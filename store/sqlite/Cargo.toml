@@ -1,0 +1,18 @@
+[package]
+name = "rustic-sqlite-store"
+version = "0.1.0"
+authors = ["Max Jöhnk <maxjoehnk@gmail.com>"]
+license = "GPL-3.0"
+readme = "README.md"
+repository = "https://github.com/rustic-music-player/sqlite-store"
+homepage = "https://github.com/rustic-music-player/sqlite-store"
+
+[dependencies]
+log = "0.4"
+failure = "0.1"
+diesel = { version = "1", features = ["sqlite"] }
+diesel_migrations = { version = "1", features = ["sqlite"] }
+
+[dependencies.rustic-core]
+path = "../../core"
+

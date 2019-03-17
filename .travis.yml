@@ -1,0 +1,13 @@
+language: rust
+rust:
+    - stable
+    - beta
+    - nightly
+matrix:
+    allow_failures:
+        - rust: nightly
+addons:
+    apt:
+        packages:
+            - libgstreamer-plugins-base1.0-dev
+            - libgstreamer1.0-dev

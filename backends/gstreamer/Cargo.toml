@@ -1,0 +1,19 @@
+[package]
+name = "rustic-gstreamer-backend"
+version = "0.1.0"
+authors = ["Max Jöhnk <maxjoehnk@gmail.com>"]
+license = "GPL-3.0"
+readme = "README.md"
+repository = "https://github.com/rustic-music-player/gstreamer-backend"
+homepage = "https://github.com/rustic-music-player/gstreamer-backend"
+
+[dependencies]
+crossbeam-channel = "0.2"
+log = "0.4"
+failure = "0.1"
+gstreamer = "0.12"
+glib = "0.6.0"
+pinboard = "2.0.0"
+
+[dependencies.rustic-core]
+path = "../../core"

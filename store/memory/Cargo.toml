@@ -1,0 +1,15 @@
+[package]
+name = "rustic-memory-store"
+version = "0.1.0"
+authors = ["Max Jöhnk <maxjoehnk@gmail.com>"]
+license = "GPL-3.0"
+readme = "README.md"
+repository = "https://github.com/rustic-music-player/memory-store"
+homepage = "https://github.com/rustic-music-player/memory-store"
+edition = "2018"
+
+[dependencies]
+failure = "0.1"
+
+[dependencies.rustic-core]
+path = "../../core"
