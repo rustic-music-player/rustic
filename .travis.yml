@@ -1,3 +1,4 @@
+dist: xenial
 language: rust
 rust:
     - stable
@@ -9,4 +10,4 @@ matrix:
 addons:
     apt:
         packages:
-            - gst-plugins-base1.0
+            - gstreamer1.0
