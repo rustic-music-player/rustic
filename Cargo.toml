@@ -1,0 +1,15 @@
+[workspace]
+members = [
+    "core",
+    "rustic",
+    "backends/gstreamer",
+    "frontends/http",
+    "frontends/mpd",
+    "frontends/qt",
+    "provider/local",
+    "provider/pocketcasts",
+    "provider/soundcloud",
+    "provider/spotify",
+    "store/memory",
+    "store/sqlite"
+]
