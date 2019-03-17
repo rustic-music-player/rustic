@@ -11,3 +11,4 @@ addons:
     apt:
         packages:
             - gstreamer1.0
+            - qtdeclarative5-dev
