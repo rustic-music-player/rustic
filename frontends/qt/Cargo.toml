@@ -1,0 +1,14 @@
+[package]
+name = "rustic-qt-frontend"
+version = "0.1.0"
+authors = ["Max Jöhnk <maxjoehnk@gmail.com>"]
+license = "GPL-3.0"
+readme = "README.md"
+repository = "https://github.com/rustic-music-player/qt-frontend"
+homepage = "https://github.com/rustic-music-player/qt-frontend"
+
+[dependencies]
+qmetaobject = "0.0.5"
+
+[dependencies.rustic-core]
+path = "../../core"
