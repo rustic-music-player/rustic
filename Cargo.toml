@@ -5,7 +5,6 @@ members = [
     "backends/gstreamer",
     "frontends/http",
     "frontends/mpd",
-    "frontends/qt",
     "provider/local",
     "provider/pocketcasts",
     "provider/soundcloud",
