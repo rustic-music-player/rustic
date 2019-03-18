@@ -12,3 +12,4 @@ addons:
         packages:
             - gstreamer1.0
             - qtdeclarative5-dev
+            - qml-module-qtquick2
