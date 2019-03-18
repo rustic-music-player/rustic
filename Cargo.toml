@@ -2,6 +2,7 @@
 members = [
     "core",
     "rustic",
+    "backends/google-cast",
     "backends/gstreamer",
     "frontends/http",
     "frontends/mpd",
