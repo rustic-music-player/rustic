@@ -26,6 +26,9 @@ path = "../store/memory"
 [dependencies.rustic-sqlite-store]
 path = "../store/sqlite"
 
+[dependencies.rustic-dbus-frontend]
+path = "../frontends/dbus"
+
 [dependencies.rustic-http-frontend]
 path = "../frontends/http"
 

@@ -12,6 +12,7 @@ extern crate env_logger;
 extern crate rustic_core as rustic;
 
 // Frontends
+extern crate rustic_dbus_frontend as dbus_frontend;
 extern crate rustic_http_frontend as http_frontend;
 extern crate rustic_mpd_frontend as mpd_frontend;
 
@@ -77,6 +78,7 @@ fn main() -> Result<(), Error> {
     let mut threads = vec![
         rustic::sync::start(Arc::clone(&app), Arc::clone(&keep_running))?,
         rustic::cache::start(Arc::clone(&app), Arc::clone(&keep_running))?,
+        dbus_frontend::start(Arc::clone(&app)),
     ];
 
     if config.mpd.is_some() {

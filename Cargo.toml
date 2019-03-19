@@ -3,6 +3,7 @@ members = [
     "core",
     "rustic",
     "backends/gstreamer",
+    "frontends/dbus",
     "frontends/http",
     "frontends/mpd",
     "provider/local",
