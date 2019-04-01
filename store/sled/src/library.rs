@@ -2,11 +2,12 @@ use std::path::Path;
 use std::sync::Arc;
 
 use bincode::{deserialize, serialize};
-use byteorder::{LittleEndian, ReadBytesExt, WriteBytesExt};
 use failure::Error;
 use serde::de::DeserializeOwned;
 
 use rustic_core::{Album, Artist, Playlist, SearchResults, Track};
+
+use crate::util::*;
 
 pub struct SledLibrary {
     db: sled::Db,
@@ -82,36 +83,6 @@ impl SledLibrary {
                 _ => false
             })
     }
-}
-
-fn serialize_id(id: usize) -> Result<Vec<u8>, Error> {
-    let mut id_bytes = Vec::new();
-    id_bytes.write_u64::<LittleEndian>(id as u64)?;
-
-    Ok(id_bytes)
-}
-
-fn deserialize_id(id: &[u8]) -> Result<usize, Error> {
-    let mut bytes = id.clone();
-    let id = bytes.read_u64::<LittleEndian>()?;
-
-    Ok(id as usize)
-}
-
-fn fetch_entity<E>(tree: &Arc<sled::Tree>, id: usize) -> Result<Option<E>, Error> where E: DeserializeOwned {
-    let id = serialize_id(id)?;
-    if let Some(bytes) = tree.get(&id)? {
-        let entity: E = deserialize(&bytes)?;
-        Ok(Some(entity))
-    } else {
-        Ok(None)
-    }
-}
-
-fn fetch_entities<E>(tree: &Arc<sled::Tree>) -> Result<Vec<E>, Error> where E: DeserializeOwned {
-    tree.iter()
-        .map(|item| item.map_err(Error::from).and_then(|(_, bytes)| deserialize(&bytes).map_err(Error::from)))
-        .collect()
 }
 
 impl rustic_core::Library for SledLibrary {
