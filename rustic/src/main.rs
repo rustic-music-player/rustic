@@ -18,6 +18,7 @@ extern crate rustic_mpd_frontend as mpd_frontend;
 // Stores
 extern crate rustic_memory_store as memory_store;
 extern crate rustic_sqlite_store as sqlite_store;
+extern crate rustic_sled_store as sled_store;
 
 // Backends
 extern crate rustic_gstreamer_backend as gst_backend;
@@ -33,6 +34,7 @@ mod config;
 use failure::Error;
 use memory_store::MemoryLibrary;
 use sqlite_store::SqliteLibrary;
+use sled_store::SledLibrary;
 use std::sync::{Arc, Condvar, Mutex, RwLock};
 
 use config::*;
@@ -47,6 +49,7 @@ fn main() -> Result<(), Error> {
     let store: Box<rustic::Library> = match config.library.unwrap_or(LibraryConfig::Memory) {
         LibraryConfig::Memory => Box::new(MemoryLibrary::new()),
         LibraryConfig::SQLite { path } => Box::new(SqliteLibrary::new(path)?),
+        LibraryConfig::Sled { path } => Box::new(SledLibrary::new(path)?)
     };
 
     let app = rustic::Rustic::new(store, providers)?;
