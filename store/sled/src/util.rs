@@ -34,3 +34,15 @@ pub fn fetch_entities<E>(tree: &Arc<sled::Tree>) -> Result<Vec<E>, Error> where 
         .map(|item| item.map_err(Error::from).and_then(|(_, bytes)| deserialize(&bytes).map_err(Error::from)))
         .collect()
 }
+
+pub fn search_entities<E, P>(tree: &Arc<sled::Tree>, predicate: P) -> Result<Vec<E>, Error>
+    where E: DeserializeOwned,
+          P: Fn(&E) -> bool {
+    tree.iter()
+        .map(|item| item.map_err(Error::from).and_then(|(_, bytes)| deserialize(&bytes).map_err(Error::from)))
+        .filter(|item| match item {
+            Ok(entity) => predicate(entity),
+            _ => false
+        })
+        .collect()
+}

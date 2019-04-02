@@ -223,6 +223,23 @@ impl rustic_core::Library for SledLibrary {
     }
 
     fn search(&self, query: String) -> Result<SearchResults, Error> {
-        unimplemented!()
+        let tracks = search_entities(&self.tracks_tree, |track: &Track| {
+            track.title.contains(&query)
+        })?;
+        let artists = search_entities(&self.artists_tree, |artist: &Artist| {
+            artist.name.contains(&query)
+        })?;
+        let albums = search_entities(&self.albums_tree, |album: &Album| {
+            album.title.contains(&query)
+        })?;
+        let playlists = search_entities(&self.playlists_tree, |playlist: &Playlist| {
+            playlist.title.contains(&query)
+        })?;
+        Ok(SearchResults {
+            albums,
+            artists,
+            tracks,
+            playlists
+        })
     }
 }
