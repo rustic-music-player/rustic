@@ -11,10 +11,10 @@ pub struct MemoryLibrary {
     artist_id: AtomicUsize,
     track_id: AtomicUsize,
     playlist_id: AtomicUsize,
-    pub albums: RwLock<Vec<Album>>,
-    pub artists: RwLock<Vec<Artist>>,
-    pub tracks: RwLock<Vec<Track>>,
-    pub playlists: RwLock<Vec<Playlist>>,
+    albums: RwLock<Vec<Album>>,
+    artists: RwLock<Vec<Artist>>,
+    tracks: RwLock<Vec<Track>>,
+    playlists: RwLock<Vec<Playlist>>,
 }
 
 impl MemoryLibrary {
