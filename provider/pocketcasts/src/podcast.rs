@@ -30,14 +30,14 @@ impl From<PocketcastAlbum> for Album {
                 name: podcast.author,
                 image_url: None,
                 meta: hashmap!(
-                    META_POCKETCASTS_PODCAST_UUID => id.clone().into()
+                    META_POCKETCASTS_PODCAST_UUID.into() => id.clone().into()
                 ),
             }),
             provider: Provider::Pocketcasts,
             image_url: Some(thumbnail_url),
             uri: format!("pocketcasts://podcast/{}", podcast.uuid),
             meta: hashmap!(
-                META_POCKETCASTS_PODCAST_UUID => id.into()
+                META_POCKETCASTS_PODCAST_UUID.into() => id.into()
             ),
         }
     }

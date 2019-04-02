@@ -19,6 +19,7 @@ pub struct Config {
 pub enum LibraryConfig {
     Memory,
     SQLite { path: String },
+    Sled { path: String },
 }
 
 #[derive(Deserialize, Clone, PartialEq, Eq)]

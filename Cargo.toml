@@ -10,5 +10,6 @@ members = [
     "provider/soundcloud",
     "provider/spotify",
     "store/memory",
+    "store/sled",
     "store/sqlite"
 ]

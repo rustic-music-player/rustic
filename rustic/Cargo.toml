@@ -23,6 +23,9 @@ path = "../core"
 [dependencies.rustic-memory-store]
 path = "../store/memory"
 
+[dependencies.rustic-sled-store]
+path = "../store/sled"
+
 [dependencies.rustic-sqlite-store]
 path = "../store/sqlite"
 
