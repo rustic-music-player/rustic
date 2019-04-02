@@ -7,7 +7,6 @@ use rustic_core::{
 use std::sync::Arc;
 use std::thread;
 use viewmodels::TrackModel;
-use failure;
 
 mod messages;
 mod server;
@@ -39,15 +38,14 @@ pub fn build_socket_app(rustic: Arc<Rustic>) -> App<SocketState> {
                 }
                 Some(PlayerEvent::TrackChanged(track)) => {
                     debug!("received currently playing track");
-                    let model = TrackModel::new_with_joins(track, &rustic).ok();
-                    addr.do_send(messages::Message::CurrentlyPlayingChanged(model));
+                    let model = TrackModel::new(track, &rustic);
+                    addr.do_send(messages::Message::CurrentlyPlayingChanged(Some(model)));
                 }
                 Some(PlayerEvent::QueueUpdated(queue)) => {
                     debug!("received new queue");
                     let models = queue.into_iter()
-                        .map(|track| TrackModel::new_with_joins(track, &rustic))
-                        .collect::<Result<Vec<TrackModel>, failure::Error>>()
-                        .unwrap();
+                        .map(|track| TrackModel::new(track, &rustic))
+                        .collect();
                     addr.do_send(messages::Message::QueueUpdated(models));
                 }
                 msg => debug!("unexpected msg {:?}", msg),

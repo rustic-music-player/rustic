@@ -15,12 +15,12 @@ pub struct PlaylistModel {
 }
 
 impl PlaylistModel {
-    pub fn from(playlist: Playlist, app: &Arc<Rustic>) -> Result<PlaylistModel, Error> {
+    pub fn new(playlist: Playlist, app: &Arc<Rustic>) -> Result<PlaylistModel, Error> {
         let tracks = playlist
             .tracks
             .into_iter()
-            .map(|track| TrackModel::new_with_joins(track, app))
-            .collect::<Result<Vec<TrackModel>, _>>()?;
+            .map(|track| TrackModel::new(track, app))
+            .collect();
 
         Ok(PlaylistModel {
             id: playlist.id,

@@ -33,6 +33,7 @@ impl From<PocketcastAlbum> for Album {
                     META_POCKETCASTS_PODCAST_UUID.into() => id.clone().into()
                 ),
             }),
+            tracks: vec![],
             provider: Provider::Pocketcasts,
             image_url: Some(thumbnail_url),
             uri: format!("pocketcasts://podcast/{}", podcast.uuid),
@@ -84,6 +85,7 @@ impl From<PocketcastSearchResult> for Album {
                 image_url: None,
                 meta: HashMap::new(),
             }),
+            tracks: vec![],
             provider: Provider::Pocketcasts,
             image_url: Some(thumbnail_url),
             uri: format!("pocketcasts://podcast/{}", podcast.uuid),

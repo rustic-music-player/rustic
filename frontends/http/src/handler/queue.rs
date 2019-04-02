@@ -5,11 +5,12 @@ use viewmodels::TrackModel;
 
 pub fn fetch(rustic: &Arc<Rustic>) -> Result<Vec<TrackModel>, Error> {
     let player = rustic.get_default_player().ok_or(format_err!("Missing default player"))?;
-    player
+    let tracks = player
         .get_queue()
         .into_iter()
-        .map(|track| TrackModel::new_with_joins(track, &rustic))
-        .collect()
+        .map(|track| TrackModel::new(track, &rustic))
+        .collect();
+    Ok(tracks)
 }
 
 pub fn queue_track(track_id: usize, rustic: &Arc<Rustic>) -> Result<Option<()>, Error> {

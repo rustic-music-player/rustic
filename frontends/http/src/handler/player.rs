@@ -7,7 +7,7 @@ use viewmodels::{PlayerModel, TrackModel};
 pub fn get_state(rustic: &Arc<Rustic>) -> Result<PlayerModel, Error> {
     let player = rustic.get_default_player().ok_or(format_err!("Missing default player"))?;
     let current = match player.current() {
-        Some(track) => Some(TrackModel::new_with_joins(track, &rustic)?),
+        Some(track) => Some(TrackModel::new(track, &rustic)),
         None => None,
     };
 

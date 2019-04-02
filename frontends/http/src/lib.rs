@@ -13,6 +13,7 @@ extern crate actix_web;
 extern crate failure;
 extern crate rayon;
 extern crate uuid;
+extern crate stopwatch;
 
 use rustic_core::Rustic;
 

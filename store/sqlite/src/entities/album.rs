@@ -22,6 +22,7 @@ impl AlbumEntity {
             artist: None,
             provider: int_to_provider(self.provider)?,
             uri: self.uri,
+            tracks: vec![],
             image_url: self.image_url,
             meta: unimplemented!(),
         })

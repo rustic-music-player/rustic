@@ -117,6 +117,7 @@ impl From<scanner::Track> for library::Track {
                 artist: None,
                 provider: Provider::LocalMedia,
                 image_url: None,
+                tracks: vec![],
                 uri: String::new(),
                 meta: hashmap!(
                     META_LOCAL_FILE_URL.into() => path.clone().into()
@@ -153,6 +154,7 @@ impl From<scanner::Track> for Option<library::Album> {
             artist: None,
             provider: Provider::LocalMedia,
             image_url: None,
+            tracks: vec![],
             uri: String::new(),
             meta: hashmap!(
                 META_LOCAL_FILE_URL.into() => path.into()

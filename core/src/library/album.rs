@@ -3,7 +3,7 @@ use crate::library::{Artist, MetaValue};
 use crate::provider::Provider;
 use std::sync::Arc;
 use std::collections::HashMap;
-use crate::Rustic;
+use crate::{Rustic, Track};
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct Album {
@@ -11,6 +11,7 @@ pub struct Album {
     pub title: String,
     pub artist_id: Option<usize>,
     pub artist: Option<Artist>,
+    pub tracks: Vec<Track>,
     pub provider: Provider,
     pub image_url: Option<String>,
     pub uri: String,

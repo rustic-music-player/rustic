@@ -27,6 +27,36 @@ impl MemoryLibrary {
             ..MemoryLibrary::default()
         }
     }
+
+    fn join_track(&self, track: Track) -> Result<Track, Error> {
+        let artist = if let Some(artist_id) = track.artist_id {
+            self.get_artist(artist_id)?
+        } else { None };
+        let album = if let Some(album_id) = track.album_id {
+            self.get_album(album_id)?
+        } else { None };
+        Ok(Track {
+            album,
+            artist,
+            ..track
+        })
+    }
+
+    fn join_album(&self, album: Album) -> Result<Album, Error> {
+        let tracks = self.get_tracks()?
+            .into_iter()
+            .filter(|track| track.album_id == album.id)
+            .collect();
+
+        let artist = if let Some(artist_id) = album.artist_id {
+            self.get_artist(artist_id)?
+        } else { None };
+        Ok(Album {
+            artist,
+            tracks,
+            ..album
+        })
+    }
 }
 
 impl Library for MemoryLibrary {
@@ -38,12 +68,21 @@ impl Library for MemoryLibrary {
             .iter()
             .cloned()
             .find(|track| track.id == Some(id));
+        let track = if let Some(track) = track {
+            Some(self.join_track(track)?)
+        }else {
+            None
+        };
         Ok(track)
     }
 
     fn get_tracks(&self) -> Result<Vec<Track>, Error> {
-        let tracks = self.tracks.read().unwrap().clone();
-        Ok(tracks)
+        self.tracks.read()
+            .unwrap()
+            .iter()
+            .cloned()
+            .map(|track| self.join_track(track))
+            .collect()
     }
 
     fn get_album(&self, id: usize) -> Result<Option<Album>, Error> {
@@ -54,12 +93,21 @@ impl Library for MemoryLibrary {
             .iter()
             .cloned()
             .find(|album| album.id == Some(id));
+        let album = if let Some(album) = album {
+            Some(self.join_album(album)?)
+        }else {
+            None
+        };
         Ok(album)
     }
 
     fn get_albums(&self) -> Result<Vec<Album>, Error> {
-        let albums = self.albums.read().unwrap().clone();
-        Ok(albums)
+        self.albums.read()
+            .unwrap()
+            .iter()
+            .cloned()
+            .map(|album| self.join_album(album))
+            .collect()
     }
 
     fn get_artist(&self, id: usize) -> Result<Option<Artist>, Error> {
