@@ -1,5 +1,5 @@
 use failure::Error;
-use rustic_core::{Album, Artist, Library, Playlist, SearchResults, Track};
+use rustic_core::{Album, Artist, Library, Playlist, SearchResults, Track, SingleQuery, MultiQuery, SingleQueryIdentifier};
 use std::sync::{
     atomic::{AtomicUsize, Ordering},
     RwLock,
@@ -43,7 +43,7 @@ impl MemoryLibrary {
     }
 
     fn join_album(&self, album: Album) -> Result<Album, Error> {
-        let tracks = self.get_tracks()?
+        let tracks = self.query_tracks(MultiQuery::new())?
             .into_iter()
             .filter(|track| track.album_id == album.id)
             .collect();
@@ -60,29 +60,39 @@ impl MemoryLibrary {
 }
 
 impl Library for MemoryLibrary {
-    fn get_track(&self, id: usize) -> Result<Option<Track>, Error> {
-        let track = self
+    fn query_track(&self, query: SingleQuery) -> Result<Option<Track>, Error> {
+        let mut tracks = self
             .tracks
             .read()
             .unwrap()
-            .iter()
-            .cloned()
-            .find(|track| track.id == Some(id));
-        let track = if let Some(track) = track {
-            Some(self.join_track(track)?)
+            .clone()
+            .into_iter();
+        let track = match query.identifier {
+            SingleQueryIdentifier::Id(id) => tracks.find(|track| track.id == Some(id)),
+            SingleQueryIdentifier::Uri(uri) => tracks.find(|track| track.uri == uri)
+        };
+        let track = if query.joins {
+            if let Some(track) = track {
+                Some(self.join_track(track)?)
+            }else {
+                None
+            }
         }else {
             None
         };
         Ok(track)
     }
 
-    fn get_tracks(&self) -> Result<Vec<Track>, Error> {
-        self.tracks.read()
+    fn query_tracks(&self, query: MultiQuery) -> Result<Vec<Track>, Error> {
+        let iter = self.tracks.read()
             .unwrap()
-            .iter()
-            .cloned()
-            .map(|track| self.join_track(track))
-            .collect()
+            .clone()
+            .into_iter();
+        if query.joins {
+            iter.map(|track| self.join_track(track)).collect()
+        }else {
+            Ok(iter.collect())
+        }
     }
 
     fn get_album(&self, id: usize) -> Result<Option<Album>, Error> {

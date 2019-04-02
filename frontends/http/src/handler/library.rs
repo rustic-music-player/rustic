@@ -1,5 +1,5 @@
 use failure::Error;
-use rustic_core::Rustic;
+use rustic_core::{Rustic, MultiQuery};
 use std::sync::Arc;
 use viewmodels::*;
 
@@ -51,8 +51,10 @@ pub fn fetch_playlists(rustic: &Arc<Rustic>) -> Result<Vec<PlaylistModel>, Error
 pub fn fetch_tracks(rustic: &Arc<Rustic>) -> Result<Vec<TrackModel>, Error> {
     let library = &rustic.library;
     let sw = stopwatch::Stopwatch::start_new();
+    let mut query = MultiQuery::new();
+    query.joins(true);
     let tracks = library
-        .get_tracks()?;
+        .query_tracks(query)?;
     debug!("Fetching tracks took {}ms", sw.elapsed_ms());
     let tracks = tracks
         .into_iter()

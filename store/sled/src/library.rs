@@ -5,7 +5,7 @@ use bincode::{deserialize, serialize};
 use failure::Error;
 use serde::de::DeserializeOwned;
 
-use rustic_core::{Album, Artist, Playlist, SearchResults, Track};
+use rustic_core::{Album, Artist, Playlist, SearchResults, Track, SingleQuery, MultiQuery, SingleQueryIdentifier};
 
 use crate::util::*;
 
@@ -86,11 +86,14 @@ impl SledLibrary {
 }
 
 impl rustic_core::Library for SledLibrary {
-    fn get_track(&self, id: usize) -> Result<Option<Track>, Error> {
-        fetch_entity(&self.tracks_tree, id)
+    fn query_track(&self, query: SingleQuery) -> Result<Option<Track>, Error> {
+        match query.identifier {
+            SingleQueryIdentifier::Id(id) => fetch_entity(&self.tracks_tree, id),
+            _ => Ok(None)
+        }
     }
 
-    fn get_tracks(&self) -> Result<Vec<Track>, Error> {
+    fn query_tracks(&self, query: MultiQuery) -> Result<Vec<Track>, Error> {
         fetch_entities(&self.tracks_tree)
     }
 

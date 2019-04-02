@@ -18,10 +18,11 @@ use diesel::insert_into;
 use diesel::prelude::*;
 use diesel::sqlite::SqliteConnection;
 
-use core::{Album, Artist, Playlist, SearchResults, Track};
+use core::{Album, Artist, Playlist, SearchResults, Track, SingleQuery, MultiQuery};
 use std::sync::{Arc, Mutex};
 
 use failure::Error;
+use rustic_core::SingleQueryIdentifier;
 
 #[derive(Clone)]
 pub struct SqliteLibrary {
@@ -43,14 +44,21 @@ impl SqliteLibrary {
 }
 
 impl core::Library for SqliteLibrary {
-    fn get_track(&self, track_id: usize) -> Result<Option<Track>, Error> {
+    fn query_track(&self, query: SingleQuery) -> Result<Option<Track>, Error> {
         use schema::tracks::dsl::*;
 
         let connection = self.connection.lock().unwrap();
 
-        tracks
-            .find(track_id as i32)
-            .first::<entities::TrackEntity>(&*connection)
+        let query = match query.identifier {
+            SingleQueryIdentifier::Id(track_id) => tracks
+                .find(track_id as i32)
+                .first::<entities::TrackEntity>(&*connection),
+            SingleQueryIdentifier::Uri(query_uri) => tracks
+                .filter(uri.eq(query_uri))
+                .first::<entities::TrackEntity>(&*connection)
+        };
+
+        query
             .optional()
             .map_err(Error::from)
             .and_then(|track| match track {
@@ -59,7 +67,7 @@ impl core::Library for SqliteLibrary {
             })
     }
 
-    fn get_tracks(&self) -> Result<Vec<Track>, Error> {
+    fn query_tracks(&self, query: MultiQuery) -> Result<Vec<Track>, Error> {
         use schema::tracks::dsl::*;
 
         let connection = self.connection.lock().unwrap();

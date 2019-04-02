@@ -1,5 +1,5 @@
 use failure::Error;
-use rustic_core::{Playlist, Rustic, Track};
+use rustic_core::{Playlist, Rustic, Track, SingleQuery};
 use std::sync::Arc;
 use viewmodels::TrackModel;
 
@@ -16,7 +16,7 @@ pub fn fetch(rustic: &Arc<Rustic>) -> Result<Vec<TrackModel>, Error> {
 pub fn queue_track(track_id: usize, rustic: &Arc<Rustic>) -> Result<Option<()>, Error> {
     let library = &rustic.library;
     debug!("adding track to queue {}", track_id);
-    let track: Option<Track> = library.get_track(track_id)?;
+    let track: Option<Track> = library.query_track(SingleQuery::id(track_id))?;
     match track {
         Some(track) => {
             let player = rustic.get_default_player().ok_or(format_err!("Missing default player"))?;

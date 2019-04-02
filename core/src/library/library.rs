@@ -1,6 +1,9 @@
-use failure::Error;
-use crate::library::{Album, Artist, Playlist, Track};
 use std::sync::Arc;
+
+use failure::Error;
+
+use crate::{MultiQuery, SingleQuery};
+use crate::library::{Album, Artist, Playlist, Track};
 
 pub type SharedLibrary = Arc<Box<dyn Library>>;
 
@@ -13,13 +16,14 @@ pub struct SearchResults {
 
 pub trait Library: Sync + Send {
     /**
-     * Return the track for the given id or None
+     * Fetch a single track
      */
-    fn get_track(&self, id: usize) -> Result<Option<Track>, Error>;
+    fn query_track(&self, query: SingleQuery) -> Result<Option<Track>, Error>;
+
     /**
-     * Return a list of all tracks
+     * Fetch multiple tracks
      */
-    fn get_tracks(&self) -> Result<Vec<Track>, Error>;
+    fn query_tracks(&self, query: MultiQuery) -> Result<Vec<Track>, Error>;
 
     /**
      * Return the album for the given id or None
