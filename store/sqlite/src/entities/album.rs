@@ -2,8 +2,10 @@ use failure::Error;
 
 use core::Album;
 use entities::provider::int_to_provider;
+use schema::{albums, albums_meta};
 
-#[derive(Queryable)]
+#[derive(Identifiable, Queryable, Associations, PartialEq, Debug)]
+#[table_name = "albums"]
 pub struct AlbumEntity {
     pub id: i32,
     pub title: String,
@@ -11,6 +13,19 @@ pub struct AlbumEntity {
     pub image_url: Option<String>,
     pub uri: String,
     pub provider: i32,
+}
+
+#[derive(Identifiable, Queryable, Associations, PartialEq, Debug)]
+#[belongs_to(AlbumEntity, foreign_key = "album_id")]
+#[table_name = "albums_meta"]
+#[primary_key(album_id, key)]
+pub struct AlbumMeta {
+    pub album_id: i32,
+    pub key: String,
+    pub bool_variant: Option<i32>,
+    pub float_variant: Option<f32>,
+    pub string_variant: Option<String>,
+    pub int_variant: Option<i32>
 }
 
 impl AlbumEntity {
