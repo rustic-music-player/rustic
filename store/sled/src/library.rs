@@ -97,27 +97,36 @@ impl rustic_core::Library for SledLibrary {
         fetch_entities(&self.tracks_tree)
     }
 
-    fn get_album(&self, id: usize) -> Result<Option<Album>, Error> {
-        fetch_entity(&self.albums_tree, id)
+    fn query_album(&self, query: SingleQuery) -> Result<Option<Album>, Error> {
+        match query.identifier {
+            SingleQueryIdentifier::Id(id) => fetch_entity(&self.albums_tree, id),
+            _ => Ok(None)
+        }
     }
 
-    fn get_albums(&self) -> Result<Vec<Album>, Error> {
+    fn query_albums(&self, query: MultiQuery) -> Result<Vec<Album>, Error> {
         fetch_entities(&self.albums_tree)
     }
 
-    fn get_artist(&self, id: usize) -> Result<Option<Artist>, Error> {
-        fetch_entity(&self.artists_tree, id)
+    fn query_artist(&self, query: SingleQuery) -> Result<Option<Artist>, Error> {
+        match query.identifier {
+            SingleQueryIdentifier::Id(id) => fetch_entity(&self.artists_tree, id),
+            _ => Ok(None)
+        }
     }
 
-    fn get_artists(&self) -> Result<Vec<Artist>, Error> {
+    fn query_artists(&self, query: MultiQuery) -> Result<Vec<Artist>, Error> {
         fetch_entities(&self.artists_tree)
     }
 
-    fn get_playlist(&self, id: usize) -> Result<Option<Playlist>, Error> {
-        fetch_entity(&self.playlists_tree, id)
+    fn query_playlist(&self, query: SingleQuery) -> Result<Option<Playlist>, Error> {
+        match query.identifier {
+            SingleQueryIdentifier::Id(id) => fetch_entity(&self.playlists_tree, id),
+            _ => Ok(None)
+        }
     }
 
-    fn get_playlists(&self) -> Result<Vec<Playlist>, Error> {
+    fn query_playlists(&self, query: MultiQuery) -> Result<Vec<Playlist>, Error> {
         fetch_entities(&self.playlists_tree)
     }
 

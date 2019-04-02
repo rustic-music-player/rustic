@@ -28,29 +28,29 @@ pub trait Library: Sync + Send {
     /**
      * Return the album for the given id or None
      */
-    fn get_album(&self, id: usize) -> Result<Option<Album>, Error>;
+    fn query_album(&self, query: SingleQuery) -> Result<Option<Album>, Error>;
     /**
      * Return a list of all albums
      */
-    fn get_albums(&self) -> Result<Vec<Album>, Error>;
+    fn query_albums(&self, query: MultiQuery) -> Result<Vec<Album>, Error>;
 
     /**
      * Return the artist for the given id or None
      */
-    fn get_artist(&self, id: usize) -> Result<Option<Artist>, Error>;
+    fn query_artist(&self, query: SingleQuery) -> Result<Option<Artist>, Error>;
     /**
      * Return a list of all artists
      */
-    fn get_artists(&self) -> Result<Vec<Artist>, Error>;
+    fn query_artists(&self, query: MultiQuery) -> Result<Vec<Artist>, Error>;
 
     /**
      * Return the playlist for the given id or None
      */
-    fn get_playlist(&self, id: usize) -> Result<Option<Playlist>, Error>;
+    fn query_playlist(&self, query: SingleQuery) -> Result<Option<Playlist>, Error>;
     /**
      * Return a list of all playlists
      */
-    fn get_playlists(&self) -> Result<Vec<Playlist>, Error>;
+    fn query_playlists(&self, query: MultiQuery) -> Result<Vec<Playlist>, Error>;
 
     /**
      * Store the given track, setting the id

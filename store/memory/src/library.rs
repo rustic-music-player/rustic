@@ -30,10 +30,10 @@ impl MemoryLibrary {
 
     fn join_track(&self, track: Track) -> Result<Track, Error> {
         let artist = if let Some(artist_id) = track.artist_id {
-            self.get_artist(artist_id)?
+            self.query_artist(SingleQuery::id(artist_id))?
         } else { None };
         let album = if let Some(album_id) = track.album_id {
-            self.get_album(album_id)?
+            self.query_album(SingleQuery::id(album_id))?
         } else { None };
         Ok(Track {
             album,
@@ -49,7 +49,7 @@ impl MemoryLibrary {
             .collect();
 
         let artist = if let Some(artist_id) = album.artist_id {
-            self.get_artist(artist_id)?
+            self.query_artist(SingleQuery::id(artist_id))?
         } else { None };
         Ok(Album {
             artist,
@@ -95,59 +95,75 @@ impl Library for MemoryLibrary {
         }
     }
 
-    fn get_album(&self, id: usize) -> Result<Option<Album>, Error> {
-        let album = self
+    fn query_album(&self, query: SingleQuery) -> Result<Option<Album>, Error> {
+        let mut albums = self
             .albums
             .read()
             .unwrap()
-            .iter()
-            .cloned()
-            .find(|album| album.id == Some(id));
-        let album = if let Some(album) = album {
-            Some(self.join_album(album)?)
+            .clone()
+            .into_iter();
+        let album = match query.identifier {
+            SingleQueryIdentifier::Id(id) => albums.find(|album| album.id == Some(id)),
+            SingleQueryIdentifier::Uri(uri) => albums.find(|album| album.uri == uri)
+        };
+        let album = if query.joins {
+            if let Some(album) = album {
+                Some(self.join_album(album)?)
+            }else {
+                None
+            }
         }else {
             None
         };
         Ok(album)
     }
 
-    fn get_albums(&self) -> Result<Vec<Album>, Error> {
-        self.albums.read()
+    fn query_albums(&self, query: MultiQuery) -> Result<Vec<Album>, Error> {
+        let iter = self.albums.read()
             .unwrap()
-            .iter()
-            .cloned()
-            .map(|album| self.join_album(album))
-            .collect()
+            .clone()
+            .into_iter();
+        if query.joins {
+            iter.map(|album| self.join_album(album)).collect()
+        }else {
+            Ok(iter.collect())
+        }
     }
 
-    fn get_artist(&self, id: usize) -> Result<Option<Artist>, Error> {
-        let artist = self
-            .artists
-            .read()
-            .unwrap()
-            .iter()
-            .cloned()
-            .find(|artist| artist.id == Some(id));
+    fn query_artist(&self, query: SingleQuery) -> Result<Option<Artist>, Error> {
+        let artist = match query.identifier {
+            SingleQueryIdentifier::Id(id) => self
+                .artists
+                .read()
+                .unwrap()
+                .iter()
+                .cloned()
+                .find(|artist| artist.id == Some(id)),
+            _ => None
+        };
         Ok(artist)
     }
 
-    fn get_artists(&self) -> Result<Vec<Artist>, Error> {
+    fn query_artists(&self, _query: MultiQuery) -> Result<Vec<Artist>, Error> {
         let artists = self.artists.read().unwrap().clone();
         Ok(artists)
     }
 
-    fn get_playlist(&self, id: usize) -> Result<Option<Playlist>, Error> {
-        let playlist = self
-            .playlists
-            .read()
-            .unwrap()
-            .iter()
-            .cloned()
-            .find(|playlist| playlist.id == Some(id));
+    fn query_playlist(&self, query: SingleQuery) -> Result<Option<Playlist>, Error> {
+        let playlist = match query.identifier {
+            SingleQueryIdentifier::Id(id) => self
+                .playlists
+                .read()
+                .unwrap()
+                .iter()
+                .cloned()
+                .find(|playlist| playlist.id == Some(id)),
+            _ => None
+        };
         Ok(playlist)
     }
 
-    fn get_playlists(&self) -> Result<Vec<Playlist>, Error> {
+    fn query_playlists(&self, _query: MultiQuery) -> Result<Vec<Playlist>, Error> {
         let playlists = self.playlists.read().unwrap().clone();
         Ok(playlists)
     }

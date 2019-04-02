@@ -1,6 +1,6 @@
 use commands::MpdCommand;
 use failure::Error;
-use rustic_core::{Playlist, Rustic};
+use rustic_core::{Playlist, Rustic, MultiQuery};
 use std::sync::Arc;
 
 #[derive(Debug, Serialize)]
@@ -31,7 +31,7 @@ impl MpdCommand<Vec<PlaylistEntry>> for ListPlaylistsCommand {
     fn handle(&self, app: &Arc<Rustic>) -> Result<Vec<PlaylistEntry>, Error> {
         let playlists = app
             .library
-            .get_playlists()?
+            .query_playlists(MultiQuery::new())?
             .into_iter()
             .map(PlaylistEntry::from)
             .collect();

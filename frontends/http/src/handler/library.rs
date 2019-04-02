@@ -1,11 +1,13 @@
 use failure::Error;
-use rustic_core::{Rustic, MultiQuery};
+use rustic_core::{Rustic, MultiQuery, SingleQuery};
 use std::sync::Arc;
 use viewmodels::*;
 
 pub fn fetch_album(album_id: usize, rustic: &Arc<Rustic>) -> Result<Option<AlbumModel>, Error> {
     let library = &rustic.library;
-    let album = library.get_album(album_id)?.map(|album| AlbumModel::new(album, &rustic));
+    let mut query = SingleQuery::id(album_id);
+    query.joins(true);
+    let album = library.query_album(query)?.map(|album| AlbumModel::new(album, &rustic));
 
     Ok(album)
 }
@@ -13,8 +15,10 @@ pub fn fetch_album(album_id: usize, rustic: &Arc<Rustic>) -> Result<Option<Album
 pub fn fetch_albums(rustic: &Arc<Rustic>) -> Result<Vec<AlbumModel>, Error> {
     let library = &rustic.library;
     let sw = stopwatch::Stopwatch::start_new();
+    let mut query = MultiQuery::new();
+    query.joins(true);
     let albums = library
-        .get_albums()?;
+        .query_albums(query)?;
     debug!("Fetching albums took {}ms", sw.elapsed_ms());
     let albums = albums
         .into_iter()
@@ -26,8 +30,10 @@ pub fn fetch_albums(rustic: &Arc<Rustic>) -> Result<Vec<AlbumModel>, Error> {
 pub fn fetch_artists(rustic: &Arc<Rustic>) -> Result<Vec<ArtistModel>, Error> {
     let library = &rustic.library;
     let sw = stopwatch::Stopwatch::start_new();
+    let mut query = MultiQuery::new();
+    query.joins(true);
     let artists = library
-        .get_artists()?;
+        .query_artists(query)?;
     debug!("Fetching artists took {}ms", sw.elapsed_ms());
     let artists = artists
         .into_iter()
@@ -39,8 +45,10 @@ pub fn fetch_artists(rustic: &Arc<Rustic>) -> Result<Vec<ArtistModel>, Error> {
 pub fn fetch_playlists(rustic: &Arc<Rustic>) -> Result<Vec<PlaylistModel>, Error> {
     let library = &rustic.library;
     let sw = stopwatch::Stopwatch::start_new();
+    let mut query = MultiQuery::new();
+    query.joins(true);
     let playlists = library
-        .get_playlists()?;
+        .query_playlists(query)?;
     debug!("Fetching playlists took {}ms", sw.elapsed_ms());
     playlists
         .into_iter()

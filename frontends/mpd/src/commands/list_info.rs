@@ -1,7 +1,7 @@
 use commands::list_playlists::PlaylistEntry;
 use commands::MpdCommand;
 use failure::Error;
-use rustic_core::{Explorer, Playlist, Rustic, SharedLibrary, Track};
+use rustic_core::{Explorer, Playlist, Rustic, SharedLibrary, Track, MultiQuery};
 use song::MpdSong;
 use std::sync::Arc;
 
@@ -23,7 +23,7 @@ impl ListInfoCommand {
 
     fn get_playlists(&self, library: &SharedLibrary) -> Result<Vec<PlaylistEntry>, Error> {
         let playlists = library
-            .get_playlists()?
+            .query_playlists(MultiQuery::new())?
             .into_iter()
             .map(PlaylistEntry::from)
             .collect();

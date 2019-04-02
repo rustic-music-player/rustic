@@ -31,7 +31,7 @@ pub fn queue_track(track_id: usize, rustic: &Arc<Rustic>) -> Result<Option<()>, 
 pub fn queue_playlist(playlist_id: usize, rustic: &Arc<Rustic>) -> Result<Option<()>, Error> {
     let library = &rustic.library;
     debug!("adding playlist to queue {}", playlist_id);
-    let playlist: Option<Playlist> = library.get_playlist(playlist_id)?;
+    let playlist: Option<Playlist> = library.query_playlist(SingleQuery::id(playlist_id))?;
     match playlist {
         Some(playlist) => {
             let player = rustic.get_default_player().ok_or(format_err!("Missing default player"))?;
