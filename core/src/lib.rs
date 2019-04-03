@@ -5,7 +5,7 @@ use crossbeam_channel as channel;
 use failure::format_err;
 use url::Url;
 
-pub use crate::library::{Album, Artist, Library, MultiQuery, Playlist, SearchResults, SharedLibrary, SingleQuery, SingleQueryIdentifier, Track};
+pub use crate::library::{Album, Artist, Library, MultiQuery, Playlist, QueryJoins, SearchResults, SharedLibrary, SingleQuery, SingleQueryIdentifier, Track, LibraryQueryJoins};
 pub use crate::player::{PlayerBackend, PlayerEvent, PlayerState};
 pub use crate::provider::{Explorer, Provider};
 
@@ -64,7 +64,7 @@ impl Rustic {
 
     pub fn resolve_track(&self, uri: &str) -> Result<Option<Track>, failure::Error> {
         let mut query = SingleQuery::uri(uri.to_string());
-        query.joins(true);
+        query.join_all();
         let track = self
             .library
             .query_track(query)?;

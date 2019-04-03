@@ -1,4 +1,3 @@
-use failure::Error;
 use rustic_core::library::Album;
 use rustic_core::provider::Provider;
 use rustic_core::Rustic;

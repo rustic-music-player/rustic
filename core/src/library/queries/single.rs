@@ -1,7 +1,9 @@
+use super::{LibraryQueryJoins, QueryJoins};
+
 #[derive(Default, Clone)]
 pub struct SingleQuery {
     pub identifier: SingleQueryIdentifier,
-    pub joins: bool,
+    pub joins: LibraryQueryJoins,
 }
 
 #[derive(Clone)]
@@ -17,22 +19,39 @@ impl Default for SingleQueryIdentifier {
 }
 
 impl SingleQuery {
-    pub fn id(id: usize) -> SingleQuery {
+    pub fn id(id: usize) -> Self {
         SingleQuery {
             identifier: SingleQueryIdentifier::Id(id),
             ..SingleQuery::default()
         }
     }
 
-    pub fn uri(uri: String) -> SingleQuery {
+    pub fn uri(uri: String) -> Self {
         SingleQuery {
             identifier: SingleQueryIdentifier::Uri(uri),
             ..SingleQuery::default()
         }
     }
+}
 
-    pub fn joins(&mut self, joins: bool) -> &mut SingleQuery {
-        self.joins = joins;
+impl QueryJoins for SingleQuery {
+    fn join_all(&mut self) -> &mut Self {
+        self.joins = LibraryQueryJoins::ALL;
+        self
+    }
+
+    fn join_tracks(&mut self) -> &mut Self {
+        self.joins |= LibraryQueryJoins::TRACK;
+        self
+    }
+
+    fn join_albums(&mut self) -> &mut Self {
+        self.joins |= LibraryQueryJoins::ALBUM;
+        self
+    }
+
+    fn join_artists(&mut self) -> &mut Self {
+        self.joins |= LibraryQueryJoins::ARTIST;
         self
     }
 }
