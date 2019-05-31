@@ -87,8 +87,20 @@ pub trait Library: Sync + Send {
      * Will set the id when not persisted yet
      */
     fn sync_track(&self, track: &mut Track) -> Result<(), Error>;
+    /**
+     * Sync the given album by its uri
+     * Will set the id when not persisted yet
+     */
     fn sync_album(&self, album: &mut Album) -> Result<(), Error>;
+    /**
+     * Sync the given artist by its uri
+     * Will set the id when not persisted yet
+     */
     fn sync_artist(&self, artist: &mut Artist) -> Result<(), Error>;
+    /**
+     * Sync the given playlist by its uri
+     * Will set the id when not persisted yet
+     */
     fn sync_playlist(&self, playlist: &mut Playlist) -> Result<(), Error>;
 
     fn sync_tracks(&self, tracks: &mut Vec<Track>) -> Result<(), Error> {
