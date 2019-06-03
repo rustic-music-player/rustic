@@ -5,7 +5,8 @@ use bincode::{deserialize, serialize};
 use failure::Error;
 use serde::de::DeserializeOwned;
 
-use rustic_core::{Album, Artist, Playlist, SearchResults, Track, SingleQuery, MultiQuery, SingleQueryIdentifier};
+use rustic_core::{Album, Artist, MultiQuery, Playlist, SearchResults, SingleQuery, SingleQueryIdentifier, Track};
+use rustic_core::library::queries::helpers::{join_track, join_album, join_albums};
 
 use crate::util::*;
 
@@ -87,8 +88,12 @@ impl SledLibrary {
 
 impl rustic_core::Library for SledLibrary {
     fn query_track(&self, query: SingleQuery) -> Result<Option<Track>, Error> {
-        match query.identifier {
+        let entity = match query.identifier {
             SingleQueryIdentifier::Id(id) => fetch_entity(&self.tracks_tree, id),
+            _ => Ok(None)
+        }?;
+        match entity {
+            Some(track) => Ok(Some(join_track(self, track, query.joins)?)),
             _ => Ok(None)
         }
     }
@@ -98,14 +103,19 @@ impl rustic_core::Library for SledLibrary {
     }
 
     fn query_album(&self, query: SingleQuery) -> Result<Option<Album>, Error> {
-        match query.identifier {
+        let entity = match query.identifier {
             SingleQueryIdentifier::Id(id) => fetch_entity(&self.albums_tree, id),
+            _ => Ok(None)
+        }?;
+        match entity {
+            Some(album) => Ok(Some(join_album(self, album, query.joins)?)),
             _ => Ok(None)
         }
     }
 
     fn query_albums(&self, query: MultiQuery) -> Result<Vec<Album>, Error> {
-        fetch_entities(&self.albums_tree)
+        let albums = fetch_entities(&self.albums_tree)?;
+        join_albums(self, &albums, query.joins)
     }
 
     fn query_artist(&self, query: SingleQuery) -> Result<Option<Artist>, Error> {
@@ -251,7 +261,7 @@ impl rustic_core::Library for SledLibrary {
             albums,
             artists,
             tracks,
-            playlists
+            playlists,
         })
     }
 }

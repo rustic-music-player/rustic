@@ -4,7 +4,7 @@ mod library;
 mod playlist;
 mod track;
 mod meta;
-mod queries;
+pub mod queries;
 
 pub use self::album::Album;
 pub use self::artist::Artist;

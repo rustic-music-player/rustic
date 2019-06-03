@@ -6,6 +6,7 @@ use std::sync::{
 use failure::Error;
 
 use rustic_core::{Album, Artist, Library, LibraryQueryJoins, MultiQuery, Playlist, SearchResults, SingleQuery, SingleQueryIdentifier, Track};
+use rustic_core::library::queries::helpers::{join_album, join_track, join_albums};
 
 #[derive(Debug, Default)]
 pub struct MemoryLibrary {
@@ -29,45 +30,6 @@ impl MemoryLibrary {
             ..MemoryLibrary::default()
         }
     }
-
-    fn join_track(&self, track: Track, joins: LibraryQueryJoins) -> Result<Track, Error> {
-        let artist = if joins.has_artists() {
-            if let Some(artist_id) = track.artist_id {
-                self.query_artist(SingleQuery::id(artist_id))?
-            } else { track.artist }
-        } else { track.artist };
-        let album = if joins.has_albums() {
-            if let Some(album_id) = track.album_id {
-                self.query_album(SingleQuery::id(album_id))?
-            } else { track.album }
-        } else { track.album };
-        Ok(Track {
-            album,
-            artist,
-            ..track
-        })
-    }
-
-    fn join_album(&self, album: Album, joins: LibraryQueryJoins) -> Result<Album, Error> {
-        let tracks = if joins.has_tracks() {
-            self.query_tracks(MultiQuery::new())?
-                .into_iter()
-                .filter(|track| track.album_id == album.id)
-                .collect()
-        } else { album.tracks };
-
-        let artist = if joins.has_artists() {
-            if let Some(artist_id) = album.artist_id {
-                self.query_artist(SingleQuery::id(artist_id))?
-            } else { album.artist }
-        } else { album.artist };
-
-        Ok(Album {
-            artist,
-            tracks,
-            ..album
-        })
-    }
 }
 
 impl Library for MemoryLibrary {
@@ -83,7 +45,7 @@ impl Library for MemoryLibrary {
             SingleQueryIdentifier::Uri(uri) => tracks.find(|track| track.uri == uri)
         };
         let track = if let Some(track) = track {
-            Some(self.join_track(track, query.joins)?)
+            Some(join_track(self, track, query.joins)?)
         } else {
             None
         };
@@ -95,7 +57,7 @@ impl Library for MemoryLibrary {
             .unwrap()
             .clone()
             .into_iter()
-            .map(|track| self.join_track(track, query.joins))
+            .map(|track| join_track(self, track, query.joins))
             .collect()
     }
 
@@ -111,7 +73,7 @@ impl Library for MemoryLibrary {
             SingleQueryIdentifier::Uri(uri) => albums.find(|album| album.uri == uri)
         };
         let album = if let Some(album) = album {
-            Some(self.join_album(album, query.joins)?)
+            Some(join_album(self, album, query.joins)?)
         } else {
             None
         };
@@ -119,12 +81,10 @@ impl Library for MemoryLibrary {
     }
 
     fn query_albums(&self, query: MultiQuery) -> Result<Vec<Album>, Error> {
-        self.albums.read()
+        let albums = self.albums.read()
             .unwrap()
-            .clone()
-            .into_iter()
-            .map(|album| self.join_album(album, query.joins))
-            .collect()
+            .clone();
+        join_albums(self, &albums, query.joins)
     }
 
     fn query_artist(&self, query: SingleQuery) -> Result<Option<Artist>, Error> {
