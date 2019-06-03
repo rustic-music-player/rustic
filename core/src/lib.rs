@@ -1,6 +1,7 @@
+use log::info;
 use failure::format_err;
 use std::collections::HashMap;
-use std::sync::{Arc, Mutex};
+use std::sync::{Arc, Mutex, Condvar};
 
 use crossbeam_channel as channel;
 use url::Url;
@@ -21,6 +22,7 @@ pub struct Rustic {
     pub providers: provider::SharedProviders,
     pub cache: cache::SharedCache,
     default_player: Arc<Mutex<Option<String>>>,
+    keep_running: Arc<(Mutex<bool>, Condvar)>
 }
 
 impl Rustic {
@@ -35,6 +37,7 @@ impl Rustic {
             providers,
             cache: Arc::new(cache::Cache::new()),
             default_player: Arc::new(Mutex::new(None)),
+            keep_running: Arc::new((Mutex::new(true), Condvar::new()))
         }))
     }
 
@@ -91,5 +94,18 @@ impl Rustic {
             .find(|provider| provider.read().unwrap().provider() == track.provider)
             .ok_or_else(|| format_err!("provider for track {:?} not found", track))
             .and_then(|provider| provider.read().unwrap().stream_url(track))
+    }
+
+    pub fn exit(&self) {
+        let interrupt = Arc::clone(&self.keep_running);
+        info!("Shutting down");
+        let &(ref lock, ref cvar) = &*interrupt;
+        let mut running = lock.lock().unwrap();
+        *running = false;
+        cvar.notify_all();
+    }
+
+    pub fn running(&self) -> Arc<(Mutex<bool>, Condvar)> {
+        Arc::clone(&self.keep_running)
     }
 }

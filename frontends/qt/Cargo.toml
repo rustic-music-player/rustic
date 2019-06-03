@@ -8,7 +8,7 @@ repository = "https://github.com/rustic-music-player/qt-frontend"
 homepage = "https://github.com/rustic-music-player/qt-frontend"
 
 [dependencies]
-qmetaobject = "0.0.5"
+qmetaobject = { git = "https://github.com/woboq/qmetaobject-rs" }
 
 [dependencies.rustic-core]
 path = "../../core"

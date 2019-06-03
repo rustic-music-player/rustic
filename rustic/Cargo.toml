@@ -32,6 +32,9 @@ path = "../frontends/http"
 [dependencies.rustic-mpd-frontend]
 path = "../frontends/mpd"
 
+[dependencies.rustic-qt-frontend]
+path = "../frontends/qt"
+
 [dependencies.rustic-gstreamer-backend]
 path = "../backends/gstreamer"
 

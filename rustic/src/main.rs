@@ -14,6 +14,7 @@ extern crate rustic_core as rustic;
 // Frontends
 extern crate rustic_http_frontend as http_frontend;
 extern crate rustic_mpd_frontend as mpd_frontend;
+extern crate rustic_qt_frontend as qt_frontend;
 
 // Stores
 extern crate rustic_memory_store as memory_store;
@@ -33,7 +34,7 @@ mod config;
 use failure::Error;
 use memory_store::MemoryLibrary;
 use sqlite_store::SqliteLibrary;
-use std::sync::{Arc, Condvar, Mutex, RwLock};
+use std::sync::{Arc, RwLock};
 
 use config::*;
 
@@ -62,21 +63,17 @@ fn main() -> Result<(), Error> {
         }
     }
 
-    let keep_running = Arc::new((Mutex::new(true), Condvar::new()));
 
-    let interrupt = Arc::clone(&keep_running);
-
-    ctrlc::set_handler(move || {
-        info!("Shutting down");
-        let &(ref lock, ref cvar) = &*interrupt;
-        let mut running = lock.lock().unwrap();
-        *running = false;
-        cvar.notify_all();
-    })?;
+    {
+        let app = Arc::clone(&app);
+        ctrlc::set_handler(move || {
+            app.exit();
+        })?;
+    }
 
     let mut threads = vec![
-        rustic::sync::start(Arc::clone(&app), Arc::clone(&keep_running))?,
-        rustic::cache::start(Arc::clone(&app), Arc::clone(&keep_running))?,
+        rustic::sync::start(Arc::clone(&app))?,
+        rustic::cache::start(Arc::clone(&app))?,
     ];
 
     if config.mpd.is_some() {
@@ -88,6 +85,8 @@ fn main() -> Result<(), Error> {
         let http_thread = http_frontend::start(config.http.clone(), Arc::clone(&app));
         threads.push(http_thread);
     }
+
+    qt_frontend::start(app);
 
     for handle in threads {
         let _ = handle.join();

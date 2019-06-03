@@ -1,22 +1,28 @@
-import QtQuick 2.6;
-import QtQuick.Window 2.0
-import QtQuick.Controls 2.3
+import QtQml 2.12
+import QtQuick 2.12
+import QtQuick.Window 2.12
+import QtQuick.Controls 2.12
+import Rustic 1.0
 
-Window {
+ApplicationWindow {
     id: window
     property alias listView: listView
     visible: true;
     title: "Rustic Music Player"
 
-    ToolBar {
-        id: toolBar
-        anchors.right: parent.right
-        anchors.rightMargin: 0
-        anchors.left: parent.left
-        anchors.leftMargin: 0
-        anchors.top: parent.top
-        anchors.topMargin: 0
-    }
+	menuBar: MenuBar {
+		Menu {
+			title: qsTr("&File")
+			Action {
+				text: qsTr("&Quit")
+				onTriggered: frontend.exit()
+			}
+		}
+	}
+
+	Frontend {
+		id: frontend
+	}
 
     ListView {
         id: listView
@@ -25,7 +31,7 @@ Window {
         spacing: 0
         anchors.bottom: parent.bottom
         anchors.bottomMargin: 0
-        anchors.top: toolBar.bottom
+        anchors.top: parent.top
         anchors.topMargin: 0
         model: ListModel {
             ListElement {
