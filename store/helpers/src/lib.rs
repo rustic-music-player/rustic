@@ -1,6 +1,6 @@
 use failure::Error;
 
-use crate::{Album, Library, LibraryQueryJoins, MultiQuery, SingleQuery, Track};
+use rustic_core::{Album, Library, LibraryQueryJoins, MultiQuery, SingleQuery, Track};
 
 pub fn join_track(store: &Library, track: Track, joins: LibraryQueryJoins) -> Result<Track, Error> {
     let artist = if joins.has_artists() {

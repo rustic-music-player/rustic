@@ -6,7 +6,7 @@ use failure::Error;
 use serde::de::DeserializeOwned;
 
 use rustic_core::{Album, Artist, MultiQuery, Playlist, SearchResults, SingleQuery, SingleQueryIdentifier, Track};
-use rustic_core::library::queries::helpers::{join_track, join_album, join_albums};
+use rustic_store_helpers::{join_album, join_track, join_albums};
 
 use crate::util::*;
 

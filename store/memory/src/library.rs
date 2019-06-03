@@ -6,7 +6,7 @@ use std::sync::{
 use failure::Error;
 
 use rustic_core::{Album, Artist, Library, LibraryQueryJoins, MultiQuery, Playlist, SearchResults, SingleQuery, SingleQueryIdentifier, Track};
-use rustic_core::library::queries::helpers::{join_album, join_track, join_albums};
+use rustic_store_helpers::{join_album, join_track, join_albums};
 
 #[derive(Debug, Default)]
 pub struct MemoryLibrary {
