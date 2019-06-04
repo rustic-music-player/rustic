@@ -46,3 +46,19 @@ pub fn search_entities<E, P>(tree: &Arc<sled::Tree>, predicate: P) -> Result<Vec
         })
         .collect()
 }
+
+pub fn find_entity<E, M>(tree: &Arc<sled::Tree>, matches: M) -> Result<Option<E>, Error>
+    where E: DeserializeOwned,
+          M: Fn(&E) -> bool {
+    tree
+        .iter()
+        .map(|item| item.map_err(Error::from).and_then(|(_, bytes)| {
+            let entity: E = deserialize(&bytes)?;
+            Ok(entity)
+        }))
+        .find(|item| match item {
+            Ok(t) => matches(t),
+            _ => false
+        })
+        .transpose()
+}

@@ -1,15 +1,33 @@
 use std::path::Path;
 use std::sync::Arc;
 
-use bincode::{deserialize, serialize};
-use failure::Error;
-use serde::de::DeserializeOwned;
+use bincode::serialize;
+use failure::{Error, err_msg};
 
 use rustic_core::{Album, Artist, MultiQuery, Playlist, SearchResults, SingleQuery, SingleQueryIdentifier, Track};
 use rustic_store_helpers::{join_album, join_track, join_albums};
 
 use crate::util::*;
 
+/// **Experimental**
+///
+/// # TODO: optimize joins with associations tree and maybe the following instead of plain entities
+/// ```rust
+/// enum SledAssociation {
+///     Track(usize),
+///     Album(usize),
+///     Artist(usize),
+///     Playlist(usize)
+/// }
+///
+/// struct SledEntity<E> {
+///     entity: E,
+///     associations: Vec<SledAssociation>
+/// }
+/// ```
+///
+/// Also we could update associations on changes
+/// would make writes slower but reads way faster
 pub struct SledLibrary {
     db: sled::Db,
     artists_tree: Arc<sled::Tree>,
@@ -41,48 +59,36 @@ impl SledLibrary {
         Ok(id as usize)
     }
 
-    fn id(&self, id: Option<usize>) -> Result<Vec<u8>, Error> {
-        let id = id.unwrap_or_else(|| self.next_id().unwrap());
-        serialize_id(id)
+    fn id(&self, id: Option<usize>) -> Result<usize, Error> {
+        if let Some(id) = id {
+            Ok(id)
+        } else {
+            self.next_id()
+        }
     }
 
-    fn serialize_track(&self, track: &Track) -> Result<(Vec<u8>, Vec<u8>), Error> {
-        let id = self.id(track.id)?;
+    fn serialize_track(&self, track: &mut Track) -> Result<(Vec<u8>, Vec<u8>), Error> {
+        let id = track.id.ok_or(err_msg("missing id")).and_then(serialize_id)?;
         let bytes = serialize(&track)?;
         Ok((id, bytes))
     }
 
     fn serialize_artist(&self, artist: &Artist) -> Result<(Vec<u8>, Vec<u8>), Error> {
-        let id = self.id(artist.id)?;
+        let id = artist.id.ok_or(err_msg("missing id")).and_then(serialize_id)?;
         let bytes = serialize(&artist)?;
         Ok((id, bytes))
     }
 
     fn serialize_album(&self, album: &Album) -> Result<(Vec<u8>, Vec<u8>), Error> {
-        let id = self.id(album.id)?;
+        let id = album.id.ok_or(err_msg("missing id")).and_then(serialize_id)?;
         let bytes = serialize(&album)?;
         Ok((id, bytes))
     }
 
     fn serialize_playlist(&self, playlist: &Playlist) -> Result<(Vec<u8>, Vec<u8>), Error> {
-        let id = self.id(playlist.id)?;
+        let id = playlist.id.ok_or(err_msg("missing id")).and_then(serialize_id)?;
         let bytes = serialize(&playlist)?;
         Ok((id, bytes))
-    }
-
-    fn sync_entity<E, M>(&self, tree: &Arc<sled::Tree>, matches: M) -> Option<Result<E, Error>>
-        where E: DeserializeOwned,
-              M: Fn(&E) -> bool {
-        tree
-            .iter()
-            .map(|item| item.map_err(Error::from).and_then(|(_, bytes)| {
-                let entity: E = deserialize(&bytes)?;
-                Ok(entity)
-            }))
-            .find(|item| match item {
-                Ok(t) => matches(t),
-                _ => false
-            })
     }
 }
 
@@ -141,24 +147,28 @@ impl rustic_core::Library for SledLibrary {
     }
 
     fn add_track(&self, track: &mut Track) -> Result<(), Error> {
-        let (id, bytes) = self.serialize_track(&track)?;
+        track.id = Some(self.id(track.id)?);
+        let (id, bytes) = self.serialize_track(track)?;
         self.tracks_tree.set(id, bytes)?;
         Ok(())
     }
 
     fn add_album(&self, album: &mut Album) -> Result<(), Error> {
+        album.id = Some(self.id(album.id)?);
         let (id, bytes) = self.serialize_album(&album)?;
         self.albums_tree.set(id, bytes)?;
         Ok(())
     }
 
     fn add_artist(&self, artist: &mut Artist) -> Result<(), Error> {
+        artist.id = Some(self.id(artist.id)?);
         let (id, bytes) = self.serialize_artist(&artist)?;
         self.artists_tree.set(id, bytes)?;
         Ok(())
     }
 
     fn add_playlist(&self, playlist: &mut Playlist) -> Result<(), Error> {
+        playlist.id = Some(self.id(playlist.id)?);
         let (id, bytes) = self.serialize_playlist(&playlist)?;
         self.playlists_tree.set(id, bytes)?;
         Ok(())
@@ -166,7 +176,6 @@ impl rustic_core::Library for SledLibrary {
 
     fn add_tracks(&self, tracks: &mut Vec<Track>) -> Result<(), Error> {
         for mut track in tracks {
-            track.id = Some(self.next_id()?);
             self.add_track(&mut track)?
         }
         Ok(())
@@ -174,7 +183,6 @@ impl rustic_core::Library for SledLibrary {
 
     fn add_albums(&self, albums: &mut Vec<Album>) -> Result<(), Error> {
         for mut album in albums {
-            album.id = Some(self.next_id()?);
             self.add_album(&mut album)?
         }
         Ok(())
@@ -182,7 +190,6 @@ impl rustic_core::Library for SledLibrary {
 
     fn add_artists(&self, artists: &mut Vec<Artist>) -> Result<(), Error> {
         for mut artist in artists {
-            artist.id = Some(self.next_id()?);
             self.add_artist(&mut artist)?
         }
         Ok(())
@@ -190,16 +197,17 @@ impl rustic_core::Library for SledLibrary {
 
     fn add_playlists(&self, playlists: &mut Vec<Playlist>) -> Result<(), Error> {
         for mut playlist in playlists {
-            playlist.id = Some(self.next_id()?);
             self.add_playlist(&mut playlist)?
         }
         Ok(())
     }
 
     fn sync_track(&self, track: &mut Track) -> Result<(), Error> {
-        let find_result = self.sync_entity::<Track, _>(&self.tracks_tree, |t| t.uri == track.uri);
+        let find_result = find_entity::<Track, _>(&self.tracks_tree, |t| t.uri == track.uri)?;
         if let Some(found_track) = find_result {
-            let id = self.id(found_track?.id)?;
+            let id = self.id(found_track.id)?;
+            track.id = Some(id);
+            let id = serialize_id(id)?;
             let track = serialize(track)?;
             self.tracks_tree.set(id, track)?;
         } else {
@@ -209,9 +217,11 @@ impl rustic_core::Library for SledLibrary {
     }
 
     fn sync_album(&self, album: &mut Album) -> Result<(), Error> {
-        let find_result = self.sync_entity::<Album, _>(&self.albums_tree, |a| a.uri == album.uri);
+        let find_result = find_entity::<Album, _>(&self.albums_tree, |a| a.uri == album.uri)?;
         if let Some(found_album) = find_result {
-            let id = self.id(found_album?.id)?;
+            let id = self.id(found_album.id)?;
+            album.id = Some(id);
+            let id = serialize_id(id)?;
             let album = serialize(album)?;
             self.albums_tree.set(id, album)?;
         } else {
@@ -221,9 +231,11 @@ impl rustic_core::Library for SledLibrary {
     }
 
     fn sync_artist(&self, artist: &mut Artist) -> Result<(), Error> {
-        let find_result = self.sync_entity::<Artist, _>(&self.artists_tree, |a| a.uri == artist.uri);
+        let find_result = find_entity::<Artist, _>(&self.artists_tree, |a| a.uri == artist.uri)?;
         if let Some(found_artist) = find_result {
-            let id = self.id(found_artist?.id)?;
+            let id = self.id(found_artist.id)?;
+            artist.id = Some(id);
+            let id = serialize_id(id)?;
             let artist = serialize(artist)?;
             self.artists_tree.set(id, artist)?;
         } else {
@@ -233,9 +245,11 @@ impl rustic_core::Library for SledLibrary {
     }
 
     fn sync_playlist(&self, playlist: &mut Playlist) -> Result<(), Error> {
-        let find_result = self.sync_entity::<Playlist, _>(&self.playlists_tree, |p| p.uri == playlist.uri);
+        let find_result = find_entity::<Playlist, _>(&self.playlists_tree, |p| p.uri == playlist.uri)?;
         if let Some(found_playlist) = find_result {
-            let id = self.id(found_playlist?.id)?;
+            let id = self.id(found_playlist.id)?;
+            playlist.id = Some(id);
+            let id = serialize_id(id)?;
             let playlist = serialize(playlist)?;
             self.playlists_tree.set(id, playlist)?;
         } else {
