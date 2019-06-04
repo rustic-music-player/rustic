@@ -9,6 +9,7 @@ members = [
     "provider/pocketcasts",
     "provider/soundcloud",
     "provider/spotify",
+    "store/helpers",
     "store/memory",
     "store/sled",
     "store/sqlite"
