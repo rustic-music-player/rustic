@@ -1,6 +1,9 @@
-use failure::Error;
-use crate::library::{Album, Artist, Playlist, Track};
 use std::sync::Arc;
+
+use failure::Error;
+
+use crate::{MultiQuery, SingleQuery};
+use crate::library::{Album, Artist, Playlist, Track};
 
 pub type SharedLibrary = Arc<Box<dyn Library>>;
 
@@ -13,40 +16,41 @@ pub struct SearchResults {
 
 pub trait Library: Sync + Send {
     /**
-     * Return the track for the given id or None
+     * Fetch a single track
      */
-    fn get_track(&self, id: usize) -> Result<Option<Track>, Error>;
+    fn query_track(&self, query: SingleQuery) -> Result<Option<Track>, Error>;
+
     /**
-     * Return a list of all tracks
+     * Fetch multiple tracks
      */
-    fn get_tracks(&self) -> Result<Vec<Track>, Error>;
+    fn query_tracks(&self, query: MultiQuery) -> Result<Vec<Track>, Error>;
 
     /**
      * Return the album for the given id or None
      */
-    fn get_album(&self, id: usize) -> Result<Option<Album>, Error>;
+    fn query_album(&self, query: SingleQuery) -> Result<Option<Album>, Error>;
     /**
      * Return a list of all albums
      */
-    fn get_albums(&self) -> Result<Vec<Album>, Error>;
+    fn query_albums(&self, query: MultiQuery) -> Result<Vec<Album>, Error>;
 
     /**
      * Return the artist for the given id or None
      */
-    fn get_artist(&self, id: usize) -> Result<Option<Artist>, Error>;
+    fn query_artist(&self, query: SingleQuery) -> Result<Option<Artist>, Error>;
     /**
      * Return a list of all artists
      */
-    fn get_artists(&self) -> Result<Vec<Artist>, Error>;
+    fn query_artists(&self, query: MultiQuery) -> Result<Vec<Artist>, Error>;
 
     /**
      * Return the playlist for the given id or None
      */
-    fn get_playlist(&self, id: usize) -> Result<Option<Playlist>, Error>;
+    fn query_playlist(&self, query: SingleQuery) -> Result<Option<Playlist>, Error>;
     /**
      * Return a list of all playlists
      */
-    fn get_playlists(&self) -> Result<Vec<Playlist>, Error>;
+    fn query_playlists(&self, query: MultiQuery) -> Result<Vec<Playlist>, Error>;
 
     /**
      * Store the given track, setting the id

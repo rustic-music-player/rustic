@@ -1,11 +1,11 @@
-use failure::format_err;
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
 
 use crossbeam_channel as channel;
+use failure::format_err;
 use url::Url;
 
-pub use crate::library::{Album, Artist, Library, Playlist, SearchResults, SharedLibrary, Track};
+pub use crate::library::{Album, Artist, Library, MultiQuery, Playlist, QueryJoins, SearchResults, SharedLibrary, SingleQuery, SingleQueryIdentifier, Track, LibraryQueryJoins};
 pub use crate::player::{PlayerBackend, PlayerEvent, PlayerState};
 pub use crate::provider::{Explorer, Provider};
 
@@ -63,11 +63,11 @@ impl Rustic {
     }
 
     pub fn resolve_track(&self, uri: &str) -> Result<Option<Track>, failure::Error> {
+        let mut query = SingleQuery::uri(uri.to_string());
+        query.join_all();
         let track = self
             .library
-            .get_tracks()?
-            .into_iter()
-            .find(|track| track.uri == uri);
+            .query_track(query)?;
 
         match track {
             Some(track) => Ok(Some(track)),

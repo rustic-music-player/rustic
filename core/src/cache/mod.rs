@@ -11,7 +11,7 @@ use std::path::Path;
 use std::sync::{Arc, Condvar, Mutex, RwLock};
 use std::thread;
 use std::time::Duration;
-use crate::Rustic;
+use crate::{Rustic, MultiQuery};
 
 const THUMBNAIL_SIZE: u32 = 512;
 const SERVICE_INTERVAL: u64 = 30;
@@ -44,7 +44,7 @@ pub fn start(
             while *keep_running {
                 info!("Caching Coverart...");
                 let result: Result<Vec<CachedEntry>, Error> =
-                    app.library.get_tracks().and_then(|tracks| {
+                    app.library.query_tracks(MultiQuery::new()).and_then(|tracks| {
                         tracks
                             .iter()
                             .filter(|track| track.image_url.is_some())

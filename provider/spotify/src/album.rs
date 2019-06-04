@@ -21,6 +21,7 @@ impl From<SpotifyFullAlbum> for Album {
             title: album.name,
             artist_id: None,
             artist,
+            tracks: vec![],
             provider: provider::Provider::Spotify,
             image_url: convert_images(&album.images),
             uri: format!("spotify://album/{}", album.id),
@@ -40,6 +41,7 @@ impl From<SpotifySimplifiedAlbum> for Album {
             artist,
             provider: provider::Provider::Spotify,
             image_url: convert_images(&album.images),
+            tracks: vec![],
             uri: format!("spotify://album/{}", album.id),
             meta: HashMap::new(),
         }

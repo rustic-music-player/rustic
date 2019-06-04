@@ -13,3 +13,6 @@ failure = "0.1"
 
 [dependencies.rustic-core]
 path = "../../core"
+
+[dependencies.rustic-store-helpers]
+path = "../helpers"
