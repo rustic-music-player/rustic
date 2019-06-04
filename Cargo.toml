@@ -23,6 +23,26 @@ readme = "README.md"
 repository = "https://github.com/rustic-music-player/rustic"
 homepage = "https://github.com/rustic-music-player/rustic"
 
+[features]
+default = [
+	"sled-store",
+	"web-api",
+	"gstreamer",
+	"local-files",
+	"pocketcasts",
+	"soundcloud"
+]
+
+mpd = ["rustic-mpd-frontend"]
+web-api = ["rustic-http-frontend"]
+gstreamer = ["rustic-gstreamer-backend"]
+local-files = ["rustic-local-provider"]
+pocketcasts = ["rustic-pocketcasts-provider"]
+soundcloud = ["rustic-soundcloud-provider"]
+spotify = ["rustic-spotify-provider"]
+sled-store = ["rustic-sled-store"]
+sqlite-store = ["rustic-sqlite-store"]
+
 [dependencies]
 env_logger = "0.5"
 log = "0.4"
@@ -41,27 +61,36 @@ path = "store/memory"
 
 [dependencies.rustic-sled-store]
 path = "store/sled"
+optional = true
 
 [dependencies.rustic-sqlite-store]
 path = "store/sqlite"
+optional = true
 
 [dependencies.rustic-http-frontend]
 path = "frontends/http"
+optional = true
 
 [dependencies.rustic-mpd-frontend]
 path = "frontends/mpd"
+optional = true
 
 [dependencies.rustic-gstreamer-backend]
 path = "backends/gstreamer"
+optional = true
 
 [dependencies.rustic-local-provider]
 path = "provider/local"
+optional = true
 
 [dependencies.rustic-spotify-provider]
 path = "provider/spotify"
+optional = true
 
 [dependencies.rustic-pocketcasts-provider]
 path = "provider/pocketcasts"
+optional = true
 
 [dependencies.rustic-soundcloud-provider]
 path = "provider/soundcloud"
+optional = true

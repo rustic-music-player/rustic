@@ -3,11 +3,17 @@ use std::io::prelude::*;
 
 #[derive(Deserialize, Clone, Default)]
 pub struct Config {
+    #[cfg(feature = "mpd")]
     pub mpd: Option<mpd_frontend::MpdConfig>,
+    #[cfg(feature = "web-api")]
     pub http: Option<http_frontend::HttpConfig>,
+    #[cfg(feature = "pocketcasts")]
     pub pocketcasts: Option<pocketcasts_provider::PocketcastsProvider>,
+    #[cfg(feature = "soundcloud")]
     pub soundcloud: Option<soundcloud_provider::SoundcloudProvider>,
+    #[cfg(feature = "spotify")]
     pub spotify: Option<spotify_provider::SpotifyProvider>,
+    #[cfg(feature = "local-files")]
     pub local: Option<local_provider::LocalProvider>,
     pub library: Option<LibraryConfig>,
     #[serde(rename = "player", default = "default_backend")]
@@ -18,7 +24,9 @@ pub struct Config {
 #[serde(tag = "store", rename_all = "lowercase")]
 pub enum LibraryConfig {
     Memory,
+    #[cfg(feature = "sqlite-store")]
     SQLite { path: String },
+    #[cfg(feature = "sled-store")]
     Sled { path: String },
 }
 
