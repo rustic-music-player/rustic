@@ -1,5 +1,8 @@
 use std::fs::File;
 use std::io::prelude::*;
+use std::path::PathBuf;
+
+use failure::Error;
 
 #[derive(Deserialize, Clone, Default)]
 pub struct Config {
@@ -56,9 +59,10 @@ fn default_backend() -> Vec<PlayerBackendConfig> {
     vec![config]
 }
 
-pub fn read_config() -> Config {
-    let mut config_file = File::open("config.toml").unwrap();
+pub fn read_config(path: PathBuf) -> Result<Config, Error> {
+    let mut config_file = File::open(path)?;
     let mut config = String::new();
-    config_file.read_to_string(&mut config).unwrap();
-    toml::from_str(config.as_str()).unwrap()
+    config_file.read_to_string(&mut config)?;
+    let config = toml::from_str(config.as_str())?;
+    Ok(config)
 }
