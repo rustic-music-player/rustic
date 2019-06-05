@@ -20,6 +20,7 @@ log = "0.4"
 failure = "0.1"
 rayon = "1.0"
 uuid = { version = "0.6", features = ["v4"] }
+stopwatch = "0.0.7"
 
 [dependencies.rustic-core]
 path = "../../core"

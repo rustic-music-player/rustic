@@ -29,6 +29,7 @@ impl From<SpotifyFullTrack> for Track {
                 title: track.album.name,
                 artist_id: None,
                 artist,
+                tracks: vec![],
                 provider: provider::Provider::Spotify,
                 image_url: convert_images(&track.album.images),
                 uri: format!("spotify://album/{}", track.album.id),

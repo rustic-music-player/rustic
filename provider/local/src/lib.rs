@@ -117,9 +117,10 @@ impl From<scanner::Track> for library::Track {
                 artist: None,
                 provider: Provider::LocalMedia,
                 image_url: None,
+                tracks: vec![],
                 uri: String::new(),
                 meta: hashmap!(
-                    META_LOCAL_FILE_URL => path.clone().into()
+                    META_LOCAL_FILE_URL.into() => path.clone().into()
                 ),
             }),
             artist_id: None,
@@ -129,7 +130,7 @@ impl From<scanner::Track> for library::Track {
                 uri: String::new(),
                 image_url: None,
                 meta: hashmap!(
-                    META_LOCAL_FILE_URL => path.clone().into()
+                    META_LOCAL_FILE_URL.into() => path.clone().into()
                 ),
             }),
             image_url: None,
@@ -137,7 +138,7 @@ impl From<scanner::Track> for library::Track {
             uri: format!("file://{}", track.path),
             duration: None,
             meta: hashmap!(
-                META_LOCAL_FILE_URL => path.into()
+                META_LOCAL_FILE_URL.into() => path.into()
             ),
         }
     }
@@ -153,9 +154,10 @@ impl From<scanner::Track> for Option<library::Album> {
             artist: None,
             provider: Provider::LocalMedia,
             image_url: None,
+            tracks: vec![],
             uri: String::new(),
             meta: hashmap!(
-                META_LOCAL_FILE_URL => path.into()
+                META_LOCAL_FILE_URL.into() => path.into()
             )
         })
     }
@@ -170,7 +172,7 @@ impl From<scanner::Track> for Option<library::Artist> {
             uri: String::new(),
             image_url: None,
             meta: hashmap!(
-                META_LOCAL_FILE_URL => path.into()
+                META_LOCAL_FILE_URL.into() => path.into()
             )
         })
     }

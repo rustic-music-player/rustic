@@ -1,6 +1,6 @@
 use commands::MpdCommand;
 use failure::Error;
-use rustic_core::Rustic;
+use rustic_core::{Rustic, MultiQuery};
 use std::sync::Arc;
 
 pub struct LoadPlaylistCommand {
@@ -17,7 +17,7 @@ impl MpdCommand<()> for LoadPlaylistCommand {
     fn handle(&self, app: &Arc<Rustic>) -> Result<(), Error> {
         let tracks = app
             .library
-            .get_playlists()?
+            .query_playlists(MultiQuery::new())?
             .iter()
             .find(|playlist| playlist.title == self.name)
             .cloned()

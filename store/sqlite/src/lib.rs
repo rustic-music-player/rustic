@@ -18,10 +18,11 @@ use diesel::insert_into;
 use diesel::prelude::*;
 use diesel::sqlite::SqliteConnection;
 
-use core::{Album, Artist, Playlist, SearchResults, Track};
+use core::{Album, Artist, Playlist, SearchResults, Track, SingleQuery, MultiQuery};
 use std::sync::{Arc, Mutex};
 
 use failure::Error;
+use rustic_core::SingleQueryIdentifier;
 
 #[derive(Clone)]
 pub struct SqliteLibrary {
@@ -43,14 +44,21 @@ impl SqliteLibrary {
 }
 
 impl core::Library for SqliteLibrary {
-    fn get_track(&self, track_id: usize) -> Result<Option<Track>, Error> {
+    fn query_track(&self, query: SingleQuery) -> Result<Option<Track>, Error> {
         use schema::tracks::dsl::*;
 
         let connection = self.connection.lock().unwrap();
 
-        tracks
-            .find(track_id as i32)
-            .first::<entities::TrackEntity>(&*connection)
+        let query = match query.identifier {
+            SingleQueryIdentifier::Id(track_id) => tracks
+                .find(track_id as i32)
+                .first::<entities::TrackEntity>(&*connection),
+            SingleQueryIdentifier::Uri(query_uri) => tracks
+                .filter(uri.eq(query_uri))
+                .first::<entities::TrackEntity>(&*connection)
+        };
+
+        query
             .optional()
             .map_err(Error::from)
             .and_then(|track| match track {
@@ -59,7 +67,7 @@ impl core::Library for SqliteLibrary {
             })
     }
 
-    fn get_tracks(&self) -> Result<Vec<Track>, Error> {
+    fn query_tracks(&self, query: MultiQuery) -> Result<Vec<Track>, Error> {
         use schema::tracks::dsl::*;
 
         let connection = self.connection.lock().unwrap();
@@ -72,14 +80,21 @@ impl core::Library for SqliteLibrary {
             .collect()
     }
 
-    fn get_album(&self, album_id: usize) -> Result<Option<Album>, Error> {
+    fn query_album(&self, query: SingleQuery) -> Result<Option<Album>, Error> {
         use schema::albums::dsl::*;
 
         let connection = self.connection.lock().unwrap();
 
-        albums
-            .find(album_id as i32)
-            .first::<entities::AlbumEntity>(&*connection)
+        let query = match query.identifier {
+            SingleQueryIdentifier::Id(album_id) => albums
+                .find(album_id as i32)
+                .first::<entities::AlbumEntity>(&*connection),
+            SingleQueryIdentifier::Uri(query_uri) => albums
+                .filter(uri.eq(query_uri))
+                .first::<entities::AlbumEntity>(&*connection)
+        };
+
+        query
             .optional()
             .map_err(Error::from)
             .and_then(|album| match album {
@@ -88,7 +103,7 @@ impl core::Library for SqliteLibrary {
             })
     }
 
-    fn get_albums(&self) -> Result<Vec<Album>, Error> {
+    fn query_albums(&self, query: MultiQuery) -> Result<Vec<Album>, Error> {
         use schema::albums::dsl::*;
 
         let connection = self.connection.lock().unwrap();
@@ -101,14 +116,21 @@ impl core::Library for SqliteLibrary {
             .collect()
     }
 
-    fn get_artist(&self, artist_id: usize) -> Result<Option<Artist>, Error> {
+    fn query_artist(&self, query: SingleQuery) -> Result<Option<Artist>, Error> {
         use schema::artists::dsl::*;
 
         let connection = self.connection.lock().unwrap();
 
-        artists
-            .find(artist_id as i32)
-            .first::<entities::ArtistEntity>(&*connection)
+        let query = match query.identifier {
+            SingleQueryIdentifier::Id(artist_id) => artists
+                .find(artist_id as i32)
+                .first::<entities::ArtistEntity>(&*connection),
+            SingleQueryIdentifier::Uri(query_uri) => artists
+                .filter(uri.eq(query_uri))
+                .first::<entities::ArtistEntity>(&*connection)
+        };
+
+        query
             .optional()
             .map_err(Error::from)
             .and_then(|artist| match artist {
@@ -117,7 +139,7 @@ impl core::Library for SqliteLibrary {
             })
     }
 
-    fn get_artists(&self) -> Result<Vec<Artist>, Error> {
+    fn query_artists(&self, query: MultiQuery) -> Result<Vec<Artist>, Error> {
         use schema::artists::dsl::*;
 
         let connection = self.connection.lock().unwrap();
@@ -130,11 +152,11 @@ impl core::Library for SqliteLibrary {
             .collect()
     }
 
-    fn get_playlist(&self, _playlist_id: usize) -> Result<Option<Playlist>, Error> {
+    fn query_playlist(&self, _query: SingleQuery) -> Result<Option<Playlist>, Error> {
         unimplemented!()
     }
 
-    fn get_playlists(&self) -> Result<Vec<Playlist>, Error> {
+    fn query_playlists(&self, _query: MultiQuery) -> Result<Vec<Playlist>, Error> {
         unimplemented!()
     }
 
