@@ -28,6 +28,7 @@ homepage = "https://github.com/rustic-music-player/rustic"
 default = [
 	"sled-store",
 	"web-api",
+	"dbus",
 	"gstreamer",
 	"local-files",
 	"pocketcasts",
@@ -36,6 +37,7 @@ default = [
 
 mpd = ["rustic-mpd-frontend"]
 web-api = ["rustic-http-frontend"]
+dbus = ["rustic-dbus-frontend"]
 gstreamer = ["rustic-gstreamer-backend"]
 local-files = ["rustic-local-provider"]
 pocketcasts = ["rustic-pocketcasts-provider"]
@@ -75,6 +77,10 @@ optional = true
 
 [dependencies.rustic-mpd-frontend]
 path = "frontends/mpd"
+optional = true
+
+[dependencies.rustic-dbus-frontend]
+path = "frontends/dbus"
 optional = true
 
 [dependencies.rustic-gstreamer-backend]

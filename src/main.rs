@@ -19,6 +19,8 @@ extern crate rustic_gstreamer_backend as gst_backend;
 extern crate rustic_http_frontend as http_frontend;
 #[cfg(feature = "mpd")]
 extern crate rustic_mpd_frontend as mpd_frontend;
+#[cfg(feature = "dbus")]
+extern crate rustic_dbus_frontend as dbus_frontend;
 // Provider
 #[cfg(feature = "local-files")]
 extern crate rustic_local_provider as local_provider;
@@ -120,6 +122,12 @@ fn main() -> Result<(), Error> {
                 let http_thread = http_frontend::start(config.http.clone(), Arc::clone(&app));
                 threads.push(http_thread);
             }
+        }
+
+    #[cfg(feature = "dbus")]
+        {
+            let dbus_thread = dbus_frontend::start(Arc::clone(&app));
+            threads.push(dbus_thread);
         }
 
     for handle in threads {
