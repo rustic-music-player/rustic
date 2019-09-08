@@ -1,9 +1,9 @@
-use serde_derive::Serialize;
+use serde_derive::{Serialize, Deserialize};
 use crate::library::Track;
 use crate::provider::Provider;
 use std::cmp::Ordering;
 
-#[derive(Debug, Clone, Serialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Playlist {
     pub id: Option<usize>,
     pub title: String,

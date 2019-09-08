@@ -1,6 +1,6 @@
 use commands::MpdCommand;
 use failure::Error;
-use rustic_core::{Artist, Rustic};
+use rustic_core::{Artist, Rustic, MultiQuery};
 use std::sync::Arc;
 
 #[derive(Debug, Serialize)]
@@ -29,7 +29,7 @@ impl MpdCommand<Vec<MpdArtist>> for ListArtistCommand {
     fn handle(&self, app: &Arc<Rustic>) -> Result<Vec<MpdArtist>, Error> {
         let mut artists: Vec<MpdArtist> = app
             .library
-            .get_artists()?
+            .query_artists(MultiQuery::new())?
             .into_iter()
             .map(MpdArtist::from)
             .collect();

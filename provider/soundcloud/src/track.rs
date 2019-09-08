@@ -23,7 +23,7 @@ impl From<SoundcloudTrack> for Track {
                 image_url: Some(track.user.avatar_url),
                 uri: format!("soundcloud://user/{}", track.user.id),
                 meta: hashmap!(
-                    META_SOUNDCLOUD_USER_ID => track.user.id.into()
+                    META_SOUNDCLOUD_USER_ID.into() => track.user.id.into()
                 )
             }),
             artist_id: None,
@@ -34,8 +34,8 @@ impl From<SoundcloudTrack> for Track {
             image_url: track.artwork_url,
             duration: Some(track.duration),
             meta: hashmap!{
-                META_SOUNDCLOUD_TRACK_ID => track.id.into(),
-                META_SOUNDCLOUD_STREAM_URL => stream_url.into()
+                META_SOUNDCLOUD_TRACK_ID.into() => track.id.into(),
+                META_SOUNDCLOUD_STREAM_URL.into() => stream_url.into()
             }
         }
     }

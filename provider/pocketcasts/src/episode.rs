@@ -22,7 +22,7 @@ impl From<PocketcastTrack> for Track {
             image_url: None,
             duration: Some(episode.duration),
             meta: hashmap!(
-                META_POCKETCASTS_STREAM_URL => episode.url.into()
+                META_POCKETCASTS_STREAM_URL.into() => episode.url.into()
             )
         }
     }
