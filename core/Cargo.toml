@@ -1,8 +1,12 @@
 [package]
 name = "rustic-core"
 version = "0.1.0"
-authors = ["Max Jööhnk <maxjoehnk@gmail.com>"]
+authors = ["Max Jöhnk <maxjoehnk@gmail.com>"]
 edition = "2018"
+license = "GPL-3.0"
+readme = "README.md"
+repository = "https://github.com/rustic-music-player/rustic"
+homepage = "https://github.com/rustic-music-player/rustic"
 
 [dependencies]
 log = "0.4"
