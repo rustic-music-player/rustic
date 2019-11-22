@@ -47,6 +47,8 @@ pub struct PlayerBackendConfig {
 pub enum PlayerBackend {
     GStreamer,
     Rodio,
+    #[cfg(feature = "google-cast")]
+    GoogleCast
 }
 
 fn default_backend() -> Vec<PlayerBackendConfig> {

@@ -1,20 +1,26 @@
+use std::any::Any;
+use std::net::IpAddr;
+use std::sync::{Arc, atomic, Mutex, Condvar};
+use std::thread;
+use std::time::Duration;
+
 use crossbeam_channel::{Receiver, Sender};
 use failure::Error;
-use std::any::Any;
-use std::time::Duration;
-use std::sync::{Arc, atomic, Mutex};
-use std::thread;
-use rust_cast::{CastDevice, channels::{
-    receiver::CastDeviceApp,
-    media::*
-}};
 use pinboard::NonEmptyPinboard;
+use rust_cast::{CastDevice, channels::{
+    media::*,
+    receiver::CastDeviceApp,
+}};
 
-use rustic_core::{Track, PlayerState, PlayerEvent};
+use rustic_core::{PlayerEvent, PlayerState, Track};
+
+use crate::discovery::DiscoverMessage;
+
+mod discovery;
 
 enum InternalCommand {
     Play(Track),
-    Volume(f32)
+    Volume(f32),
 }
 
 pub struct GoogleCastBackend {
@@ -25,17 +31,36 @@ pub struct GoogleCastBackend {
     current_index: atomic::AtomicUsize,
     current_track: NonEmptyPinboard<Option<Track>>,
     handle: thread::JoinHandle<Result<(), failure::Error>>,
-    internal_sender: crossbeam_channel::Sender<InternalCommand>
+    internal_sender: crossbeam_channel::Sender<InternalCommand>,
 }
 
 impl GoogleCastBackend {
-    pub fn new(core: Arc<rustic_core::Rustic>, ip: String) -> Result<Arc<Box<rustic_core::PlayerBackend>>, Error> {
+    pub fn start_discovery(core: Arc<rustic_core::Rustic>,
+                           running: Arc<(Mutex<bool>, Condvar)>) {
+        let (tx, rx) = crossbeam_channel::unbounded();
+        thread::spawn(|| {
+            discovery::discover(tx, Arc::clone(&running));
+        });
+        let core = Arc::clone(&core);
+        thread::spawn(move || {
+            for msg in rx {
+                match msg {
+                    DiscoverMessage::AddBackend(target) => {
+                        let player = GoogleCastBackend::new(Arc::clone(&core), target.addr).unwrap();
+                        core.add_player(target.name, player)
+                    }
+                }
+            }
+        });
+    }
+
+    pub fn new(core: Arc<rustic_core::Rustic>, ip: IpAddr) -> Result<Arc<Box<dyn rustic_core::PlayerBackend>>, Error> {
         let (internal_sender, internal_receiver) = crossbeam_channel::unbounded();
         let (tx, rx) = crossbeam_channel::unbounded();
         let handle = {
             let core = Arc::clone(&core);
-            thread::spawn(move|| {
-                let device = CastDevice::connect_without_host_verification(ip, 8009)?;
+            thread::spawn(move || {
+                let device = CastDevice::connect_without_host_verification(ip.to_string(), 8009)?;
                 let app = device.receiver.launch_app(&CastDeviceApp::DefaultMediaReceiver)?;
 
                 loop {
@@ -55,15 +80,15 @@ impl GoogleCastBackend {
                                     track_number: None,
                                     disc_number: None,
                                     images: vec![],
-                                    release_date: None
+                                    release_date: None,
                                 })),
-                                duration: None
+                                duration: None,
                             };
                             device.media.load(app.transport_id.as_str(), app.session_id.as_str(), &media)?;
-                        },
+                        }
                         Some(InternalCommand::Volume(volume)) => {
                             device.receiver.set_volume(volume)?;
-                        },
+                        }
                         _ => ()
                     }
                 }
@@ -78,7 +103,7 @@ impl GoogleCastBackend {
             current_index: atomic::AtomicUsize::new(0),
             current_track: NonEmptyPinboard::new(None),
             handle,
-            internal_sender
+            internal_sender,
         })))
     }
 }
@@ -155,7 +180,13 @@ impl rustic_core::PlayerBackend for GoogleCastBackend {
         self.rx.clone()
     }
 
-    fn as_any(&self) -> &Any {
+    fn as_any(&self) -> &dyn Any {
         self
+    }
+}
+
+impl std::fmt::Debug for GoogleCastBackend {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        write!(f, "GoogleCastBackend {{}}")
     }
 }

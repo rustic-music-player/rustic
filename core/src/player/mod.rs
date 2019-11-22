@@ -1,16 +1,19 @@
-pub mod event;
-pub mod state;
+use std::any::Any;
+use std::fmt::Debug;
+use std::time::Duration;
+
+use failure::Error;
 
 use crate::channel::Receiver;
-use failure::Error;
 use crate::library::Track;
-use std::any::Any;
-use std::time::Duration;
 
 pub use self::event::PlayerEvent;
 pub use self::state::PlayerState;
 
-pub trait PlayerBackend: Send + Sync {
+pub mod event;
+pub mod state;
+
+pub trait PlayerBackend: Send + Sync + Debug {
     /// Put a single track at the end of the current queue
     fn queue_single(&self, track: &Track);
 

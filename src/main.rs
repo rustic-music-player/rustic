@@ -14,6 +14,8 @@ extern crate rustic_core as rustic;
 // Backends
 #[cfg(feature = "gstreamer")]
 extern crate rustic_gstreamer_backend as gst_backend;
+#[cfg(feature = "google-cast")]
+extern crate rustic_google_cast_backend as google_cast_backend;
 // Frontends
 #[cfg(feature = "web-api")]
 extern crate rustic_http_frontend as http_frontend;
@@ -77,18 +79,6 @@ fn main() -> Result<(), Error> {
 
     let app = rustic::Rustic::new(store, providers)?;
 
-    for player in config.players.iter() {
-        let backend = match player.backend_type {
-            #[cfg(feature = "gstreamer")]
-            PlayerBackend::GStreamer => gst_backend::GstBackend::new(Arc::clone(&app))?,
-            _ => panic!("invalid backend config"),
-        };
-        app.add_player(player.name.clone(), backend);
-        if player.default {
-            app.set_default_player(player.name.clone());
-        }
-    }
-
     let keep_running = Arc::new((Mutex::new(true), Condvar::new()));
 
     let interrupt = Arc::clone(&keep_running);
@@ -100,6 +90,24 @@ fn main() -> Result<(), Error> {
         *running = false;
         cvar.notify_all();
     })?;
+
+    for player in config.players.iter() {
+        match player.backend_type {
+            #[cfg(feature = "gstreamer")]
+            PlayerBackend::GStreamer => {
+                let backend = gst_backend::GstBackend::new(Arc::clone(&app))?;
+                app.add_player(player.name.clone(), backend);
+                if player.default {
+                    app.set_default_player(player.name.clone());
+                }
+            },
+            #[cfg(feature = "google-cast")]
+            PlayerBackend::GoogleCast => {
+                let discovery = google_cast_backend::GoogleCastBackend::start_discovery(Arc::clone(&app), Arc::clone(&keep_running));
+            },
+            _ => panic!("invalid backend config"),
+        }
+    }
 
     let mut threads = vec![
         rustic::sync::start(Arc::clone(&app), Arc::clone(&keep_running))?,
