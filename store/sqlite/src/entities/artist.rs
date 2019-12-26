@@ -1,13 +1,27 @@
 use core::Artist;
 use failure::Error;
-use schema::artists;
+use schema::{artists, artists_meta};
 
-#[derive(Queryable)]
+#[derive(Identifiable, Queryable, Associations, PartialEq, Debug)]
+#[table_name = "artists"]
 pub struct ArtistEntity {
     pub id: i32,
     pub name: String,
     pub image_url: Option<String>,
     pub uri: String,
+}
+
+#[derive(Identifiable, Queryable, Associations, PartialEq, Debug)]
+#[belongs_to(ArtistEntity, foreign_key = "artist_id")]
+#[table_name = "artists_meta"]
+#[primary_key(artist_id, key)]
+pub struct ArtistMeta {
+    pub artist_id: i32,
+    pub key: String,
+    pub bool_variant: Option<i32>,
+    pub float_variant: Option<f32>,
+    pub string_variant: Option<String>,
+    pub int_variant: Option<i32>
 }
 
 #[derive(Insertable)]

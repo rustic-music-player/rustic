@@ -1,1 +1,3 @@
--- This file should undo anything in `up.sql`
+DROP INDEX playlists_id_uindex;
+DROP TABLE playlist_tracks;
+DROP TABLE playlists;
