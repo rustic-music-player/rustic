@@ -1,6 +1,7 @@
 [workspace]
 members = [
     "core",
+    "backends/google-cast",
     "backends/gstreamer",
     "frontends/http",
     "frontends/mpd",
@@ -36,6 +37,7 @@ default = [
 mpd = ["rustic-mpd-frontend"]
 web-api = ["rustic-http-frontend"]
 gstreamer = ["rustic-gstreamer-backend"]
+google-cast = ["rustic-google-cast-backend"]
 local-files = ["rustic-local-provider"]
 pocketcasts = ["rustic-pocketcasts-provider"]
 soundcloud = ["rustic-soundcloud-provider"]
@@ -78,6 +80,10 @@ optional = true
 
 [dependencies.rustic-gstreamer-backend]
 path = "backends/gstreamer"
+optional = true
+
+[dependencies.rustic-google-cast-backend]
+path = "backends/google-cast"
 optional = true
 
 [dependencies.rustic-local-provider]

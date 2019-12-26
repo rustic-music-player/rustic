@@ -4,6 +4,7 @@ use std::sync::{Arc, Mutex};
 use crossbeam_channel as channel;
 use failure::format_err;
 use url::Url;
+use log::debug;
 
 pub use crate::library::{Album, Artist, Library, MultiQuery, Playlist, QueryJoins, SearchResults, SharedLibrary, SingleQuery, SingleQueryIdentifier, Track, LibraryQueryJoins};
 pub use crate::player::{PlayerBackend, PlayerEvent, PlayerState};
@@ -39,6 +40,7 @@ impl Rustic {
     }
 
     pub fn add_player(&self, id: String, backend: Arc<Box<dyn PlayerBackend>>) {
+        debug!("Adding player {}: {:?}", id, backend);
         let mut player = self.player.lock().unwrap();
         player.insert(id, backend);
     }
