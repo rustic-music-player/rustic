@@ -1,0 +1,12 @@
+[package]
+name = "rustic-dbus-frontend"
+version = "0.1.0"
+authors = ["Max Jöhnk <maxjoehnk@gmail.com>"]
+edition = "2018"
+
+[dependencies]
+dbus = "0.6.4"
+failure = "0.1.5"
+
+[dependencies.rustic-core]
+path = "../../core"
