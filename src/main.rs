@@ -23,6 +23,8 @@ extern crate rustic_http_frontend as http_frontend;
 extern crate rustic_mpd_frontend as mpd_frontend;
 #[cfg(feature = "dbus")]
 extern crate rustic_dbus_frontend as dbus_frontend;
+#[cfg(feature = "qt")]
+extern crate rustic_qt_frontend as qt_frontend;
 // Provider
 #[cfg(feature = "local-files")]
 extern crate rustic_local_provider as local_provider;
@@ -112,8 +114,8 @@ fn main() -> Result<(), Error> {
     }
 
     let mut threads = vec![
-        rustic::sync::start(Arc::clone(&app), Arc::clone(&keep_running))?,
-        rustic::cache::start(Arc::clone(&app), Arc::clone(&keep_running))?,
+        rustic::sync::start(Arc::clone(&app))?,
+        rustic::cache::start(Arc::clone(&app))?,
     ];
 
     #[cfg(feature = "mpd")]
@@ -136,6 +138,11 @@ fn main() -> Result<(), Error> {
         {
             let dbus_thread = dbus_frontend::start(Arc::clone(&app));
             threads.push(dbus_thread);
+        }
+
+    #[cfg(feature = "qt")]
+        {
+            qt_frontend::start(Arc::clone(&app));
         }
 
     for handle in threads {

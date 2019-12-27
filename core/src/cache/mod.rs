@@ -8,7 +8,7 @@ use std::collections::HashMap;
 use std::fs::{create_dir_all, OpenOptions};
 use std::io::prelude::*;
 use std::path::Path;
-use std::sync::{Arc, Condvar, Mutex, RwLock};
+use std::sync::{Arc, RwLock};
 use std::thread;
 use std::time::Duration;
 use crate::{Rustic, MultiQuery};
@@ -31,7 +31,6 @@ pub type SharedCache = Arc<Cache>;
 
 pub fn start(
     app: Arc<Rustic>,
-    running: Arc<(Mutex<bool>, Condvar)>,
 ) -> Result<thread::JoinHandle<()>, Error> {
     create_dir_all(".cache/coverart")?;
 
@@ -39,7 +38,7 @@ pub fn start(
         .name("Coverart Cache".into())
         .spawn(move || {
             info!("Starting Coverart Cache");
-            let &(ref lock, ref cvar) = &*running;
+            let &(ref lock, ref cvar) = &*app.running();
             let mut keep_running = lock.lock().unwrap();
             while *keep_running {
                 info!("Caching Coverart...");

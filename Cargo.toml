@@ -7,6 +7,7 @@ members = [
     "frontends/dbus",
     "frontends/http",
     "frontends/mpd",
+    "frontends/qt",
     "provider/local",
     "provider/pocketcasts",
     "provider/soundcloud",
@@ -40,6 +41,7 @@ default = [
 mpd = ["rustic-mpd-frontend"]
 web-api = ["rustic-http-frontend"]
 dbus = ["rustic-dbus-frontend"]
+qt = ["rustic-qt-frontend"]
 gstreamer = ["rustic-gstreamer-backend"]
 rodio = ["rustic-rodio-backend"]
 google-cast = ["rustic-google-cast-backend"]
@@ -85,6 +87,10 @@ optional = true
 
 [dependencies.rustic-dbus-frontend]
 path = "frontends/dbus"
+optional = true
+
+[dependencies.rustic-qt-frontend]
+path = "frontends/qt"
 optional = true
 
 [dependencies.rustic-gstreamer-backend]

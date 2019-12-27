@@ -1,19 +1,18 @@
 use log::{error, info};
 use failure::Error;
-use std::sync::{Arc, Condvar, Mutex};
+use std::sync::Arc;
 use std::thread;
 use std::time::Duration;
 use crate::Rustic;
 
 pub fn start(
     app: Arc<Rustic>,
-    running: Arc<(Mutex<bool>, Condvar)>,
 ) -> Result<thread::JoinHandle<()>, Error> {
     thread::Builder::new()
         .name("Background Sync".into())
         .spawn(move || {
             info!("Starting Background Sync");
-            let &(ref lock, ref cvar) = &*running;
+            let &(ref lock, ref cvar) = &*app.running();
             let mut keep_running = lock.lock().unwrap();
             while *keep_running {
                 let providers = app.providers.clone();
