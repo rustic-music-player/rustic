@@ -3,6 +3,7 @@ members = [
     "core",
     "backends/google-cast",
     "backends/gstreamer",
+    "backends/rodio",
     "frontends/http",
     "frontends/mpd",
     "provider/local",
@@ -38,6 +39,7 @@ default = [
 mpd = ["rustic-mpd-frontend"]
 web-api = ["rustic-http-frontend"]
 gstreamer = ["rustic-gstreamer-backend"]
+rodio = ["rustic-rodio-backend"]
 google-cast = ["rustic-google-cast-backend"]
 local-files = ["rustic-local-provider"]
 pocketcasts = ["rustic-pocketcasts-provider"]
@@ -81,6 +83,10 @@ optional = true
 
 [dependencies.rustic-gstreamer-backend]
 path = "backends/gstreamer"
+optional = true
+
+[dependencies.rustic-rodio-backend]
+path = "backends/rodio"
 optional = true
 
 [dependencies.rustic-google-cast-backend]
