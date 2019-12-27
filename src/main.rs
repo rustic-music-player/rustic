@@ -83,17 +83,7 @@ fn main() -> Result<(), Error> {
 
     let app = rustic::Rustic::new(store, providers, Vec::new())?;
 
-    let keep_running = Arc::new((Mutex::new(true), Condvar::new()));
-
-    let interrupt = Arc::clone(&keep_running);
-
-    ctrlc::set_handler(move || {
-        info!("Shutting down");
-        let &(ref lock, ref cvar) = &*interrupt;
-        let mut running = lock.lock().unwrap();
-        *running = false;
-        cvar.notify_all();
-    })?;
+    setup_interrupt(&app)?;
 
     for player in config.players.iter() {
         match player.backend_type {
@@ -187,4 +177,12 @@ fn setup_providers(config: &Config) -> rustic::provider::SharedProviders {
     }
 
     providers
+}
+
+fn setup_interrupt(app: &Arc<rustic::Rustic>) -> Result<(), Error> {
+    let app = Arc::clone(app);
+    ctrlc::set_handler(move|| {
+        app.exit();
+    })?;
+    Ok(())
 }
