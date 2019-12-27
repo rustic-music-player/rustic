@@ -1,8 +1,6 @@
-use actix_web::{error, HttpRequest, Json, Path, Result, State};
+use actix_web::{error, get, post, web, HttpResponse, Responder, Result};
+use app::ApiState;
 use handler::queue as queue_handler;
-use rustic_core::Rustic;
-use std::sync::Arc;
-use viewmodels::TrackModel;
 
 #[derive(Deserialize)]
 pub struct QueueTrackQuery {
@@ -14,33 +12,43 @@ pub struct QueuePlaylistQuery {
     playlist_id: usize,
 }
 
-pub fn fetch(req: &HttpRequest<Arc<Rustic>>) -> Result<Json<Vec<TrackModel>>> {
-    let rustic = req.state();
+#[get("/queue")]
+pub fn fetch(data: web::Data<ApiState>) -> Result<impl Responder> {
+    let rustic = &data.app;
     let tracks = queue_handler::fetch(&rustic)?;
 
-    Ok(Json(tracks))
+    Ok(web::Json(tracks))
 }
 
-pub fn queue_track(req: (State<Arc<Rustic>>, Path<QueueTrackQuery>)) -> Result<Json<()>> {
-    let (rustic, params) = req;
+#[post("/queue/track/{track_id}")]
+pub fn queue_track(
+    data: web::Data<ApiState>,
+    params: web::Path<QueueTrackQuery>,
+) -> Result<impl Responder> {
+    let rustic = &data.app;
     let result = queue_handler::queue_track(params.track_id, &rustic)?;
     match result {
-        Some(_) => Ok(Json(())),
+        Some(_) => Ok(HttpResponse::NoContent().finish()),
         None => Err(error::ErrorNotFound("Not Found")),
     }
 }
 
-pub fn queue_playlist(req: (State<Arc<Rustic>>, Path<QueuePlaylistQuery>)) -> Result<Json<()>> {
-    let (rustic, params) = req;
+#[post("/queue/playlist/{playlist_id}")]
+pub fn queue_playlist(
+    data: web::Data<ApiState>,
+    params: web::Path<QueuePlaylistQuery>,
+) -> Result<impl Responder> {
+    let rustic = &data.app;
     let result = queue_handler::queue_playlist(params.playlist_id, &rustic)?;
     match result {
-        Some(_) => Ok(Json(())),
+        Some(_) => Ok(HttpResponse::NoContent().finish()),
         None => Err(error::ErrorNotFound("Not Found")),
     }
 }
 
-pub fn clear(req: &HttpRequest<Arc<Rustic>>) -> Result<Json<()>> {
-    let rustic = req.state();
+#[post("/queue/clear")]
+pub fn clear(data: web::Data<ApiState>) -> Result<impl Responder> {
+    let rustic = &data.app;
     queue_handler::clear(&rustic)?;
-    Ok(Json(()))
+    Ok(HttpResponse::NoContent().finish())
 }

@@ -1,5 +1,5 @@
 use failure::Error;
-use rustic_core::{Rustic, MultiQuery, SingleQuery, QueryJoins};
+use rustic_core::{MultiQuery, QueryJoins, Rustic, SingleQuery};
 use std::sync::Arc;
 use viewmodels::*;
 
@@ -9,7 +9,8 @@ pub fn fetch_album(album_id: usize, rustic: &Arc<Rustic>) -> Result<Option<Album
     let sw = stopwatch::Stopwatch::start_new();
     let mut query = SingleQuery::id(album_id);
     query.join_all();
-    let album = library.query_album(query)?
+    let album = library
+        .query_album(query)?
         .map(|album| AlbumModel::new(album, &rustic));
     debug!("Fetching album took {}ms", sw.elapsed_ms());
 
@@ -22,8 +23,7 @@ pub fn fetch_albums(rustic: &Arc<Rustic>) -> Result<Vec<AlbumModel>, Error> {
     let sw = stopwatch::Stopwatch::start_new();
     let mut query = MultiQuery::new();
     query.join_artists();
-    let albums = library
-        .query_albums(query)?;
+    let albums = library.query_albums(query)?;
     debug!("Fetching albums took {}ms", sw.elapsed_ms());
 
     let albums = albums
@@ -38,8 +38,7 @@ pub fn fetch_artists(rustic: &Arc<Rustic>) -> Result<Vec<ArtistModel>, Error> {
     let library = &rustic.library;
 
     let sw = stopwatch::Stopwatch::start_new();
-    let artists = library
-        .query_artists(MultiQuery::new())?;
+    let artists = library.query_artists(MultiQuery::new())?;
     debug!("Fetching artists took {}ms", sw.elapsed_ms());
 
     let artists = artists
@@ -54,8 +53,7 @@ pub fn fetch_playlists(rustic: &Arc<Rustic>) -> Result<Vec<PlaylistModel>, Error
     let sw = stopwatch::Stopwatch::start_new();
     let mut query = MultiQuery::new();
     query.join_tracks();
-    let playlists = library
-        .query_playlists(query)?;
+    let playlists = library.query_playlists(query)?;
     debug!("Fetching playlists took {}ms", sw.elapsed_ms());
     playlists
         .into_iter()
@@ -68,8 +66,7 @@ pub fn fetch_tracks(rustic: &Arc<Rustic>) -> Result<Vec<TrackModel>, Error> {
     let sw = stopwatch::Stopwatch::start_new();
     let mut query = MultiQuery::new();
     query.join_artists();
-    let tracks = library
-        .query_tracks(query)?;
+    let tracks = library.query_tracks(query)?;
     debug!("Fetching tracks took {}ms", sw.elapsed_ms());
     let tracks = tracks
         .into_iter()

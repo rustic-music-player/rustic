@@ -1,17 +1,32 @@
 use actix::prelude::*;
 use failure::Error;
+use rustic_core::Rustic;
+use socket::events::PlayerEvents;
 use socket::messages;
 use std::collections::HashMap;
+use std::sync::Arc;
 use uuid::Uuid;
 
-#[derive(Default)]
 pub struct SocketServer {
     pub sessions: HashMap<String, Recipient<messages::Message>>,
+    app: Arc<Rustic>,
 }
 
 impl SocketServer {
+    pub fn new(app: Arc<Rustic>) -> SocketServer {
+        trace!("Creating socket server");
+        SocketServer {
+            sessions: HashMap::default(),
+            app,
+        }
+    }
+
     fn broadcast(&self, msg: messages::Message) -> Result<(), Error> {
-        debug!("broadcast msg {:?}", &msg);
+        debug!(
+            "broadcast msg {:?} to {} sockets",
+            &msg,
+            self.sessions.len()
+        );
         for (_, addr) in self.sessions.iter() {
             let _ = addr.do_send(msg.clone());
         }
@@ -19,11 +34,13 @@ impl SocketServer {
     }
 }
 
-impl Handler<messages::Message> for SocketServer {
-    type Result = ();
+impl Actor for SocketServer {
+    type Context = Context<Self>;
 
-    fn handle(&mut self, msg: messages::Message, _: &mut Context<Self>) {
-        self.broadcast(msg).unwrap();
+    fn started(&mut self, ctx: &mut Self::Context) {
+        let events = PlayerEvents::new(Arc::clone(&self.app));
+
+        ctx.add_message_stream(events);
     }
 }
 
@@ -50,6 +67,16 @@ impl Handler<messages::Disconnect> for SocketServer {
     }
 }
 
-impl Actor for SocketServer {
-    type Context = Context<Self>;
+impl Handler<messages::Message> for SocketServer {
+    type Result = ();
+
+    fn handle(&mut self, msg: messages::Message, _: &mut Context<Self>) {
+        self.broadcast(msg).unwrap();
+    }
+}
+
+impl Handler<messages::Ping> for SocketServer {
+    type Result = ();
+
+    fn handle(&mut self, _: messages::Ping, _: &mut Context<Self>) {}
 }

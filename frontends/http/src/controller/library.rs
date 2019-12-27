@@ -1,47 +1,62 @@
-use actix_web::{error, HttpRequest, Json, Path, Result, State};
+use actix_web::{error, get, web, Responder, Result};
+use app::ApiState;
 use handler::library as library_handler;
-use rustic_core::Rustic;
-use std::sync::Arc;
-use viewmodels::*;
 
 #[derive(Deserialize)]
 pub struct GetAlbumQuery {
     album_id: usize,
 }
 
-pub fn get_album(req: (State<Arc<Rustic>>, Path<GetAlbumQuery>)) -> Result<Json<AlbumModel>> {
-    let (rustic, params) = req;
-    let album = library_handler::fetch_album(params.album_id, &rustic)?;
+//pub fn library_controller() -> Scope {
+//    web::scope("/library")
+//        .service(get_album)
+//        .service(get_albums)
+//        .service(get_artists)
+//        .service(get_playlists)
+//        .service(get_tracks)
+//}
+
+#[get("/library/albums/{album_id}")]
+pub fn get_album(
+    data: web::Data<ApiState>,
+    params: web::Path<GetAlbumQuery>,
+) -> Result<impl Responder> {
+    let rustic = &data.app;
+    let album = library_handler::fetch_album(params.album_id, rustic)?;
     match album {
-        Some(album) => Ok(Json(album)),
+        Some(album) => Ok(web::Json(album)),
         None => Err(error::ErrorNotFound("Not Found")),
     }
 }
 
-pub fn get_albums(req: &HttpRequest<Arc<Rustic>>) -> Result<Json<Vec<AlbumModel>>> {
-    let rustic = req.state();
-    let albums = library_handler::fetch_albums(&rustic)?;
+#[get("/library/albums")]
+pub fn get_albums(data: web::Data<ApiState>) -> Result<impl Responder> {
+    let rustic = &data.app;
+    let albums = library_handler::fetch_albums(rustic)?;
 
-    Ok(Json(albums))
+    Ok(web::Json(albums))
 }
 
-pub fn get_artists(req: &HttpRequest<Arc<Rustic>>) -> Result<Json<Vec<ArtistModel>>> {
-    let rustic = req.state();
+#[get("/library/artists")]
+pub fn get_artists(data: web::Data<ApiState>) -> Result<impl Responder> {
+    let rustic = &data.app;
     let artists = library_handler::fetch_artists(&rustic)?;
 
-    Ok(Json(artists))
+    Ok(web::Json(artists))
 }
 
-pub fn get_playlists(req: &HttpRequest<Arc<Rustic>>) -> Result<Json<Vec<PlaylistModel>>> {
-    let rustic = req.state();
+#[get("/library/playlists")]
+pub fn get_playlists(data: web::Data<ApiState>) -> Result<impl Responder> {
+    let rustic = &data.app;
     let playlists = library_handler::fetch_playlists(&rustic)?;
 
-    Ok(Json(playlists))
+    Ok(web::Json(playlists))
 }
 
-pub fn get_tracks(req: &HttpRequest<Arc<Rustic>>) -> Result<Json<Vec<TrackModel>>> {
-    let rustic = req.state();
+#[get("/library/tracks")]
+pub fn get_tracks(data: web::Data<ApiState>) -> Result<impl Responder> {
+    let rustic = &data.app;
     let tracks = library_handler::fetch_tracks(&rustic)?;
 
-    Ok(Json(tracks))
+    Ok(web::Json(tracks))
 }

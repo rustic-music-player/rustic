@@ -1,65 +1,53 @@
-use actix_web::http::Method;
-use actix_web::{fs, middleware, server, App, Result};
+use std::sync::Arc;
+
+use actix_web::{middleware, web, App, HttpServer, Result, Scope};
+
+use actix::{Addr, System};
+use actix_files::Files;
 use controller;
 use rustic_core::Rustic;
-use socket::build_socket_app;
-use std::sync::Arc;
+use socket::{create_socket_server, socket_service, SocketServer};
 use HttpConfig;
 
-fn build_api_app(app: Arc<Rustic>) -> App<Arc<Rustic>> {
-    App::with_state(app)
-        .prefix("/api")
-        .middleware(middleware::Logger::default())
-        .resource("/library/albums", |r| {
-            r.method(Method::GET).f(controller::library::get_albums)
-        }).resource("/library/albums/{album_id}", |r| {
-            r.method(Method::GET).with(controller::library::get_album)
-        }).resource("/library/artists", |r| {
-            r.method(Method::GET).f(controller::library::get_artists)
-        }).resource("/library/playlists", |r| {
-            r.method(Method::GET).f(controller::library::get_playlists)
-        }).resource("/library/tracks", |r| {
-            r.method(Method::GET).f(controller::library::get_tracks)
-        }).resource("/queue", |r| {
-            r.method(Method::GET).f(controller::queue::fetch)
-        }).resource("/queue/clear", |r| {
-            r.method(Method::POST).f(controller::queue::clear)
-        }).resource("/queue/playlist/{playlist_id}", |r| {
-            r.method(Method::POST)
-                .with(controller::queue::queue_playlist)
-        }).resource("/queue/track/{track_id}", |r| {
-            r.method(Method::POST).with(controller::queue::queue_track)
-        }).resource("/queue/{track_id}", |r| {
-            r.method(Method::POST).with(controller::queue::queue_track)
-        }).resource("/player", |r| {
-            r.method(Method::GET).f(controller::player::player_state)
-        }).resource("/player/play", |r| {
-            r.method(Method::POST).f(controller::player::control_play)
-        }).resource("/player/pause", |r| {
-            r.method(Method::POST).f(controller::player::control_pause)
-        }).resource("/player/next", |r| {
-            r.method(Method::POST).f(controller::player::control_next)
-        }).resource("/player/prev", |r| {
-            r.method(Method::POST).f(controller::player::control_prev)
-        }).resource("/search", |r| {
-            r.method(Method::GET).with(controller::search::search)
-        })
+pub struct ApiState {
+    pub app: Arc<Rustic>,
 }
 
-fn build_static_app() -> Result<App<()>> {
-    Ok(App::new()
-        .middleware(middleware::Logger::default())
-        .handler("/cache", fs::StaticFiles::new(".cache")?))
+fn build_api(app: Arc<Rustic>, ws_server: Addr<SocketServer>) -> Scope {
+    web::scope("/api")
+        .data(ApiState { app })
+        .service(controller::library::get_albums)
+        .service(controller::library::get_album)
+        .service(controller::library::get_artists)
+        .service(controller::library::get_playlists)
+        .service(controller::library::get_tracks)
+        .service(controller::queue::fetch)
+        .service(controller::queue::clear)
+        .service(controller::queue::queue_playlist)
+        .service(controller::queue::queue_track)
+        .service(controller::search::search)
+        .service(controller::player::player_state)
+        .service(controller::player::control_next)
+        .service(controller::player::control_prev)
+        .service(controller::player::control_play)
+        .service(controller::player::control_pause)
+        .service(socket_service(ws_server))
 }
 
 pub fn start(config: &HttpConfig, app: Arc<Rustic>) -> Result<()> {
-    server::new(move || {
-        vec![
-            build_socket_app(Arc::clone(&app)).boxed(),
-            build_api_app(Arc::clone(&app)).boxed(),
-            build_static_app().unwrap().boxed(),
-        ]
-    }).bind(format!("{}:{}", config.ip, config.port))?
-    .run();
+    let sys = System::new("rustic-http-frontend");
+
+    let ws_server = create_socket_server(Arc::clone(&app));
+
+    HttpServer::new(move || {
+        App::new()
+            .wrap(middleware::Logger::default())
+            .service(build_api(Arc::clone(&app), ws_server.clone()))
+            .service(Files::new("/cache", ".cache"))
+    })
+    .bind(format!("{}:{}", config.ip, config.port))?
+    .start();
+
+    sys.run()?;
     Ok(())
 }

@@ -1,10 +1,12 @@
 use failure::Error;
-use rustic_core::{Playlist, Rustic, Track, SingleQuery};
+use rustic_core::{Playlist, Rustic, SingleQuery, Track};
 use std::sync::Arc;
 use viewmodels::TrackModel;
 
 pub fn fetch(rustic: &Arc<Rustic>) -> Result<Vec<TrackModel>, Error> {
-    let player = rustic.get_default_player().ok_or(format_err!("Missing default player"))?;
+    let player = rustic
+        .get_default_player()
+        .ok_or(format_err!("Missing default player"))?;
     let tracks = player
         .get_queue()
         .into_iter()
@@ -19,7 +21,9 @@ pub fn queue_track(track_id: usize, rustic: &Arc<Rustic>) -> Result<Option<()>, 
     let track: Option<Track> = library.query_track(SingleQuery::id(track_id))?;
     match track {
         Some(track) => {
-            let player = rustic.get_default_player().ok_or(format_err!("Missing default player"))?;
+            let player = rustic
+                .get_default_player()
+                .ok_or(format_err!("Missing default player"))?;
             player.queue_single(&track);
 
             Ok(Some(()))
@@ -34,7 +38,9 @@ pub fn queue_playlist(playlist_id: usize, rustic: &Arc<Rustic>) -> Result<Option
     let playlist: Option<Playlist> = library.query_playlist(SingleQuery::id(playlist_id))?;
     match playlist {
         Some(playlist) => {
-            let player = rustic.get_default_player().ok_or(format_err!("Missing default player"))?;
+            let player = rustic
+                .get_default_player()
+                .ok_or(format_err!("Missing default player"))?;
             player.queue_multiple(&playlist.tracks);
 
             Ok(Some(()))
@@ -45,7 +51,9 @@ pub fn queue_playlist(playlist_id: usize, rustic: &Arc<Rustic>) -> Result<Option
 
 pub fn clear(rustic: &Arc<Rustic>) -> Result<(), Error> {
     debug!("Clearing queue");
-    let player = rustic.get_default_player().ok_or(format_err!("Missing default player"))?;
+    let player = rustic
+        .get_default_player()
+        .ok_or(format_err!("Missing default player"))?;
     player.clear_queue();
     Ok(())
 }

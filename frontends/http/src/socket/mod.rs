@@ -1,64 +1,35 @@
-use actix::{Addr, Arbiter};
-use actix_web::{http::Method, middleware, ws, App, Error, HttpRequest, HttpResponse};
-use rustic_core::{
-    player::{PlayerEvent, PlayerState},
-    Rustic,
-};
+use actix::{Actor, Addr};
+use actix_web::{web, Error, HttpRequest, HttpResponse, Resource};
+use actix_web_actors::ws;
+use rustic_core::Rustic;
+use socket::events::PlayerEventActor;
+pub use socket::server::SocketServer;
 use std::sync::Arc;
-use std::thread;
-use viewmodels::TrackModel;
 
+mod events;
 mod messages;
 mod server;
 mod session;
 
-pub struct SocketState {
-    pub rustic: Arc<Rustic>,
-    pub addr: Addr<server::SocketServer>,
+pub fn create_socket_server(rustic: Arc<Rustic>) -> Addr<SocketServer> {
+    let server = SocketServer::new(rustic).start();
+    let _ = PlayerEventActor::new(server.clone()).start();
+    server
 }
 
-pub fn build_socket_app(rustic: Arc<Rustic>) -> App<SocketState> {
-    let addr = Arbiter::start(|_| server::SocketServer::default());
-    let state = SocketState {
-        rustic: rustic.clone(),
-        addr: addr.clone(),
-    };
-    thread::spawn(move || {
-        let player = rustic.get_default_player().ok_or(format_err!("Missing default player")).unwrap();
-
-        loop {
-            let event = player.observe().recv();
-
-            match event {
-                Some(PlayerEvent::StateChanged(state)) => {
-                    debug!("received new playing state");
-                    addr.do_send(messages::Message::PlayerStateChanged(
-                        state == PlayerState::Play,
-                    ));
-                }
-                Some(PlayerEvent::TrackChanged(track)) => {
-                    debug!("received currently playing track");
-                    let model = TrackModel::new(track, &rustic);
-                    addr.do_send(messages::Message::CurrentlyPlayingChanged(Some(model)));
-                }
-                Some(PlayerEvent::QueueUpdated(queue)) => {
-                    debug!("received new queue");
-                    let models = queue.into_iter()
-                        .map(|track| TrackModel::new(track, &rustic))
-                        .collect();
-                    addr.do_send(messages::Message::QueueUpdated(models));
-                }
-                msg => debug!("unexpected msg {:?}", msg),
-            }
-        }
-    });
-    App::with_state(state)
-        .middleware(middleware::Logger::default())
-        .prefix("/api/socket")
-        .resource("", |r| r.method(Method::GET).f(open))
+pub fn socket_service(server: Addr<SocketServer>) -> Resource {
+    web::resource("/socket").data(server).to(open)
 }
 
-pub fn open(req: &HttpRequest<SocketState>) -> Result<HttpResponse, Error> {
+pub fn open(
+    req: HttpRequest,
+    stream: web::Payload,
+    srv: web::Data<Addr<server::SocketServer>>,
+) -> Result<HttpResponse, Error> {
     debug!("connection");
-    ws::start(req, session::SocketSession::default())
+    ws::start(
+        session::SocketSession::new(srv.get_ref().clone()),
+        &req,
+        stream,
+    )
 }

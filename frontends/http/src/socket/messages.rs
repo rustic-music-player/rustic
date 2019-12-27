@@ -3,11 +3,8 @@ use actix::Recipient;
 use viewmodels::TrackModel;
 
 #[derive(Message, Clone, Debug, Serialize)]
-#[serde(
-tag = "type",
-content = "payload",
-rename_all = "SCREAMING_SNAKE_CASE"
-)]
+#[rtype(result = "()")]
+#[serde(tag = "type", content = "payload", rename_all = "SCREAMING_SNAKE_CASE")]
 pub enum Message {
     PlayerStateChanged(bool),
     CurrentlyPlayingChanged(Option<TrackModel>),
@@ -21,6 +18,11 @@ pub struct Connect {
 }
 
 #[derive(Message, Debug)]
+#[rtype(result = "()")]
 pub struct Disconnect {
     pub id: String,
 }
+
+#[derive(Message)]
+#[rtype(result = "()")]
+pub struct Ping;

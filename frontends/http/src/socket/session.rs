@@ -1,17 +1,27 @@
-use actix::{Addr, fut};
 use actix::prelude::*;
-use actix_web::ws;
+use actix::{fut, Addr};
+use actix_web_actors::ws;
 use serde_json;
 
-use socket::{messages, SocketState};
+use socket::messages;
+use socket::server::SocketServer;
 
-#[derive(Default, Debug)]
 pub struct SocketSession {
     pub id: String,
+    addr: Addr<SocketServer>,
+}
+
+impl SocketSession {
+    pub fn new(addr: Addr<SocketServer>) -> SocketSession {
+        SocketSession {
+            id: String::new(),
+            addr,
+        }
+    }
 }
 
 impl Actor for SocketSession {
-    type Context = ws::WebsocketContext<Self, SocketState>;
+    type Context = ws::WebsocketContext<Self>;
 
     /// Method is called on actor start.
     /// We register ws session with ChatServer
@@ -21,12 +31,12 @@ impl Actor for SocketSession {
         // before processing any other events.
         // HttpContext::state() is instance of WsChatSessionState, state is shared
         // across all routes within application
-        let addr: Addr<_> = ctx.address();
-        ctx.state()
-            .addr
+        let addr = ctx.address();
+        self.addr
             .send(messages::Connect {
                 addr: addr.recipient(),
-            }).into_actor(self)
+            })
+            .into_actor(self)
             .then(|res, act, ctx| {
                 match res {
                     Ok(res) => act.id = res,
@@ -34,12 +44,13 @@ impl Actor for SocketSession {
                     _ => ctx.stop(),
                 }
                 fut::ok(())
-            }).wait(ctx);
+            })
+            .wait(ctx);
     }
 
-    fn stopping(&mut self, ctx: &mut Self::Context) -> Running {
+    fn stopping(&mut self, _ctx: &mut Self::Context) -> Running {
         // notify chat server
-        ctx.state().addr.do_send(messages::Disconnect {
+        self.addr.do_send(messages::Disconnect {
             id: self.id.clone(),
         });
         Running::Stop
@@ -66,6 +77,7 @@ impl StreamHandler<ws::Message, ws::ProtocolError> for SocketSession {
             ws::Message::Close(_) => {
                 ctx.stop();
             }
+            ws::Message::Nop => {}
         }
     }
 }

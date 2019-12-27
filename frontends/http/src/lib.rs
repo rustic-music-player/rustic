@@ -11,9 +11,13 @@ extern crate actix;
 extern crate actix_web;
 #[macro_use]
 extern crate failure;
+extern crate actix_files;
+extern crate actix_web_actors;
+extern crate crossbeam_channel;
+extern crate futures;
 extern crate rayon;
-extern crate uuid;
 extern crate stopwatch;
+extern crate uuid;
 
 use rustic_core::Rustic;
 

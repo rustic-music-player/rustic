@@ -1,17 +1,19 @@
-use actix_web::{Json, Query, Result, State};
+use actix_web::{error, get, web, Responder};
+use app::ApiState;
 use handler::search as search_handler;
-use rustic_core::Rustic;
-use std::sync::Arc;
-use viewmodels::*;
 
 #[derive(Deserialize)]
 pub struct SearchQuery {
     query: String,
 }
 
-pub fn search(req: (State<Arc<Rustic>>, Query<SearchQuery>)) -> Result<Json<SearchResults>> {
-    let (rustic, params) = req;
+#[get("/search")]
+pub fn search(
+    data: web::Data<ApiState>,
+    params: web::Path<SearchQuery>,
+) -> Result<impl Responder, error::Error> {
+    let rustic = &data.app;
     trace!("search {}", &params.query);
     let result = search_handler::search(&params.query, &rustic)?;
-    Ok(Json(result))
+    Ok(web::Json(result))
 }

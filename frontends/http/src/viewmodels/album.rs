@@ -22,7 +22,11 @@ impl AlbumModel {
             id: album.id,
             title: album.title,
             artist: album.artist.map(|artist| ArtistModel::new(artist, app)),
-            tracks: album.tracks.into_iter().map(|track| TrackModel::new(track, app)).collect(),
+            tracks: album
+                .tracks
+                .into_iter()
+                .map(|track| TrackModel::new(track, app))
+                .collect(),
             provider: album.provider,
             coverart,
             uri: album.uri,

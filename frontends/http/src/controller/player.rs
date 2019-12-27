@@ -1,40 +1,43 @@
-use actix_web::{HttpRequest, Json, Result};
+use actix_web::{get, post, web, HttpResponse, Responder, Result};
+use app::ApiState;
 use handler::player as player_handler;
-use rustic_core::Rustic;
-use std::sync::Arc;
-use viewmodels::PlayerModel;
 
-pub fn player_state(req: &HttpRequest<Arc<Rustic>>) -> Result<Json<PlayerModel>> {
-    let rustic = req.state();
+#[get("/player")]
+pub fn player_state(data: web::Data<ApiState>) -> Result<impl Responder> {
+    let rustic = &data.app;
     let state = player_handler::get_state(&rustic)?;
 
-    Ok(Json(state))
+    Ok(web::Json(state))
 }
 
-pub fn control_next(req: &HttpRequest<Arc<Rustic>>) -> Result<Json<()>> {
-    let rustic = req.state();
+#[post("/player/next")]
+pub fn control_next(data: web::Data<ApiState>) -> Result<impl Responder> {
+    let rustic = &data.app;
     player_handler::control_next(&rustic)?;
 
-    Ok(Json(()))
+    Ok(HttpResponse::NoContent().finish())
 }
 
-pub fn control_prev(req: &HttpRequest<Arc<Rustic>>) -> Result<Json<()>> {
-    let rustic = req.state();
+#[post("/player/prev")]
+pub fn control_prev(data: web::Data<ApiState>) -> Result<impl Responder> {
+    let rustic = &data.app;
     player_handler::control_prev(&rustic)?;
 
-    Ok(Json(()))
+    Ok(HttpResponse::NoContent().finish())
 }
 
-pub fn control_pause(req: &HttpRequest<Arc<Rustic>>) -> Result<Json<()>> {
-    let rustic = req.state();
+#[post("/player/pause")]
+pub fn control_pause(data: web::Data<ApiState>) -> Result<impl Responder> {
+    let rustic = &data.app;
     player_handler::control_pause(&rustic)?;
 
-    Ok(Json(()))
+    Ok(HttpResponse::NoContent().finish())
 }
 
-pub fn control_play(req: &HttpRequest<Arc<Rustic>>) -> Result<Json<()>> {
-    let rustic = req.state();
+#[post("/player/play")]
+pub fn control_play(data: web::Data<ApiState>) -> Result<impl Responder> {
+    let rustic = &data.app;
     player_handler::control_play(&rustic)?;
 
-    Ok(Json(()))
+    Ok(HttpResponse::NoContent().finish())
 }
