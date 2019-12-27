@@ -12,7 +12,8 @@ members = [
     "store/helpers",
     "store/memory",
     "store/sled",
-    "store/sqlite"
+    "store/sqlite",
+    "extensions/party-mode"
 ]
 
 [package]

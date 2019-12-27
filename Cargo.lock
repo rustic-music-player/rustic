@@ -2206,6 +2206,13 @@ dependencies = [
 ]
 
 [[package]]
+name = "rustic-party-mode-extension"
+version = "0.1.0"
+dependencies = [
+ "rustic-core 0.1.0",
+]
+
+[[package]]
 name = "rustic-pocketcasts-provider"
 version = "0.1.0"
 dependencies = [

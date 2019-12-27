@@ -77,7 +77,7 @@ fn main() -> Result<(), Error> {
         LibraryConfig::Sled { path } => Box::new(SledLibrary::new(path)?)
     };
 
-    let app = rustic::Rustic::new(store, providers)?;
+    let app = rustic::Rustic::new(store, providers, Vec::new())?;
 
     let keep_running = Arc::new((Mutex::new(true), Condvar::new()));
 
