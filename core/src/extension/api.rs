@@ -11,10 +11,7 @@ pub enum ExtensionConfigValue {
     Int(i64)
 }
 
-pub trait Extension {
-    fn id(&self) -> String;
-    fn name(&self) -> String;
-    // TODO: Use custom error type
+pub trait Extension : std::fmt::Debug {
     fn setup(&mut self, config: Option<HashMap<String, ExtensionConfigValue>>) -> Result<(), Box<dyn Error>> {
         Ok(())
     }

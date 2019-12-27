@@ -53,6 +53,7 @@ use memory_store::MemoryLibrary;
 use sled_store::SledLibrary;
 #[cfg(feature = "sqlite-store")]
 use sqlite_store::SqliteLibrary;
+use std::path::Path;
 
 mod config;
 mod options;
@@ -81,7 +82,9 @@ fn main() -> Result<(), Error> {
         LibraryConfig::Sled { path } => Box::new(SledLibrary::new(path)?)
     };
 
-    let app = rustic::Rustic::new(store, providers, Vec::new())?;
+    let extensions = rustic::extension::load_extensions(Path::new("target/debug"))?;
+
+    let app = rustic::Rustic::new(store, providers, extensions)?;
 
     setup_interrupt(&app)?;
 

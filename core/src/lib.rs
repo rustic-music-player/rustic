@@ -6,7 +6,7 @@ use crossbeam_channel as channel;
 use failure::format_err;
 use url::Url;
 use log::debug;
-use crate::extension::Extension;
+use crate::extension::HostedExtension;
 
 pub use crate::library::{Album, Artist, Library, MultiQuery, Playlist, QueryJoins, SearchResults, SharedLibrary, SingleQuery, SingleQueryIdentifier, Track, LibraryQueryJoins};
 pub use crate::player::{PlayerBackend, PlayerEvent, PlayerState};
@@ -24,7 +24,7 @@ pub struct Rustic {
     pub library: library::SharedLibrary,
     pub providers: provider::SharedProviders,
     pub cache: cache::SharedCache,
-    pub extensions: Vec<Box<dyn Extension + Send + Sync>>,
+    pub extensions: Vec<HostedExtension>,
     default_player: Arc<Mutex<Option<String>>>,
     keep_running: Arc<(Mutex<bool>, Condvar)>
 }
@@ -33,7 +33,7 @@ impl Rustic {
     pub fn new(
         library: Box<dyn Library>,
         providers: provider::SharedProviders,
-        extensions: Vec<Box<dyn Extension + Send + Sync>>,
+        extensions: Vec<HostedExtension>,
     ) -> Result<Arc<Rustic>, failure::Error> {
         let library = Arc::new(library);
         Ok(Arc::new(Rustic {
