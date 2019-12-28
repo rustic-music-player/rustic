@@ -62,12 +62,14 @@ impl RodioBackend {
         Ok(Arc::new(Box::new(backend)))
     }
 
-    fn decode_stream(url: String) -> Result<rodio::Decoder<BufReader<File>>, Error> {
-        let url = Url::parse(&url)?;
+    fn decode_stream(stream_url: String) -> Result<rodio::Decoder<BufReader<File>>, Error> {
+        trace!("Decoding stream {}", &stream_url);
+        let url = Url::parse(&stream_url)?;
         match url.scheme() {
             "file" => {
-                let mut path = url.as_str().to_owned();
+                let mut path = stream_url;
                 path.replace_range(..7, "");
+                trace!("Decoding file {}", &path);
                 let file = File::open(path)?;
                 let decoder = rodio::Decoder::new(BufReader::new(file))?;
                 Ok(decoder)
@@ -82,6 +84,7 @@ impl RodioBackend {
     }
 
     fn set_track(&self, track: &Track) -> Result<(), Error> {
+        debug!("Selecting {:?}", track);
         let source = RodioBackend::decode_stream(self.core.stream_url(track)?)?;
         let sink = rodio::Sink::new(&self.device);
         sink.append(source);
@@ -144,11 +147,23 @@ impl PlayerBackend for RodioBackend {
     }
 
     fn prev(&self) -> Result<Option<()>, Error> {
-        unimplemented!()
+        if let Some(track) = self.queue.prev() {
+            self.set_track(&track)?;
+            Ok(Some(()))
+        } else {
+            self.stop();
+            Ok(None)
+        }
     }
 
     fn next(&self) -> Result<Option<()>, Error> {
-        unimplemented!()
+        if let Some(track) = self.queue.next() {
+            self.set_track(&track)?;
+            Ok(Some(()))
+        } else {
+            self.stop();
+            Ok(None)
+        }
     }
 
     fn set_state(&self, state: PlayerState) -> Result<(), Error> {
