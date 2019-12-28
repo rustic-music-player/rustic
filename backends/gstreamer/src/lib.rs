@@ -17,12 +17,11 @@ use failure::{err_msg, Error};
 use gst::{prelude::*, MessageView, StateChangeReturn};
 use pinboard::NonEmptyPinboard;
 
-use core::{PlayerBackend, PlayerEvent, PlayerState, Track};
+use core::{player::MemoryQueue, PlayerBackend, PlayerEvent, PlayerState, Track};
 
 pub struct GstBackend {
     core: Arc<core::Rustic>,
-    queue: NonEmptyPinboard<Vec<Track>>,
-    current_index: atomic::AtomicUsize,
+    queue: MemoryQueue,
     current_track: NonEmptyPinboard<Option<Track>>,
     current_volume: f32,
     state: NonEmptyPinboard<PlayerState>,
@@ -37,12 +36,10 @@ pub struct GstBackend {
 
 impl std::fmt::Debug for GstBackend {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> Result<(), std::fmt::Error> {
-        write!(f, "GstBackend {{ queue: {:?}, current_index: {:?}, volume: {}, state: {:?}, blend_time: {:?} }}",
-               self.queue,
-               self.current_index,
-               self.current_volume,
-               self.state,
-               self.blend_time
+        write!(
+            f,
+            "GstBackend {{ queue: {:?}, volume: {}, state: {:?}, blend_time: {:?} }}",
+            self.queue, self.current_volume, self.state, self.blend_time
         )
     }
 }
@@ -60,8 +57,7 @@ impl GstBackend {
         let (tx, rx) = channel::unbounded();
         let backend = GstBackend {
             core,
-            queue: NonEmptyPinboard::new(vec![]),
-            current_index: atomic::AtomicUsize::new(0),
+            queue: MemoryQueue::new(),
             current_track: NonEmptyPinboard::new(None),
             blend_time: Duration::default(),
             current_volume: 1.0,
@@ -184,30 +180,23 @@ impl GstBackend {
 
 impl PlayerBackend for GstBackend {
     fn queue_single(&self, track: &Track) {
-        let mut queue = self.queue.read();
-        queue.push(track.clone());
-        self.queue.set(queue);
+        self.queue.queue_single(track);
     }
 
     fn queue_multiple(&self, tracks: &[Track]) {
-        let mut queue = self.queue.read();
-        queue.append(&mut tracks.to_vec());
-        self.queue.set(queue);
+        self.queue.queue_multiple(tracks);
     }
 
     fn queue_next(&self, track: &Track) {
-        let mut queue = self.queue.read();
-        let current_index = self.current_index.load(atomic::Ordering::Relaxed);
-        queue.insert(current_index + 1, track.clone());
-        self.queue.set(queue);
+        self.queue.queue_next(track);
     }
 
     fn get_queue(&self) -> Vec<Track> {
-        self.queue.read()
+        self.queue.get_queue()
     }
 
     fn clear_queue(&self) {
-        self.queue.set(vec![]);
+        self.queue.clear();
     }
 
     fn current(&self) -> Option<Track> {
@@ -215,53 +204,38 @@ impl PlayerBackend for GstBackend {
     }
 
     fn prev(&self) -> Result<Option<()>, Error> {
-        let mut current_index = self.current_index.load(atomic::Ordering::Relaxed);
-        if current_index == 0 {
-            self.set_state(PlayerState::Stop)?;
-            return Ok(None);
-        }
-
-        let queue = self.queue.read();
-
-        current_index -= 1;
-        self.current_index
-            .store(current_index, atomic::Ordering::Relaxed);
-        if let Some(track) = queue.get(current_index) {
+        let track = self.queue.prev();
+        if let Some(track) = track {
             self.set_track(&track)?;
             Ok(Some(()))
         } else {
+            self.set_state(PlayerState::Stop)?;
             Ok(None)
         }
     }
 
     fn next(&self) -> Result<Option<()>, Error> {
-        let mut current_index = self.current_index.load(atomic::Ordering::Relaxed);
-        let queue = self.queue.read();
-
-        if current_index >= queue.len() {
-            self.set_state(PlayerState::Stop)?;
-            return Ok(None);
-        }
-        current_index += 1;
-        self.current_index
-            .store(current_index, atomic::Ordering::Relaxed);
-        if let Some(track) = queue.get(current_index) {
+        let track = self.queue.next();
+        if let Some(track) = track {
             self.set_track(&track)?;
             Ok(Some(()))
         } else {
+            self.set_state(PlayerState::Stop)?;
             Ok(None)
         }
     }
 
     fn set_state(&self, new_state: PlayerState) -> Result<(), Error> {
         debug!("set_state, {:?}", &new_state);
-        let current_index = self.current_index.load(atomic::Ordering::Relaxed);
         match new_state {
             PlayerState::Play => {
-                let queue = self.queue.read();
-                let track = &queue[current_index];
-                self.write_state(new_state);
-                self.set_track(track)
+                if let Some(track) = self.queue.get_current_track() {
+                    self.write_state(new_state);
+                    self.set_track(&track)
+                } else {
+                    self.write_state(PlayerState::Stop);
+                    Ok(())
+                }
             }
             PlayerState::Pause => {
                 if let StateChangeReturn::Failure = self.pipeline.set_state(gst::State::Paused) {

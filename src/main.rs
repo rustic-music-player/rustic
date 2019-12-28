@@ -16,6 +16,8 @@ extern crate rustic_core as rustic;
 extern crate rustic_google_cast_backend as google_cast_backend;
 #[cfg(feature = "gstreamer")]
 extern crate rustic_gstreamer_backend as gst_backend;
+#[cfg(feature = "rodio")]
+extern crate rustic_rodio_backend as rodio_backend;
 // Frontends
 #[cfg(feature = "dbus")]
 extern crate rustic_dbus_frontend as dbus_frontend;
@@ -105,7 +107,14 @@ fn main() -> Result<(), Error> {
                     Arc::clone(&keep_running),
                 );
             }
-            _ => panic!("invalid backend config"),
+            #[cfg(feature = "rodio")]
+            PlayerBackend::Rodio => {
+                let backend = rodio_backend::RodioBackend::new(Arc::clone(&app))?;
+                app.add_player(player.name.clone(), backend);
+                if player.default {
+                    app.set_default_player(player.name.clone());
+                }
+            }
         }
     }
 

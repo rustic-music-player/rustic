@@ -50,6 +50,7 @@ pub struct PlayerBackendConfig {
 #[serde(rename_all = "lowercase")]
 pub enum PlayerBackend {
     GStreamer,
+    #[cfg(feature = "rodio")]
     Rodio,
     #[cfg(feature = "google-cast")]
     GoogleCast,

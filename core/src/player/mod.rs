@@ -8,9 +8,11 @@ use crate::channel::Receiver;
 use crate::library::Track;
 
 pub use self::event::PlayerEvent;
+pub use self::memory_queue::MemoryQueue;
 pub use self::state::PlayerState;
 
 pub mod event;
+mod memory_queue;
 pub mod state;
 
 pub trait PlayerBackend: Send + Sync + Debug {
