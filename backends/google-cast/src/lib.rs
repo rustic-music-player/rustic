@@ -1,16 +1,16 @@
 use std::any::Any;
 use std::net::IpAddr;
-use std::sync::{Arc, atomic, Mutex, Condvar};
+use std::sync::{atomic, Arc, Condvar, Mutex};
 use std::thread;
 use std::time::Duration;
 
 use crossbeam_channel::{Receiver, Sender};
 use failure::Error;
 use pinboard::NonEmptyPinboard;
-use rust_cast::{CastDevice, channels::{
-    media::*,
-    receiver::CastDeviceApp,
-}};
+use rust_cast::{
+    channels::{media::*, receiver::CastDeviceApp},
+    CastDevice,
+};
 
 use rustic_core::{PlayerEvent, PlayerState, Track};
 
@@ -35,8 +35,7 @@ pub struct GoogleCastBackend {
 }
 
 impl GoogleCastBackend {
-    pub fn start_discovery(core: Arc<rustic_core::Rustic>,
-                           running: Arc<(Mutex<bool>, Condvar)>) {
+    pub fn start_discovery(core: Arc<rustic_core::Rustic>, running: Arc<(Mutex<bool>, Condvar)>) {
         let (tx, rx) = crossbeam_channel::unbounded();
         thread::spawn(move || {
             discovery::discover(tx, Arc::clone(&running));
@@ -46,7 +45,8 @@ impl GoogleCastBackend {
             for msg in rx {
                 match msg {
                     DiscoverMessage::AddBackend(target) => {
-                        let player = GoogleCastBackend::new(Arc::clone(&core), target.addr).unwrap();
+                        let player =
+                            GoogleCastBackend::new(Arc::clone(&core), target.addr).unwrap();
                         core.add_player(target.name, player)
                     }
                 }
@@ -54,14 +54,19 @@ impl GoogleCastBackend {
         });
     }
 
-    pub fn new(core: Arc<rustic_core::Rustic>, ip: IpAddr) -> Result<Arc<Box<dyn rustic_core::PlayerBackend>>, Error> {
+    pub fn new(
+        core: Arc<rustic_core::Rustic>,
+        ip: IpAddr,
+    ) -> Result<Arc<Box<dyn rustic_core::PlayerBackend>>, Error> {
         let (internal_sender, internal_receiver) = crossbeam_channel::unbounded();
         let (tx, rx) = crossbeam_channel::unbounded();
         let handle = {
             let core = Arc::clone(&core);
             thread::spawn(move || {
                 let device = CastDevice::connect_without_host_verification(ip.to_string(), 8009)?;
-                let app = device.receiver.launch_app(&CastDeviceApp::DefaultMediaReceiver)?;
+                let app = device
+                    .receiver
+                    .launch_app(&CastDeviceApp::DefaultMediaReceiver)?;
 
                 loop {
                     match internal_receiver.recv() {
@@ -84,12 +89,16 @@ impl GoogleCastBackend {
                                 })),
                                 duration: None,
                             };
-                            device.media.load(app.transport_id.as_str(), app.session_id.as_str(), &media)?;
+                            device.media.load(
+                                app.transport_id.as_str(),
+                                app.session_id.as_str(),
+                                &media,
+                            )?;
                         }
                         Some(InternalCommand::Volume(volume)) => {
                             device.receiver.set_volume(volume)?;
                         }
-                        _ => ()
+                        _ => (),
                     }
                 }
             })

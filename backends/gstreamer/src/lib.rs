@@ -8,13 +8,13 @@ extern crate pinboard;
 extern crate rustic_core as core;
 
 use std::any::Any;
-use std::sync::{Arc, atomic, Mutex};
+use std::sync::{atomic, Arc, Mutex};
 use std::thread;
 use std::time::Duration;
 
 use channel::{Receiver, Sender};
 use failure::{err_msg, Error};
-use gst::{MessageView, prelude::*, StateChangeReturn};
+use gst::{prelude::*, MessageView, StateChangeReturn};
 use pinboard::NonEmptyPinboard;
 
 use core::{PlayerBackend, PlayerEvent, PlayerState, Track};

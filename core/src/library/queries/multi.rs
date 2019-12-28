@@ -3,7 +3,7 @@ use super::{LibraryQueryJoins, QueryJoins};
 #[derive(Default, Clone, Copy)]
 pub struct MultiQuery {
     pub joins: LibraryQueryJoins,
-    pub limit: Option<usize>
+    pub limit: Option<usize>,
 }
 
 impl MultiQuery {
@@ -58,7 +58,10 @@ mod tests {
         query.joins = LibraryQueryJoins::ALBUM;
         query.join_tracks();
 
-        assert_eq!(query.joins, LibraryQueryJoins::ALBUM | LibraryQueryJoins::TRACK);
+        assert_eq!(
+            query.joins,
+            LibraryQueryJoins::ALBUM | LibraryQueryJoins::TRACK
+        );
     }
 
     #[test]
@@ -67,7 +70,10 @@ mod tests {
         query.joins = LibraryQueryJoins::ARTIST;
         query.join_albums();
 
-        assert_eq!(query.joins, LibraryQueryJoins::ARTIST | LibraryQueryJoins::ALBUM);
+        assert_eq!(
+            query.joins,
+            LibraryQueryJoins::ARTIST | LibraryQueryJoins::ALBUM
+        );
     }
 
     #[test]
@@ -76,7 +82,10 @@ mod tests {
         query.joins = LibraryQueryJoins::TRACK;
         query.join_artists();
 
-        assert_eq!(query.joins, LibraryQueryJoins::TRACK | LibraryQueryJoins::ARTIST);
+        assert_eq!(
+            query.joins,
+            LibraryQueryJoins::TRACK | LibraryQueryJoins::ARTIST
+        );
     }
 
     #[test]

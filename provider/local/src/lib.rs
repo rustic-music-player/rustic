@@ -1,4 +1,4 @@
-use failure::{Error, format_err};
+use failure::{format_err, Error};
 use maplit::hashmap;
 use serde_derive::Deserialize;
 
@@ -51,7 +51,8 @@ impl ProviderInstance for LocalProvider {
             .map(|mut album| -> Result<library::Album, Error> {
                 library.add_album(&mut album)?;
                 Ok(album)
-            }).filter(|a| a.is_ok())
+            })
+            .filter(|a| a.is_ok())
             .map(|a| a.unwrap())
             .collect();
         let mut tracks = tracks
@@ -65,7 +66,8 @@ impl ProviderInstance for LocalProvider {
                     }
                 }
                 t
-            }).collect();
+            })
+            .collect();
         library.add_tracks(&mut tracks)?;
         Ok(SyncResult {
             tracks: tracks.len(),
@@ -158,7 +160,7 @@ impl From<scanner::Track> for Option<library::Album> {
             uri: String::new(),
             meta: hashmap!(
                 META_LOCAL_FILE_URL.into() => path.into()
-            )
+            ),
         })
     }
 }
@@ -173,7 +175,7 @@ impl From<scanner::Track> for Option<library::Artist> {
             image_url: None,
             meta: hashmap!(
                 META_LOCAL_FILE_URL.into() => path.into()
-            )
+            ),
         })
     }
 }

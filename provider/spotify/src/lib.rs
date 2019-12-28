@@ -3,8 +3,8 @@ mod artist;
 mod track;
 mod util;
 
-use log::{debug, trace};
 use failure::{err_msg, Error};
+use log::{debug, trace};
 use rspotify::spotify::client::Spotify;
 use rspotify::spotify::oauth2::{SpotifyClientCredentials, SpotifyOAuth};
 use rspotify::spotify::util::get_token;
@@ -37,8 +37,9 @@ impl rustic_core::provider::ProviderInstance for SpotifyProvider {
                     "user-read-recently-played",
                     "playlist-read-collaborative",
                 ]
-                    .join(" "),
-            ).redirect_uri("http://localhost:8888/callback")
+                .join(" "),
+            )
+            .redirect_uri("http://localhost:8888/callback")
             .build();
 
         let spotify = get_token(&mut oauth)
@@ -49,7 +50,8 @@ impl rustic_core::provider::ProviderInstance for SpotifyProvider {
                 Spotify::default()
                     .client_credentials_manager(client_credential)
                     .build()
-            }).ok_or_else(|| err_msg("Spotify auth failed"))?;
+            })
+            .ok_or_else(|| err_msg("Spotify auth failed"))?;
 
         self.client = Some(spotify);
 
@@ -92,8 +94,10 @@ impl rustic_core::provider::ProviderInstance for SpotifyProvider {
                     .map(|mut track| {
                         track.album_id = album_entity.id;
                         track
-                    }).collect()
-            }).fold(vec![], |mut a, b: Vec<Track>| {
+                    })
+                    .collect()
+            })
+            .fold(vec![], |mut a, b: Vec<Track>| {
                 a.extend(b);
                 a
             });

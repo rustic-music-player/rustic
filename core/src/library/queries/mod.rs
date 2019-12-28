@@ -1,7 +1,7 @@
-mod single;
-mod multi;
 mod joins;
+mod multi;
+mod single;
 
-pub use self::single::*;
-pub use self::multi::*;
 pub use self::joins::*;
+pub use self::multi::*;
+pub use self::single::*;

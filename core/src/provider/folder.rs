@@ -1,5 +1,5 @@
-use serde_derive::Serialize;
 use crate::provider::item::ProviderItem;
+use serde_derive::Serialize;
 
 #[derive(Debug, Clone, Serialize)]
 pub struct ProviderFolder {

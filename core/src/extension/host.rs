@@ -1,25 +1,38 @@
-use crate::extension::ClientExtension;
-use std::path::Path;
-use std::fs::{read_dir, DirEntry};
-use log::{debug, error, info};
-use std::process::{Child, Command, Stdio};
 use crate::extension::commands::{ExtensionCommands, ExtensionResponses, Hook};
+use crate::extension::ClientExtension;
+use log::{debug, error, info};
+use std::fs::{read_dir, DirEntry};
 use std::io::Stdin;
-use std::sync::Mutex;
+use std::path::Path;
+use std::process::{Child, Command, Stdio};
 use std::sync::Arc;
+use std::sync::Mutex;
 
 pub fn load_extensions(path: &Path) -> Result<Vec<HostedExtension>, failure::Error> {
     let extensions = read_dir(path)?
         .into_iter()
         .filter(|file| file.is_ok())
         .map(|file| file.unwrap())
-        .filter(|file| file.file_type().map(|file_type| file_type.is_file()).unwrap_or(false))
-        .filter(|file| file.file_name().into_string().unwrap().ends_with("extension"))
+        .filter(|file| {
+            file.file_type()
+                .map(|file_type| file_type.is_file())
+                .unwrap_or(false)
+        })
+        .filter(|file| {
+            file.file_name()
+                .into_string()
+                .unwrap()
+                .ends_with("extension")
+        })
         .map(load_extension)
         .filter(|(path, extension)| {
             let is_err = extension.is_err();
             if is_err {
-                error!("Error loading extension {}: {:?}", path, extension.as_ref().unwrap_err());
+                error!(
+                    "Error loading extension {}: {:?}",
+                    path,
+                    extension.as_ref().unwrap_err()
+                );
             }
             is_err
         })
@@ -42,7 +55,7 @@ pub struct HostedExtension {
     id: String,
     name: String,
     version: String,
-    hooks: Vec<Hook>
+    hooks: Vec<Hook>,
 }
 
 impl HostedExtension {
@@ -57,9 +70,10 @@ impl HostedExtension {
         let response: ExtensionResponses = bincode::deserialize_from(stdout)?;
         let metadata = if let ExtensionResponses::Load(metadata) = response {
             Some(metadata)
-        }else {
+        } else {
             None
-        }.unwrap();
+        }
+        .unwrap();
         info!("Loaded Extension: {} v{}", metadata.name, metadata.version);
         debug!("> Hooks: {:?}", metadata.hooks);
         Ok(HostedExtension {
@@ -67,11 +81,14 @@ impl HostedExtension {
             id: metadata.id,
             name: metadata.name,
             version: metadata.version,
-            hooks: metadata.hooks
+            hooks: metadata.hooks,
         })
     }
 
-    fn run_command(&self, command: ExtensionCommands) -> Result<ExtensionResponses, failure::Error> {
+    fn run_command(
+        &self,
+        command: ExtensionCommands,
+    ) -> Result<ExtensionResponses, failure::Error> {
         let mut process = self.process.lock().unwrap();
         let stdin = process.stdin.as_mut().unwrap();
         bincode::serialize_into(stdin, &command)?;

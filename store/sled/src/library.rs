@@ -2,10 +2,12 @@ use std::path::Path;
 use std::sync::Arc;
 
 use bincode::serialize;
-use failure::{Error, err_msg};
+use failure::{err_msg, Error};
 
-use rustic_core::{Album, Artist, MultiQuery, Playlist, SearchResults, SingleQuery, SingleQueryIdentifier, Track};
-use rustic_store_helpers::{join_album, join_track, join_albums};
+use rustic_core::{
+    Album, Artist, MultiQuery, Playlist, SearchResults, SingleQuery, SingleQueryIdentifier, Track,
+};
+use rustic_store_helpers::{join_album, join_albums, join_track};
 
 use crate::util::*;
 
@@ -68,25 +70,37 @@ impl SledLibrary {
     }
 
     fn serialize_track(&self, track: &mut Track) -> Result<(Vec<u8>, Vec<u8>), Error> {
-        let id = track.id.ok_or(err_msg("missing id")).and_then(serialize_id)?;
+        let id = track
+            .id
+            .ok_or(err_msg("missing id"))
+            .and_then(serialize_id)?;
         let bytes = serialize(&track)?;
         Ok((id, bytes))
     }
 
     fn serialize_artist(&self, artist: &Artist) -> Result<(Vec<u8>, Vec<u8>), Error> {
-        let id = artist.id.ok_or(err_msg("missing id")).and_then(serialize_id)?;
+        let id = artist
+            .id
+            .ok_or(err_msg("missing id"))
+            .and_then(serialize_id)?;
         let bytes = serialize(&artist)?;
         Ok((id, bytes))
     }
 
     fn serialize_album(&self, album: &Album) -> Result<(Vec<u8>, Vec<u8>), Error> {
-        let id = album.id.ok_or(err_msg("missing id")).and_then(serialize_id)?;
+        let id = album
+            .id
+            .ok_or(err_msg("missing id"))
+            .and_then(serialize_id)?;
         let bytes = serialize(&album)?;
         Ok((id, bytes))
     }
 
     fn serialize_playlist(&self, playlist: &Playlist) -> Result<(Vec<u8>, Vec<u8>), Error> {
-        let id = playlist.id.ok_or(err_msg("missing id")).and_then(serialize_id)?;
+        let id = playlist
+            .id
+            .ok_or(err_msg("missing id"))
+            .and_then(serialize_id)?;
         let bytes = serialize(&playlist)?;
         Ok((id, bytes))
     }
@@ -96,11 +110,11 @@ impl rustic_core::Library for SledLibrary {
     fn query_track(&self, query: SingleQuery) -> Result<Option<Track>, Error> {
         let entity = match query.identifier {
             SingleQueryIdentifier::Id(id) => fetch_entity(&self.tracks_tree, id),
-            _ => Ok(None)
+            _ => Ok(None),
         }?;
         match entity {
             Some(track) => Ok(Some(join_track(self, track, query.joins)?)),
-            _ => Ok(None)
+            _ => Ok(None),
         }
     }
 
@@ -111,11 +125,11 @@ impl rustic_core::Library for SledLibrary {
     fn query_album(&self, query: SingleQuery) -> Result<Option<Album>, Error> {
         let entity = match query.identifier {
             SingleQueryIdentifier::Id(id) => fetch_entity(&self.albums_tree, id),
-            _ => Ok(None)
+            _ => Ok(None),
         }?;
         match entity {
             Some(album) => Ok(Some(join_album(self, album, query.joins)?)),
-            _ => Ok(None)
+            _ => Ok(None),
         }
     }
 
@@ -127,7 +141,7 @@ impl rustic_core::Library for SledLibrary {
     fn query_artist(&self, query: SingleQuery) -> Result<Option<Artist>, Error> {
         match query.identifier {
             SingleQueryIdentifier::Id(id) => fetch_entity(&self.artists_tree, id),
-            _ => Ok(None)
+            _ => Ok(None),
         }
     }
 
@@ -138,7 +152,7 @@ impl rustic_core::Library for SledLibrary {
     fn query_playlist(&self, query: SingleQuery) -> Result<Option<Playlist>, Error> {
         match query.identifier {
             SingleQueryIdentifier::Id(id) => fetch_entity(&self.playlists_tree, id),
-            _ => Ok(None)
+            _ => Ok(None),
         }
     }
 
@@ -245,7 +259,8 @@ impl rustic_core::Library for SledLibrary {
     }
 
     fn sync_playlist(&self, playlist: &mut Playlist) -> Result<(), Error> {
-        let find_result = find_entity::<Playlist, _>(&self.playlists_tree, |p| p.uri == playlist.uri)?;
+        let find_result =
+            find_entity::<Playlist, _>(&self.playlists_tree, |p| p.uri == playlist.uri)?;
         if let Some(found_playlist) = find_result {
             let id = self.id(found_playlist.id)?;
             playlist.id = Some(id);

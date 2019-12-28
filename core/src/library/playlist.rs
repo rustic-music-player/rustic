@@ -1,6 +1,6 @@
-use serde_derive::{Serialize, Deserialize};
 use crate::library::Track;
 use crate::provider::Provider;
+use serde_derive::{Deserialize, Serialize};
 use std::cmp::Ordering;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

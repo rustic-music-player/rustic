@@ -21,8 +21,8 @@ use rustic::library::{Album, Artist, SharedLibrary, Track};
 use rustic::provider;
 
 mod episode;
-mod podcast;
 mod meta;
+mod podcast;
 
 #[derive(Debug, Clone, Deserialize)]
 pub struct PocketcastsProvider {
@@ -45,14 +45,19 @@ impl provider::ProviderInstance for PocketcastsProvider {
         "Pocketcasts"
     }
 
-    fn uri_scheme(&self) -> &'static str { "pocketcasts" }
+    fn uri_scheme(&self) -> &'static str {
+        "pocketcasts"
+    }
 
     fn provider(&self) -> provider::Provider {
         provider::Provider::Pocketcasts
     }
 
     fn sync(&mut self, library: SharedLibrary) -> Result<provider::SyncResult, Error> {
-        let client = self.client.clone().ok_or_else(|| format_err!("Pocketcasts not setup"))?;
+        let client = self
+            .client
+            .clone()
+            .ok_or_else(|| format_err!("Pocketcasts not setup"))?;
         let podcasts = client.get_subscriptions()?;
         let albums = podcasts.len();
         let mut episodes: Vec<Track> = podcasts
@@ -87,10 +92,13 @@ impl provider::ProviderInstance for PocketcastsProvider {
                     .collect();
                 tracks
             })
-            .reduce(|| vec![], |mut a, b| {
-                a.extend(b);
-                a
-            });
+            .reduce(
+                || vec![],
+                |mut a, b| {
+                    a.extend(b);
+                    a
+                },
+            );
         let tracks = episodes.len();
         library.sync_tracks(&mut episodes);
         Ok(provider::SyncResult {
@@ -107,7 +115,7 @@ impl provider::ProviderInstance for PocketcastsProvider {
                 "Subscriptions".to_owned(),
                 "Top Charts".to_owned(),
                 "Featured".to_owned(),
-                "Trending".to_owned()
+                "Trending".to_owned(),
             ],
             items: vec![],
         }
@@ -117,10 +125,10 @@ impl provider::ProviderInstance for PocketcastsProvider {
         let client = self.client.clone().unwrap();
         let podcasts = match path[0].as_str() {
             "Subscriptions" => Ok(self.client.clone().unwrap().get_subscriptions()),
-//            "Top Charts" => Ok(PocketcastClient::get_top_charts()),
-//            "Featured" => Ok(PocketcastClient::get_featured()),
-//            "Trending" => Ok(PocketcastClient::get_trending()),
-            _ => Err(Error::from(provider::NavigationError::PathNotFound))
+            //            "Top Charts" => Ok(PocketcastClient::get_top_charts()),
+            //            "Featured" => Ok(PocketcastClient::get_featured()),
+            //            "Trending" => Ok(PocketcastClient::get_trending()),
+            _ => Err(Error::from(provider::NavigationError::PathNotFound)),
         }?;
         match path.len() {
             1 => podcasts
@@ -132,8 +140,11 @@ impl provider::ProviderInstance for PocketcastsProvider {
                     .find(|podcast| podcast.title == path[1])
                     .ok_or(provider::NavigationError::PathNotFound)
                     .map_err(Error::from)
-                    .and_then(|podcast| client.get_episodes(&podcast.uuid)
-                        .map_err(|_err| Error::from(provider::NavigationError::FetchError)))
+                    .and_then(|podcast| {
+                        client
+                            .get_episodes(&podcast.uuid)
+                            .map_err(|_err| Error::from(provider::NavigationError::FetchError))
+                    })
                     .map(|episodes| {
                         episodes
                             .iter()
@@ -144,14 +155,12 @@ impl provider::ProviderInstance for PocketcastsProvider {
                             .collect()
                     })
                     // .ok_or(Error::from(provider::NavigationError::FetchError))
-                    .map(|items| {
-                        provider::ProviderFolder {
-                            folders: vec![],
-                            items,
-                        }
+                    .map(|items| provider::ProviderFolder {
+                        folders: vec![],
+                        items,
                     })
             }),
-            _ => Err(Error::from(provider::NavigationError::PathNotFound))
+            _ => Err(Error::from(provider::NavigationError::PathNotFound)),
         }
     }
 
@@ -173,11 +182,15 @@ impl provider::ProviderInstance for PocketcastsProvider {
 
     fn stream_url(&self, track: &Track) -> Result<String, Error> {
         if track.provider == provider::Provider::Pocketcasts {
-            if let rustic::library::MetaValue::String(stream_url) = track.meta.get(meta::META_POCKETCASTS_STREAM_URL).unwrap() {
+            if let rustic::library::MetaValue::String(stream_url) =
+                track.meta.get(meta::META_POCKETCASTS_STREAM_URL).unwrap()
+            {
                 return Ok(stream_url.to_string());
             }
 
-            return Err(format_err!("Can't get stream url from track, meta value incompatible"));
+            return Err(format_err!(
+                "Can't get stream url from track, meta value incompatible"
+            ));
         }
 
         Err(format_err!("Invalid provider: {:?}", track.provider))

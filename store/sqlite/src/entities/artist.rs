@@ -21,7 +21,7 @@ pub struct ArtistMeta {
     pub bool_variant: Option<i32>,
     pub float_variant: Option<f32>,
     pub string_variant: Option<String>,
-    pub int_variant: Option<i32>
+    pub int_variant: Option<i32>,
 }
 
 #[derive(Insertable)]
@@ -39,7 +39,7 @@ impl ArtistEntity {
             name: self.name,
             uri: self.uri,
             image_url: self.image_url,
-            meta: unimplemented!()
+            meta: unimplemented!(),
         })
     }
 }

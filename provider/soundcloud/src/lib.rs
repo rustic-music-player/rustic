@@ -97,7 +97,8 @@ impl provider::ProviderInstance for SoundcloudProvider {
                             playlist::SoundcloudPlaylist::from(playlist),
                         )),
                         _ => panic!("something went horribly wrong"),
-                    }).collect();
+                    })
+                    .collect();
                 let folder = provider::ProviderFolder {
                     folders: vec![],
                     items,
@@ -138,12 +139,19 @@ impl provider::ProviderInstance for SoundcloudProvider {
 
     fn stream_url(&self, track: &Track) -> Result<String, Error> {
         if track.provider == provider::Provider::Soundcloud {
-
-            if let rustic::library::MetaValue::String(stream_url) = track.meta.get(track::META_SOUNDCLOUD_STREAM_URL).unwrap() {
-                return Ok(format!("{}?client_id={}", stream_url, self.client_id.clone()));
+            if let rustic::library::MetaValue::String(stream_url) =
+                track.meta.get(track::META_SOUNDCLOUD_STREAM_URL).unwrap()
+            {
+                return Ok(format!(
+                    "{}?client_id={}",
+                    stream_url,
+                    self.client_id.clone()
+                ));
             }
 
-            return Err(format_err!("Can't get stream url from track, meta value incompatible"));
+            return Err(format_err!(
+                "Can't get stream url from track, meta value incompatible"
+            ));
         }
 
         Err(format_err!("Invalid provider: {:?}", track.provider))

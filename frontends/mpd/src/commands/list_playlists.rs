@@ -1,6 +1,6 @@
 use commands::MpdCommand;
 use failure::Error;
-use rustic_core::{Playlist, Rustic, MultiQuery};
+use rustic_core::{MultiQuery, Playlist, Rustic};
 use std::sync::Arc;
 
 #[derive(Debug, Serialize)]

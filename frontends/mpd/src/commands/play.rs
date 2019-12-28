@@ -13,7 +13,9 @@ impl PlayCommand {
 
 impl MpdCommand<()> for PlayCommand {
     fn handle(&self, app: &Arc<Rustic>) -> Result<(), Error> {
-        let player = app.get_default_player().ok_or(format_err!("Missing default player"))?;
+        let player = app
+            .get_default_player()
+            .ok_or(format_err!("Missing default player"))?;
         player.set_state(PlayerState::Play)
     }
 }

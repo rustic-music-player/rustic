@@ -1,6 +1,6 @@
 use commands::MpdCommand;
 use failure::Error;
-use rustic_core::{Rustic, MultiQuery};
+use rustic_core::{MultiQuery, Rustic};
 use song::MpdSong;
 use std::sync::Arc;
 

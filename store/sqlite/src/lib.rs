@@ -18,7 +18,7 @@ use diesel::insert_into;
 use diesel::prelude::*;
 use diesel::sqlite::SqliteConnection;
 
-use core::{Album, Artist, Playlist, SearchResults, Track, SingleQuery, MultiQuery};
+use core::{Album, Artist, MultiQuery, Playlist, SearchResults, SingleQuery, Track};
 use std::sync::{Arc, Mutex};
 
 use failure::Error;
@@ -55,7 +55,7 @@ impl core::Library for SqliteLibrary {
                 .first::<entities::TrackEntity>(&*connection),
             SingleQueryIdentifier::Uri(query_uri) => tracks
                 .filter(uri.eq(query_uri))
-                .first::<entities::TrackEntity>(&*connection)
+                .first::<entities::TrackEntity>(&*connection),
         };
 
         query
@@ -91,7 +91,7 @@ impl core::Library for SqliteLibrary {
                 .first::<entities::AlbumEntity>(&*connection),
             SingleQueryIdentifier::Uri(query_uri) => albums
                 .filter(uri.eq(query_uri))
-                .first::<entities::AlbumEntity>(&*connection)
+                .first::<entities::AlbumEntity>(&*connection),
         };
 
         query
@@ -127,7 +127,7 @@ impl core::Library for SqliteLibrary {
                 .first::<entities::ArtistEntity>(&*connection),
             SingleQueryIdentifier::Uri(query_uri) => artists
                 .filter(uri.eq(query_uri))
-                .first::<entities::ArtistEntity>(&*connection)
+                .first::<entities::ArtistEntity>(&*connection),
         };
 
         query

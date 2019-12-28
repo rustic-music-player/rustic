@@ -1,6 +1,6 @@
 use commands::MpdCommand;
 use failure::Error;
-use rustic_core::{Rustic, Track, MultiQuery};
+use rustic_core::{MultiQuery, Rustic, Track};
 use std::sync::Arc;
 
 #[derive(Debug, Serialize)]

@@ -1,7 +1,8 @@
-use log::{info, error, trace, debug};
+use crate::{MultiQuery, Rustic};
 use failure::Error;
 use image;
 use image::FilterType;
+use log::{debug, error, info, trace};
 use md5;
 use reqwest::get;
 use std::collections::HashMap;
@@ -11,7 +12,6 @@ use std::path::Path;
 use std::sync::{Arc, RwLock};
 use std::thread;
 use std::time::Duration;
-use crate::{Rustic, MultiQuery};
 
 const THUMBNAIL_SIZE: u32 = 512;
 const SERVICE_INTERVAL: u64 = 30;
@@ -29,9 +29,7 @@ pub struct Cache {
 
 pub type SharedCache = Arc<Cache>;
 
-pub fn start(
-    app: Arc<Rustic>,
-) -> Result<thread::JoinHandle<()>, Error> {
+pub fn start(app: Arc<Rustic>) -> Result<thread::JoinHandle<()>, Error> {
     create_dir_all(".cache/coverart")?;
 
     thread::Builder::new()
@@ -42,15 +40,18 @@ pub fn start(
             let mut keep_running = lock.lock().unwrap();
             while *keep_running {
                 info!("Caching Coverart...");
-                let result: Result<Vec<CachedEntry>, Error> =
-                    app.library.query_tracks(MultiQuery::new()).and_then(|tracks| {
+                let result: Result<Vec<CachedEntry>, Error> = app
+                    .library
+                    .query_tracks(MultiQuery::new())
+                    .and_then(|tracks| {
                         tracks
                             .iter()
                             .filter(|track| track.image_url.is_some())
                             .filter(|track| {
                                 let map = app.cache.coverart.read().unwrap();
                                 !map.contains_key(&track.uri)
-                            }).map(|track| track.image_url.clone().unwrap())
+                            })
+                            .map(|track| track.image_url.clone().unwrap())
                             .map(cache_coverart)
                             .collect()
                     });
@@ -72,7 +73,8 @@ pub fn start(
                 keep_running = result.0;
             }
             info!("Coverart Cache stopped");
-        }).map_err(Error::from)
+        })
+        .map_err(Error::from)
 }
 
 fn cache_coverart(uri: String) -> Result<CachedEntry, Error> {

@@ -1,13 +1,11 @@
-use log::{error, info};
+use crate::Rustic;
 use failure::Error;
+use log::{error, info};
 use std::sync::Arc;
 use std::thread;
 use std::time::Duration;
-use crate::Rustic;
 
-pub fn start(
-    app: Arc<Rustic>,
-) -> Result<thread::JoinHandle<()>, Error> {
+pub fn start(app: Arc<Rustic>) -> Result<thread::JoinHandle<()>, Error> {
     thread::Builder::new()
         .name("Background Sync".into())
         .spawn(move || {
@@ -37,5 +35,6 @@ pub fn start(
                 keep_running = result.0;
             }
             info!("Background Sync stopped");
-        }).map_err(Error::from)
+        })
+        .map_err(Error::from)
 }

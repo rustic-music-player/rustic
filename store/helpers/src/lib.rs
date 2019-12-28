@@ -6,13 +6,21 @@ pub fn join_track(store: &Library, track: Track, joins: LibraryQueryJoins) -> Re
     let artist = if joins.has_artists() {
         if let Some(artist_id) = track.artist_id {
             store.query_artist(SingleQuery::id(artist_id))?
-        } else { track.artist }
-    } else { track.artist };
+        } else {
+            track.artist
+        }
+    } else {
+        track.artist
+    };
     let album = if joins.has_albums() {
         if let Some(album_id) = track.album_id {
             store.query_album(SingleQuery::id(album_id))?
-        } else { track.album }
-    } else { track.album };
+        } else {
+            track.album
+        }
+    } else {
+        track.album
+    };
     Ok(Track {
         album,
         artist,
@@ -27,13 +35,19 @@ pub fn join_album(store: &Library, album: Album, joins: LibraryQueryJoins) -> Re
             .into_iter()
             .filter(|track| track.album_id == album.id)
             .collect()
-    } else { album.tracks };
+    } else {
+        album.tracks
+    };
 
     let artist = if joins.has_artists() {
         if let Some(artist_id) = album.artist_id {
             store.query_artist(SingleQuery::id(artist_id))?
-        } else { album.artist }
-    } else { album.artist };
+        } else {
+            album.artist
+        }
+    } else {
+        album.artist
+    };
 
     Ok(Album {
         artist,
@@ -42,16 +56,26 @@ pub fn join_album(store: &Library, album: Album, joins: LibraryQueryJoins) -> Re
     })
 }
 
-pub fn join_albums(store: &Library, albums: &[Album], joins: LibraryQueryJoins) -> Result<Vec<Album>, Error> {
+pub fn join_albums(
+    store: &Library,
+    albums: &[Album],
+    joins: LibraryQueryJoins,
+) -> Result<Vec<Album>, Error> {
     let tracks = if joins.has_tracks() {
         store.query_tracks(MultiQuery::new())?
-    } else { vec![] };
+    } else {
+        vec![]
+    };
     let artists = if joins.has_artists() {
         store.query_artists(MultiQuery::new())?
-    } else { vec![] };
-    let albums = albums.iter()
+    } else {
+        vec![]
+    };
+    let albums = albums
+        .iter()
         .map(|album| {
-            let tracks = tracks.iter()
+            let tracks = tracks
+                .iter()
                 .filter(|t| t.album_id == album.id)
                 .cloned()
                 .collect();

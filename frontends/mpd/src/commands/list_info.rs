@@ -1,7 +1,7 @@
 use commands::list_playlists::PlaylistEntry;
 use commands::MpdCommand;
 use failure::Error;
-use rustic_core::{Explorer, Playlist, Rustic, SharedLibrary, Track, MultiQuery};
+use rustic_core::{Explorer, MultiQuery, Playlist, Rustic, SharedLibrary, Track};
 use song::MpdSong;
 use std::sync::Arc;
 
@@ -45,7 +45,8 @@ impl MpdCommand<ListInfoResponse> for ListInfoCommand {
                     .iter()
                     .map(|folder| PathItem {
                         directory: folder.clone(),
-                    }).collect();
+                    })
+                    .collect();
                 let playlists = self.get_playlists(&app.library)?;
                 Ok((folders, playlists, vec![]))
             }
@@ -59,7 +60,8 @@ impl MpdCommand<ListInfoResponse> for ListInfoCommand {
                     .iter()
                     .map(|folder| PathItem {
                         directory: format!("{}{}", path, folder),
-                    }).collect();
+                    })
+                    .collect();
                 let items = folder
                     .items
                     .iter()

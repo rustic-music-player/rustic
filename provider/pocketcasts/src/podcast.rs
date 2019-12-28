@@ -60,7 +60,8 @@ impl From<PocketcastAlbum> for Artist {
 impl From<PocketcastAlbums> for ProviderFolder {
     fn from(podcasts: PocketcastAlbums) -> ProviderFolder {
         ProviderFolder {
-            folders: podcasts.0
+            folders: podcasts
+                .0
                 .iter()
                 .cloned()
                 .map(|podcast| podcast.title)

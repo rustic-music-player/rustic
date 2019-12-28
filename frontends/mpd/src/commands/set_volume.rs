@@ -15,7 +15,9 @@ impl SetVolumeCommand {
 
 impl MpdCommand<()> for SetVolumeCommand {
     fn handle(&self, app: &Arc<Rustic>) -> Result<(), Error> {
-        let player = app.get_default_player().ok_or(format_err!("Missing default player"))?;
+        let player = app
+            .get_default_player()
+            .ok_or(format_err!("Missing default player"))?;
         let volume = (self.volume as f32) / 100f32;
 
         player.set_volume(volume)

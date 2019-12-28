@@ -1,10 +1,10 @@
-use serde_derive::{Serialize, Deserialize};
 use crate::library::{Album, Artist, MetaValue};
 use crate::provider::Provider;
-use std::cmp::Ordering;
-use std::sync::Arc;
-use std::collections::HashMap;
 use crate::Rustic;
+use serde_derive::{Deserialize, Serialize};
+use std::cmp::Ordering;
+use std::collections::HashMap;
+use std::sync::Arc;
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct Track {
@@ -18,7 +18,7 @@ pub struct Track {
     pub uri: String,
     pub image_url: Option<String>,
     pub duration: Option<u64>,
-    pub meta: HashMap<String, MetaValue>
+    pub meta: HashMap<String, MetaValue>,
 }
 
 impl Track {

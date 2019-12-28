@@ -5,8 +5,11 @@ use std::sync::{
 
 use failure::Error;
 
-use rustic_core::{Album, Artist, Library, LibraryQueryJoins, MultiQuery, Playlist, SearchResults, SingleQuery, SingleQueryIdentifier, Track};
-use rustic_store_helpers::{join_album, join_track, join_albums};
+use rustic_core::{
+    Album, Artist, Library, LibraryQueryJoins, MultiQuery, Playlist, SearchResults, SingleQuery,
+    SingleQueryIdentifier, Track,
+};
+use rustic_store_helpers::{join_album, join_albums, join_track};
 
 #[derive(Debug, Default)]
 pub struct MemoryLibrary {
@@ -34,15 +37,10 @@ impl MemoryLibrary {
 
 impl Library for MemoryLibrary {
     fn query_track(&self, query: SingleQuery) -> Result<Option<Track>, Error> {
-        let mut tracks = self
-            .tracks
-            .read()
-            .unwrap()
-            .clone()
-            .into_iter();
+        let mut tracks = self.tracks.read().unwrap().clone().into_iter();
         let track = match query.identifier {
             SingleQueryIdentifier::Id(id) => tracks.find(|track| track.id == Some(id)),
-            SingleQueryIdentifier::Uri(uri) => tracks.find(|track| track.uri == uri)
+            SingleQueryIdentifier::Uri(uri) => tracks.find(|track| track.uri == uri),
         };
         let track = if let Some(track) = track {
             Some(join_track(self, track, query.joins)?)
@@ -53,7 +51,8 @@ impl Library for MemoryLibrary {
     }
 
     fn query_tracks(&self, query: MultiQuery) -> Result<Vec<Track>, Error> {
-        self.tracks.read()
+        self.tracks
+            .read()
             .unwrap()
             .clone()
             .into_iter()
@@ -62,15 +61,10 @@ impl Library for MemoryLibrary {
     }
 
     fn query_album(&self, query: SingleQuery) -> Result<Option<Album>, Error> {
-        let mut albums = self
-            .albums
-            .read()
-            .unwrap()
-            .clone()
-            .into_iter();
+        let mut albums = self.albums.read().unwrap().clone().into_iter();
         let album = match query.identifier {
             SingleQueryIdentifier::Id(id) => albums.find(|album| album.id == Some(id)),
-            SingleQueryIdentifier::Uri(uri) => albums.find(|album| album.uri == uri)
+            SingleQueryIdentifier::Uri(uri) => albums.find(|album| album.uri == uri),
         };
         let album = if let Some(album) = album {
             Some(join_album(self, album, query.joins)?)
@@ -81,9 +75,7 @@ impl Library for MemoryLibrary {
     }
 
     fn query_albums(&self, query: MultiQuery) -> Result<Vec<Album>, Error> {
-        let albums = self.albums.read()
-            .unwrap()
-            .clone();
+        let albums = self.albums.read().unwrap().clone();
         join_albums(self, &albums, query.joins)
     }
 
@@ -96,7 +88,7 @@ impl Library for MemoryLibrary {
                 .iter()
                 .cloned()
                 .find(|artist| artist.id == Some(id)),
-            _ => None
+            _ => None,
         };
         Ok(artist)
     }
@@ -115,7 +107,7 @@ impl Library for MemoryLibrary {
                 .iter()
                 .cloned()
                 .find(|playlist| playlist.id == Some(id)),
-            _ => None
+            _ => None,
         };
         Ok(playlist)
     }
@@ -266,7 +258,8 @@ impl Library for MemoryLibrary {
                     .find(|t| t.uri == track.uri)
                     .map(|_t| false)
                     .unwrap_or(true)
-            }).map(|mut track| self.add_track(&mut track))
+            })
+            .map(|mut track| self.add_track(&mut track))
             .collect()
     }
 
@@ -280,7 +273,8 @@ impl Library for MemoryLibrary {
                     .find(|t| t.uri == album.uri)
                     .map(|_t| false)
                     .unwrap_or(true)
-            }).map(|mut album| self.add_album(&mut album))
+            })
+            .map(|mut album| self.add_album(&mut album))
             .collect()
     }
 
@@ -294,7 +288,8 @@ impl Library for MemoryLibrary {
                     .find(|t| t.uri == artist.uri)
                     .map(|_t| false)
                     .unwrap_or(true)
-            }).map(|mut artist| self.add_artist(&mut artist))
+            })
+            .map(|mut artist| self.add_artist(&mut artist))
             .collect()
     }
 
@@ -308,7 +303,8 @@ impl Library for MemoryLibrary {
                     .find(|p| p.uri == playlist.uri)
                     .map(|_p| false)
                     .unwrap_or(true)
-            }).map(|mut p| self.add_playlist(&mut p))
+            })
+            .map(|mut p| self.add_playlist(&mut p))
             .collect()
     }
 

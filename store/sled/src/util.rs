@@ -19,7 +19,10 @@ pub fn deserialize_id(id: &[u8]) -> Result<usize, Error> {
     Ok(id as usize)
 }
 
-pub fn fetch_entity<E>(tree: &Arc<sled::Tree>, id: usize) -> Result<Option<E>, Error> where E: DeserializeOwned {
+pub fn fetch_entity<E>(tree: &Arc<sled::Tree>, id: usize) -> Result<Option<E>, Error>
+where
+    E: DeserializeOwned,
+{
     let id = serialize_id(id)?;
     if let Some(bytes) = tree.get(&id)? {
         let entity: E = deserialize(&bytes)?;
@@ -29,36 +32,50 @@ pub fn fetch_entity<E>(tree: &Arc<sled::Tree>, id: usize) -> Result<Option<E>, E
     }
 }
 
-pub fn fetch_entities<E>(tree: &Arc<sled::Tree>) -> Result<Vec<E>, Error> where E: DeserializeOwned {
+pub fn fetch_entities<E>(tree: &Arc<sled::Tree>) -> Result<Vec<E>, Error>
+where
+    E: DeserializeOwned,
+{
     tree.iter()
-        .map(|item| item.map_err(Error::from).and_then(|(_, bytes)| deserialize(&bytes).map_err(Error::from)))
+        .map(|item| {
+            item.map_err(Error::from)
+                .and_then(|(_, bytes)| deserialize(&bytes).map_err(Error::from))
+        })
         .collect()
 }
 
 pub fn search_entities<E, P>(tree: &Arc<sled::Tree>, predicate: P) -> Result<Vec<E>, Error>
-    where E: DeserializeOwned,
-          P: Fn(&E) -> bool {
+where
+    E: DeserializeOwned,
+    P: Fn(&E) -> bool,
+{
     tree.iter()
-        .map(|item| item.map_err(Error::from).and_then(|(_, bytes)| deserialize(&bytes).map_err(Error::from)))
+        .map(|item| {
+            item.map_err(Error::from)
+                .and_then(|(_, bytes)| deserialize(&bytes).map_err(Error::from))
+        })
         .filter(|item| match item {
             Ok(entity) => predicate(entity),
-            _ => false
+            _ => false,
         })
         .collect()
 }
 
 pub fn find_entity<E, M>(tree: &Arc<sled::Tree>, matches: M) -> Result<Option<E>, Error>
-    where E: DeserializeOwned,
-          M: Fn(&E) -> bool {
-    tree
-        .iter()
-        .map(|item| item.map_err(Error::from).and_then(|(_, bytes)| {
-            let entity: E = deserialize(&bytes)?;
-            Ok(entity)
-        }))
+where
+    E: DeserializeOwned,
+    M: Fn(&E) -> bool,
+{
+    tree.iter()
+        .map(|item| {
+            item.map_err(Error::from).and_then(|(_, bytes)| {
+                let entity: E = deserialize(&bytes)?;
+                Ok(entity)
+            })
+        })
         .find(|item| match item {
             Ok(t) => matches(t),
-            _ => false
+            _ => false,
         })
         .transpose()
 }

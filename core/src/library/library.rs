@@ -2,8 +2,8 @@ use std::sync::Arc;
 
 use failure::Error;
 
-use crate::{MultiQuery, SingleQuery};
 use crate::library::{Album, Artist, Playlist, Track};
+use crate::{MultiQuery, SingleQuery};
 
 pub type SharedLibrary = Arc<Box<dyn Library>>;
 
@@ -108,22 +108,17 @@ pub trait Library: Sync + Send {
     fn sync_playlist(&self, playlist: &mut Playlist) -> Result<(), Error>;
 
     fn sync_tracks(&self, tracks: &mut Vec<Track>) -> Result<(), Error> {
-        tracks.iter_mut()
-            .map(|t| self.sync_track(t))
-            .collect()
+        tracks.iter_mut().map(|t| self.sync_track(t)).collect()
     }
     fn sync_albums(&self, albums: &mut Vec<Album>) -> Result<(), Error> {
-        albums.iter_mut()
-            .map(|a| self.sync_album(a))
-            .collect()
+        albums.iter_mut().map(|a| self.sync_album(a)).collect()
     }
     fn sync_artists(&self, artists: &mut Vec<Artist>) -> Result<(), Error> {
-        artists.iter_mut()
-            .map(|a| self.sync_artist(a))
-            .collect()
+        artists.iter_mut().map(|a| self.sync_artist(a)).collect()
     }
     fn sync_playlists(&self, playlists: &mut Vec<Playlist>) -> Result<(), Error> {
-        playlists.iter_mut()
+        playlists
+            .iter_mut()
             .map(|p| self.sync_playlist(p))
             .collect()
     }

@@ -1,6 +1,6 @@
 use commands::MpdCommand;
 use failure::Error;
-use rustic_core::{Artist, Rustic, MultiQuery};
+use rustic_core::{Artist, MultiQuery, Rustic};
 use std::sync::Arc;
 
 #[derive(Debug, Serialize)]

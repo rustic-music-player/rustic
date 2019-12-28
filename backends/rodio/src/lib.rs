@@ -8,13 +8,13 @@ extern crate url;
 use channel::{Receiver, Sender};
 use core::{PlayerBackend, PlayerEvent, PlayerState, Track};
 use failure::Error;
+use failure::_core::any::Any;
 use std::fs::File;
-use std::io::BufReader;
 use std::io::prelude::*;
+use std::io::BufReader;
 use std::sync::Arc;
 use std::time::Duration;
 use url::Url;
-use failure::_core::any::Any;
 
 pub struct RodioBackend {
     core: Arc<core::Rustic>,
@@ -30,11 +30,10 @@ pub struct RodioBackend {
 
 impl std::fmt::Debug for RodioBackend {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> Result<(), std::fmt::Error> {
-        write!(f, "RodioBackend {{ queue: {:?}, current_index: {:?}, state: {:?}, blend_time: {:?} }}",
-               self.queue,
-               self.current_index,
-               self.state,
-               self.blend_time
+        write!(
+            f,
+            "RodioBackend {{ queue: {:?}, current_index: {:?}, state: {:?}, blend_time: {:?} }}",
+            self.queue, self.current_index, self.state, self.blend_time
         )
     }
 }
@@ -69,7 +68,7 @@ impl RodioBackend {
                 let decoder = rodio::Decoder::new(BufReader::new(file))?;
                 Ok(decoder)
             }
-            scheme => bail!("Invalid scheme: {}", scheme)
+            scheme => bail!("Invalid scheme: {}", scheme),
         }
     }
 }
@@ -116,7 +115,7 @@ impl PlayerBackend for RodioBackend {
                 self.sink.play();
             }
             PlayerState::Pause => self.sink.pause(),
-            PlayerState::Stop => self.sink.stop()
+            PlayerState::Stop => self.sink.stop(),
         }
         self.state = state;
         Ok(())

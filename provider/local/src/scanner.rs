@@ -1,5 +1,5 @@
-use log::error;
 use failure::Error;
+use log::error;
 
 #[derive(Debug, PartialEq, Clone)]
 pub struct Track {
@@ -74,7 +74,8 @@ impl Scanner {
                         }
                     }
                 })
-            }).filter(|track| track.is_ok())
+            })
+            .filter(|track| track.is_ok())
             .collect()
     }
 }

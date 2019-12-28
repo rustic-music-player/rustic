@@ -28,9 +28,13 @@ pub struct Config {
 pub enum LibraryConfig {
     Memory,
     #[cfg(feature = "sqlite-store")]
-    SQLite { path: String },
+    SQLite {
+        path: String,
+    },
     #[cfg(feature = "sled-store")]
-    Sled { path: String },
+    Sled {
+        path: String,
+    },
 }
 
 #[derive(Deserialize, Clone, PartialEq, Eq)]
@@ -48,7 +52,7 @@ pub enum PlayerBackend {
     GStreamer,
     Rodio,
     #[cfg(feature = "google-cast")]
-    GoogleCast
+    GoogleCast,
 }
 
 fn default_backend() -> Vec<PlayerBackendConfig> {

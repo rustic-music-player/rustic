@@ -9,7 +9,7 @@ pub struct SingleQuery {
 #[derive(Clone)]
 pub enum SingleQueryIdentifier {
     Id(usize),
-    Uri(String)
+    Uri(String),
 }
 
 impl Default for SingleQueryIdentifier {

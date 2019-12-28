@@ -1,23 +1,26 @@
 use log::info;
 use std::collections::HashMap;
-use std::sync::{Arc, Mutex, Condvar};
+use std::sync::{Arc, Condvar, Mutex};
 
+use crate::extension::HostedExtension;
 use crossbeam_channel as channel;
 use failure::format_err;
-use url::Url;
 use log::debug;
-use crate::extension::HostedExtension;
+use url::Url;
 
-pub use crate::library::{Album, Artist, Library, MultiQuery, Playlist, QueryJoins, SearchResults, SharedLibrary, SingleQuery, SingleQueryIdentifier, Track, LibraryQueryJoins};
+pub use crate::library::{
+    Album, Artist, Library, LibraryQueryJoins, MultiQuery, Playlist, QueryJoins, SearchResults,
+    SharedLibrary, SingleQuery, SingleQueryIdentifier, Track,
+};
 pub use crate::player::{PlayerBackend, PlayerEvent, PlayerState};
 pub use crate::provider::{Explorer, Provider};
 
 pub mod cache;
+pub mod extension;
 pub mod library;
 pub mod player;
 pub mod provider;
 pub mod sync;
-pub mod extension;
 
 pub struct Rustic {
     player: Arc<Mutex<HashMap<String, Arc<Box<dyn PlayerBackend>>>>>,
@@ -26,7 +29,7 @@ pub struct Rustic {
     pub cache: cache::SharedCache,
     pub extensions: Vec<HostedExtension>,
     default_player: Arc<Mutex<Option<String>>>,
-    keep_running: Arc<(Mutex<bool>, Condvar)>
+    keep_running: Arc<(Mutex<bool>, Condvar)>,
 }
 
 impl Rustic {
@@ -43,7 +46,7 @@ impl Rustic {
             extensions,
             cache: Arc::new(cache::Cache::new()),
             default_player: Arc::new(Mutex::new(None)),
-            keep_running: Arc::new((Mutex::new(true), Condvar::new()))
+            keep_running: Arc::new((Mutex::new(true), Condvar::new())),
         }))
     }
 
@@ -75,9 +78,7 @@ impl Rustic {
     pub fn resolve_track(&self, uri: &str) -> Result<Option<Track>, failure::Error> {
         let mut query = SingleQuery::uri(uri.to_string());
         query.join_all();
-        let track = self
-            .library
-            .query_track(query)?;
+        let track = self.library.query_track(query)?;
 
         match track {
             Some(track) => Ok(Some(track)),
@@ -97,7 +98,8 @@ impl Rustic {
     }
 
     pub fn stream_url(&self, track: &Track) -> Result<String, failure::Error> {
-        self.providers.iter()
+        self.providers
+            .iter()
             .find(|provider| provider.read().unwrap().provider() == track.provider)
             .ok_or_else(|| format_err!("provider for track {:?} not found", track))
             .and_then(|provider| provider.read().unwrap().stream_url(track))

@@ -25,7 +25,7 @@ pub struct AlbumMeta {
     pub bool_variant: Option<i32>,
     pub float_variant: Option<f32>,
     pub string_variant: Option<String>,
-    pub int_variant: Option<i32>
+    pub int_variant: Option<i32>,
 }
 
 impl AlbumEntity {

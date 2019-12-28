@@ -1,6 +1,6 @@
 use commands::MpdCommand;
 use failure::Error;
-use rustic_core::{Rustic, MultiQuery};
+use rustic_core::{MultiQuery, Rustic};
 use std::sync::Arc;
 
 pub struct LoadPlaylistCommand {
@@ -23,7 +23,9 @@ impl MpdCommand<()> for LoadPlaylistCommand {
             .cloned()
             .unwrap()
             .tracks;
-        let player = app.get_default_player().ok_or(format_err!("Missing default player"))?;
+        let player = app
+            .get_default_player()
+            .ok_or(format_err!("Missing default player"))?;
         player.queue_multiple(&tracks);
         Ok(())
     }

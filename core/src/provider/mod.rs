@@ -1,5 +1,5 @@
-use serde_derive::{Deserialize, Serialize};
 use failure::{Error, Fail};
+use serde_derive::{Deserialize, Serialize};
 
 mod explorer;
 mod folder;

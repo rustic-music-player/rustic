@@ -12,17 +12,17 @@ extern crate toml;
 // Core
 extern crate rustic_core as rustic;
 // Backends
-#[cfg(feature = "gstreamer")]
-extern crate rustic_gstreamer_backend as gst_backend;
 #[cfg(feature = "google-cast")]
 extern crate rustic_google_cast_backend as google_cast_backend;
+#[cfg(feature = "gstreamer")]
+extern crate rustic_gstreamer_backend as gst_backend;
 // Frontends
+#[cfg(feature = "dbus")]
+extern crate rustic_dbus_frontend as dbus_frontend;
 #[cfg(feature = "web-api")]
 extern crate rustic_http_frontend as http_frontend;
 #[cfg(feature = "mpd")]
 extern crate rustic_mpd_frontend as mpd_frontend;
-#[cfg(feature = "dbus")]
-extern crate rustic_dbus_frontend as dbus_frontend;
 #[cfg(feature = "qt")]
 extern crate rustic_qt_frontend as qt_frontend;
 // Provider
@@ -63,7 +63,7 @@ fn main() -> Result<(), Error> {
     let log_level = match options.verbose {
         0 => LevelFilter::Info,
         1 => LevelFilter::Debug,
-        _ => LevelFilter::Trace
+        _ => LevelFilter::Trace,
     };
 
     env_logger::Builder::from_default_env()
@@ -79,7 +79,7 @@ fn main() -> Result<(), Error> {
         #[cfg(feature = "sqlite-store")]
         LibraryConfig::SQLite { path } => Box::new(SqliteLibrary::new(path)?),
         #[cfg(feature = "sled-store")]
-        LibraryConfig::Sled { path } => Box::new(SledLibrary::new(path)?)
+        LibraryConfig::Sled { path } => Box::new(SledLibrary::new(path)?),
     };
 
     let extensions = rustic::extension::load_extensions(Path::new("target/debug"))?;
@@ -97,11 +97,14 @@ fn main() -> Result<(), Error> {
                 if player.default {
                     app.set_default_player(player.name.clone());
                 }
-            },
+            }
             #[cfg(feature = "google-cast")]
             PlayerBackend::GoogleCast => {
-                let discovery = google_cast_backend::GoogleCastBackend::start_discovery(Arc::clone(&app), Arc::clone(&keep_running));
-            },
+                let discovery = google_cast_backend::GoogleCastBackend::start_discovery(
+                    Arc::clone(&app),
+                    Arc::clone(&keep_running),
+                );
+            }
             _ => panic!("invalid backend config"),
         }
     }
@@ -112,31 +115,31 @@ fn main() -> Result<(), Error> {
     ];
 
     #[cfg(feature = "mpd")]
-        {
-            if config.mpd.is_some() {
-                let mpd_thread = mpd_frontend::start(config.mpd.clone(), Arc::clone(&app));
-                threads.push(mpd_thread);
-            }
+    {
+        if config.mpd.is_some() {
+            let mpd_thread = mpd_frontend::start(config.mpd.clone(), Arc::clone(&app));
+            threads.push(mpd_thread);
         }
+    }
 
     #[cfg(feature = "web-api")]
-        {
-            if config.http.is_some() {
-                let http_thread = http_frontend::start(config.http.clone(), Arc::clone(&app));
-                threads.push(http_thread);
-            }
+    {
+        if config.http.is_some() {
+            let http_thread = http_frontend::start(config.http.clone(), Arc::clone(&app));
+            threads.push(http_thread);
         }
+    }
 
     #[cfg(feature = "dbus")]
-        {
-            let dbus_thread = dbus_frontend::start(Arc::clone(&app));
-            threads.push(dbus_thread);
-        }
+    {
+        let dbus_thread = dbus_frontend::start(Arc::clone(&app));
+        threads.push(dbus_thread);
+    }
 
     #[cfg(feature = "qt")]
-        {
-            qt_frontend::start(Arc::clone(&app));
-        }
+    {
+        qt_frontend::start(Arc::clone(&app));
+    }
 
     for handle in threads {
         let _ = handle.join();
@@ -149,34 +152,34 @@ fn setup_providers(config: &Config) -> rustic::provider::SharedProviders {
     let mut providers: rustic::provider::SharedProviders = vec![];
 
     #[cfg(feature = "pocketcasts")]
-        {
-            if let Some(pocketcasts) = config.pocketcasts.clone() {
-                providers.push(Arc::new(RwLock::new(Box::new(pocketcasts))));
-            }
+    {
+        if let Some(pocketcasts) = config.pocketcasts.clone() {
+            providers.push(Arc::new(RwLock::new(Box::new(pocketcasts))));
         }
+    }
     #[cfg(feature = "soundcloud")]
-        {
-            if let Some(soundcloud) = config.soundcloud.clone() {
-                providers.push(Arc::new(RwLock::new(Box::new(soundcloud))));
-            }
+    {
+        if let Some(soundcloud) = config.soundcloud.clone() {
+            providers.push(Arc::new(RwLock::new(Box::new(soundcloud))));
         }
+    }
     #[cfg(feature = "spotify")]
-        {
-            if let Some(spotify) = config.spotify.clone() {
-                providers.push(Arc::new(RwLock::new(Box::new(spotify))));
-            }
+    {
+        if let Some(spotify) = config.spotify.clone() {
+            providers.push(Arc::new(RwLock::new(Box::new(spotify))));
         }
+    }
     #[cfg(feature = "local-files")]
-        {
-            if let Some(local) = config.local.clone() {
-                providers.push(Arc::new(RwLock::new(Box::new(local))));
-            }
+    {
+        if let Some(local) = config.local.clone() {
+            providers.push(Arc::new(RwLock::new(Box::new(local))));
         }
+    }
     for provider in &providers {
         let mut provider = provider.write().unwrap();
-        provider.setup().unwrap_or_else(|err| {
-            error!("Can't setup {} provider: {:?}", provider.title(), err)
-        });
+        provider
+            .setup()
+            .unwrap_or_else(|err| error!("Can't setup {} provider: {:?}", provider.title(), err));
     }
 
     providers
@@ -184,7 +187,7 @@ fn setup_providers(config: &Config) -> rustic::provider::SharedProviders {
 
 fn setup_interrupt(app: &Arc<rustic::Rustic>) -> Result<(), Error> {
     let app = Arc::clone(app);
-    ctrlc::set_handler(move|| {
+    ctrlc::set_handler(move || {
         app.exit();
     })?;
     Ok(())
