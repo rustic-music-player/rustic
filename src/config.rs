@@ -49,6 +49,7 @@ pub struct PlayerBackendConfig {
 #[derive(Deserialize, Clone, PartialEq, Eq)]
 #[serde(rename_all = "lowercase")]
 pub enum PlayerBackend {
+    #[cfg(feature = "gstreamer")]
     GStreamer,
     #[cfg(feature = "rodio")]
     Rodio,
@@ -57,10 +58,14 @@ pub enum PlayerBackend {
 }
 
 fn default_backend() -> Vec<PlayerBackendConfig> {
+    #[cfg(feature = "gstreamer")]
+    let backend_type = PlayerBackend::GStreamer;
+    #[cfg(feature = "rodio")]
+    let backend_type = PlayerBackend::Rodio;
     let config = PlayerBackendConfig {
         name: "default".to_string(),
         default: true,
-        backend_type: PlayerBackend::GStreamer,
+        backend_type,
     };
 
     vec![config]

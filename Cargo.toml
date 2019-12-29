@@ -33,6 +33,7 @@ default = [
 	"sled-store",
 	"web-api",
 	"gstreamer",
+	"rodio",
 	"local-files",
 	"pocketcasts",
 	"soundcloud"
