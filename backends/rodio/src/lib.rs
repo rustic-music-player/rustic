@@ -121,19 +121,26 @@ impl RodioBackend {
             sink.stop();
         }
     }
+
+    fn queue_changed(&self) {
+        self.tx.send(PlayerEvent::QueueUpdated(self.queue.get_queue()));
+    }
 }
 
 impl PlayerBackend for RodioBackend {
     fn queue_single(&self, track: &Track) {
         self.queue.queue_single(track);
+        self.queue_changed();
     }
 
     fn queue_multiple(&self, tracks: &[Track]) {
         self.queue.queue_multiple(tracks);
+        self.queue_changed();
     }
 
     fn queue_next(&self, track: &Track) {
         self.queue.queue_next(track);
+        self.queue_changed();
     }
 
     fn get_queue(&self) -> Vec<Track> {
@@ -142,6 +149,7 @@ impl PlayerBackend for RodioBackend {
 
     fn clear_queue(&self) {
         self.queue.clear();
+        self.queue_changed();
     }
 
     fn current(&self) -> Option<Track> {
