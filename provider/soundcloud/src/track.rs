@@ -33,7 +33,7 @@ impl From<SoundcloudTrack> for Track {
             provider: provider::Provider::Soundcloud,
             uri: format!("soundcloud://track/{}", track.id),
             image_url: track.artwork_url,
-            duration: Some(track.duration),
+            duration: Some(track.duration / 1000),
             meta: hashmap! {
                 META_SOUNDCLOUD_TRACK_ID.into() => track.id.into(),
                 META_SOUNDCLOUD_STREAM_URL.into() => stream_url.into()
