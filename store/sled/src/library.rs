@@ -72,7 +72,7 @@ impl SledLibrary {
     fn serialize_track(&self, track: &mut Track) -> Result<(Vec<u8>, Vec<u8>), Error> {
         let id = track
             .id
-            .ok_or(err_msg("missing id"))
+            .ok_or_else(|| err_msg("missing id"))
             .and_then(serialize_id)?;
         let bytes = serialize(&track)?;
         Ok((id, bytes))
@@ -81,7 +81,7 @@ impl SledLibrary {
     fn serialize_artist(&self, artist: &Artist) -> Result<(Vec<u8>, Vec<u8>), Error> {
         let id = artist
             .id
-            .ok_or(err_msg("missing id"))
+            .ok_or_else(|| err_msg("missing id"))
             .and_then(serialize_id)?;
         let bytes = serialize(&artist)?;
         Ok((id, bytes))
@@ -90,7 +90,7 @@ impl SledLibrary {
     fn serialize_album(&self, album: &Album) -> Result<(Vec<u8>, Vec<u8>), Error> {
         let id = album
             .id
-            .ok_or(err_msg("missing id"))
+            .ok_or_else(|| err_msg("missing id"))
             .and_then(serialize_id)?;
         let bytes = serialize(&album)?;
         Ok((id, bytes))
@@ -99,7 +99,7 @@ impl SledLibrary {
     fn serialize_playlist(&self, playlist: &Playlist) -> Result<(Vec<u8>, Vec<u8>), Error> {
         let id = playlist
             .id
-            .ok_or(err_msg("missing id"))
+            .ok_or_else(|| err_msg("missing id"))
             .and_then(serialize_id)?;
         let bytes = serialize(&playlist)?;
         Ok((id, bytes))
@@ -118,7 +118,7 @@ impl rustic_core::Library for SledLibrary {
         }
     }
 
-    fn query_tracks(&self, query: MultiQuery) -> Result<Vec<Track>, Error> {
+    fn query_tracks(&self, _query: MultiQuery) -> Result<Vec<Track>, Error> {
         fetch_entities(&self.tracks_tree)
     }
 
@@ -145,7 +145,7 @@ impl rustic_core::Library for SledLibrary {
         }
     }
 
-    fn query_artists(&self, query: MultiQuery) -> Result<Vec<Artist>, Error> {
+    fn query_artists(&self, _query: MultiQuery) -> Result<Vec<Artist>, Error> {
         fetch_entities(&self.artists_tree)
     }
 
@@ -156,7 +156,7 @@ impl rustic_core::Library for SledLibrary {
         }
     }
 
-    fn query_playlists(&self, query: MultiQuery) -> Result<Vec<Playlist>, Error> {
+    fn query_playlists(&self, _query: MultiQuery) -> Result<Vec<Playlist>, Error> {
         fetch_entities(&self.playlists_tree)
     }
 

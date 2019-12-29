@@ -9,15 +9,14 @@ extern crate rustic_core as core;
 extern crate url;
 
 use std::fs::File;
-use std::io::prelude::*;
 use std::io::BufReader;
 use std::ops::DerefMut;
 use std::sync::{Arc, Mutex};
 use std::time::Duration;
 
 use channel::{Receiver, Sender};
-use failure::Error;
 use failure::_core::any::Any;
+use failure::Error;
 use pinboard::NonEmptyPinboard;
 use url::Url;
 
@@ -123,7 +122,8 @@ impl RodioBackend {
     }
 
     fn queue_changed(&self) {
-        self.tx.send(PlayerEvent::QueueUpdated(self.queue.get_queue()));
+        self.tx
+            .send(PlayerEvent::QueueUpdated(self.queue.get_queue()));
     }
 }
 
@@ -210,7 +210,7 @@ impl PlayerBackend for RodioBackend {
         }
     }
 
-    fn set_blend_time(&self, duration: Duration) -> Result<(), Error> {
+    fn set_blend_time(&self, _duration: Duration) -> Result<(), Error> {
         unimplemented!()
     }
 
@@ -218,7 +218,7 @@ impl PlayerBackend for RodioBackend {
         unimplemented!()
     }
 
-    fn seek(&self, duration: Duration) -> Result<(), Error> {
+    fn seek(&self, _duration: Duration) -> Result<(), Error> {
         unimplemented!()
     }
 
@@ -226,7 +226,7 @@ impl PlayerBackend for RodioBackend {
         self.rx.clone()
     }
 
-    fn as_any(&self) -> &Any {
+    fn as_any(&self) -> &dyn Any {
         self
     }
 }

@@ -8,13 +8,13 @@ extern crate pinboard;
 extern crate rustic_core as core;
 
 use std::any::Any;
-use std::sync::{atomic, Arc, Mutex};
+use std::sync::Arc;
 use std::thread;
 use std::time::Duration;
 
 use channel::{Receiver, Sender};
 use failure::{err_msg, Error};
-use gst::{prelude::*, MessageView, StateChangeReturn};
+use gst::{MessageView, prelude::*, StateChangeReturn};
 use pinboard::NonEmptyPinboard;
 
 use core::{player::MemoryQueue, PlayerBackend, PlayerEvent, PlayerState, Track};
@@ -45,7 +45,7 @@ impl std::fmt::Debug for GstBackend {
 }
 
 impl GstBackend {
-    pub fn new(core: Arc<core::Rustic>) -> Result<Arc<Box<PlayerBackend>>, Error> {
+    pub fn new(core: Arc<core::Rustic>) -> Result<Arc<Box<dyn PlayerBackend>>, Error> {
         gst::init()?;
         let pipeline = gst::Pipeline::new(None);
         let decoder = gst::ElementFactory::make("uridecodebin", None)
@@ -86,7 +86,7 @@ impl GstBackend {
                 pad.link(&sink_pad);
             });
 
-        let backend: Arc<Box<PlayerBackend>> = Arc::new(Box::new(backend));
+        let backend: Arc<Box<dyn PlayerBackend>> = Arc::new(Box::new(backend));
 
         {
             let gst_backend = Arc::clone(&backend);
@@ -284,7 +284,7 @@ impl PlayerBackend for GstBackend {
         self.rx.clone()
     }
 
-    fn as_any(&self) -> &Any {
+    fn as_any(&self) -> &dyn Any {
         self
     }
 }

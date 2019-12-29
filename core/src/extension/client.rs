@@ -1,7 +1,7 @@
+use std::error::Error;
+
 use crate::extension::commands::{ExtensionCommands, ExtensionMetadata, ExtensionResponses, Hook};
 use crate::Track;
-use failure::_core::fmt::Formatter;
-use std::error::Error;
 
 #[macro_export]
 macro_rules! crate_version {

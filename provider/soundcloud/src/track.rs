@@ -1,10 +1,11 @@
-use rustic::library::{Artist, Track};
-use rustic::provider;
 use soundcloud;
 
-pub const META_SOUNDCLOUD_USER_ID: &'static str = "SOUNDCLOUD_USER_ID";
-pub const META_SOUNDCLOUD_TRACK_ID: &'static str = "SOUNDCLOUD_TRACK_ID";
-pub const META_SOUNDCLOUD_STREAM_URL: &'static str = "SOUNDCLOUD_STREAM_URL";
+use rustic::library::{Artist, Track};
+use rustic::provider;
+
+pub const META_SOUNDCLOUD_USER_ID: &str = "SOUNDCLOUD_USER_ID";
+pub const META_SOUNDCLOUD_TRACK_ID: &str = "SOUNDCLOUD_TRACK_ID";
+pub const META_SOUNDCLOUD_STREAM_URL: &str = "SOUNDCLOUD_STREAM_URL";
 
 #[derive(Debug, Clone)]
 pub struct SoundcloudTrack(soundcloud::Track);

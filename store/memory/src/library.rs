@@ -6,7 +6,7 @@ use std::sync::{
 use failure::Error;
 
 use rustic_core::{
-    Album, Artist, Library, LibraryQueryJoins, MultiQuery, Playlist, SearchResults, SingleQuery,
+    Album, Artist, Library, MultiQuery, Playlist, SearchResults, SingleQuery,
     SingleQueryIdentifier, Track,
 };
 use rustic_store_helpers::{join_album, join_albums, join_track};

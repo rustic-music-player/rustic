@@ -3,23 +3,23 @@ use bitflags::bitflags;
 bitflags! {
     #[derive(Default)]
     pub struct LibraryQueryJoins: u32 {
-        const TRACK =  0b00000001;
-        const ALBUM =  0b00000010;
-        const ARTIST = 0b00000100;
+        const TRACK =  0b0000_0001;
+        const ALBUM =  0b0000_0010;
+        const ARTIST = 0b0000_0100;
         const ALL = Self::TRACK.bits | Self::ALBUM.bits | Self::ARTIST.bits;
     }
 }
 
 impl LibraryQueryJoins {
-    pub fn has_tracks(&self) -> bool {
+    pub fn has_tracks(self) -> bool {
         self.contains(LibraryQueryJoins::TRACK)
     }
 
-    pub fn has_albums(&self) -> bool {
+    pub fn has_albums(self) -> bool {
         self.contains(LibraryQueryJoins::ALBUM)
     }
 
-    pub fn has_artists(&self) -> bool {
+    pub fn has_artists(self) -> bool {
         self.contains(LibraryQueryJoins::ARTIST)
     }
 }

@@ -1,4 +1,4 @@
-use failure::{format_err, Error};
+use failure::{Error, format_err};
 use maplit::hashmap;
 use serde_derive::Deserialize;
 
@@ -7,7 +7,7 @@ use rustic_core::provider::*;
 
 pub mod scanner;
 
-const META_LOCAL_FILE_URL: &'static str = "LOCAL_FILE_URL";
+const META_LOCAL_FILE_URL: &str = "LOCAL_FILE_URL";
 
 #[derive(Clone, Deserialize, Debug)]
 pub struct LocalProvider {

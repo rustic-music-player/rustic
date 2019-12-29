@@ -2,7 +2,11 @@ use failure::Error;
 
 use rustic_core::{Album, Library, LibraryQueryJoins, MultiQuery, SingleQuery, Track};
 
-pub fn join_track(store: &Library, track: Track, joins: LibraryQueryJoins) -> Result<Track, Error> {
+pub fn join_track(
+    store: &dyn Library,
+    track: Track,
+    joins: LibraryQueryJoins,
+) -> Result<Track, Error> {
     let artist = if joins.has_artists() {
         if let Some(artist_id) = track.artist_id {
             store.query_artist(SingleQuery::id(artist_id))?
@@ -28,7 +32,11 @@ pub fn join_track(store: &Library, track: Track, joins: LibraryQueryJoins) -> Re
     })
 }
 
-pub fn join_album(store: &Library, album: Album, joins: LibraryQueryJoins) -> Result<Album, Error> {
+pub fn join_album(
+    store: &dyn Library,
+    album: Album,
+    joins: LibraryQueryJoins,
+) -> Result<Album, Error> {
     let tracks = if joins.has_tracks() {
         store
             .query_tracks(MultiQuery::new())?
@@ -57,7 +65,7 @@ pub fn join_album(store: &Library, album: Album, joins: LibraryQueryJoins) -> Re
 }
 
 pub fn join_albums(
-    store: &Library,
+    store: &dyn Library,
     albums: &[Album],
     joins: LibraryQueryJoins,
 ) -> Result<Vec<Album>, Error> {

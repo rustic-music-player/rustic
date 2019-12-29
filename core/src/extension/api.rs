@@ -1,7 +1,9 @@
-use crate::Track;
-use serde_derive::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::error::Error;
+
+use serde_derive::{Deserialize, Serialize};
+
+use crate::Track;
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub enum ExtensionConfigValue {
@@ -14,7 +16,7 @@ pub enum ExtensionConfigValue {
 pub trait Extension: std::fmt::Debug {
     fn setup(
         &mut self,
-        config: Option<HashMap<String, ExtensionConfigValue>>,
+        _config: Option<HashMap<String, ExtensionConfigValue>>,
     ) -> Result<(), Box<dyn Error>> {
         Ok(())
     }

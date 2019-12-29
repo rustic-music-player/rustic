@@ -3,47 +3,47 @@ extern crate env_logger;
 extern crate failure;
 #[macro_use]
 extern crate log;
+// Core
+extern crate rustic_core as rustic;
+// Frontends
+#[cfg(feature = "dbus")]
+extern crate rustic_dbus_frontend as dbus_frontend;
+// Backends
+#[cfg(feature = "google-cast")]
+extern crate rustic_google_cast_backend as google_cast_backend;
+#[cfg(feature = "gstreamer")]
+extern crate rustic_gstreamer_backend as gst_backend;
+#[cfg(feature = "web-api")]
+extern crate rustic_http_frontend as http_frontend;
+// Provider
+#[cfg(feature = "local-files")]
+extern crate rustic_local_provider as local_provider;
+// Stores
+extern crate rustic_memory_store as memory_store;
+#[cfg(feature = "mpd")]
+extern crate rustic_mpd_frontend as mpd_frontend;
+#[cfg(feature = "pocketcasts")]
+extern crate rustic_pocketcasts_provider as pocketcasts_provider;
+#[cfg(feature = "qt")]
+extern crate rustic_qt_frontend as qt_frontend;
+#[cfg(feature = "rodio")]
+extern crate rustic_rodio_backend as rodio_backend;
+#[cfg(feature = "sled-store")]
+extern crate rustic_sled_store as sled_store;
+#[cfg(feature = "soundcloud")]
+extern crate rustic_soundcloud_provider as soundcloud_provider;
+#[cfg(feature = "spotify")]
+extern crate rustic_spotify_provider as spotify_provider;
+#[cfg(feature = "sqlite-store")]
+extern crate rustic_sqlite_store as sqlite_store;
 extern crate serde;
 #[macro_use]
 extern crate serde_derive;
 extern crate structopt;
 extern crate toml;
 
-// Core
-extern crate rustic_core as rustic;
-// Backends
-#[cfg(feature = "google-cast")]
-extern crate rustic_google_cast_backend as google_cast_backend;
-#[cfg(feature = "gstreamer")]
-extern crate rustic_gstreamer_backend as gst_backend;
-#[cfg(feature = "rodio")]
-extern crate rustic_rodio_backend as rodio_backend;
-// Frontends
-#[cfg(feature = "dbus")]
-extern crate rustic_dbus_frontend as dbus_frontend;
-#[cfg(feature = "web-api")]
-extern crate rustic_http_frontend as http_frontend;
-#[cfg(feature = "mpd")]
-extern crate rustic_mpd_frontend as mpd_frontend;
-#[cfg(feature = "qt")]
-extern crate rustic_qt_frontend as qt_frontend;
-// Provider
-#[cfg(feature = "local-files")]
-extern crate rustic_local_provider as local_provider;
-#[cfg(feature = "pocketcasts")]
-extern crate rustic_pocketcasts_provider as pocketcasts_provider;
-#[cfg(feature = "soundcloud")]
-extern crate rustic_soundcloud_provider as soundcloud_provider;
-#[cfg(feature = "spotify")]
-extern crate rustic_spotify_provider as spotify_provider;
-// Stores
-extern crate rustic_memory_store as memory_store;
-#[cfg(feature = "sled-store")]
-extern crate rustic_sled_store as sled_store;
-#[cfg(feature = "sqlite-store")]
-extern crate rustic_sqlite_store as sqlite_store;
-
-use std::sync::{Arc, Condvar, Mutex, RwLock};
+use std::path::Path;
+use std::sync::{Arc, RwLock};
 
 use failure::Error;
 use log::LevelFilter;
@@ -55,7 +55,6 @@ use memory_store::MemoryLibrary;
 use sled_store::SledLibrary;
 #[cfg(feature = "sqlite-store")]
 use sqlite_store::SqliteLibrary;
-use std::path::Path;
 
 mod config;
 mod options;
@@ -76,7 +75,7 @@ fn main() -> Result<(), Error> {
 
     let providers = setup_providers(&config);
 
-    let store: Box<rustic::Library> = match config.library.unwrap_or(LibraryConfig::Memory) {
+    let store: Box<dyn rustic::Library> = match config.library.unwrap_or(LibraryConfig::Memory) {
         LibraryConfig::Memory => Box::new(MemoryLibrary::new()),
         #[cfg(feature = "sqlite-store")]
         LibraryConfig::SQLite { path } => Box::new(SqliteLibrary::new(path)?),

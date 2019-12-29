@@ -4,6 +4,7 @@ use std::time::Duration;
 use actix::prelude::*;
 use crossbeam_channel::Receiver;
 use futures::{Async, Poll, Stream};
+
 use rustic_core::{PlayerEvent, PlayerState, Rustic};
 use socket::{messages, SocketServer};
 use viewmodels::TrackModel;
@@ -38,7 +39,7 @@ impl PlayerEvents {
     pub fn new(app: Arc<Rustic>) -> PlayerEvents {
         let player = app
             .get_default_player()
-            .ok_or(format_err!("Missing default player"))
+            .ok_or_else(|| format_err!("Missing default player"))
             .unwrap();
         let receiver = player.observe();
 

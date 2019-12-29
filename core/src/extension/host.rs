@@ -1,16 +1,15 @@
-use crate::extension::commands::{ExtensionCommands, ExtensionResponses, Hook};
-use crate::extension::ClientExtension;
-use log::{debug, error, info};
-use std::fs::{read_dir, DirEntry};
-use std::io::Stdin;
+use std::fs::{DirEntry, read_dir};
 use std::path::Path;
 use std::process::{Child, Command, Stdio};
 use std::sync::Arc;
 use std::sync::Mutex;
 
+use log::{debug, error, info};
+
+use crate::extension::commands::{ExtensionCommands, ExtensionResponses, Hook};
+
 pub fn load_extensions(path: &Path) -> Result<Vec<HostedExtension>, failure::Error> {
     let extensions = read_dir(path)?
-        .into_iter()
         .filter(|file| file.is_ok())
         .map(|file| file.unwrap())
         .filter(|file| {
