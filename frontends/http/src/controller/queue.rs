@@ -29,7 +29,7 @@ pub fn queue_track(
     }
 }
 
-#[post("/queue/playlist/{playlist_id}")]
+#[post("/queue/playlist/{cursor}")]
 pub fn queue_playlist(
     data: web::Data<ApiState>,
     params: web::Path<AddToQueueQuery>,
