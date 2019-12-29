@@ -1,29 +1,20 @@
-extern crate crossbeam_channel as channel;
-#[macro_use]
-extern crate failure;
-#[macro_use]
-extern crate log;
-extern crate pinboard;
-extern crate rodio;
-extern crate rustic_core as core;
-extern crate url;
-
+use std::any::Any;
 use std::fs::File;
 use std::io::BufReader;
 use std::ops::DerefMut;
 use std::sync::{Arc, Mutex};
 use std::time::Duration;
 
-use channel::{Receiver, Sender};
-use failure::_core::any::Any;
-use failure::Error;
+use crossbeam_channel::{Receiver, Sender};
+use failure::{bail, Error};
+use log::{debug, trace};
 use pinboard::NonEmptyPinboard;
 use url::Url;
 
-use core::{player::MemoryQueue, PlayerBackend, PlayerEvent, PlayerState, Track};
+use rustic_core::{player::MemoryQueue, PlayerBackend, PlayerEvent, PlayerState, Rustic, Track};
 
 pub struct RodioBackend {
-    core: Arc<core::Rustic>,
+    core: Arc<Rustic>,
     queue: MemoryQueue,
     state: NonEmptyPinboard<PlayerState>,
     blend_time: Duration,
@@ -34,7 +25,7 @@ pub struct RodioBackend {
 }
 
 impl std::fmt::Debug for RodioBackend {
-    fn fmt(&self, f: &mut std::fmt::Formatter) -> Result<(), std::fmt::Error> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> Result<(), std::fmt::Error> {
         write!(
             f,
             "RodioBackend {{ queue: {:?}, state: {:?}, blend_time: {:?} }}",
@@ -44,9 +35,9 @@ impl std::fmt::Debug for RodioBackend {
 }
 
 impl RodioBackend {
-    pub fn new(core: Arc<core::Rustic>) -> Result<Arc<Box<dyn PlayerBackend>>, Error> {
+    pub fn new(core: Arc<Rustic>) -> Result<Arc<Box<dyn PlayerBackend>>, Error> {
         let device = rodio::default_output_device().unwrap();
-        let (tx, rx) = channel::unbounded();
+        let (tx, rx) = crossbeam_channel::unbounded();
         let backend = RodioBackend {
             core,
             queue: MemoryQueue::new(),
