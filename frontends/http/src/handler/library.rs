@@ -1,4 +1,3 @@
-use std::str::from_utf8;
 use std::sync::Arc;
 
 use failure::Error;
@@ -12,7 +11,7 @@ pub fn fetch_album(cursor: &str, rustic: &Arc<Rustic>) -> Result<Option<AlbumMod
     let sw = stopwatch::Stopwatch::start_new();
 
     let uri = from_cursor(cursor)?;
-    let mut query = SingleQuery::uri(uri.to_string());
+    let mut query = SingleQuery::uri(uri);
     query.join_all();
     let album = library
         .query_album(query)?
@@ -60,10 +59,27 @@ pub fn fetch_playlists(rustic: &Arc<Rustic>) -> Result<Vec<PlaylistModel>, Error
     query.join_tracks();
     let playlists = library.query_playlists(query)?;
     debug!("Fetching playlists took {}ms", sw.elapsed_ms());
-    playlists
+    let playlists = playlists
         .into_iter()
         .map(|playlist| PlaylistModel::new(playlist, &rustic))
-        .collect()
+        .collect();
+
+    Ok(playlists)
+}
+
+pub fn fetch_playlist(cursor: &str, rustic: &Arc<Rustic>) -> Result<Option<PlaylistModel>, Error> {
+    let library = &rustic.library;
+    let sw = stopwatch::Stopwatch::start_new();
+
+    let uri = from_cursor(cursor)?;
+    let mut query = SingleQuery::uri(uri);
+    query.join_all();
+    let playlist = library
+        .query_playlist(query)?
+        .map(|playlist| PlaylistModel::new(playlist, &rustic));
+    debug!("Fetching playlist took {}ms", sw.elapsed_ms());
+
+    Ok(playlist)
 }
 
 pub fn fetch_tracks(rustic: &Arc<Rustic>) -> Result<Vec<TrackModel>, Error> {

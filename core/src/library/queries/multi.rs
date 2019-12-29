@@ -1,6 +1,6 @@
 use super::{LibraryQueryJoins, QueryJoins};
 
-#[derive(Default, Clone, Copy)]
+#[derive(Default, Debug, Clone, Copy)]
 pub struct MultiQuery {
     pub joins: LibraryQueryJoins,
     pub limit: Option<usize>,
@@ -41,8 +41,9 @@ impl QueryJoins for MultiQuery {
 
 #[cfg(test)]
 mod tests {
-    use super::{LibraryQueryJoins, QueryJoins};
     use crate::MultiQuery;
+
+    use super::{LibraryQueryJoins, QueryJoins};
 
     #[test]
     fn join_all_should_set_bits_for_all_joins() {

@@ -1,13 +1,13 @@
 use std::sync::Arc;
 
-use actix_web::{middleware, web, App, HttpServer, Result, Scope};
-
 use actix::{Addr, System};
 use actix_files::Files;
+use actix_web::{App, HttpServer, middleware, Result, Scope, web};
+
 use controller;
+use HttpConfig;
 use rustic_core::Rustic;
 use socket::{create_socket_server, socket_service, SocketServer};
-use HttpConfig;
 
 pub struct ApiState {
     pub app: Arc<Rustic>,
@@ -20,6 +20,7 @@ fn build_api(app: Arc<Rustic>, ws_server: Addr<SocketServer>) -> Scope {
         .service(controller::library::get_album)
         .service(controller::library::get_artists)
         .service(controller::library::get_playlists)
+        .service(controller::library::get_playlist)
         .service(controller::library::get_tracks)
         .service(controller::queue::fetch)
         .service(controller::queue::clear)

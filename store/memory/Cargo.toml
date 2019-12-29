@@ -10,6 +10,7 @@ edition = "2018"
 
 [dependencies]
 failure = "0.1"
+log = "0.4"
 
 [dependencies.rustic-core]
 path = "../../core"

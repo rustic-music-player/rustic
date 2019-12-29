@@ -1,12 +1,12 @@
 use super::{LibraryQueryJoins, QueryJoins};
 
-#[derive(Default, Clone)]
+#[derive(Default, Debug, Clone)]
 pub struct SingleQuery {
     pub identifier: SingleQueryIdentifier,
     pub joins: LibraryQueryJoins,
 }
 
-#[derive(Clone)]
+#[derive(Debug, Clone)]
 pub enum SingleQueryIdentifier {
     Id(usize),
     Uri(String),

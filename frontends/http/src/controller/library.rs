@@ -54,6 +54,19 @@ pub fn get_playlists(data: web::Data<ApiState>) -> Result<impl Responder> {
     Ok(web::Json(playlists))
 }
 
+#[get("/library/playlists/{cursor}")]
+pub fn get_playlist(
+    data: web::Data<ApiState>,
+    params: web::Path<GetEntityQuery>,
+) -> Result<impl Responder> {
+    let rustic = &data.app;
+    let playlist = library_handler::fetch_playlist(&params.cursor, rustic)?;
+    match playlist {
+        Some(playlist) => Ok(web::Json(playlist)),
+        None => Err(error::ErrorNotFound("Not Found")),
+    }
+}
+
 #[get("/library/tracks")]
 pub fn get_tracks(data: web::Data<ApiState>) -> Result<impl Responder> {
     let rustic = &data.app;
