@@ -1,21 +1,23 @@
+use std::fmt::Debug;
+use std::sync::{Arc, RwLock};
+
 use failure::{Error, Fail};
 use serde_derive::{Deserialize, Serialize};
 
-mod explorer;
-mod folder;
-mod item;
-mod sync_error;
+use crate::library::{SharedLibrary, Track};
 
 pub use self::explorer::Explorer;
 pub use self::folder::ProviderFolder;
 pub use self::item::{ProviderItem, ProviderItemType};
 pub use self::sync_error::SyncError;
 
-use crate::library::{SharedLibrary, Track};
-use std::fmt::Debug;
-use std::sync::{Arc, RwLock};
+mod explorer;
+mod folder;
+mod item;
+mod sync_error;
 
-pub type SharedProviders = Vec<Arc<RwLock<Box<dyn ProviderInstance + Send + Sync>>>>;
+pub type SharedProvider = Arc<RwLock<Box<dyn ProviderInstance + Send + Sync>>>;
+pub type SharedProviders = Vec<SharedProvider>;
 
 pub struct SyncResult {
     pub tracks: usize,

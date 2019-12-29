@@ -3,8 +3,7 @@ use std::sync::{Arc, Condvar, Mutex};
 
 use crossbeam_channel as channel;
 use failure::format_err;
-use log::debug;
-use log::info;
+use log::{debug, info, trace};
 use url::Url;
 
 use crate::extension::HostedExtension;
@@ -14,6 +13,7 @@ pub use crate::library::{
 };
 pub use crate::player::{PlayerBackend, PlayerEvent, PlayerState};
 pub use crate::provider::{Explorer, Provider};
+use crate::provider::SharedProvider;
 
 pub mod cache;
 pub mod extension;
@@ -79,26 +79,35 @@ impl Rustic {
         *default_player = Some(id);
     }
 
-    pub fn resolve_track(&self, uri: &str) -> Result<Option<Track>, failure::Error> {
-        let mut query = SingleQuery::uri(uri.to_string());
-        query.join_all();
-        let track = self.library.query_track(query)?;
-
-        match track {
-            Some(track) => Ok(Some(track)),
-            None => {
-                let url = Url::parse(uri)?;
-                let provider = self
-                    .providers
-                    .iter()
-                    .find(|provider| provider.read().unwrap().uri_scheme() == url.scheme());
+    pub fn query_track(&self, query: SingleQuery) -> Result<Option<Track>, failure::Error> {
+        debug!("Executing track query: {:?}", query);
+        let track = self.library.query_track(query.clone())?;
+        if let Some(track) = track {
+            Ok(Some(track))
+        }else {
+            if let SingleQueryIdentifier::Uri(ref uri) = query.identifier {
+                trace!("Track is not in library, asking provider");
+                let provider = self.get_provider(uri)?;
                 let track = match provider {
                     Some(provider) => provider.read().unwrap().resolve_track(uri)?,
                     _ => None,
                 };
                 Ok(track)
+            }else {
+                // Only library tracks have an id
+                Ok(None)
             }
         }
+    }
+
+    fn get_provider(&self, uri: &str) -> Result<Option<&SharedProvider>, failure::Error> {
+        trace!("get_provider for {}", uri);
+        let url = dbg!(Url::parse(uri))?;
+        let provider = self
+            .providers
+            .iter()
+            .find(|provider| provider.read().unwrap().uri_scheme() == url.scheme());
+        Ok(provider)
     }
 
     pub fn stream_url(&self, track: &Track) -> Result<String, failure::Error> {

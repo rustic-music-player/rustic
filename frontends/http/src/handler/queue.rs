@@ -19,10 +19,9 @@ pub fn fetch(rustic: &Arc<Rustic>) -> Result<Vec<TrackModel>, Error> {
 }
 
 pub fn queue_track(cursor: &str, rustic: &Arc<Rustic>) -> Result<Option<()>, Error> {
-    let library = &rustic.library;
     let uri = from_cursor(cursor)?;
     debug!("adding track to queue {}", uri);
-    let track: Option<Track> = library.query_track(SingleQuery::uri(uri))?;
+    let track: Option<Track> = rustic.query_track(SingleQuery::uri(uri))?;
     match track {
         Some(track) => {
             let player = rustic
