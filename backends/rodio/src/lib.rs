@@ -85,20 +85,22 @@ impl RodioBackend {
 
     fn set_track(&self, track: &Track) -> Result<(), Error> {
         debug!("Selecting {:?}", track);
-        let source = RodioBackend::decode_stream(self.core.stream_url(track)?)?;
-        let sink = rodio::Sink::new(&self.device);
-        sink.append(source);
-        let mut current_sink = self.current_sink.lock().unwrap();
-        if let Some(prev_sink) = current_sink.deref_mut() {
-            prev_sink.stop();
-        }
-        *current_sink = Some(sink);
-        self.tx.send(PlayerEvent::TrackChanged(track.clone()));
-
+        {
+            let source = RodioBackend::decode_stream(self.core.stream_url(track)?)?;
+            let sink = rodio::Sink::new(&self.device);
+            sink.append(source);
+            let mut current_sink = self.current_sink.lock().unwrap();
+            if let Some(prev_sink) = current_sink.take() {
+                trace!("Removing previous sink");
+                prev_sink.stop();
+                prev_sink.detach();
+            }
+            *current_sink = Some(sink);
+            self.tx.send(PlayerEvent::TrackChanged(track.clone()))?;
+        } // Drop the lock
         if self.state.read() == PlayerState::Play {
             self.play();
         }
-
         Ok(())
     }
 
