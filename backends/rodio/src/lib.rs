@@ -1,8 +1,8 @@
 use std::any::Any;
-use std::fs::File;
 use std::io::BufReader;
 use std::ops::DerefMut;
 use std::sync::{Arc, Mutex};
+use std::thread;
 use std::time::Duration;
 
 use crossbeam_channel::{Receiver, Sender};
@@ -13,6 +13,10 @@ use url::Url;
 
 use rustic_core::{player::MemoryQueue, PlayerBackend, PlayerEvent, PlayerState, Rustic, Track};
 
+use crate::file::RodioFile;
+
+mod file;
+
 pub struct RodioBackend {
     core: Arc<Rustic>,
     queue: MemoryQueue,
@@ -22,6 +26,7 @@ pub struct RodioBackend {
     device: rodio::Device,
     tx: Sender<PlayerEvent>,
     rx: Receiver<PlayerEvent>,
+    next_sender: Sender<()>,
 }
 
 impl std::fmt::Debug for RodioBackend {
@@ -38,6 +43,7 @@ impl RodioBackend {
     pub fn new(core: Arc<Rustic>) -> Result<Arc<Box<dyn PlayerBackend>>, Error> {
         let device = rodio::default_output_device().unwrap();
         let (tx, rx) = crossbeam_channel::unbounded();
+        let (next_sender, next_receiver) = crossbeam_channel::unbounded();
         let backend = RodioBackend {
             core,
             queue: MemoryQueue::new(),
@@ -47,28 +53,38 @@ impl RodioBackend {
             device,
             tx,
             rx,
+            next_sender,
         };
+        let backend: Arc<Box<dyn PlayerBackend>> = Arc::new(Box::new(backend));
 
-        Ok(Arc::new(Box::new(backend)))
+        let receiver_backend = Arc::clone(&backend);
+        thread::spawn(move || {
+            let backend = receiver_backend;
+            for _ in next_receiver {
+                backend.next().unwrap();
+            }
+        });
+
+        Ok(backend)
     }
 
-    fn decode_stream(&self, track: &Track, stream_url: String) -> Result<rodio::Decoder<BufReader<File>>, Error> {
+    fn decode_stream(&self, track: &Track, stream_url: String) -> Result<rodio::Decoder<BufReader<RodioFile>>, Error> {
         trace!("Decoding stream {} for track {}", &stream_url, track);
         let url = Url::parse(&stream_url)?;
         match url.scheme() {
-            "file" => RodioBackend::decode_file(stream_url),
+            "file" => self.decode_file(stream_url),
             "http" | "https" => {
                 let path = self.core.cache.fetch_track(track, &stream_url)?;
-                RodioBackend::decode_file(path)
-            },
+                self.decode_file(path)
+            }
             scheme => bail!("Invalid scheme: {}", scheme),
         }
     }
 
-    fn decode_file(mut path: String) -> Result<rodio::Decoder<BufReader<File>>, Error> {
+    fn decode_file(&self, mut path: String) -> Result<rodio::Decoder<BufReader<RodioFile>>, Error> {
         path.replace_range(..7, "");
         trace!("Decoding file {}", &path);
-        let file = File::open(path)?;
+        let file = RodioFile::open(path, self.next_sender.clone())?;
         let decoder = rodio::Decoder::new(BufReader::new(file))?;
         Ok(decoder)
     }
@@ -88,7 +104,6 @@ impl RodioBackend {
             if let Some(prev_sink) = current_sink.take() {
                 trace!("Removing previous sink");
                 prev_sink.stop();
-                prev_sink.detach();
             }
             *current_sink = Some(sink);
             self.tx.send(PlayerEvent::TrackChanged(track.clone()))?;
