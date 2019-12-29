@@ -1,8 +1,8 @@
 use std::net::IpAddr;
+use std::sync::{Arc, Condvar, Mutex};
 
 use log::{debug, trace};
 use mdns::{self, Record, RecordKind};
-use std::sync::{Arc, Condvar, Mutex};
 
 #[derive(Debug)]
 pub(crate) enum DiscoverMessage {
@@ -15,7 +15,7 @@ pub(crate) struct Target {
     pub addr: IpAddr,
 }
 
-const SERVICE_NAME: &'static str = "_googlecast._tcp.local";
+const SERVICE_NAME: &str = "_googlecast._tcp.local";
 
 pub(crate) fn discover(
     sender: crossbeam_channel::Sender<DiscoverMessage>,
@@ -30,7 +30,7 @@ pub(crate) fn discover(
 
         if let Some(target) = target {
             debug!("found cast device at {}", target.addr);
-            sender.send(DiscoverMessage::AddBackend(target))
+            sender.send(DiscoverMessage::AddBackend(target));
         } else {
             trace!("cast device does not advertise address");
         }

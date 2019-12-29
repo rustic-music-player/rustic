@@ -1,6 +1,6 @@
 use std::any::Any;
 use std::net::IpAddr;
-use std::sync::{atomic, Arc, Condvar, Mutex};
+use std::sync::{Arc, atomic, Condvar, Mutex};
 use std::thread;
 use std::time::Duration;
 
@@ -8,8 +8,8 @@ use crossbeam_channel::{Receiver, Sender};
 use failure::Error;
 use pinboard::NonEmptyPinboard;
 use rust_cast::{
-    channels::{media::*, receiver::CastDeviceApp},
     CastDevice,
+    channels::{media::*, receiver::CastDeviceApp},
 };
 
 use rustic_core::{PlayerEvent, PlayerState, Track};
@@ -70,7 +70,7 @@ impl GoogleCastBackend {
 
                 loop {
                     match internal_receiver.recv() {
-                        Some(InternalCommand::Play(track)) => {
+                        Ok(InternalCommand::Play(track)) => {
                             device.connection.connect(app.transport_id.as_str())?;
                             let media = Media {
                                 content_id: core.stream_url(&track)?,
@@ -95,7 +95,7 @@ impl GoogleCastBackend {
                                 &media,
                             )?;
                         }
-                        Some(InternalCommand::Volume(volume)) => {
+                        Ok(InternalCommand::Volume(volume)) => {
                             device.receiver.set_volume(volume)?;
                         }
                         _ => (),
