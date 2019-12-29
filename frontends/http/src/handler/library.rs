@@ -1,13 +1,18 @@
-use failure::Error;
-use rustic_core::{MultiQuery, QueryJoins, Rustic, SingleQuery};
+use std::str::from_utf8;
 use std::sync::Arc;
+
+use failure::Error;
+
+use cursor::from_cursor;
+use rustic_core::{MultiQuery, QueryJoins, Rustic, SingleQuery};
 use viewmodels::*;
 
-pub fn fetch_album(album_id: usize, rustic: &Arc<Rustic>) -> Result<Option<AlbumModel>, Error> {
+pub fn fetch_album(cursor: &str, rustic: &Arc<Rustic>) -> Result<Option<AlbumModel>, Error> {
     let library = &rustic.library;
-
     let sw = stopwatch::Stopwatch::start_new();
-    let mut query = SingleQuery::id(album_id);
+
+    let uri = from_cursor(cursor)?;
+    let mut query = SingleQuery::uri(uri.to_string());
     query.join_all();
     let album = library
         .query_album(query)?

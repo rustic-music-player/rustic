@@ -1,17 +1,19 @@
+use std::sync::Arc;
+
 use failure::Error;
+
+use cursor::to_cursor;
 use rustic_core::library::Playlist;
 use rustic_core::provider::Provider;
 use rustic_core::Rustic;
-use std::sync::Arc;
 use viewmodels::TrackModel;
 
 #[derive(Clone, Debug, Serialize)]
 pub struct PlaylistModel {
-    pub id: Option<usize>,
+    pub cursor: String,
     pub title: String,
     pub tracks: Vec<TrackModel>,
     pub provider: Provider,
-    pub uri: String,
 }
 
 impl PlaylistModel {
@@ -23,11 +25,10 @@ impl PlaylistModel {
             .collect();
 
         Ok(PlaylistModel {
-            id: playlist.id,
+            cursor: to_cursor(&playlist.uri),
             title: playlist.title,
             tracks,
             provider: playlist.provider,
-            uri: playlist.uri,
         })
     }
 }

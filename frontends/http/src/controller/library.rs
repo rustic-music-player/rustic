@@ -1,10 +1,11 @@
-use actix_web::{error, get, web, Responder, Result};
+use actix_web::{error, get, Responder, Result, web};
+
 use app::ApiState;
 use handler::library as library_handler;
 
 #[derive(Deserialize)]
-pub struct GetAlbumQuery {
-    album_id: usize,
+pub struct GetEntityQuery {
+    cursor: String,
 }
 
 //pub fn library_controller() -> Scope {
@@ -16,13 +17,13 @@ pub struct GetAlbumQuery {
 //        .service(get_tracks)
 //}
 
-#[get("/library/albums/{album_id}")]
+#[get("/library/albums/{cursor}")]
 pub fn get_album(
     data: web::Data<ApiState>,
-    params: web::Path<GetAlbumQuery>,
+    params: web::Path<GetEntityQuery>,
 ) -> Result<impl Responder> {
     let rustic = &data.app;
-    let album = library_handler::fetch_album(params.album_id, rustic)?;
+    let album = library_handler::fetch_album(&params.cursor, rustic)?;
     match album {
         Some(album) => Ok(web::Json(album)),
         None => Err(error::ErrorNotFound("Not Found")),

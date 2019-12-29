@@ -23,6 +23,7 @@ rayon = "1.0"
 uuid = { version = "0.6", features = ["v4"] }
 stopwatch = "0.0.7"
 crossbeam-channel = "0.4"
+base64 = "0.11"
 
 [dependencies.rustic-core]
 path = "../../core"

@@ -1,32 +1,33 @@
-extern crate rustic_core;
-extern crate serde;
-extern crate serde_json;
-#[macro_use]
-extern crate serde_derive;
-extern crate mime;
-#[macro_use]
-extern crate log;
 #[macro_use]
 extern crate actix;
+extern crate actix_files;
 extern crate actix_web;
+extern crate actix_web_actors;
+extern crate base64;
+extern crate crossbeam_channel;
 #[macro_use]
 extern crate failure;
-extern crate actix_files;
-extern crate actix_web_actors;
-extern crate crossbeam_channel;
 extern crate futures;
+#[macro_use]
+extern crate log;
+extern crate mime;
 extern crate rayon;
+extern crate rustic_core;
+extern crate serde;
+#[macro_use]
+extern crate serde_derive;
+extern crate serde_json;
 extern crate stopwatch;
 extern crate uuid;
 
-use rustic_core::Rustic;
-
 use std::sync::Arc;
-
 use std::thread;
+
+use rustic_core::Rustic;
 
 mod app;
 mod controller;
+mod cursor;
 mod handler;
 mod socket;
 mod viewmodels;

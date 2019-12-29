@@ -1,25 +1,26 @@
+use std::sync::Arc;
+
+use cursor::to_cursor;
 use rustic_core::library::Album;
 use rustic_core::provider::Provider;
 use rustic_core::Rustic;
-use std::sync::Arc;
 use viewmodels::{ArtistModel, TrackModel};
 
 #[derive(Clone, Debug, Serialize)]
 pub struct AlbumModel {
-    pub id: Option<usize>,
+    pub cursor: String,
     pub title: String,
     pub artist: Option<ArtistModel>,
     pub tracks: Vec<TrackModel>,
     pub provider: Provider,
     pub coverart: Option<String>,
-    pub uri: String,
 }
 
 impl AlbumModel {
     pub fn new(album: Album, app: &Arc<Rustic>) -> AlbumModel {
         let coverart = album.coverart(app);
         AlbumModel {
-            id: album.id,
+            cursor: to_cursor(&album.uri),
             title: album.title,
             artist: album.artist.map(|artist| ArtistModel::new(artist, app)),
             tracks: album
@@ -29,7 +30,6 @@ impl AlbumModel {
                 .collect(),
             provider: album.provider,
             coverart,
-            uri: album.uri,
         }
     }
 }

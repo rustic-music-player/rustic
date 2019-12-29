@@ -1,13 +1,13 @@
-use log::info;
 use std::collections::HashMap;
 use std::sync::{Arc, Condvar, Mutex};
 
-use crate::extension::HostedExtension;
 use crossbeam_channel as channel;
 use failure::format_err;
 use log::debug;
+use log::info;
 use url::Url;
 
+use crate::extension::HostedExtension;
 pub use crate::library::{
     Album, Artist, Library, LibraryQueryJoins, MultiQuery, Playlist, QueryJoins, SearchResults,
     SharedLibrary, SingleQuery, SingleQueryIdentifier, Track,
@@ -63,11 +63,15 @@ impl Rustic {
 
     pub fn get_default_player(&self) -> Option<Arc<Box<dyn PlayerBackend>>> {
         let default_player = self.default_player.lock().unwrap();
-        default_player.clone().and_then(|id| {
+        default_player.as_ref().and_then(|id| {
             let player = self.player.lock().unwrap();
 
-            player.get(&id).map(Arc::clone)
+            player.get(id).map(Arc::clone)
         })
+    }
+
+    pub fn get_default_player_id(&self) -> Option<String> {
+        self.default_player.lock().unwrap().clone()
     }
 
     pub fn set_default_player(&self, id: String) {

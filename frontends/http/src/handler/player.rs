@@ -2,6 +2,7 @@ use std::sync::Arc;
 
 use failure::Error;
 
+use cursor::to_cursor;
 use rustic_core::player::PlayerState;
 use rustic_core::Rustic;
 use viewmodels::{PlayerModel, TrackModel};
@@ -10,12 +11,14 @@ pub fn get_state(rustic: &Arc<Rustic>) -> Result<PlayerModel, Error> {
     let player = rustic
         .get_default_player()
         .ok_or_else(|| format_err!("Missing default player"))?;
+    let player_id = rustic.get_default_player_id().unwrap();
     let current = match player.current() {
         Some(track) => Some(TrackModel::new(track, &rustic)),
         None => None,
     };
 
     let state = PlayerModel {
+        cursor: to_cursor(&player_id),
         playing: (player.state() == PlayerState::Play),
         current,
     };

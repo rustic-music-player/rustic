@@ -2,6 +2,7 @@ use std::sync::Arc;
 
 use failure::Error;
 
+use cursor::from_cursor;
 use rustic_core::{Playlist, Rustic, SingleQuery, Track};
 use viewmodels::TrackModel;
 
@@ -17,10 +18,11 @@ pub fn fetch(rustic: &Arc<Rustic>) -> Result<Vec<TrackModel>, Error> {
     Ok(tracks)
 }
 
-pub fn queue_track(track_id: usize, rustic: &Arc<Rustic>) -> Result<Option<()>, Error> {
+pub fn queue_track(cursor: &str, rustic: &Arc<Rustic>) -> Result<Option<()>, Error> {
     let library = &rustic.library;
-    debug!("adding track to queue {}", track_id);
-    let track: Option<Track> = library.query_track(SingleQuery::id(track_id))?;
+    let uri = from_cursor(cursor)?;
+    debug!("adding track to queue {}", uri);
+    let track: Option<Track> = library.query_track(SingleQuery::uri(uri))?;
     match track {
         Some(track) => {
             let player = rustic
@@ -34,10 +36,11 @@ pub fn queue_track(track_id: usize, rustic: &Arc<Rustic>) -> Result<Option<()>, 
     }
 }
 
-pub fn queue_playlist(playlist_id: usize, rustic: &Arc<Rustic>) -> Result<Option<()>, Error> {
+pub fn queue_playlist(cursor: &str, rustic: &Arc<Rustic>) -> Result<Option<()>, Error> {
     let library = &rustic.library;
-    debug!("adding playlist to queue {}", playlist_id);
-    let playlist: Option<Playlist> = library.query_playlist(SingleQuery::id(playlist_id))?;
+    let uri = from_cursor(cursor)?;
+    debug!("adding playlist to queue {}", uri);
+    let playlist: Option<Playlist> = library.query_playlist(SingleQuery::uri(uri))?;
     match playlist {
         Some(playlist) => {
             let player = rustic
