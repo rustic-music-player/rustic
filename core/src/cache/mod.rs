@@ -1,10 +1,3 @@
-use crate::{MultiQuery, Rustic};
-use failure::Error;
-use image;
-use image::FilterType;
-use log::{debug, error, info, trace};
-use md5;
-use reqwest::get;
 use std::collections::HashMap;
 use std::fs::{create_dir_all, OpenOptions};
 use std::io::prelude::*;
@@ -12,6 +5,16 @@ use std::path::Path;
 use std::sync::{Arc, RwLock};
 use std::thread;
 use std::time::Duration;
+
+use failure::Error;
+use image;
+use image::FilterType;
+use log::{debug, error, info, trace};
+use md5;
+use pinboard::NonEmptyPinboard;
+use reqwest::get;
+
+use crate::{MultiQuery, Rustic, Track};
 
 const THUMBNAIL_SIZE: u32 = 512;
 const SERVICE_INTERVAL: u64 = 30;
@@ -22,15 +25,17 @@ struct CachedEntry {
     filename: String,
 }
 
-#[derive(Debug, Default)]
+#[derive(Debug)]
 pub struct Cache {
     pub coverart: Arc<RwLock<HashMap<String, String>>>,
+    pub tracks: Arc<NonEmptyPinboard<HashMap<String, String>>>
 }
 
 pub type SharedCache = Arc<Cache>;
 
 pub fn start(app: Arc<Rustic>) -> Result<thread::JoinHandle<()>, Error> {
     create_dir_all(".cache/coverart")?;
+    create_dir_all(".cache/music")?;
 
     thread::Builder::new()
         .name("Coverart Cache".into())
@@ -77,6 +82,55 @@ pub fn start(app: Arc<Rustic>) -> Result<thread::JoinHandle<()>, Error> {
         .map_err(Error::from)
 }
 
+impl Cache {
+    pub fn new() -> Cache {
+        Cache {
+            coverart: Default::default(),
+            tracks: Arc::new(NonEmptyPinboard::new(HashMap::new()))
+        }
+    }
+
+    pub fn fetch_coverart(&self, uri: String) -> Result<String, Error> {
+        trace!("fetch_coverart (uri: {})", &uri);
+        {
+            let map = self.coverart.read().unwrap();
+            if map.contains_key(&uri) {
+                return Ok(format!("/cache/coverart/{}", map.get(&uri).unwrap()));
+            }
+        }
+        trace!("coverart not cached yet");
+        let entry = cache_coverart(uri)?;
+        {
+            let mut map = self.coverart.write().unwrap();
+            map.insert(entry.uri, entry.filename.clone());
+        }
+        Ok(format!("/cache/coverart/{}", entry.filename))
+    }
+
+    pub fn fetch_track(&self, track: &Track, stream_url: &str) -> Result<String, Error> {
+        trace!("fetch_track (track: {}, stream_url: {})", track, stream_url);
+        {
+            let map = self.tracks.read();
+            if let Some(file) = map.get(&track.uri) {
+                return Ok(format!("file://.cache/music/{}", file));
+            }
+        }
+        trace!("track not cached yet");
+        let entry = cache_track(track, stream_url)?;
+        {
+            let mut map = self.tracks.read();
+            map.insert(entry.uri.clone(), entry.filename.clone());
+            self.tracks.set(map);
+        }
+        Ok(format!("file://.cache/music/{}", entry.filename))
+    }
+
+    pub fn prepare_track(&self, track: &Track, stream_url: &str) -> Result<(), Error> {
+        self.fetch_track(track, stream_url)?;
+        Ok(())
+    }
+}
+
 fn cache_coverart(uri: String) -> Result<CachedEntry, Error> {
     trace!("cache_coverart (uri: {})", &uri);
     let base = ".cache/coverart";
@@ -106,25 +160,22 @@ fn cache_coverart(uri: String) -> Result<CachedEntry, Error> {
     Ok(CachedEntry { filename, uri })
 }
 
-impl Cache {
-    pub fn new() -> Cache {
-        Cache::default()
+fn cache_track(track: &Track, stream_url: &str) -> Result<CachedEntry, Error> {
+    trace!("cache_track (track: {}, stream_url: {})", track, stream_url);
+    let base = ".cache/music";
+    let hash = md5::compute(&track.uri);
+    let filename = format!("{:x}", hash);
+    let path = format!("{}/{}", base, filename);
+    if Path::new(&path).exists() {
+        trace!("file already exists");
+        return Ok(CachedEntry { filename, uri: track.uri.clone() });
     }
 
-    pub fn fetch_coverart(&self, uri: String) -> Result<String, Error> {
-        trace!("fetch_coverart (uri: {})", &uri);
-        {
-            let map = self.coverart.read().unwrap();
-            if map.contains_key(&uri) {
-                return Ok(format!("/cache/coverart/{}", map.get(&uri).unwrap()));
-            }
-        }
-        trace!("coverart not cached yet");
-        let entry = cache_coverart(uri)?;
-        {
-            let mut map = self.coverart.write().unwrap();
-            map.insert(entry.uri, entry.filename.clone());
-        }
-        Ok(format!("/cache/coverart/{}", entry.filename))
-    }
+    debug!("{} -> {}", &track.uri, &filename);
+
+    let mut file = OpenOptions::new().create(true).write(true).open(&path)?;
+    let mut res = get(stream_url)?;
+    res.copy_to(&mut file)?;
+
+    Ok(CachedEntry { filename, uri: track.uri.clone() })
 }

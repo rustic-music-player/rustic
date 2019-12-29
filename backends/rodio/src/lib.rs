@@ -52,20 +52,25 @@ impl RodioBackend {
         Ok(Arc::new(Box::new(backend)))
     }
 
-    fn decode_stream(stream_url: String) -> Result<rodio::Decoder<BufReader<File>>, Error> {
-        trace!("Decoding stream {}", &stream_url);
+    fn decode_stream(&self, track: &Track, stream_url: String) -> Result<rodio::Decoder<BufReader<File>>, Error> {
+        trace!("Decoding stream {} for track {}", &stream_url, track);
         let url = Url::parse(&stream_url)?;
         match url.scheme() {
-            "file" => {
-                let mut path = stream_url;
-                path.replace_range(..7, "");
-                trace!("Decoding file {}", &path);
-                let file = File::open(path)?;
-                let decoder = rodio::Decoder::new(BufReader::new(file))?;
-                Ok(decoder)
-            }
+            "file" => RodioBackend::decode_file(stream_url),
+            "http" | "https" => {
+                let path = self.core.cache.fetch_track(track, &stream_url)?;
+                RodioBackend::decode_file(path)
+            },
             scheme => bail!("Invalid scheme: {}", scheme),
         }
+    }
+
+    fn decode_file(mut path: String) -> Result<rodio::Decoder<BufReader<File>>, Error> {
+        path.replace_range(..7, "");
+        trace!("Decoding file {}", &path);
+        let file = File::open(path)?;
+        let decoder = rodio::Decoder::new(BufReader::new(file))?;
+        Ok(decoder)
     }
 
     fn write_state(&self, state: PlayerState) {
@@ -76,7 +81,7 @@ impl RodioBackend {
     fn set_track(&self, track: &Track) -> Result<(), Error> {
         debug!("Selecting {:?}", track);
         {
-            let source = RodioBackend::decode_stream(self.core.stream_url(track)?)?;
+            let source = self.decode_stream(track, self.core.stream_url(track)?)?;
             let sink = rodio::Sink::new(&self.device);
             sink.append(source);
             let mut current_sink = self.current_sink.lock().unwrap();
