@@ -10,7 +10,7 @@ pub struct SearchQuery {
 #[get("/search")]
 pub fn search(
     data: web::Data<ApiState>,
-    params: web::Path<SearchQuery>,
+    params: web::Query<SearchQuery>,
 ) -> Result<impl Responder, error::Error> {
     let rustic = &data.app;
     trace!("search {}", &params.query);
