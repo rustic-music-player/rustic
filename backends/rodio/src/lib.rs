@@ -90,6 +90,9 @@ impl RodioBackend {
     }
 
     fn write_state(&self, state: PlayerState) {
+        if self.state.read() == state {
+            return;
+        }
         self.state.set(state);
         self.tx.send(PlayerEvent::StateChanged(state));
     }
@@ -117,18 +120,21 @@ impl RodioBackend {
     fn play(&self) {
         if let Some(sink) = self.current_sink.lock().unwrap().deref_mut() {
             sink.play();
+            self.write_state(PlayerState::Play);
         }
     }
 
     fn pause(&self) {
         if let Some(sink) = self.current_sink.lock().unwrap().deref_mut() {
             sink.pause();
+            self.write_state(PlayerState::Pause);
         }
     }
 
     fn stop(&self) {
         if let Some(sink) = self.current_sink.lock().unwrap().deref_mut() {
             sink.stop();
+            self.write_state(PlayerState::Stop);
         }
     }
 
@@ -198,7 +204,6 @@ impl PlayerBackend for RodioBackend {
             PlayerState::Pause => self.pause(),
             PlayerState::Stop => self.stop(),
         }
-        self.write_state(state);
         Ok(())
     }
 
