@@ -68,7 +68,7 @@ impl ProviderInstance for LocalProvider {
                 t
             })
             .collect();
-        library.add_tracks(&mut tracks)?;
+        library.sync_tracks(&mut tracks)?;
         Ok(SyncResult {
             tracks: tracks.len(),
             albums: albums.len(),
