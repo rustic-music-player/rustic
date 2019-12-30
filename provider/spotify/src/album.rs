@@ -1,10 +1,12 @@
 use std::collections::HashMap;
 
-use crate::util::*;
 use rspotify::spotify::model::album::{FullAlbum, SimplifiedAlbum};
+use serde_derive::{Deserialize, Serialize};
+
 use rustic_core::library::Album;
 use rustic_core::provider;
-use serde_derive::{Deserialize, Serialize};
+
+use crate::util::*;
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct SpotifyFullAlbum(FullAlbum);
@@ -42,7 +44,7 @@ impl From<SpotifySimplifiedAlbum> for Album {
             provider: provider::Provider::Spotify,
             image_url: convert_images(&album.images),
             tracks: vec![],
-            uri: format!("spotify://album/{}", album.id),
+            uri: album.id.map(|id| format!("spotify://album/{}", id)).unwrap(),
             meta: HashMap::new(),
         }
     }

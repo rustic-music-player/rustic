@@ -1,27 +1,95 @@
-mod album;
-mod artist;
-mod track;
-mod util;
+use std::thread;
 
-use failure::{err_msg, Error};
+use failure::{err_msg, Error, format_err};
 use log::{debug, trace};
 use rspotify::spotify::client::Spotify;
 use rspotify::spotify::oauth2::{SpotifyClientCredentials, SpotifyOAuth};
 use rspotify::spotify::util::get_token;
-use rustic_core::library::{Album, Artist, SharedLibrary, Track};
-use rustic_core::provider;
 use serde_derive::Deserialize;
+
+use rustic_core::library::{Album, Artist, MetaValue, Playlist, SharedLibrary, Track};
+use rustic_core::provider;
 
 use crate::album::*;
 use crate::artist::*;
+use crate::meta::META_SPOTIFY_URI;
+use crate::player::SpotifyPlayer;
+use crate::playlist::*;
 use crate::track::*;
+
+mod album;
+mod artist;
+mod playlist;
+mod track;
+mod util;
+mod player;
+mod meta;
 
 #[derive(Clone, Deserialize, Debug)]
 pub struct SpotifyProvider {
     client_id: String,
     client_secret: String,
+    username: String,
+    password: String,
     #[serde(skip)]
     client: Option<Spotify>,
+    #[serde(skip)]
+    player: SpotifyPlayer
+}
+
+impl SpotifyProvider {
+    fn sync_tracks(&mut self, library: &SharedLibrary) -> Result<(usize, usize), Error> {
+        let spotify = self.client.as_ref().unwrap();
+
+        let albums = spotify.current_user_saved_albums(None, None)?.items;
+
+        let albums_len = albums.len();
+
+        let mut tracks = albums
+            .into_iter()
+            .map(|album| album.album)
+            .map(|album| {
+                let mut album_entity = Album::from(SpotifyFullAlbum::from(album.clone()));
+                library.sync_album(&mut album_entity);
+                album
+                    .tracks
+                    .items
+                    .into_iter()
+                    .map(SpotifySimplifiedTrack::from)
+                    .map(Track::from)
+                    .map(|mut track| {
+                        track.album_id = album_entity.id;
+                        track
+                    })
+                    .collect()
+            })
+            .fold(vec![], |mut a, b: Vec<Track>| {
+                a.extend(b);
+                a
+            });
+
+        library.sync_tracks(&mut tracks)?;
+
+        Ok((tracks.len(), albums_len))
+    }
+
+    fn sync_playlists(&mut self, library: &SharedLibrary) -> Result<usize, Error> {
+        let spotify = self.client.as_ref().unwrap();
+
+        let playlists = spotify.current_user_playlists(None, None)?;
+        let mut playlists = playlists.items
+            .into_iter()
+            .map(|playlist| spotify.playlist(&playlist.id, None, None)
+                .map(SpotifyPlaylist::from)
+                .map(Playlist::from))
+            .collect::<Result<Vec<Playlist>, Error>>()?;
+
+        let playlist_count = playlists.len();
+
+        library.sync_playlists(&mut playlists)?;
+
+        Ok(playlist_count)
+    }
 }
 
 impl rustic_core::provider::ProviderInstance for SpotifyProvider {
@@ -55,6 +123,8 @@ impl rustic_core::provider::ProviderInstance for SpotifyProvider {
 
         self.client = Some(spotify);
 
+        self.player.setup(&self.username, &self.password)?;
+
         Ok(())
     }
 
@@ -71,44 +141,15 @@ impl rustic_core::provider::ProviderInstance for SpotifyProvider {
     }
 
     fn sync(&mut self, library: SharedLibrary) -> Result<provider::SyncResult, Error> {
-        let spotify = self.client.clone().unwrap();
+        let (tracks, albums) = self.sync_tracks(&library)?;
 
-        let albums = spotify.current_user_saved_albums(None, None)?.items;
-
-        debug!("{:?}", albums);
-
-        let albums_len = albums.len();
-
-        let mut tracks = albums
-            .into_iter()
-            .map(|album| album.album)
-            .map(|album| {
-                let mut album_entity = Album::from(SpotifyFullAlbum::from(album.clone()));
-                library.sync_album(&mut album_entity);
-                album
-                    .tracks
-                    .items
-                    .into_iter()
-                    .map(SpotifySimplifiedTrack::from)
-                    .map(Track::from)
-                    .map(|mut track| {
-                        track.album_id = album_entity.id;
-                        track
-                    })
-                    .collect()
-            })
-            .fold(vec![], |mut a, b: Vec<Track>| {
-                a.extend(b);
-                a
-            });
-
-        library.sync_tracks(&mut tracks)?;
+        let playlists = self.sync_playlists(&library)?;
 
         Ok(provider::SyncResult {
-            tracks: tracks.len(),
-            albums: albums_len,
+            tracks,
+            albums,
             artists: 0,
-            playlists: 0,
+            playlists,
         })
     }
 
@@ -160,7 +201,18 @@ impl rustic_core::provider::ProviderInstance for SpotifyProvider {
         Ok(None)
     }
 
-    fn stream_url(&self, _track: &Track) -> Result<String, Error> {
-        unimplemented!()
+    fn stream_url(&self, track: &Track) -> Result<String, Error> {
+        let uri = track.meta.get(META_SPOTIFY_URI).ok_or_else(|| format_err!("Missing spotify uri"))?;
+        if let MetaValue::String(uri) = uri {
+            let uri = uri.clone();
+            let player = self.player.clone();
+            let t = thread::spawn(move|| {
+                player.get_audio_file(&uri)
+            }).join().unwrap().unwrap();
+
+            unimplemented!()
+        }else {
+            unreachable!()
+        }
     }
 }
