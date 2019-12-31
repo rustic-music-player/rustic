@@ -12,6 +12,7 @@ members = [
     "provider/pocketcasts",
     "provider/soundcloud",
     "provider/spotify",
+    "provider/gmusic",
     "store/helpers",
     "store/memory",
     "store/sled",
@@ -50,6 +51,7 @@ local-files = ["rustic-local-provider"]
 pocketcasts = ["rustic-pocketcasts-provider"]
 soundcloud = ["rustic-soundcloud-provider"]
 spotify = ["rustic-spotify-provider"]
+gmusic = ["rustic-gmusic-provider"]
 sled-store = ["rustic-sled-store"]
 sqlite-store = ["rustic-sqlite-store"]
 
@@ -120,4 +122,8 @@ optional = true
 
 [dependencies.rustic-soundcloud-provider]
 path = "provider/soundcloud"
+optional = true
+
+[dependencies.rustic-gmusic-provider]
+path = "provider/gmusic"
 optional = true

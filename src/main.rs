@@ -8,6 +8,8 @@ extern crate rustic_core as rustic;
 // Frontends
 #[cfg(feature = "dbus")]
 extern crate rustic_dbus_frontend as dbus_frontend;
+#[cfg(feature = "gmusic")]
+extern crate rustic_gmusic_provider as gmusic_provider;
 // Backends
 #[cfg(feature = "google-cast")]
 extern crate rustic_google_cast_backend as google_cast_backend;
@@ -181,6 +183,12 @@ fn setup_providers(config: &Config) -> rustic::provider::SharedProviders {
     {
         if let Some(local) = config.local.clone() {
             providers.push(Arc::new(RwLock::new(Box::new(local))));
+        }
+    }
+    #[cfg(feature = "gmusic")]
+    {
+        if let Some(gmusic) = config.gmusic.clone() {
+            providers.push(Arc::new(RwLock::new(Box::new(gmusic))));
         }
     }
     for provider in &providers {

@@ -16,6 +16,8 @@ pub struct Config {
     pub soundcloud: Option<soundcloud_provider::SoundcloudProvider>,
     #[cfg(feature = "spotify")]
     pub spotify: Option<spotify_provider::SpotifyProvider>,
+    #[cfg(feature = "gmusic")]
+    pub gmusic: Option<gmusic_provider::GooglePlayMusicProvider>,
     #[cfg(feature = "local-files")]
     pub local: Option<local_provider::LocalProvider>,
     pub library: Option<LibraryConfig>,
