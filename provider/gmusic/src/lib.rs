@@ -1,10 +1,13 @@
-use failure::Error;
+use failure::{Error, format_err};
 use gmusic::GoogleMusicApi;
 use serde_derive::Deserialize;
+use crate::meta::META_GMUSIC_TRACK_ID;
 
-use rustic_core::{provider, SharedLibrary, Track};
+use rustic_core::{provider, SharedLibrary, Track, MetaValue};
 
+mod meta;
 mod playlist;
+mod track;
 
 #[derive(Clone, Deserialize, Debug)]
 pub struct GooglePlayMusicProvider {
@@ -68,7 +71,14 @@ impl provider::ProviderInstance for GooglePlayMusicProvider {
         unimplemented!()
     }
 
-    fn stream_url(&self, _track: &Track) -> Result<String, Error> {
-        unimplemented!()
+    fn stream_url(&self, track: &Track) -> Result<String, Error> {
+        let id = track.meta.get(META_GMUSIC_TRACK_ID).map_err(|| format_err!("missing track id"))?;
+        if let MetaValue::String(ref id) = id {
+            let client = self.client.as_ref().unwrap();
+            let url = client.get_stream_url(&id, &self.device_id)?;
+            Ok(url)
+        }else {
+            unreachable!()
+        }
     }
 }
