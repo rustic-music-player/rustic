@@ -30,3 +30,7 @@ config.toml
 
 # Application Cache
 .cache
+
+# Auth caches
+.google-auth.json
+.spotify_token_cache.json

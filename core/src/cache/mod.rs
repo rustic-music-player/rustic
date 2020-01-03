@@ -6,13 +6,15 @@ use std::sync::{Arc, RwLock};
 use std::thread;
 use std::time::Duration;
 
-use failure::Error;
+use failure::{bail, Error};
 use image;
 use image::FilterType;
+use itertools::Itertools;
 use log::{debug, error, info, trace};
 use md5;
 use pinboard::NonEmptyPinboard;
-use reqwest::get;
+use rayon::prelude::*;
+use reqwest::{Client, get};
 
 use crate::{MultiQuery, Rustic, Track};
 
@@ -28,10 +30,40 @@ struct CachedEntry {
 #[derive(Debug)]
 pub struct Cache {
     pub coverart: Arc<RwLock<HashMap<String, String>>>,
-    pub tracks: Arc<NonEmptyPinboard<HashMap<String, String>>>
+    pub tracks: Arc<NonEmptyPinboard<HashMap<String, String>>>,
 }
 
 pub type SharedCache = Arc<Cache>;
+
+fn coverart_cache(app: &Arc<Rustic>) -> Result<Vec<Result<CachedEntry, Error>>, Error> {
+    let mut tracks: Vec<Track> = app
+        .library
+        .query_tracks(MultiQuery::new())?;
+    let mut playlist_tracks: Vec<Track> = app
+        .library
+        .query_playlists(MultiQuery::new())?
+        .iter()
+        .flat_map(|playlist| playlist.tracks.clone())
+        .collect();
+
+    tracks.append(&mut playlist_tracks);
+
+    let entries = tracks
+        .iter()
+        .filter(|track| track.image_url.is_some())
+        .filter(|track| {
+            let map = app.cache.coverart.read().unwrap();
+            !map.contains_key(&track.uri)
+        })
+        .map(|track| track.image_url.clone().unwrap())
+        .dedup()
+        .collect::<Vec<String>>()
+        .into_par_iter()
+        .map(cache_coverart)
+        .collect();
+
+    Ok(entries)
+}
 
 pub fn start(app: Arc<Rustic>) -> Result<thread::JoinHandle<()>, Error> {
     create_dir_all(".cache/coverart")?;
@@ -45,32 +77,26 @@ pub fn start(app: Arc<Rustic>) -> Result<thread::JoinHandle<()>, Error> {
             let mut keep_running = lock.lock().unwrap();
             while *keep_running {
                 info!("Caching Coverart...");
-                let result: Result<Vec<CachedEntry>, Error> = app
-                    .library
-                    .query_tracks(MultiQuery::new())
-                    .and_then(|tracks| {
-                        tracks
-                            .iter()
-                            .filter(|track| track.image_url.is_some())
-                            .filter(|track| {
-                                let map = app.cache.coverart.read().unwrap();
-                                !map.contains_key(&track.uri)
-                            })
-                            .map(|track| track.image_url.clone().unwrap())
-                            .map(cache_coverart)
-                            .collect()
-                    });
-
-                match result {
-                    Ok(entries) => {
+                match coverart_cache(&app) {
+                    Ok(result) => {
+                        let entries: Vec<&CachedEntry> = result.iter().filter_map(|entry| entry.as_ref().ok()).collect();
+                        let errors: Vec<&Error> = result.iter().filter_map(|entry| entry.as_ref().err()).collect();
                         info!("Cached {} images", entries.len());
                         let mut map = app.cache.coverart.write().unwrap();
                         for entry in entries {
-                            map.insert(entry.uri, entry.filename);
+                            map.insert(entry.uri.clone(), entry.filename.clone());
+                        }
+
+                        error!("{} Errors while caching images", errors.len());
+                        for error in errors {
+                            error!("{}", error)
                         }
                     }
-                    Err(e) => error!("Error: {:?}", e),
+                    Err(err) => {
+                        error!("{}", err)
+                    }
                 }
+
 
                 let result = cvar
                     .wait_timeout(keep_running, Duration::new(SERVICE_INTERVAL, 0))
@@ -86,7 +112,7 @@ impl Cache {
     pub fn new() -> Cache {
         Cache {
             coverart: Default::default(),
-            tracks: Arc::new(NonEmptyPinboard::new(HashMap::new()))
+            tracks: Arc::new(NonEmptyPinboard::new(HashMap::new())),
         }
     }
 
@@ -99,6 +125,7 @@ impl Cache {
             }
         }
         trace!("coverart not cached yet");
+        bail!("skipping for now");
         let entry = cache_coverart(uri)?;
         {
             let mut map = self.coverart.write().unwrap();
@@ -147,7 +174,10 @@ fn cache_coverart(uri: String) -> Result<CachedEntry, Error> {
     let buffer = {
         trace!("fetching image");
         let mut buffer = Vec::new();
-        let mut res = get(&uri)?;
+        let client = Client::builder()
+            .timeout(Duration::from_secs(5))
+            .build()?;
+        let mut res = client.get(&uri).send()?;
         res.read_to_end(&mut buffer)?;
         buffer
     };

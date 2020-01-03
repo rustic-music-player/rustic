@@ -1,9 +1,13 @@
 use failure::{Error, format_err};
-use gmusic::GoogleMusicApi;
 use serde_derive::Deserialize;
-use crate::meta::META_GMUSIC_TRACK_ID;
 
-use rustic_core::{provider, SharedLibrary, Track, MetaValue};
+use gmusic::{auth::stdio_login, GoogleMusicApi};
+use rustic_core::{Playlist, provider, SharedLibrary, Track};
+use rustic_core::library::MetaValue;
+
+use crate::meta::{META_GMUSIC_STORE_ID, META_GMUSIC_TRACK_ID};
+use crate::playlist::GmusicPlaylist;
+use crate::track::GmusicTrack;
 
 mod meta;
 mod playlist;
@@ -20,9 +24,9 @@ pub struct GooglePlayMusicProvider {
 
 impl provider::ProviderInstance for GooglePlayMusicProvider {
     fn setup(&mut self) -> Result<(), Error> {
-        let mut api = GoogleMusicApi::new(self.client_id.clone(), self.client_secret.clone());
+        let api = GoogleMusicApi::new(self.client_id.clone(), self.client_secret.clone())?;
         api.load_token()
-            .or_else(|_| api.login().and_then(|_| api.store_token()))?;
+            .or_else(|_| api.login(stdio_login).and_then(|_| api.store_token()))?;
         self.client = Some(api);
 
         Ok(())
@@ -42,7 +46,26 @@ impl provider::ProviderInstance for GooglePlayMusicProvider {
 
     fn sync(&mut self, library: SharedLibrary) -> Result<provider::SyncResult, Error> {
         let client = self.client.as_ref().unwrap();
-        let playlists = client.get_all_playlists()?;
+        let mut playlists: Vec<Playlist> = client.get_all_playlists()?
+            .into_iter()
+            .map(GmusicPlaylist::from)
+            .map(Playlist::from)
+            .collect();
+
+        let playlist_entries = client.get_playlist_entries()?;
+
+        for playlist in &mut playlists {
+            let playlist_id = &playlist.uri["gmusic:playlist:".len()..];
+            playlist.tracks = playlist_entries.iter()
+                .filter(|entry| entry.playlist_id == playlist_id)
+                .filter_map(|entry| entry.track.as_ref())
+                .cloned()
+                .map(GmusicTrack::from)
+                .map(Track::from)
+                .collect();
+        }
+
+        library.sync_playlists(&mut playlists)?;
 
         Ok(provider::SyncResult {
             tracks: 0,
@@ -67,16 +90,21 @@ impl provider::ProviderInstance for GooglePlayMusicProvider {
         unimplemented!()
     }
 
-    fn resolve_track(&self, _uri: &str) -> Result<Option<Track>, Error> {
-        unimplemented!()
+    fn resolve_track(&self, uri: &str) -> Result<Option<Track>, Error> {
+        let client = self.client.as_ref().unwrap();
+        let track_id = &uri["gmusic:track:".len()..];
+        let track = client.get_store_track(track_id)?;
+        let track = GmusicTrack::from(track);
+        let track = Track::from(track);
+        Ok(Some(track))
     }
 
     fn stream_url(&self, track: &Track) -> Result<String, Error> {
-        let id = track.meta.get(META_GMUSIC_TRACK_ID).map_err(|| format_err!("missing track id"))?;
+        let id = track.meta.get(META_GMUSIC_STORE_ID).ok_or_else(|| format_err!("missing track id"))?;
         if let MetaValue::String(ref id) = id {
             let client = self.client.as_ref().unwrap();
             let url = client.get_stream_url(&id, &self.device_id)?;
-            Ok(url)
+            Ok(url.to_string())
         }else {
             unreachable!()
         }
