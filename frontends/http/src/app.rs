@@ -1,13 +1,14 @@
+use std::fs::create_dir_all;
 use std::sync::Arc;
 
 use actix::{Addr, System};
-use actix_files::Files;
-use actix_web::{App, HttpServer, middleware, Result, Scope, web};
+use actix_files::{Files, NamedFile};
+use actix_web::{middleware, web, App, HttpServer, Result, Scope};
 
 use controller;
-use HttpConfig;
 use rustic_core::Rustic;
 use socket::{create_socket_server, socket_service, SocketServer};
+use HttpConfig;
 
 pub struct ApiState {
     pub app: Arc<Rustic>,
@@ -36,15 +37,19 @@ fn build_api(app: Arc<Rustic>, ws_server: Addr<SocketServer>) -> Scope {
 }
 
 pub fn start(config: &HttpConfig, app: Arc<Rustic>) -> Result<()> {
+    create_dir_all(&config.static_files)?;
     let sys = System::new("rustic-http-frontend");
 
     let ws_server = create_socket_server(Arc::clone(&app));
+
+    let static_file_dir = config.static_files.clone();
 
     HttpServer::new(move || {
         App::new()
             .wrap(middleware::Logger::default())
             .service(build_api(Arc::clone(&app), ws_server.clone()))
             .service(Files::new("/cache", ".cache"))
+            .service(Files::new("", &static_file_dir).index_file("index.html"))
     })
     .bind(format!("{}:{}", config.ip, config.port))?
     .start();

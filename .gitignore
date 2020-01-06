@@ -34,3 +34,6 @@ config.toml
 # Auth caches
 .google-auth.json
 .spotify_token_cache.json
+
+# Static Http Files
+static

@@ -33,16 +33,25 @@ mod socket;
 mod viewmodels;
 
 #[derive(Deserialize, Clone)]
+#[serde(default)]
 pub struct HttpConfig {
     pub ip: String,
     pub port: i32,
+    pub static_files: String,
+}
+
+impl Default for HttpConfig {
+    fn default() -> Self {
+        HttpConfig {
+            ip: "0.0.0.0".into(),
+            port: 8080,
+            static_files: "static".into(),
+        }
+    }
 }
 
 pub fn start(config: Option<HttpConfig>, app: Arc<Rustic>) -> thread::JoinHandle<()> {
-    let config = config.unwrap_or(HttpConfig {
-        ip: "0.0.0.0".to_owned(),
-        port: 8080,
-    });
+    let config = config.unwrap_or(HttpConfig::default());
     thread::spawn(move || {
         app::start(&config, app).unwrap();
     })
