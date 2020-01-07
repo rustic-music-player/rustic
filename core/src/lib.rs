@@ -79,6 +79,13 @@ impl Rustic {
         *default_player = Some(id);
     }
 
+    pub fn get_players(&self) -> Vec<(String, Arc<Box<dyn PlayerBackend>>)> {
+        let players = self.player.lock().unwrap();
+        players.iter()
+            .map(|(id, player)| (id.clone(), Arc::clone(player)))
+            .collect()
+    }
+
     pub fn query_track(&self, query: SingleQuery) -> Result<Option<Track>, failure::Error> {
         debug!("Executing track query: {:?}", query);
         let track = self.library.query_track(query.clone())?;

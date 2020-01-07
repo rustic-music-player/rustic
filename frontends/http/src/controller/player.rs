@@ -2,6 +2,14 @@ use actix_web::{get, post, web, HttpResponse, Responder, Result};
 use app::ApiState;
 use handler::player as player_handler;
 
+#[get("/players")]
+pub fn get_players(data: web::Data<ApiState>) -> Result<impl Responder> {
+    let rustic = &data.app;
+    let players = player_handler::get_players(&rustic);
+
+    Ok(web::Json(players))
+}
+
 #[get("/player")]
 pub fn player_state(data: web::Data<ApiState>) -> Result<impl Responder> {
     let rustic = &data.app;
