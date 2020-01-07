@@ -3,12 +3,12 @@ use std::sync::Arc;
 
 use actix::{Addr, System};
 use actix_files::{Files, NamedFile};
-use actix_web::{middleware, web, App, HttpServer, Result, Scope};
+use actix_web::{App, HttpServer, middleware, Result, Scope, web};
 
 use controller;
+use HttpConfig;
 use rustic_core::Rustic;
 use socket::{create_socket_server, socket_service, SocketServer};
-use HttpConfig;
 
 pub struct ApiState {
     pub app: Arc<Rustic>,
@@ -34,6 +34,7 @@ fn build_api(app: Arc<Rustic>, ws_server: Addr<SocketServer>) -> Scope {
         .service(controller::player::control_prev)
         .service(controller::player::control_play)
         .service(controller::player::control_pause)
+        .service(controller::extensions::get_extensions)
         .service(socket_service(ws_server))
 }
 

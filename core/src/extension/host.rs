@@ -33,7 +33,7 @@ pub fn load_extensions(path: &Path) -> Result<Vec<HostedExtension>, failure::Err
                     extension.as_ref().unwrap_err()
                 );
             }
-            is_err
+            !is_err
         })
         .map(|(_, extension)| extension.unwrap())
         .collect();
@@ -51,9 +51,9 @@ fn load_extension(file: DirEntry) -> (String, Result<HostedExtension, failure::E
 #[derive(Debug)]
 pub struct HostedExtension {
     process: Arc<Mutex<Child>>,
-    id: String,
-    name: String,
-    version: String,
+    pub id: String,
+    pub name: String,
+    pub version: String,
     hooks: Vec<Hook>,
 }
 
