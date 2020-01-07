@@ -87,9 +87,11 @@ pub fn start(app: Arc<Rustic>) -> Result<thread::JoinHandle<()>, Error> {
                             map.insert(entry.uri.clone(), entry.filename.clone());
                         }
 
-                        error!("{} Errors while caching images", errors.len());
-                        for error in errors {
-                            error!("{}", error)
+                        if errors.len() > 0 {
+                            error!("{} Errors while caching images", errors.len());
+                            for error in errors {
+                                error!("{}", error)
+                            }
                         }
                     }
                     Err(err) => {
