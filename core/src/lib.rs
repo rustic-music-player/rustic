@@ -91,7 +91,7 @@ impl Rustic {
         let track = self.library.query_track(query.clone())?;
         if let Some(track) = track {
             Ok(Some(track))
-        }else {
+        } else {
             if let SingleQueryIdentifier::Uri(ref uri) = query.identifier {
                 trace!("Track is not in library, asking provider");
                 let provider = self.get_provider(uri)?;
@@ -100,7 +100,7 @@ impl Rustic {
                     _ => None,
                 };
                 Ok(track)
-            }else {
+            } else {
                 // Only library tracks have an id
                 Ok(None)
             }

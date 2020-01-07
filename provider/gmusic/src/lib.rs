@@ -19,7 +19,7 @@ pub struct GooglePlayMusicProvider {
     client_secret: String,
     device_id: String,
     #[serde(skip)]
-    client: Option<GoogleMusicApi>
+    client: Option<GoogleMusicApi>,
 }
 
 impl provider::ProviderInstance for GooglePlayMusicProvider {
@@ -46,7 +46,8 @@ impl provider::ProviderInstance for GooglePlayMusicProvider {
 
     fn sync(&mut self, library: SharedLibrary) -> Result<provider::SyncResult, Error> {
         let client = self.client.as_ref().unwrap();
-        let mut playlists: Vec<Playlist> = client.get_all_playlists()?
+        let mut playlists: Vec<Playlist> = client
+            .get_all_playlists()?
             .into_iter()
             .map(GmusicPlaylist::from)
             .map(Playlist::from)
@@ -56,7 +57,8 @@ impl provider::ProviderInstance for GooglePlayMusicProvider {
 
         for playlist in &mut playlists {
             let playlist_id = &playlist.uri["gmusic:playlist:".len()..];
-            playlist.tracks = playlist_entries.iter()
+            playlist.tracks = playlist_entries
+                .iter()
                 .filter(|entry| entry.playlist_id == playlist_id)
                 .filter_map(|entry| entry.track.as_ref())
                 .cloned()
@@ -71,7 +73,7 @@ impl provider::ProviderInstance for GooglePlayMusicProvider {
             tracks: 0,
             artists: 0,
             albums: 0,
-            playlists: playlists.len()
+            playlists: playlists.len(),
         })
     }
 
@@ -100,12 +102,15 @@ impl provider::ProviderInstance for GooglePlayMusicProvider {
     }
 
     fn stream_url(&self, track: &Track) -> Result<String, Error> {
-        let id = track.meta.get(META_GMUSIC_STORE_ID).ok_or_else(|| format_err!("missing track id"))?;
+        let id = track
+            .meta
+            .get(META_GMUSIC_STORE_ID)
+            .ok_or_else(|| format_err!("missing track id"))?;
         if let MetaValue::String(ref id) = id {
             let client = self.client.as_ref().unwrap();
             let url = client.get_stream_url(&id, &self.device_id)?;
             Ok(url.to_string())
-        }else {
+        } else {
             unreachable!()
         }
     }

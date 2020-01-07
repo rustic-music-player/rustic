@@ -47,18 +47,25 @@ impl From<SpotifyFullTrack> for Track {
                 tracks: vec![],
                 provider: provider::Provider::Spotify,
                 image_url: convert_images(&track.album.images),
-                uri: track.album.id.map(|id| format!("spotify://album/{}", id)).unwrap_or_else(|| {
-                    warn!("album {:?} is missing album id", album);
-                    format!("spotify://album/{}", &album.name)
-                }),
+                uri: track
+                    .album
+                    .id
+                    .map(|id| format!("spotify://album/{}", id))
+                    .unwrap_or_else(|| {
+                        warn!("album {:?} is missing album id", album);
+                        format!("spotify://album/{}", &album.name)
+                    }),
                 meta: HashMap::new(),
             }),
             provider: provider::Provider::Spotify,
             image_url: convert_images(&track.album.images),
-            uri: track.id.map(|id| format!("spotify://track/{}", id)).unwrap_or_else(|| {
-                warn!("track {:?} is missing track id", debug_track);
-                format!("spotify://track/{}", &debug_track.uri)
-            }),
+            uri: track
+                .id
+                .map(|id| format!("spotify://track/{}", id))
+                .unwrap_or_else(|| {
+                    warn!("track {:?} is missing track id", debug_track);
+                    format!("spotify://track/{}", &debug_track.uri)
+                }),
             duration: Some(u64::from(track.duration_ms / 1000)),
             meta,
         }
@@ -88,10 +95,13 @@ impl From<SpotifySimplifiedTrack> for Track {
             album: None,
             provider: provider::Provider::Spotify,
             image_url: None,
-            uri: track.id.map(|id| format!("spotify://track/{}", id)).unwrap_or_else(|| {
-                warn!("track {:?} is missing track id", debug_track);
-                format!("spotify://track/{}", &debug_track.uri)
-            }),
+            uri: track
+                .id
+                .map(|id| format!("spotify://track/{}", id))
+                .unwrap_or_else(|| {
+                    warn!("track {:?} is missing track id", debug_track);
+                    format!("spotify://track/{}", &debug_track.uri)
+                }),
             duration: Some(u64::from(track.duration_ms / 1000)),
             meta,
         }

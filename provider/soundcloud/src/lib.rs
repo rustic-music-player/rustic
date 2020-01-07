@@ -124,7 +124,11 @@ impl provider::ProviderInstance for SoundcloudProvider {
         Ok(results)
     }
     fn resolve_track(&self, uri: &str) -> Result<Option<Track>, Error> {
-        ensure!(uri.starts_with("soundcloud://track/"), "Invalid Uri: {}", uri);
+        ensure!(
+            uri.starts_with("soundcloud://track/"),
+            "Invalid Uri: {}",
+            uri
+        );
         let id = &uri["soundcloud://track/".len()..];
         let id = usize::from_str(id)?;
         let client = self.client();

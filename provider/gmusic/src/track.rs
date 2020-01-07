@@ -33,7 +33,7 @@ impl From<GmusicTrack> for Track {
             provider: Provider::GooglePlayMusic,
             duration: None,
             image_url: track.album_art_ref.first().map(|image| image.url.clone()),
-            meta
+            meta,
         }
     }
 }

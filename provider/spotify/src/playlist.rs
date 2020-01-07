@@ -23,10 +23,13 @@ impl From<SpotifyPlaylist> for Playlist {
             title: playlist.name,
             provider: Provider::Spotify,
             uri: format!("spotify://playlists/{}", playlist.id),
-            tracks: playlist.tracks.items.into_iter()
+            tracks: playlist
+                .tracks
+                .items
+                .into_iter()
                 .map(|track| SpotifyFullTrack::from(track.track))
                 .map(Track::from)
-                .collect()
+                .collect(),
         }
     }
 }

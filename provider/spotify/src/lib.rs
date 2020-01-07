@@ -19,11 +19,11 @@ use crate::track::*;
 
 mod album;
 mod artist;
+mod meta;
+mod player;
 mod playlist;
 mod track;
 mod util;
-mod player;
-mod meta;
 
 #[derive(Clone, Deserialize, Debug)]
 pub struct SpotifyProvider {
@@ -34,7 +34,7 @@ pub struct SpotifyProvider {
     #[serde(skip)]
     client: Option<Spotify>,
     #[serde(skip)]
-    player: SpotifyPlayer
+    player: SpotifyPlayer,
 }
 
 impl SpotifyProvider {
@@ -77,11 +77,15 @@ impl SpotifyProvider {
         let spotify = self.client.as_ref().unwrap();
 
         let playlists = spotify.current_user_playlists(None, None)?;
-        let mut playlists = playlists.items
+        let mut playlists = playlists
+            .items
             .into_iter()
-            .map(|playlist| spotify.playlist(&playlist.id, None, None)
-                .map(SpotifyPlaylist::from)
-                .map(Playlist::from))
+            .map(|playlist| {
+                spotify
+                    .playlist(&playlist.id, None, None)
+                    .map(SpotifyPlaylist::from)
+                    .map(Playlist::from)
+            })
             .collect::<Result<Vec<Playlist>, Error>>()?;
 
         let playlist_count = playlists.len();
@@ -202,16 +206,20 @@ impl rustic_core::provider::ProviderInstance for SpotifyProvider {
     }
 
     fn stream_url(&self, track: &Track) -> Result<String, Error> {
-        let uri = track.meta.get(META_SPOTIFY_URI).ok_or_else(|| format_err!("Missing spotify uri"))?;
+        let uri = track
+            .meta
+            .get(META_SPOTIFY_URI)
+            .ok_or_else(|| format_err!("Missing spotify uri"))?;
         if let MetaValue::String(uri) = uri {
             let uri = uri.clone();
             let player = self.player.clone();
-            let t = thread::spawn(move|| {
-                player.get_audio_file(&uri)
-            }).join().unwrap().unwrap();
+            let t = thread::spawn(move || player.get_audio_file(&uri))
+                .join()
+                .unwrap()
+                .unwrap();
 
             unimplemented!()
-        }else {
+        } else {
             unreachable!()
         }
     }

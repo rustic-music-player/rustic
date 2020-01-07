@@ -107,14 +107,11 @@ impl Library for MemoryLibrary {
 
     fn query_playlist(&self, query: SingleQuery) -> Result<Option<Playlist>, Error> {
         trace!("Query Playlist {:?}", query);
-        let playlists = self
-            .playlists
-            .read()
-            .unwrap();
+        let playlists = self.playlists.read().unwrap();
         let mut playlist_iter = playlists.iter();
         let playlist = match query.identifier {
             SingleQueryIdentifier::Id(id) => playlist_iter.find(|playlist| playlist.id == Some(id)),
-            SingleQueryIdentifier::Uri(uri) => playlist_iter.find(|playlist| playlist.uri == uri)
+            SingleQueryIdentifier::Uri(uri) => playlist_iter.find(|playlist| playlist.uri == uri),
         };
         Ok(playlist.cloned())
     }

@@ -33,7 +33,10 @@ impl From<SpotifySimplifiedArtist> for Artist {
             id: None,
             name: artist.name,
             image_url: None,
-            uri: artist.id.map(|id| format!("spotify://artist/{}", id)).unwrap(),
+            uri: artist
+                .id
+                .map(|id| format!("spotify://artist/{}", id))
+                .unwrap(),
             meta: HashMap::new(),
         }
     }

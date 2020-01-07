@@ -68,7 +68,11 @@ impl RodioBackend {
         Ok(backend)
     }
 
-    fn decode_stream(&self, track: &Track, stream_url: String) -> Result<rodio::Decoder<BufReader<RodioFile>>, Error> {
+    fn decode_stream(
+        &self,
+        track: &Track,
+        stream_url: String,
+    ) -> Result<rodio::Decoder<BufReader<RodioFile>>, Error> {
         trace!("Decoding stream {} for track {}", &stream_url, track);
         let url = Url::parse(&stream_url)?;
         match url.scheme() {

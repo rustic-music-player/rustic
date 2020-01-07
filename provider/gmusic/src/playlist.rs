@@ -17,7 +17,7 @@ impl From<GmusicPlaylist> for Playlist {
             title: playlist.name,
             provider: Provider::GooglePlayMusic,
             tracks: Vec::new(),
-            uri: format!("gmusic:playlist:{}", playlist.id)
+            uri: format!("gmusic:playlist:{}", playlist.id),
         }
     }
 }

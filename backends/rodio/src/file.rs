@@ -25,10 +25,13 @@ pub(crate) struct RodioFile(File, Emitter);
 impl RodioFile {
     pub fn open<P: AsRef<Path>>(path: P, sender: Sender<()>) -> io::Result<RodioFile> {
         let file = File::open(path)?;
-        Ok(RodioFile(file, Emitter {
-            sender,
-            emitted: false,
-        }))
+        Ok(RodioFile(
+            file,
+            Emitter {
+                sender,
+                emitted: false,
+            },
+        ))
     }
 }
 

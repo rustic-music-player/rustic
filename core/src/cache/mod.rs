@@ -36,9 +36,7 @@ pub struct Cache {
 pub type SharedCache = Arc<Cache>;
 
 fn coverart_cache(app: &Arc<Rustic>) -> Result<Vec<Result<CachedEntry, Error>>, Error> {
-    let mut tracks: Vec<Track> = app
-        .library
-        .query_tracks(MultiQuery::new())?;
+    let mut tracks: Vec<Track> = app.library.query_tracks(MultiQuery::new())?;
     let mut playlist_tracks: Vec<Track> = app
         .library
         .query_playlists(MultiQuery::new())?
@@ -79,8 +77,14 @@ pub fn start(app: Arc<Rustic>) -> Result<thread::JoinHandle<()>, Error> {
                 info!("Caching Coverart...");
                 match coverart_cache(&app) {
                     Ok(result) => {
-                        let entries: Vec<&CachedEntry> = result.iter().filter_map(|entry| entry.as_ref().ok()).collect();
-                        let errors: Vec<&Error> = result.iter().filter_map(|entry| entry.as_ref().err()).collect();
+                        let entries: Vec<&CachedEntry> = result
+                            .iter()
+                            .filter_map(|entry| entry.as_ref().ok())
+                            .collect();
+                        let errors: Vec<&Error> = result
+                            .iter()
+                            .filter_map(|entry| entry.as_ref().err())
+                            .collect();
                         info!("Cached {} images", entries.len());
                         let mut map = app.cache.coverart.write().unwrap();
                         for entry in entries {
@@ -94,11 +98,8 @@ pub fn start(app: Arc<Rustic>) -> Result<thread::JoinHandle<()>, Error> {
                             }
                         }
                     }
-                    Err(err) => {
-                        error!("{}", err)
-                    }
+                    Err(err) => error!("{}", err),
                 }
-
 
                 let result = cvar
                     .wait_timeout(keep_running, Duration::new(SERVICE_INTERVAL, 0))
@@ -176,9 +177,7 @@ fn cache_coverart(uri: String) -> Result<CachedEntry, Error> {
     let buffer = {
         trace!("fetching image");
         let mut buffer = Vec::new();
-        let client = Client::builder()
-            .timeout(Duration::from_secs(5))
-            .build()?;
+        let client = Client::builder().timeout(Duration::from_secs(5)).build()?;
         let mut res = client.get(&uri).send()?;
         res.read_to_end(&mut buffer)?;
         buffer
@@ -200,7 +199,10 @@ fn cache_track(track: &Track, stream_url: &str) -> Result<CachedEntry, Error> {
     let path = format!("{}/{}", base, filename);
     if Path::new(&path).exists() {
         trace!("file already exists");
-        return Ok(CachedEntry { filename, uri: track.uri.clone() });
+        return Ok(CachedEntry {
+            filename,
+            uri: track.uri.clone(),
+        });
     }
 
     debug!("{} -> {}", &track.uri, &filename);
@@ -209,5 +211,8 @@ fn cache_track(track: &Track, stream_url: &str) -> Result<CachedEntry, Error> {
     let mut res = get(stream_url)?;
     res.copy_to(&mut file)?;
 
-    Ok(CachedEntry { filename, uri: track.uri.clone() })
+    Ok(CachedEntry {
+        filename,
+        uri: track.uri.clone(),
+    })
 }
