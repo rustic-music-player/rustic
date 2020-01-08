@@ -20,12 +20,12 @@ pub struct TrackModel {
 
 impl TrackModel {
     pub fn new(track: Track, app: &Arc<Rustic>) -> TrackModel {
-        let coverart = track.coverart(app);
+        let cursor = to_cursor(&track.uri);
         TrackModel {
-            cursor: to_cursor(&track.uri),
+            cursor: cursor.clone(),
             title: track.title,
             provider: track.provider,
-            coverart,
+            coverart: Some(format!("/api/tracks/{}/coverart", &cursor)),
             duration: track.duration,
             artist: track.artist.map(|artist| ArtistModel::new(artist, app)),
             album: track.album.map(|album| AlbumModel::new(album, app)),

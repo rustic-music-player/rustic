@@ -13,7 +13,7 @@ pub use crate::library::{
 };
 pub use crate::player::{PlayerBackend, PlayerEvent, PlayerState};
 pub use crate::provider::{Explorer, Provider};
-use crate::provider::SharedProvider;
+use crate::provider::{SharedProvider, CoverArt};
 
 pub mod cache;
 pub mod extension;
@@ -94,7 +94,7 @@ impl Rustic {
         } else {
             if let SingleQueryIdentifier::Uri(ref uri) = query.identifier {
                 trace!("Track is not in library, asking provider");
-                let provider = self.get_provider(uri)?;
+                let provider = self.get_provider_for_url(uri)?;
                 let track = match provider {
                     Some(provider) => provider.read().unwrap().resolve_track(uri)?,
                     _ => None,
@@ -107,7 +107,7 @@ impl Rustic {
         }
     }
 
-    fn get_provider(&self, uri: &str) -> Result<Option<&SharedProvider>, failure::Error> {
+    fn get_provider_for_url(&self, uri: &str) -> Result<Option<&SharedProvider>, failure::Error> {
         trace!("get_provider for {}", uri);
         let url = dbg!(Url::parse(uri))?;
         let provider = self
@@ -118,11 +118,26 @@ impl Rustic {
     }
 
     pub fn stream_url(&self, track: &Track) -> Result<String, failure::Error> {
-        self.providers
+        let provider = self.get_provider(track)?;
+        let stream_url = provider.read().unwrap().stream_url(track)?;
+
+        Ok(stream_url)
+    }
+
+    pub fn cover_art(&self, track: &Track) -> Result<Option<CoverArt>, failure::Error> {
+        let provider = self.get_provider(track)?;
+        let cover = provider.read().unwrap().cover_art(track)?;
+
+        Ok(cover)
+    }
+
+    fn get_provider(&self, track: &Track) -> Result<&SharedProvider, failure::Error> {
+        let provider = self.providers
             .iter()
-            .find(|provider| provider.read().unwrap().provider() == track.provider)
-            .ok_or_else(|| format_err!("provider for track {:?} not found", track))
-            .and_then(|provider| provider.read().unwrap().stream_url(track))
+            .find(|p| p.read().unwrap().provider() == track.provider)
+            .ok_or_else(|| format_err!("provider for track {:?} not found", track))?;
+
+        Ok(provider)
     }
 
     pub fn exit(&self) {

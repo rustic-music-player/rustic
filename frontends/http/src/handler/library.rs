@@ -3,7 +3,7 @@ use std::sync::Arc;
 use failure::Error;
 
 use cursor::from_cursor;
-use rustic_core::{MultiQuery, QueryJoins, Rustic, SingleQuery};
+use rustic_core::{MultiQuery, QueryJoins, Rustic, SingleQuery, Track};
 use viewmodels::*;
 
 pub fn fetch_album(cursor: &str, rustic: &Arc<Rustic>) -> Result<Option<AlbumModel>, Error> {
@@ -94,4 +94,12 @@ pub fn fetch_tracks(rustic: &Arc<Rustic>) -> Result<Vec<TrackModel>, Error> {
         .map(|track| TrackModel::new(track, &rustic))
         .collect();
     Ok(tracks)
+}
+
+pub fn fetch_track(cursor: &str, rustic: &Arc<Rustic>) -> Result<Option<Track>, Error> {
+    let uri = from_cursor(cursor)?;
+    let query = SingleQuery::uri(uri);
+    let track = rustic.query_track(query)?;
+
+    Ok(track)
 }

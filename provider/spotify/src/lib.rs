@@ -223,4 +223,17 @@ impl rustic_core::provider::ProviderInstance for SpotifyProvider {
             unreachable!()
         }
     }
+
+    fn cover_art(&self, track: &Track) -> Result<Option<provider::CoverArt>, Error> {
+        let url = track
+            .meta
+            .get(meta::META_SPOTIFY_COVER_ART_URL)
+            .map(|value| match value {
+                MetaValue::String(url) => url.clone(),
+                _ => unreachable!()
+            })
+            .map(|url| url.into());
+
+        Ok(url)
+    }
 }

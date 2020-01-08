@@ -22,6 +22,9 @@ impl From<GmusicTrack> for Track {
         if let Some(store_id) = track.store_id.clone() {
             meta.insert(META_GMUSIC_STORE_ID.into(), store_id.into());
         }
+        if let Some(image) = track.album_art_ref.first() {
+            meta.insert(META_GMUSIC_COVER_ART_URL.into(), image.url.clone().into());
+        }
         Track {
             id: None,
             title: track.title,

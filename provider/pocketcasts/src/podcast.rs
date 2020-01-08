@@ -35,10 +35,11 @@ impl From<PocketcastAlbum> for Album {
             }),
             tracks: vec![],
             provider: Provider::Pocketcasts,
-            image_url: Some(thumbnail_url),
+            image_url: Some(String::new()),
             uri: format!("pocketcasts://podcast/{}", podcast.uuid),
             meta: hashmap!(
-                META_POCKETCASTS_PODCAST_UUID.into() => id.into()
+                META_POCKETCASTS_PODCAST_UUID.into() => id.into(),
+                META_POCKETCASTS_COVER_ART_URL.into() => thumbnail_url.into()
             ),
         }
     }
@@ -88,9 +89,11 @@ impl From<PocketcastSearchResult> for Album {
             }),
             tracks: vec![],
             provider: Provider::Pocketcasts,
-            image_url: Some(thumbnail_url),
+            image_url: Some(String::new()),
             uri: format!("pocketcasts://podcast/{}", podcast.uuid),
-            meta: HashMap::new(),
+            meta: hashmap!(
+                META_POCKETCASTS_COVER_ART_URL.into() => thumbnail_url.into()
+            ),
         }
     }
 }

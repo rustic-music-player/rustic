@@ -1,2 +1,3 @@
 pub const META_SPOTIFY_URI: &str = "SPOTIFY_URI";
 pub const META_SPOTIFY_ID: &str = "SPOTIFY_ID";
+pub const META_SPOTIFY_COVER_ART_URL: &str = "SPOTIFY_COVER_ART_URL";

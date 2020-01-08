@@ -33,6 +33,10 @@ impl From<SpotifyFullTrack> for Track {
             meta.insert(META_SPOTIFY_ID.into(), id.clone().into());
         }
 
+        if let Some(image) = convert_images(&track.album.images) {
+            meta.insert(META_SPOTIFY_COVER_ART_URL.into(), image.into());
+        }
+
         Track {
             id: None,
             title: track.name,

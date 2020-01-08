@@ -17,7 +17,7 @@ use rayon::prelude::*;
 use episode::PocketcastTrack;
 use pocketcasts::{Episode, PocketcastClient, Podcast};
 use podcast::{PocketcastAlbum, PocketcastAlbums, PocketcastSearchResult};
-use rustic::library::{Album, Artist, SharedLibrary, Track};
+use rustic::library::{Album, Artist, SharedLibrary, Track, MetaValue};
 use rustic::provider;
 
 mod episode;
@@ -194,5 +194,18 @@ impl provider::ProviderInstance for PocketcastsProvider {
         }
 
         Err(format_err!("Invalid provider: {:?}", track.provider))
+    }
+
+    fn cover_art(&self, track: &Track) -> Result<Option<provider::CoverArt>, Error> {
+        let url = track
+            .meta
+            .get(meta::META_POCKETCASTS_COVER_ART_URL)
+            .map(|value| match value {
+                MetaValue::String(url) => url.clone(),
+                _ => unreachable!()
+            })
+            .map(|url| url.into());
+
+        Ok(url)
     }
 }

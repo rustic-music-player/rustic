@@ -48,6 +48,22 @@ pub trait ProviderInstance: Debug {
     fn search(&self, query: String) -> Result<Vec<ProviderItem>, Error>;
     fn resolve_track(&self, uri: &str) -> Result<Option<Track>, Error>;
     fn stream_url(&self, track: &Track) -> Result<String, Error>;
+    fn cover_art(&self, track: &Track) -> Result<Option<CoverArt>, Error>;
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+pub enum CoverArt {
+    Data {
+        data: Vec<u8>,
+        mime_type: String
+    },
+    Url(String)
+}
+
+impl From<String> for CoverArt {
+    fn from(url: String) -> Self {
+        CoverArt::Url(url)
+    }
 }
 
 #[derive(Debug, Fail)]

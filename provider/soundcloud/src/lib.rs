@@ -14,11 +14,12 @@ use std::str::FromStr;
 
 use failure::Error;
 
-use rustic::library::{Playlist, SharedLibrary, Track};
+use rustic::library::{Playlist, SharedLibrary, Track, MetaValue};
 use rustic::provider;
 use track::SoundcloudTrack;
 
 mod error;
+mod meta;
 mod playlist;
 mod track;
 
@@ -145,7 +146,7 @@ impl provider::ProviderInstance for SoundcloudProvider {
     fn stream_url(&self, track: &Track) -> Result<String, Error> {
         if track.provider == provider::Provider::Soundcloud {
             if let rustic::library::MetaValue::String(stream_url) =
-                track.meta.get(track::META_SOUNDCLOUD_STREAM_URL).unwrap()
+                track.meta.get(meta::META_SOUNDCLOUD_STREAM_URL).unwrap()
             {
                 return Ok(format!(
                     "{}?client_id={}",
@@ -160,5 +161,18 @@ impl provider::ProviderInstance for SoundcloudProvider {
         }
 
         Err(format_err!("Invalid provider: {:?}", track.provider))
+    }
+
+    fn cover_art(&self, track: &Track) -> Result<Option<provider::CoverArt>, Error> {
+        let url = track
+            .meta
+            .get(meta::META_SOUNDCLOUD_COVER_ART_URL)
+            .map(|value| match value {
+                MetaValue::String(url) => url.clone(),
+                _ => unreachable!()
+            })
+            .map(|url| url.into());
+
+        Ok(url)
     }
 }

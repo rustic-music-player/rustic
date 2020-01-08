@@ -23,14 +23,6 @@ pub struct Track {
     pub meta: HashMap<String, MetaValue>,
 }
 
-impl Track {
-    pub fn coverart(&self, app: &Arc<Rustic>) -> Option<String> {
-        self.image_url
-            .clone()
-            .and_then(|uri| app.cache.fetch_coverart(uri).ok())
-    }
-}
-
 impl PartialEq for Track {
     fn eq(&self, other: &Track) -> bool {
         self.uri == other.uri
