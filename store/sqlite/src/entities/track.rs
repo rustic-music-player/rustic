@@ -12,7 +12,7 @@ pub struct TrackEntity {
     pub artist_id: Option<i32>,
     pub album_id: Option<i32>,
     pub uri: String,
-    pub image_url: Option<String>,
+    pub has_coverart: bool, //TODO: add migration
     pub duration: Option<i32>,
     pub provider: i32,
 }
@@ -41,7 +41,7 @@ impl TrackEntity {
             album: None,
             provider: int_to_provider(self.provider)?,
             uri: self.uri,
-            image_url: self.image_url,
+            has_coverart: self.has_coverart,
             duration: self.duration.map(|duration| duration as u64),
             meta: unimplemented!(),
         })

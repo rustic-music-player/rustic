@@ -19,7 +19,7 @@ impl From<PocketcastTrack> for Track {
             album: None,
             provider: Provider::Pocketcasts,
             uri: format!("pocketcasts://episode/{}", episode.uuid),
-            image_url: None,
+            has_coverart: false,
             duration: Some(episode.duration),
             meta: hashmap!(
                 META_POCKETCASTS_STREAM_URL.into() => episode.url.into()

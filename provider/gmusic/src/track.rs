@@ -35,7 +35,7 @@ impl From<GmusicTrack> for Track {
             uri: format!("gmusic:track:{}", track.store_id.unwrap_or(track.id)),
             provider: Provider::GooglePlayMusic,
             duration: None,
-            image_url: track.album_art_ref.first().map(|image| image.url.clone()),
+            has_coverart: track.album_art_ref.first().is_some(),
             meta,
         }
     }

@@ -62,7 +62,7 @@ impl From<SpotifyFullTrack> for Track {
                 meta: HashMap::new(),
             }),
             provider: provider::Provider::Spotify,
-            image_url: convert_images(&track.album.images),
+            has_coverart: !track.album.images.is_empty(),
             uri: track
                 .id
                 .map(|id| format!("spotify://track/{}", id))
@@ -98,7 +98,7 @@ impl From<SpotifySimplifiedTrack> for Track {
             album_id: None,
             album: None,
             provider: provider::Provider::Spotify,
-            image_url: None,
+            has_coverart: false,
             uri: track
                 .id
                 .map(|id| format!("spotify://track/{}", id))

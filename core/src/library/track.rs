@@ -18,7 +18,7 @@ pub struct Track {
     pub album: Option<Album>,
     pub provider: Provider,
     pub uri: String,
-    pub image_url: Option<String>,
+    pub has_coverart: bool,
     pub duration: Option<u64>,
     pub meta: HashMap<String, MetaValue>,
 }

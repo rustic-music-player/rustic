@@ -151,7 +151,7 @@ impl From<scanner::Track> for library::Track {
                     META_LOCAL_FILE_URL.into() => path.clone().into()
                 ),
             }),
-            image_url: None,
+            has_coverart: track.has_coverart,
             provider: Provider::LocalMedia,
             uri: format!("file://{}", track.path),
             duration: None,

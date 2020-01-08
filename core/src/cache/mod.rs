@@ -9,11 +9,9 @@ use std::time::Duration;
 use failure::{bail, Error};
 use image;
 use image::FilterType;
-use itertools::Itertools;
 use log::{debug, error, info, trace};
 use md5;
 use pinboard::NonEmptyPinboard;
-use rayon::prelude::*;
 use reqwest::{Client, get};
 
 use crate::{MultiQuery, Rustic, Track};
@@ -46,27 +44,17 @@ fn coverart_cache(app: &Arc<Rustic>) -> Result<Vec<Result<CachedEntry, Error>>, 
 
     tracks.append(&mut playlist_tracks);
 
-    let entries = tracks
-        .iter()
-        .filter(|track| track.image_url.is_some())
-        .filter(|track| {
-            let map = app.cache.coverart.read().unwrap();
-            !map.contains_key(&track.uri)
-        })
-        .map(|track| track.image_url.clone().unwrap())
-        .dedup()
-        .collect::<Vec<String>>()
-        .into_par_iter()
-        .map(cache_coverart)
-        .collect();
-
-    Ok(entries)
+    unimplemented!("TODO: implement new cache")
 }
 
 pub fn start(app: Arc<Rustic>) -> Result<thread::JoinHandle<()>, Error> {
-    create_dir_all(".cache/coverart")?;
     create_dir_all(".cache/music")?;
+    create_dir_all(".cache/coverart")?;
 
+    Ok(thread::spawn(|| {}))
+}
+
+fn _start_cache_thread(app: Arc<Rustic>) -> Result<thread::JoinHandle<()>, Error> {
     thread::Builder::new()
         .name("Coverart Cache".into())
         .spawn(move || {

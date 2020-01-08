@@ -19,6 +19,7 @@ use pocketcasts::{Episode, PocketcastClient, Podcast};
 use podcast::{PocketcastAlbum, PocketcastAlbums, PocketcastSearchResult};
 use rustic::library::{Album, Artist, SharedLibrary, Track, MetaValue};
 use rustic::provider;
+use meta::META_POCKETCASTS_COVER_ART_URL;
 
 mod episode;
 mod meta;
@@ -86,7 +87,10 @@ impl provider::ProviderInstance for PocketcastsProvider {
                     .map(|mut track| {
                         track.album_id = album.id;
                         track.artist_id = artist.id;
-                        track.image_url = album.image_url.clone();
+                        track.has_coverart = album.image_url.is_some();
+                        if let Some(image_url) = album.image_url.as_ref() {
+                            track.meta.insert(META_POCKETCASTS_COVER_ART_URL.into(), image_url.clone().into());
+                        }
                         track
                     })
                     .collect();
