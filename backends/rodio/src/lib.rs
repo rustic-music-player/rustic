@@ -200,10 +200,13 @@ impl PlayerBackend for RodioBackend {
     fn set_state(&self, state: PlayerState) -> Result<(), Error> {
         match state {
             PlayerState::Play => {
-                if let Some(track) = self.current() {
+                let is_paused = self.state.read() == PlayerState::Pause;
+                if is_paused {
+                    self.play();
+                }else if let Some(track) = self.current() {
                     self.set_track(&track)?;
+                    self.play();
                 }
-                self.play();
             }
             PlayerState::Pause => self.pause(),
             PlayerState::Stop => self.stop(),
