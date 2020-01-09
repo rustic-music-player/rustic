@@ -2,7 +2,7 @@ use std::fs::create_dir_all;
 use std::sync::Arc;
 
 use actix::{Addr, System};
-use actix_files::{Files, NamedFile};
+use actix_files::Files;
 use actix_web::{App, HttpServer, middleware, Result, Scope, web};
 
 use controller;
