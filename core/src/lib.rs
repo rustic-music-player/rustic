@@ -109,7 +109,7 @@ impl Rustic {
 
     fn get_provider_for_url(&self, uri: &str) -> Result<Option<&SharedProvider>, failure::Error> {
         trace!("get_provider for {}", uri);
-        let url = dbg!(Url::parse(uri))?;
+        let url = Url::parse(uri)?;
         let provider = self
             .providers
             .iter()
