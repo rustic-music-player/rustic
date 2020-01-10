@@ -5,6 +5,7 @@ pub use self::player::PlayerModel;
 pub use self::playlist::PlaylistModel;
 pub use self::search::SearchResults;
 pub use self::track::TrackModel;
+pub use self::provider::{ProviderModel, ProviderFolderModel};
 
 mod album;
 mod artist;
@@ -13,4 +14,4 @@ mod playlist;
 mod search;
 mod track;
 mod extension;
-
+mod provider;
