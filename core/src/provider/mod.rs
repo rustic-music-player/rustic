@@ -27,7 +27,7 @@ pub struct SyncResult {
 }
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
-#[serde(rename_all = "camelCase")]
+#[serde(rename_all = "lowercase")]
 pub enum Provider {
     Pocketcasts,
     Soundcloud,
