@@ -1,6 +1,8 @@
+use std::collections::HashMap;
+
 use maplit::hashmap;
 
-use rustic_core::{Provider, Track};
+use rustic_core::{Artist, Provider, Track};
 
 use crate::meta::*;
 
@@ -25,16 +27,23 @@ impl From<GmusicTrack> for Track {
         if let Some(image) = track.album_art_ref.first() {
             meta.insert(META_GMUSIC_COVER_ART_URL.into(), image.url.clone().into());
         }
+        let artist_uri = format!("gmusic:artist:{}", &track.artist);
         Track {
             id: None,
             title: track.title,
-            artist: None,
+            artist: Some(Artist {
+                id: None,
+                name: track.artist,
+                uri: artist_uri,
+                image_url: None,
+                meta: HashMap::new()
+            }),
             artist_id: None,
             album: None,
             album_id: None,
             uri: format!("gmusic:track:{}", track.store_id.unwrap_or(track.id)),
             provider: Provider::GooglePlayMusic,
-            duration: None,
+            duration: track.duration_millis.parse::<u64>().ok().map(|duration| duration / 1000),
             has_coverart: track.album_art_ref.first().is_some(),
             meta,
         }
