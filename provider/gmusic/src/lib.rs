@@ -1,11 +1,12 @@
 use failure::{Error, format_err};
+use log::error;
 use serde_derive::Deserialize;
 
 use gmusic::{auth::stdio_login, GoogleMusicApi};
 use rustic_core::{Playlist, provider, SharedLibrary, Track};
 use rustic_core::library::MetaValue;
 
-use crate::meta::{META_GMUSIC_STORE_ID, META_GMUSIC_TRACK_ID, META_GMUSIC_COVER_ART_URL};
+use crate::meta::{META_GMUSIC_COVER_ART_URL, META_GMUSIC_STORE_ID, META_GMUSIC_TRACK_ID};
 use crate::playlist::GmusicPlaylist;
 use crate::track::GmusicTrack;
 
@@ -108,8 +109,19 @@ impl provider::ProviderInstance for GooglePlayMusicProvider {
             .ok_or_else(|| format_err!("missing track id"))?;
         if let MetaValue::String(ref id) = id {
             let client = self.client.as_ref().unwrap();
-            let url = client.get_stream_url(&id, &self.device_id)?;
-            Ok(url.to_string())
+            // HACK: sometimes gmusic returns 403, not sure why but retrying fixes it most of the time
+            let mut url = None;
+            for _ in 0..2 {
+                match client.get_stream_url(&id, &self.device_id) {
+                    Ok(stream_url) => {
+                        url = Some(stream_url);
+                        break;
+                    }
+                    Err(err) => error!("Stream Url {:?}", err)
+                }
+            }
+            url.ok_or_else(|| format_err!("Could not get stream url"))
+                .map(|url| url.to_string())
         } else {
             unreachable!()
         }
