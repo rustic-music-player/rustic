@@ -11,8 +11,8 @@ homepage = "https://github.com/rustic-music-player/rustic"
 crossbeam-channel = "0.4"
 log = "0.4"
 failure = "0.1"
-gstreamer = "0.12"
-glib = "0.6.0"
+gstreamer = "0.15"
+glib = "0.9.0"
 pinboard = "2.0.0"
 
 [dependencies.rustic-core]

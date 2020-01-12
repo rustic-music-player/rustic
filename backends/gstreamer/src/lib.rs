@@ -14,7 +14,7 @@ use std::time::Duration;
 
 use channel::{Receiver, Sender};
 use failure::{err_msg, Error};
-use gst::{MessageView, prelude::*, StateChangeReturn};
+use gst::{MessageView, prelude::*};
 use pinboard::NonEmptyPinboard;
 
 use core::{player::MemoryQueue, PlayerBackend, PlayerEvent, PlayerState, Track};
@@ -48,12 +48,9 @@ impl GstBackend {
     pub fn new(core: Arc<core::Rustic>) -> Result<Arc<Box<dyn PlayerBackend>>, Error> {
         gst::init()?;
         let pipeline = gst::Pipeline::new(None);
-        let decoder = gst::ElementFactory::make("uridecodebin", None)
-            .ok_or_else(|| err_msg("can't build uridecodebin"))?;
-        let volume = gst::ElementFactory::make("volume", None)
-            .ok_or_else(|| err_msg("can't build volume"))?;
-        let sink = gst::ElementFactory::make("autoaudiosink", None)
-            .ok_or_else(|| err_msg("can't build autoaudiosink"))?;
+        let decoder = gst::ElementFactory::make("uridecodebin", None)?;
+        let volume = gst::ElementFactory::make("volume", None)?;
+        let sink = gst::ElementFactory::make("autoaudiosink", None)?;
         let (tx, rx) = channel::unbounded();
         let backend = GstBackend {
             core,
@@ -147,9 +144,7 @@ impl GstBackend {
 
     fn set_track(&self, track: &Track) -> Result<(), Error> {
         debug!("Selecting {:?}", track);
-        if let StateChangeReturn::Failure = self.pipeline.set_state(gst::State::Null) {
-            bail!("can't stop pipeline")
-        }
+        self.pipeline.set_state(gst::State::Null)?;
 
         let stream_url = self.core.stream_url(track)?;
 
@@ -162,11 +157,9 @@ impl GstBackend {
             PlayerState::Stop => gst::State::Null,
         };
 
-        if let StateChangeReturn::Failure = self.pipeline.set_state(state) {
-            bail!("can't restart pipeline")
-        }
+        self.pipeline.set_state(state)?;
 
-        self.tx.send(PlayerEvent::TrackChanged(track.clone()));
+        self.tx.send(PlayerEvent::TrackChanged(track.clone()))?;
         self.current_track.set(Some(track.clone()));
 
         Ok(())
@@ -238,18 +231,12 @@ impl PlayerBackend for GstBackend {
                 }
             }
             PlayerState::Pause => {
-                if let StateChangeReturn::Failure = self.pipeline.set_state(gst::State::Paused) {
-                    error!("can't play pipeline");
-                    bail!("can't play pipeline")
-                }
+                self.pipeline.set_state(gst::State::Paused)?;
                 self.write_state(new_state);
                 Ok(())
             }
             PlayerState::Stop => {
-                if let StateChangeReturn::Failure = self.pipeline.set_state(gst::State::Null) {
-                    error!("can't play pipeline");
-                    bail!("can't play pipeline")
-                }
+                self.pipeline.set_state(gst::State::Null)?;
                 self.write_state(new_state);
                 Ok(())
             }
