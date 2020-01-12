@@ -1,3 +1,4 @@
+use std::cmp::Ordering;
 use std::sync::Arc;
 
 use cursor::to_cursor;
@@ -7,7 +8,7 @@ use rustic_core::Rustic;
 use viewmodels::AlbumModel;
 use viewmodels::ArtistModel;
 
-#[derive(Clone, Debug, Serialize)]
+#[derive(Clone, Debug, Serialize, Eq)]
 pub struct TrackModel {
     pub cursor: String,
     pub title: String,
@@ -30,5 +31,23 @@ impl TrackModel {
             artist: track.artist.map(|artist| ArtistModel::new(artist, app)),
             album: track.album.map(|album| AlbumModel::new(album, app)),
         }
+    }
+}
+
+impl PartialEq for TrackModel {
+    fn eq(&self, other: &Self) -> bool {
+        self.cursor == other.cursor
+    }
+}
+
+impl PartialOrd for TrackModel {
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        Some(self.cmp(other))
+    }
+}
+
+impl Ord for TrackModel {
+    fn cmp(&self, other: &Self) -> Ordering {
+        self.title.to_lowercase().cmp(&other.title.to_lowercase())
     }
 }

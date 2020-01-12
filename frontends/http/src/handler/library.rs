@@ -1,6 +1,7 @@
 use std::sync::Arc;
 
 use failure::Error;
+use itertools::Itertools;
 
 use cursor::from_cursor;
 use rustic_core::{MultiQuery, QueryJoins, Rustic, SingleQuery, Track};
@@ -62,6 +63,7 @@ pub fn fetch_playlists(rustic: &Arc<Rustic>) -> Result<Vec<PlaylistModel>, Error
     let playlists = playlists
         .into_iter()
         .map(|playlist| PlaylistModel::new(playlist, &rustic))
+        .sorted() // TODO: sorting should probably happen in library
         .collect();
 
     Ok(playlists)

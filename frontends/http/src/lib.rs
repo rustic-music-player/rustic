@@ -8,6 +8,7 @@ extern crate crossbeam_channel;
 #[macro_use]
 extern crate failure;
 extern crate futures;
+extern crate itertools;
 #[macro_use]
 extern crate log;
 extern crate mime;
