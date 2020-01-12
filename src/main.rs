@@ -5,7 +5,6 @@ extern crate failure;
 extern crate log;
 // Core
 extern crate rustic_core as rustic;
-// Frontends
 #[cfg(feature = "dbus")]
 extern crate rustic_dbus_frontend as dbus_frontend;
 #[cfg(feature = "gmusic")]
@@ -15,6 +14,7 @@ extern crate rustic_gmusic_provider as gmusic_provider;
 extern crate rustic_google_cast_backend as google_cast_backend;
 #[cfg(feature = "gstreamer")]
 extern crate rustic_gstreamer_backend as gst_backend;
+// Frontends
 #[cfg(feature = "web-api")]
 extern crate rustic_http_frontend as http_frontend;
 // Provider
