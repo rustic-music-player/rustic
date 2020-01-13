@@ -14,7 +14,7 @@ use std::str::FromStr;
 
 use failure::Error;
 
-use rustic::library::{Playlist, SharedLibrary, Track, MetaValue};
+use rustic::library::{MetaValue, Playlist, SharedLibrary, Track};
 use rustic::provider;
 use track::SoundcloudTrack;
 
@@ -118,7 +118,13 @@ impl provider::ProviderInstance for SoundcloudProvider {
             .get()?
             .unwrap_or_else(|| vec![])
             .into_iter()
-            .filter(|track| track.stream_url.is_some())
+            .filter(|track| {
+                let has_url = track.stream_url.is_some();
+                if !has_url {
+                    warn!("Track {:?} has no stream url", &track);
+                }
+                has_url
+            })
             .map(SoundcloudTrack::from)
             .map(|track| track.into())
             .collect();
