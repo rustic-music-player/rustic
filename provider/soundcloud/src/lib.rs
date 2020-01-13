@@ -181,4 +181,8 @@ impl provider::ProviderInstance for SoundcloudProvider {
 
         Ok(url)
     }
+
+    fn resolve_share_url(&self, _url: url::Url) -> Result<Option<provider::InternalUri>, Error> {
+        Ok(None)
+    }
 }

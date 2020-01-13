@@ -19,6 +19,7 @@ extern crate serde;
 extern crate serde_derive;
 extern crate serde_json;
 extern crate stopwatch;
+extern crate urlencoding;
 extern crate uuid;
 
 use std::sync::Arc;

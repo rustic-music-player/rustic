@@ -1,7 +1,9 @@
+use std::sync::Arc;
+
 use failure::Error;
 use rayon::prelude::*;
+
 use rustic_core::{Album, Artist, Rustic, Track};
-use std::sync::Arc;
 use viewmodels::*;
 
 pub fn search(query: &str, rustic: &Arc<Rustic>) -> Result<SearchResults, Error> {
@@ -48,4 +50,11 @@ pub fn search(query: &str, rustic: &Arc<Rustic>) -> Result<SearchResults, Error>
         artists,
         playlists: vec![],
     })
+}
+
+pub fn open(url: String, rustic: &Arc<Rustic>) -> Result<Option<OpenResultModel>, Error> {
+    let internal_url = rustic.resolve_share_url(url)?;
+    let internal_url = internal_url.map(OpenResultModel::from);
+
+    Ok(internal_url)
 }

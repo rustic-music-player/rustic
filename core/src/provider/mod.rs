@@ -3,8 +3,9 @@ use std::sync::{Arc, RwLock};
 
 use failure::{Error, Fail};
 use serde_derive::{Deserialize, Serialize};
+use url::Url;
 
-use crate::library::{SharedLibrary, Track};
+use crate::library::{Album, Artist, Playlist, SharedLibrary, Track};
 
 pub use self::explorer::Explorer;
 pub use self::folder::ProviderFolder;
@@ -49,6 +50,7 @@ pub trait ProviderInstance: Debug {
     fn resolve_track(&self, uri: &str) -> Result<Option<Track>, Error>;
     fn stream_url(&self, track: &Track) -> Result<String, Error>;
     fn cover_art(&self, track: &Track) -> Result<Option<CoverArt>, Error>;
+    fn resolve_share_url(&self, url: Url) -> Result<Option<InternalUri>, Error>;
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
@@ -72,4 +74,13 @@ pub enum NavigationError {
     PathNotFound,
     #[fail(display = "can't fetch")]
     FetchError,
+}
+
+// TODO: better name
+#[derive(Debug, Clone, Deserialize, Serialize)]
+pub enum InternalUri {
+    Track(String),
+    Album(String),
+    Artist(String),
+    Playlist(String)
 }

@@ -10,16 +10,17 @@ extern crate rustic_core as rustic;
 extern crate serde;
 #[macro_use]
 extern crate serde_derive;
+extern crate url;
 
 use failure::Error;
+use pocketcasts::{Episode, PocketcastClient, Podcast};
 use rayon::prelude::*;
 
 use episode::PocketcastTrack;
-use pocketcasts::{Episode, PocketcastClient, Podcast};
-use podcast::{PocketcastAlbum, PocketcastAlbums, PocketcastSearchResult};
-use rustic::library::{Album, Artist, SharedLibrary, Track, MetaValue};
-use rustic::provider;
 use meta::META_POCKETCASTS_COVER_ART_URL;
+use podcast::{PocketcastAlbum, PocketcastAlbums, PocketcastSearchResult};
+use rustic::library::{Album, Artist, MetaValue, SharedLibrary, Track};
+use rustic::provider;
 
 mod episode;
 mod meta;
@@ -211,5 +212,9 @@ impl provider::ProviderInstance for PocketcastsProvider {
             .map(|url| url.into());
 
         Ok(url)
+    }
+
+    fn resolve_share_url(&self, _: url::Url) -> Result<Option<provider::InternalUri>, Error> {
+        Ok(None)
     }
 }

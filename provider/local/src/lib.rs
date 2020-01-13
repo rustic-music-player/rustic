@@ -2,7 +2,7 @@ use failure::{Error, format_err};
 use maplit::hashmap;
 use serde_derive::Deserialize;
 
-use rustic_core::library::{self, SharedLibrary, MetaValue};
+use rustic_core::library::{self, MetaValue, SharedLibrary};
 use rustic_core::provider::*;
 
 pub mod scanner;
@@ -118,6 +118,10 @@ impl ProviderInstance for LocalProvider {
         }else {
             unreachable!()
         }
+    }
+
+    fn resolve_share_url(&self, _url: url::Url) -> Result<Option<InternalUri>, Error> {
+        Ok(None)
     }
 }
 

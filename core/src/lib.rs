@@ -13,7 +13,7 @@ pub use crate::library::{
 };
 pub use crate::player::{PlayerBackend, PlayerEvent, PlayerState};
 pub use crate::provider::{Explorer, Provider};
-use crate::provider::{SharedProvider, CoverArt};
+use crate::provider::{CoverArt, InternalUri, SharedProvider};
 
 pub mod cache;
 pub mod extension;
@@ -138,6 +138,21 @@ impl Rustic {
             .ok_or_else(|| format_err!("provider for track {:?} not found", track))?;
 
         Ok(provider)
+    }
+
+    pub fn resolve_share_url(&self, url: String) -> Result<Option<InternalUri>, failure::Error> {
+        trace!("resolving share url {}", url);
+        let url = Url::parse(&url)?;
+        for provider in self.providers.iter() {
+            let url = url.clone();
+            let provider = provider.read().unwrap();
+            let uri = provider.resolve_share_url(url)?;
+
+            if uri.is_some() {
+                return Ok(uri);
+            }
+        }
+        Ok(None)
     }
 
     pub fn exit(&self) {

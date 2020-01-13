@@ -13,6 +13,7 @@ serde_derive = "1.0"
 log = "0.4"
 tokio-core = "0.1"
 maplit = "^1"
+url = "1.7"
 
 [dependencies.rustic-core]
 path = "../../core"
