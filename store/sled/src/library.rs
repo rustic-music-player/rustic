@@ -1,5 +1,4 @@
 use std::path::Path;
-use std::sync::Arc;
 
 use bincode::serialize;
 use failure::{err_msg, Error};
@@ -32,19 +31,19 @@ use crate::util::*;
 /// would make writes slower but reads way faster
 pub struct SledLibrary {
     db: sled::Db,
-    artists_tree: Arc<sled::Tree>,
-    albums_tree: Arc<sled::Tree>,
-    tracks_tree: Arc<sled::Tree>,
-    playlists_tree: Arc<sled::Tree>,
+    artists_tree: sled::Tree,
+    albums_tree: sled::Tree,
+    tracks_tree: sled::Tree,
+    playlists_tree: sled::Tree,
 }
 
 impl SledLibrary {
     pub fn new<P: AsRef<Path>>(path: P) -> Result<SledLibrary, Error> {
-        let db = sled::Db::start_default(path)?;
-        let artists_tree = db.open_tree("artists".into())?;
-        let albums_tree = db.open_tree("albums".into())?;
-        let tracks_tree = db.open_tree("tracks".into())?;
-        let playlists_tree = db.open_tree("playlists".into())?;
+        let db = sled::open(path)?;
+        let artists_tree = db.open_tree("artists")?;
+        let albums_tree = db.open_tree("albums")?;
+        let tracks_tree = db.open_tree("tracks")?;
+        let playlists_tree = db.open_tree("playlists")?;
 
         Ok(SledLibrary {
             db,
@@ -163,28 +162,28 @@ impl rustic_core::Library for SledLibrary {
     fn add_track(&self, track: &mut Track) -> Result<(), Error> {
         track.id = Some(self.id(track.id)?);
         let (id, bytes) = self.serialize_track(track)?;
-        self.tracks_tree.set(id, bytes)?;
+        self.tracks_tree.insert(id, bytes)?;
         Ok(())
     }
 
     fn add_album(&self, album: &mut Album) -> Result<(), Error> {
         album.id = Some(self.id(album.id)?);
         let (id, bytes) = self.serialize_album(&album)?;
-        self.albums_tree.set(id, bytes)?;
+        self.albums_tree.insert(id, bytes)?;
         Ok(())
     }
 
     fn add_artist(&self, artist: &mut Artist) -> Result<(), Error> {
         artist.id = Some(self.id(artist.id)?);
         let (id, bytes) = self.serialize_artist(&artist)?;
-        self.artists_tree.set(id, bytes)?;
+        self.artists_tree.insert(id, bytes)?;
         Ok(())
     }
 
     fn add_playlist(&self, playlist: &mut Playlist) -> Result<(), Error> {
         playlist.id = Some(self.id(playlist.id)?);
         let (id, bytes) = self.serialize_playlist(&playlist)?;
-        self.playlists_tree.set(id, bytes)?;
+        self.playlists_tree.insert(id, bytes)?;
         Ok(())
     }
 
@@ -223,7 +222,7 @@ impl rustic_core::Library for SledLibrary {
             track.id = Some(id);
             let id = serialize_id(id)?;
             let track = serialize(track)?;
-            self.tracks_tree.set(id, track)?;
+            self.tracks_tree.insert(id, track)?;
         } else {
             self.add_track(track)?;
         }
@@ -237,7 +236,7 @@ impl rustic_core::Library for SledLibrary {
             album.id = Some(id);
             let id = serialize_id(id)?;
             let album = serialize(album)?;
-            self.albums_tree.set(id, album)?;
+            self.albums_tree.insert(id, album)?;
         } else {
             self.add_album(album)?;
         }
@@ -251,7 +250,7 @@ impl rustic_core::Library for SledLibrary {
             artist.id = Some(id);
             let id = serialize_id(id)?;
             let artist = serialize(artist)?;
-            self.artists_tree.set(id, artist)?;
+            self.artists_tree.insert(id, artist)?;
         } else {
             self.add_artist(artist)?;
         }
@@ -266,7 +265,7 @@ impl rustic_core::Library for SledLibrary {
             playlist.id = Some(id);
             let id = serialize_id(id)?;
             let playlist = serialize(playlist)?;
-            self.playlists_tree.set(id, playlist)?;
+            self.playlists_tree.insert(id, playlist)?;
         } else {
             self.add_playlist(playlist)?;
         }

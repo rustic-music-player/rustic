@@ -1,5 +1,3 @@
-use std::sync::Arc;
-
 use bincode::deserialize;
 use byteorder::{LittleEndian, ReadBytesExt, WriteBytesExt};
 use failure::Error;
@@ -19,7 +17,7 @@ pub fn deserialize_id(id: &[u8]) -> Result<usize, Error> {
     Ok(id as usize)
 }
 
-pub fn fetch_entity<E>(tree: &Arc<sled::Tree>, id: usize) -> Result<Option<E>, Error>
+pub fn fetch_entity<E>(tree: &sled::Tree, id: usize) -> Result<Option<E>, Error>
 where
     E: DeserializeOwned,
 {
@@ -32,7 +30,7 @@ where
     }
 }
 
-pub fn fetch_entities<E>(tree: &Arc<sled::Tree>) -> Result<Vec<E>, Error>
+pub fn fetch_entities<E>(tree: &sled::Tree) -> Result<Vec<E>, Error>
 where
     E: DeserializeOwned,
 {
@@ -44,7 +42,7 @@ where
         .collect()
 }
 
-pub fn search_entities<E, P>(tree: &Arc<sled::Tree>, predicate: P) -> Result<Vec<E>, Error>
+pub fn search_entities<E, P>(tree: &sled::Tree, predicate: P) -> Result<Vec<E>, Error>
 where
     E: DeserializeOwned,
     P: Fn(&E) -> bool,
@@ -61,7 +59,7 @@ where
         .collect()
 }
 
-pub fn find_entity<E, M>(tree: &Arc<sled::Tree>, matches: M) -> Result<Option<E>, Error>
+pub fn find_entity<E, M>(tree: &sled::Tree, matches: M) -> Result<Option<E>, Error>
 where
     E: DeserializeOwned,
     M: Fn(&E) -> bool,
