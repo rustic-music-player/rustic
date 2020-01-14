@@ -1,11 +1,11 @@
-use failure::{Error, format_err};
+use failure::{format_err, Error};
 use log::error;
 use serde_derive::Deserialize;
 
 use gmusic::{auth::stdio_login, GoogleMusicApi};
 use lazy_static::lazy_static;
-use rustic_core::{Album, Playlist, provider, SharedLibrary, Track};
 use rustic_core::library::MetaValue;
+use rustic_core::{provider, Album, Playlist, SharedLibrary, Track};
 
 use crate::album::GmusicAlbum;
 use crate::meta::{META_GMUSIC_COVER_ART_URL, META_GMUSIC_STORE_ID, META_GMUSIC_TRACK_ID};
@@ -19,10 +19,11 @@ mod track;
 
 lazy_static! {
     static ref PLAY_MUSIC_REGEX: regex::Regex = regex::RegexBuilder::new("^/music/m/([0-9a-z]+)")
-            .case_insensitive(true)
-            .build()
-            .unwrap();
-    static ref PLAY_MUSIC_PLAYLIST_REGEX: regex::Regex = regex::RegexBuilder::new("^/music/playlist/([0-9a-z]+)")
+        .case_insensitive(true)
+        .build()
+        .unwrap();
+    static ref PLAY_MUSIC_PLAYLIST_REGEX: regex::Regex =
+        regex::RegexBuilder::new("^/music/playlist/([0-9a-z]+)")
             .case_insensitive(true)
             .build()
             .unwrap();
@@ -140,7 +141,7 @@ impl provider::ProviderInstance for GooglePlayMusicProvider {
                         url = Some(stream_url);
                         break;
                     }
-                    Err(err) => error!("Stream Url {:?}", err)
+                    Err(err) => error!("Stream Url {:?}", err),
                 }
             }
             url.ok_or_else(|| format_err!("Could not get stream url"))
@@ -156,7 +157,7 @@ impl provider::ProviderInstance for GooglePlayMusicProvider {
             .get(META_GMUSIC_COVER_ART_URL)
             .map(|value| match value {
                 MetaValue::String(url) => url.clone(),
-                _ => unreachable!()
+                _ => unreachable!(),
             })
             .map(|url| url.into());
 
@@ -178,19 +179,30 @@ impl provider::ProviderInstance for GooglePlayMusicProvider {
         if let Some(captures) = dbg!(PLAY_MUSIC_REGEX.captures(dbg!(url.path()))) {
             let id = &captures[1];
 
-            let entity = if id.starts_with("T") { // Track
+            let entity = if id.starts_with("T") {
+                // Track
                 Some(provider::InternalUri::Track(format!("gmusic:track:{}", id)))
-            } else if id.starts_with("B") { // Album
+            } else if id.starts_with("B") {
+                // Album
                 Some(provider::InternalUri::Album(format!("gmusic:album:{}", id)))
-            } else if id.starts_with("A") { // Artist
-                Some(provider::InternalUri::Artist(format!("gmusic:artist:{}", id)))
-            } else { None };
+            } else if id.starts_with("A") {
+                // Artist
+                Some(provider::InternalUri::Artist(format!(
+                    "gmusic:artist:{}",
+                    id
+                )))
+            } else {
+                None
+            };
 
             Ok(entity)
         } else if let Some(captures) = PLAY_MUSIC_PLAYLIST_REGEX.captures(url.path()) {
             let id = &captures[1];
 
-            Ok(Some(provider::InternalUri::Playlist(format!("gmusic://playlist/{}", id))))
+            Ok(Some(provider::InternalUri::Playlist(format!(
+                "gmusic://playlist/{}",
+                id
+            ))))
         } else {
             Ok(None)
         }

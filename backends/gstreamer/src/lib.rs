@@ -14,7 +14,7 @@ use std::time::Duration;
 
 use channel::{Receiver, Sender};
 use failure::{err_msg, Error};
-use gst::{MessageView, prelude::*};
+use gst::{prelude::*, MessageView};
 use pinboard::NonEmptyPinboard;
 
 use core::{player::MemoryQueue, PlayerBackend, PlayerEvent, PlayerState, Track};

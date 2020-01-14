@@ -1,4 +1,4 @@
-use actix_web::{error, get, Responder, web};
+use actix_web::{error, get, web, Responder};
 
 use app::ApiState;
 use cursor::from_cursor;
@@ -11,7 +11,7 @@ pub struct SearchQuery {
 
 #[derive(Deserialize)]
 pub struct OpenParams {
-    url: String
+    url: String,
 }
 
 #[get("/search")]
@@ -28,13 +28,13 @@ pub fn search(
 #[get("/open/{url}")]
 pub fn open(
     data: web::Data<ApiState>,
-    params: web::Path<OpenParams>
+    params: web::Path<OpenParams>,
 ) -> Result<impl Responder, error::Error> {
     let rustic = &data.app;
     let url = from_cursor(&params.url)?;
 
     match search_handler::open(url, rustic)? {
         Some(result) => Ok(web::Json(result)),
-        None => Err(error::ErrorNotFound("no results"))
+        None => Err(error::ErrorNotFound("no results")),
     }
 }

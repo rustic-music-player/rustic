@@ -10,10 +10,10 @@ pub use self::track::TrackModel;
 
 mod album;
 mod artist;
+mod extension;
+mod open_result;
 mod player;
 mod playlist;
+mod provider;
 mod search;
 mod track;
-mod extension;
-mod provider;
-mod open_result;

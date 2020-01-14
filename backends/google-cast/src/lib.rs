@@ -1,6 +1,6 @@
 use std::any::Any;
 use std::net::IpAddr;
-use std::sync::{Arc, atomic, Condvar, Mutex};
+use std::sync::{atomic, Arc, Condvar, Mutex};
 use std::thread;
 use std::time::Duration;
 
@@ -8,8 +8,8 @@ use crossbeam_channel::{Receiver, Sender};
 use failure::Error;
 use pinboard::NonEmptyPinboard;
 use rust_cast::{
-    CastDevice,
     channels::{media::*, receiver::CastDeviceApp},
+    CastDevice,
 };
 
 use rustic_core::{PlayerEvent, PlayerState, Track};

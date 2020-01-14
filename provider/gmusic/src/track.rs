@@ -36,14 +36,18 @@ impl From<GmusicTrack> for Track {
                 name: track.artist,
                 uri: artist_uri,
                 image_url: None,
-                meta: HashMap::new()
+                meta: HashMap::new(),
             }),
             artist_id: None,
             album: None,
             album_id: None,
             uri: format!("gmusic:track:{}", track.store_id.unwrap_or(track.id)),
             provider: Provider::GooglePlayMusic,
-            duration: track.duration_millis.parse::<u64>().ok().map(|duration| duration / 1000),
+            duration: track
+                .duration_millis
+                .parse::<u64>()
+                .ok()
+                .map(|duration| duration / 1000),
             has_coverart: track.album_art_ref.first().is_some(),
             meta,
         }

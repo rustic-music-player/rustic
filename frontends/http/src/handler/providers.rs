@@ -6,7 +6,9 @@ use rustic_core::{Provider, Rustic};
 use viewmodels::*;
 
 pub fn get_providers(rustic: &Arc<Rustic>) -> Vec<ProviderModel> {
-    rustic.providers.iter()
+    rustic
+        .providers
+        .iter()
         .map(|provider| {
             let provider = provider.read().unwrap();
             let title = provider.title().to_owned();
@@ -22,11 +24,15 @@ pub fn get_providers(rustic: &Arc<Rustic>) -> Vec<ProviderModel> {
         .collect()
 }
 
-pub fn navigate(rustic: &Arc<Rustic>, provider_type: Provider, path: &str) -> Result<ProviderFolderModel, failure::Error> {
-    let provider = rustic.providers.iter()
-        .find(|provider| {
-            provider.read().unwrap().provider() == provider_type
-        })
+pub fn navigate(
+    rustic: &Arc<Rustic>,
+    provider_type: Provider,
+    path: &str,
+) -> Result<ProviderFolderModel, failure::Error> {
+    let provider = rustic
+        .providers
+        .iter()
+        .find(|provider| provider.read().unwrap().provider() == provider_type)
         .ok_or_else(|| err_msg("Invalid provider"))?;
 
     let provider = provider.read().unwrap();

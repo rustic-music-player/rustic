@@ -7,7 +7,7 @@ pub enum OpenResultModel {
     Track(String),
     Artist(String),
     Album(String),
-    Playlist(String)
+    Playlist(String),
 }
 
 impl From<InternalUri> for OpenResultModel {

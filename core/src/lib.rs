@@ -12,8 +12,8 @@ pub use crate::library::{
     SharedLibrary, SingleQuery, SingleQueryIdentifier, Track,
 };
 pub use crate::player::{PlayerBackend, PlayerEvent, PlayerState};
-pub use crate::provider::{Explorer, Provider};
 use crate::provider::{CoverArt, InternalUri, SharedProvider};
+pub use crate::provider::{Explorer, Provider};
 
 pub mod cache;
 pub mod extension;
@@ -81,7 +81,8 @@ impl Rustic {
 
     pub fn get_players(&self) -> Vec<(String, Arc<Box<dyn PlayerBackend>>)> {
         let players = self.player.lock().unwrap();
-        players.iter()
+        players
+            .iter()
             .map(|(id, player)| (id.clone(), Arc::clone(player)))
             .collect()
     }
@@ -153,7 +154,8 @@ impl Rustic {
     }
 
     fn get_provider(&self, track: &Track) -> Result<&SharedProvider, failure::Error> {
-        let provider = self.providers
+        let provider = self
+            .providers
             .iter()
             .find(|p| p.read().unwrap().provider() == track.provider)
             .ok_or_else(|| format_err!("provider for track {:?} not found", track))?;

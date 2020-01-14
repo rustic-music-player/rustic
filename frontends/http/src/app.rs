@@ -3,12 +3,12 @@ use std::sync::Arc;
 
 use actix::{Addr, System};
 use actix_files::Files;
-use actix_web::{App, HttpServer, middleware, Result, Scope, web};
+use actix_web::{middleware, web, App, HttpServer, Result, Scope};
 
 use controller;
-use HttpConfig;
 use rustic_core::Rustic;
 use socket::{create_socket_server, socket_service, SocketServer};
+use HttpConfig;
 
 pub struct ApiState {
     pub app: Arc<Rustic>,

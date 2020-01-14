@@ -59,7 +59,7 @@ impl Scanner {
                                 title,
                                 artist,
                                 album,
-                                has_coverart
+                                has_coverart,
                             })
                         }
                         Err(id3::Error {
@@ -70,7 +70,7 @@ impl Scanner {
                             title: filename.to_string(),
                             artist: None,
                             album: None,
-                            has_coverart: false
+                            has_coverart: false,
                         }),
                         Err(e) => {
                             error!("{:?} {:?}", entry.path(), e);

@@ -179,7 +179,7 @@ impl provider::ProviderInstance for SoundcloudProvider {
             .get(meta::META_SOUNDCLOUD_COVER_ART_URL)
             .map(|value| match value {
                 MetaValue::String(url) => url.clone(),
-                _ => unreachable!()
+                _ => unreachable!(),
             })
             .map(|url| url.into());
 

@@ -27,7 +27,7 @@ impl From<GmusicAlbum> for Album {
                 name: album.artist,
                 uri: String::new(),
                 image_url: None,
-                meta: HashMap::new()
+                meta: HashMap::new(),
             }),
             artist_id: None,
             uri: format!("gmusic:album:{}", &album.id),
@@ -35,7 +35,12 @@ impl From<GmusicAlbum> for Album {
             meta: hashmap!(
                 META_GMUSIC_ALBUM_ID.into() => album.id.into()
             ),
-            tracks: album.tracks.into_iter().map(GmusicTrack::from).map(Track::from).collect(),
+            tracks: album
+                .tracks
+                .into_iter()
+                .map(GmusicTrack::from)
+                .map(Track::from)
+                .collect(),
             image_url: album.album_art_ref,
         }
     }

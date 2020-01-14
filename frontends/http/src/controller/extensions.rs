@@ -1,4 +1,4 @@
-use actix_web::{get, Responder, Result, web};
+use actix_web::{get, web, Responder, Result};
 
 use app::ApiState;
 use handler::extensions as extensions_handler;

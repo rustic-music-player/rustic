@@ -2,10 +2,10 @@ use std::fs;
 use std::io::{Read, Seek, SeekFrom, Write};
 use std::path::PathBuf;
 
-use failure::{Error, format_err};
+use failure::{format_err, Error};
 use librespot::audio::{AudioDecrypt, AudioFile};
 use librespot::core::audio_key::AudioKey;
-use librespot::core::authentication::{Credentials, get_credentials};
+use librespot::core::authentication::{get_credentials, Credentials};
 use librespot::core::cache::Cache;
 use librespot::core::config::SessionConfig;
 use librespot::core::session::Session;

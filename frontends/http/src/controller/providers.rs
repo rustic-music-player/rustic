@@ -1,6 +1,6 @@
 use actix_web::{get, web, Responder, Result};
-use app::ApiState;
 
+use app::ApiState;
 use handler::providers as providers_handler;
 use rustic_core::Provider;
 
@@ -11,7 +11,7 @@ pub struct NavigateQuery {
 
 #[derive(Deserialize)]
 pub struct ProviderParams {
-    provider: Provider
+    provider: Provider,
 }
 
 #[get("/providers")]
@@ -23,9 +23,11 @@ pub fn get_providers(data: web::Data<ApiState>) -> Result<impl Responder> {
 }
 
 #[get("/providers/{provider}/navigate")]
-pub fn navigate(data: web::Data<ApiState>,
-                params: web::Path<ProviderParams>,
-                query: web::Query<NavigateQuery>) -> Result<impl Responder> {
+pub fn navigate(
+    data: web::Data<ApiState>,
+    params: web::Path<ProviderParams>,
+    query: web::Query<NavigateQuery>,
+) -> Result<impl Responder> {
     let rustic = &data.app;
     let folder = providers_handler::navigate(&rustic, params.provider, &query.path)?;
 

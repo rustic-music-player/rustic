@@ -1,6 +1,6 @@
 use std::thread;
 
-use failure::{err_msg, Error, format_err};
+use failure::{err_msg, format_err, Error};
 use log::{debug, trace};
 use rspotify::spotify::client::Spotify;
 use rspotify::spotify::oauth2::{SpotifyClientCredentials, SpotifyOAuth};
@@ -234,7 +234,7 @@ impl rustic_core::provider::ProviderInstance for SpotifyProvider {
             .get(meta::META_SPOTIFY_COVER_ART_URL)
             .map(|value| match value {
                 MetaValue::String(url) => url.clone(),
-                _ => unreachable!()
+                _ => unreachable!(),
             })
             .map(|url| url.into());
 

@@ -5,7 +5,7 @@ pub struct ExtensionModel {
     name: String,
     id: String,
     version: String,
-    enabled: bool
+    enabled: bool,
 }
 
 impl From<&HostedExtension> for ExtensionModel {
@@ -14,7 +14,7 @@ impl From<&HostedExtension> for ExtensionModel {
             name: extension.name.clone(),
             id: extension.id.clone(),
             version: extension.version.clone(),
-            enabled: true
+            enabled: true,
         }
     }
 }

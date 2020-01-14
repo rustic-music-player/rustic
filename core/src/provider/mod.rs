@@ -56,11 +56,8 @@ pub trait ProviderInstance: Debug {
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub enum CoverArt {
-    Data {
-        data: Vec<u8>,
-        mime_type: String
-    },
-    Url(String)
+    Data { data: Vec<u8>, mime_type: String },
+    Url(String),
 }
 
 impl From<String> for CoverArt {
@@ -83,5 +80,5 @@ pub enum InternalUri {
     Track(String),
     Album(String),
     Artist(String),
-    Playlist(String)
+    Playlist(String),
 }

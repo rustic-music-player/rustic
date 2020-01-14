@@ -31,7 +31,7 @@ impl Actor for PlayerEventActor {
 }
 
 pub struct PlayerEvents {
-    receiver: Receiver<PlayerEvent>
+    receiver: Receiver<PlayerEvent>,
 }
 
 impl PlayerEvents {

@@ -1,4 +1,4 @@
-use failure::{Error, format_err};
+use failure::{format_err, Error};
 use maplit::hashmap;
 use serde_derive::Deserialize;
 
@@ -111,15 +111,13 @@ impl ProviderInstance for LocalProvider {
     fn cover_art(&self, track: &library::Track) -> Result<Option<CoverArt>, Error> {
         if let MetaValue::String(url) = track.meta.get(META_LOCAL_FILE_URL).as_ref().unwrap() {
             let tag = id3::Tag::read_from_path(&url)?;
-            let picture = tag.pictures()
-                .find(|_| true)
-                .map(|picture| CoverArt::Data {
-                    data: picture.data.clone(),
-                    mime_type: picture.mime_type.clone()
-                });
+            let picture = tag.pictures().find(|_| true).map(|picture| CoverArt::Data {
+                data: picture.data.clone(),
+                mime_type: picture.mime_type.clone(),
+            });
 
             Ok(picture)
-        }else {
+        } else {
             unreachable!()
         }
     }

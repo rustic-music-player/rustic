@@ -90,7 +90,10 @@ impl provider::ProviderInstance for PocketcastsProvider {
                         track.artist_id = artist.id;
                         track.has_coverart = album.image_url.is_some();
                         if let Some(image_url) = album.image_url.as_ref() {
-                            track.meta.insert(META_POCKETCASTS_COVER_ART_URL.into(), image_url.clone().into());
+                            track.meta.insert(
+                                META_POCKETCASTS_COVER_ART_URL.into(),
+                                image_url.clone().into(),
+                            );
                         }
                         track
                     })
@@ -211,7 +214,7 @@ impl provider::ProviderInstance for PocketcastsProvider {
             .get(meta::META_POCKETCASTS_COVER_ART_URL)
             .map(|value| match value {
                 MetaValue::String(url) => url.clone(),
-                _ => unreachable!()
+                _ => unreachable!(),
             })
             .map(|url| url.into());
 

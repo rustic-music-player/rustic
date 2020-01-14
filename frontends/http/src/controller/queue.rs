@@ -1,4 +1,4 @@
-use actix_web::{error, get, HttpResponse, post, Responder, Result, web};
+use actix_web::{error, get, post, web, HttpResponse, Responder, Result};
 
 use app::ApiState;
 use handler::queue as queue_handler;

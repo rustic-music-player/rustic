@@ -19,7 +19,10 @@ impl From<SoundcloudTrack> for Track {
         };
 
         if let Some(image_url) = track.artwork_url.as_ref() {
-            meta.insert(META_SOUNDCLOUD_COVER_ART_URL.into(), image_url.clone().into());
+            meta.insert(
+                META_SOUNDCLOUD_COVER_ART_URL.into(),
+                image_url.clone().into(),
+            );
         }
 
         Track {

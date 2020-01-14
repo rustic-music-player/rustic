@@ -203,7 +203,7 @@ impl PlayerBackend for RodioBackend {
                 let is_paused = self.state.read() == PlayerState::Pause;
                 if is_paused {
                     self.play();
-                }else if let Some(track) = self.current() {
+                } else if let Some(track) = self.current() {
                     self.set_track(&track)?;
                     self.play();
                 }

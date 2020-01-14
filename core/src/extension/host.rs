@@ -1,4 +1,4 @@
-use std::fs::{DirEntry, read_dir};
+use std::fs::{read_dir, DirEntry};
 use std::path::Path;
 use std::process::{Child, Command, Stdio};
 use std::sync::Arc;

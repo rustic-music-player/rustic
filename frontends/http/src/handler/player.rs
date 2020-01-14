@@ -9,7 +9,8 @@ use viewmodels::{PlayerModel, TrackModel};
 
 pub fn get_players(rustic: &Arc<Rustic>) -> Vec<PlayerModel> {
     let players = rustic.get_players();
-    players.into_iter()
+    players
+        .into_iter()
         .map(|(id, player)| {
             let track = player.current().map(|track| TrackModel::new(track));
 
@@ -17,7 +18,7 @@ pub fn get_players(rustic: &Arc<Rustic>) -> Vec<PlayerModel> {
                 cursor: to_cursor(&id),
                 name: id.clone(), // TODO: get actual name from player
                 playing: (player.state() == PlayerState::Play),
-                current: track
+                current: track,
             }
         })
         .collect()

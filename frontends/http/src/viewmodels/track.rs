@@ -24,7 +24,11 @@ impl TrackModel {
             cursor: cursor.clone(),
             title: track.title,
             provider: track.provider,
-            coverart: if track.has_coverart { Some(format!("/api/tracks/{}/coverart", &cursor)) } else { None },
+            coverart: if track.has_coverart {
+                Some(format!("/api/tracks/{}/coverart", &cursor))
+            } else {
+                None
+            },
             duration: track.duration,
             artist: track.artist.map(|artist| ArtistModel::new(artist)),
             album: track.album.map(|album| AlbumModel::new(album)),

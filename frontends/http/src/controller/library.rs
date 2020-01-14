@@ -1,4 +1,4 @@
-use actix_web::{error, get, HttpResponse, Responder, Result, web};
+use actix_web::{error, get, web, HttpResponse, Responder, Result};
 
 use app::ApiState;
 use handler::library as library_handler;
@@ -93,22 +93,19 @@ pub fn get_track(
 #[get("/tracks/{cursor}/coverart")]
 pub fn get_track_cover_art(
     data: web::Data<ApiState>,
-    params: web::Path<GetEntityQuery>) -> Result<impl Responder> {
+    params: web::Path<GetEntityQuery>,
+) -> Result<impl Responder> {
     let rustic = &data.app;
     let cover_art = library_handler::get_coverart_for_track(&params.cursor, &rustic)?;
     match cover_art {
         Some(CoverArt::Data { data, mime_type }) => {
-            let response = HttpResponse::Ok()
-                .content_type(mime_type)
-                .body(data);
+            let response = HttpResponse::Ok().content_type(mime_type).body(data);
             Ok(response)
         }
         Some(CoverArt::Url(url)) => {
-            let response = HttpResponse::Found()
-                .header("Location", url)
-                .finish();
+            let response = HttpResponse::Found().header("Location", url).finish();
             Ok(response)
         }
-        None => Err(error::ErrorNotFound("Not Found"))
+        None => Err(error::ErrorNotFound("Not Found")),
     }
 }

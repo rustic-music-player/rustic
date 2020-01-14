@@ -12,7 +12,7 @@ use image::FilterType;
 use log::{debug, error, info, trace};
 use md5;
 use pinboard::NonEmptyPinboard;
-use reqwest::{Client, get};
+use reqwest::{get, Client};
 
 use crate::{MultiQuery, Rustic, Track};
 

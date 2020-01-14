@@ -4,8 +4,8 @@ use failure::Error;
 use itertools::Itertools;
 
 use cursor::from_cursor;
-use rustic_core::{MultiQuery, QueryJoins, Rustic, SingleQuery};
 use rustic_core::provider::CoverArt;
+use rustic_core::{MultiQuery, QueryJoins, Rustic, SingleQuery};
 use viewmodels::*;
 
 pub fn fetch_album(cursor: &str, rustic: &Arc<Rustic>) -> Result<Option<AlbumModel>, Error> {
@@ -107,7 +107,10 @@ pub fn fetch_track(cursor: &str, rustic: &Arc<Rustic>) -> Result<Option<TrackMod
     Ok(track)
 }
 
-pub fn get_coverart_for_track(cursor: &str, rustic: &Arc<Rustic>) -> Result<Option<CoverArt>, Error> {
+pub fn get_coverart_for_track(
+    cursor: &str,
+    rustic: &Arc<Rustic>,
+) -> Result<Option<CoverArt>, Error> {
     let uri = from_cursor(cursor)?;
     let query = SingleQuery::uri(uri);
     let track = rustic.query_track(query)?;
@@ -116,7 +119,7 @@ pub fn get_coverart_for_track(cursor: &str, rustic: &Arc<Rustic>) -> Result<Opti
         let cover_art = rustic.cover_art(&track)?;
 
         Ok(cover_art)
-    }else {
+    } else {
         Ok(None)
     }
 }
