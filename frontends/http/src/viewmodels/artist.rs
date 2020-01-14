@@ -1,9 +1,7 @@
 use std::cmp::Ordering;
-use std::sync::Arc;
 
 use cursor::to_cursor;
 use rustic_core::library::Artist;
-use rustic_core::Rustic;
 use viewmodels::{AlbumModel, TrackModel};
 
 #[derive(Clone, Debug, Serialize, Eq)]
@@ -16,14 +14,13 @@ pub struct ArtistModel {
 }
 
 impl ArtistModel {
-    pub fn new(artist: Artist, app: &Arc<Rustic>) -> ArtistModel {
-        let image = artist.image(app);
+    pub fn new(artist: Artist) -> ArtistModel {
         ArtistModel {
             cursor: to_cursor(&artist.uri),
             name: artist.name,
             albums: None,
             tracks: None,
-            image,
+            image: artist.image_url.clone(),
         }
     }
 }

@@ -1,8 +1,7 @@
-use actix_web::{error, get, Responder, Result, web, HttpResponse};
+use actix_web::{error, get, HttpResponse, Responder, Result, web};
 
 use app::ApiState;
 use handler::library as library_handler;
-use handler::coverart as coverart_handler;
 use rustic_core::provider::CoverArt;
 
 #[derive(Deserialize)]
@@ -77,31 +76,39 @@ pub fn get_tracks(data: web::Data<ApiState>) -> Result<impl Responder> {
     Ok(web::Json(tracks))
 }
 
+#[get("/tracks/{cursor}")]
+pub fn get_track(
+    data: web::Data<ApiState>,
+    params: web::Path<GetEntityQuery>,
+) -> Result<impl Responder> {
+    let rustic = &data.app;
+    let track = library_handler::fetch_track(&params.cursor, &rustic)?;
+
+    match track {
+        Some(track) => Ok(web::Json(track)),
+        None => Err(error::ErrorNotFound("Not Found")),
+    }
+}
+
 #[get("/tracks/{cursor}/coverart")]
 pub fn get_track_cover_art(
     data: web::Data<ApiState>,
     params: web::Path<GetEntityQuery>) -> Result<impl Responder> {
     let rustic = &data.app;
-    let track = library_handler::fetch_track(&params.cursor, &rustic)?;
-    match track {
-        Some(track) => {
-            let cover_art = coverart_handler::get_coverart(&track, &rustic)?;
-            match cover_art {
-                Some(CoverArt::Data { data, mime_type }) => {
-                    let response = HttpResponse::Ok()
-                        .content_type(mime_type)
-                        .body(data);
-                    Ok(response)
-                },
-                Some(CoverArt::Url(url)) => {
-                    let response = HttpResponse::Found()
-                        .header("Location", url)
-                        .finish();
-                    Ok(response)
-                },
-                None => Err(error::ErrorNotFound("Not Found"))
-            }
-        },
-        None => Err(error::ErrorNotFound("Not Found")),
+    let cover_art = library_handler::get_coverart_for_track(&params.cursor, &rustic)?;
+    match cover_art {
+        Some(CoverArt::Data { data, mime_type }) => {
+            let response = HttpResponse::Ok()
+                .content_type(mime_type)
+                .body(data);
+            Ok(response)
+        }
+        Some(CoverArt::Url(url)) => {
+            let response = HttpResponse::Found()
+                .header("Location", url)
+                .finish();
+            Ok(response)
+        }
+        None => Err(error::ErrorNotFound("Not Found"))
     }
 }

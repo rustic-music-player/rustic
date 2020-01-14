@@ -11,7 +11,7 @@ pub fn get_players(rustic: &Arc<Rustic>) -> Vec<PlayerModel> {
     let players = rustic.get_players();
     players.into_iter()
         .map(|(id, player)| {
-            let track = player.current().map(|track| TrackModel::new(track, &rustic));
+            let track = player.current().map(|track| TrackModel::new(track));
 
             PlayerModel {
                 cursor: to_cursor(&id),
@@ -29,7 +29,7 @@ pub fn get_state(rustic: &Arc<Rustic>) -> Result<PlayerModel, Error> {
         .ok_or_else(|| format_err!("Missing default player"))?;
     let player_id = rustic.get_default_player_id().unwrap();
     let current = match player.current() {
-        Some(track) => Some(TrackModel::new(track, &rustic)),
+        Some(track) => Some(TrackModel::new(track)),
         None => None,
     };
 

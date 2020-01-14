@@ -205,6 +205,10 @@ impl rustic_core::provider::ProviderInstance for SpotifyProvider {
         Ok(None)
     }
 
+    fn resolve_album(&self, _uri: &str) -> Result<Option<Album>, Error> {
+        Ok(None)
+    }
+
     fn stream_url(&self, track: &Track) -> Result<String, Error> {
         let uri = track
             .meta

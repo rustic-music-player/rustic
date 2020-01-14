@@ -2,8 +2,7 @@ use std::sync::Arc;
 
 use failure::err_msg;
 
-use rustic_core::{Rustic, Provider};
-use rustic_core::provider::ProviderFolder;
+use rustic_core::{Provider, Rustic};
 use viewmodels::*;
 
 pub fn get_providers(rustic: &Arc<Rustic>) -> Vec<ProviderModel> {
@@ -33,7 +32,7 @@ pub fn navigate(rustic: &Arc<Rustic>, provider_type: Provider, path: &str) -> Re
     let provider = provider.read().unwrap();
     let path = path.split("/").map(String::from).collect();
     let folder = provider.navigate(path)?;
-    let folder = ProviderFolderModel::new(folder, rustic);
+    let folder = ProviderFolderModel::new(folder);
 
     Ok(folder)
 }

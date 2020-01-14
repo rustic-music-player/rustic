@@ -31,8 +31,7 @@ impl Actor for PlayerEventActor {
 }
 
 pub struct PlayerEvents {
-    receiver: Receiver<PlayerEvent>,
-    app: Arc<Rustic>,
+    receiver: Receiver<PlayerEvent>
 }
 
 impl PlayerEvents {
@@ -43,7 +42,7 @@ impl PlayerEvents {
             .unwrap();
         let receiver = player.observe();
 
-        PlayerEvents { receiver, app }
+        PlayerEvents { receiver }
     }
 }
 
@@ -64,14 +63,14 @@ impl Stream for PlayerEvents {
                 }
                 PlayerEvent::TrackChanged(track) => {
                     debug!("received currently playing track");
-                    let model = TrackModel::new(track, &self.app);
+                    let model = TrackModel::new(track);
                     Ok(messages::Message::CurrentlyPlayingChanged(Some(model)))
                 }
                 PlayerEvent::QueueUpdated(queue) => {
                     debug!("received new queue");
                     let models = queue
                         .into_iter()
-                        .map(|track| TrackModel::new(track, &self.app))
+                        .map(|track| TrackModel::new(track))
                         .collect();
                     Ok(messages::Message::QueueUpdated(models))
                 }

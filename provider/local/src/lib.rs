@@ -96,6 +96,10 @@ impl ProviderInstance for LocalProvider {
         Ok(None)
     }
 
+    fn resolve_album(&self, _uri: &str) -> Result<Option<library::Album>, Error> {
+        Ok(None)
+    }
+
     fn stream_url(&self, track: &library::Track) -> Result<String, Error> {
         if track.provider == Provider::LocalMedia {
             return Ok(track.uri.clone());

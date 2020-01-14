@@ -48,6 +48,7 @@ pub trait ProviderInstance: Debug {
     fn navigate(&self, path: Vec<String>) -> Result<ProviderFolder, Error>;
     fn search(&self, query: String) -> Result<Vec<ProviderItem>, Error>;
     fn resolve_track(&self, uri: &str) -> Result<Option<Track>, Error>;
+    fn resolve_album(&self, uri: &str) -> Result<Option<Album>, Error>;
     fn stream_url(&self, track: &Track) -> Result<String, Error>;
     fn cover_art(&self, track: &Track) -> Result<Option<CoverArt>, Error>;
     fn resolve_share_url(&self, url: Url) -> Result<Option<InternalUri>, Error>;

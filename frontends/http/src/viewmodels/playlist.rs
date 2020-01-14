@@ -1,11 +1,8 @@
-use std::sync::Arc;
-
 use failure::_core::cmp::Ordering;
 
 use cursor::to_cursor;
 use rustic_core::library::Playlist;
 use rustic_core::provider::Provider;
-use rustic_core::Rustic;
 use viewmodels::TrackModel;
 
 #[derive(Clone, Debug, Serialize, Eq)]
@@ -17,11 +14,11 @@ pub struct PlaylistModel {
 }
 
 impl PlaylistModel {
-    pub fn new(playlist: Playlist, app: &Arc<Rustic>) -> PlaylistModel {
+    pub fn new(playlist: Playlist) -> PlaylistModel {
         let tracks = playlist
             .tracks
             .into_iter()
-            .map(|track| TrackModel::new(track, app))
+            .map(|track| TrackModel::new(track))
             .collect();
 
         PlaylistModel {

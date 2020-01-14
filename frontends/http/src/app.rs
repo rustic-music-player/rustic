@@ -23,6 +23,7 @@ fn build_api(app: Arc<Rustic>, ws_server: Addr<SocketServer>) -> Scope {
         .service(controller::library::get_playlists)
         .service(controller::library::get_playlist)
         .service(controller::library::get_tracks)
+        .service(controller::library::get_track)
         .service(controller::library::get_track_cover_art)
         .service(controller::queue::fetch)
         .service(controller::queue::clear)

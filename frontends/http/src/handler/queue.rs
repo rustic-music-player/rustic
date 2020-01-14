@@ -13,7 +13,7 @@ pub fn fetch(rustic: &Arc<Rustic>) -> Result<Vec<TrackModel>, Error> {
     let tracks = player
         .get_queue()
         .into_iter()
-        .map(|track| TrackModel::new(track, &rustic))
+        .map(|track| TrackModel::new(track))
         .collect();
     Ok(tracks)
 }

@@ -1,10 +1,8 @@
 use std::cmp::Ordering;
-use std::sync::Arc;
 
 use cursor::to_cursor;
 use rustic_core::library::Track;
 use rustic_core::provider::Provider;
-use rustic_core::Rustic;
 use viewmodels::AlbumModel;
 use viewmodels::ArtistModel;
 
@@ -20,7 +18,7 @@ pub struct TrackModel {
 }
 
 impl TrackModel {
-    pub fn new(track: Track, app: &Arc<Rustic>) -> TrackModel {
+    pub fn new(track: Track) -> TrackModel {
         let cursor = to_cursor(&track.uri);
         TrackModel {
             cursor: cursor.clone(),
@@ -28,8 +26,8 @@ impl TrackModel {
             provider: track.provider,
             coverart: if track.has_coverart { Some(format!("/api/tracks/{}/coverart", &cursor)) } else { None },
             duration: track.duration,
-            artist: track.artist.map(|artist| ArtistModel::new(artist, app)),
-            album: track.album.map(|album| AlbumModel::new(album, app)),
+            artist: track.artist.map(|artist| ArtistModel::new(artist)),
+            album: track.album.map(|album| AlbumModel::new(album)),
         }
     }
 }

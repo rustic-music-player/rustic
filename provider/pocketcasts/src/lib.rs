@@ -185,6 +185,10 @@ impl provider::ProviderInstance for PocketcastsProvider {
         Ok(None)
     }
 
+    fn resolve_album(&self, _uri: &str) -> Result<Option<Album>, Error> {
+        Ok(None)
+    }
+
     fn stream_url(&self, track: &Track) -> Result<String, Error> {
         if track.provider == provider::Provider::Pocketcasts {
             if let rustic::library::MetaValue::String(stream_url) =

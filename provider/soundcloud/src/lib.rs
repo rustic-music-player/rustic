@@ -14,7 +14,7 @@ use std::str::FromStr;
 
 use failure::Error;
 
-use rustic::library::{MetaValue, Playlist, SharedLibrary, Track};
+use rustic::library::{Album, MetaValue, Playlist, SharedLibrary, Track};
 use rustic::provider;
 use track::SoundcloudTrack;
 
@@ -147,6 +147,10 @@ impl provider::ProviderInstance for SoundcloudProvider {
             .map(SoundcloudTrack::from)
             .map(Track::from);
         Ok(track)
+    }
+
+    fn resolve_album(&self, _uri: &str) -> Result<Option<Album>, Error> {
+        Ok(None)
     }
 
     fn stream_url(&self, track: &Track) -> Result<String, Error> {

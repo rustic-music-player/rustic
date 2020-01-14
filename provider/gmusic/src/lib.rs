@@ -1,16 +1,18 @@
 use failure::{Error, format_err};
-use gmusic::{auth::stdio_login, GoogleMusicApi};
 use log::error;
 use serde_derive::Deserialize;
 
+use gmusic::{auth::stdio_login, GoogleMusicApi};
 use lazy_static::lazy_static;
-use rustic_core::{Playlist, provider, SharedLibrary, Track};
+use rustic_core::{Album, Playlist, provider, SharedLibrary, Track};
 use rustic_core::library::MetaValue;
 
+use crate::album::GmusicAlbum;
 use crate::meta::{META_GMUSIC_COVER_ART_URL, META_GMUSIC_STORE_ID, META_GMUSIC_TRACK_ID};
 use crate::playlist::GmusicPlaylist;
 use crate::track::GmusicTrack;
 
+mod album;
 mod meta;
 mod playlist;
 mod track;
@@ -114,6 +116,15 @@ impl provider::ProviderInstance for GooglePlayMusicProvider {
         Ok(Some(track))
     }
 
+    fn resolve_album(&self, uri: &str) -> Result<Option<Album>, Error> {
+        let client = self.client.as_ref().unwrap();
+        let album_id = &uri["gmusic:album:".len()..];
+        let album = client.get_album(album_id)?;
+        let album = GmusicAlbum::from(album);
+        let album = Album::from(album);
+        Ok(Some(album))
+    }
+
     fn stream_url(&self, track: &Track) -> Result<String, Error> {
         let id = track
             .meta
@@ -168,11 +179,11 @@ impl provider::ProviderInstance for GooglePlayMusicProvider {
             let id = &captures[1];
 
             let entity = if id.starts_with("T") { // Track
-                Some(provider::InternalUri::Track(format!("gmusic://track/{}", id)))
+                Some(provider::InternalUri::Track(format!("gmusic:track:{}", id)))
             } else if id.starts_with("B") { // Album
-                Some(provider::InternalUri::Album(format!("gmusic://album/{}", id)))
+                Some(provider::InternalUri::Album(format!("gmusic:album:{}", id)))
             } else if id.starts_with("A") { // Artist
-                Some(provider::InternalUri::Artist(format!("gmusic://artist/{}", id)))
+                Some(provider::InternalUri::Artist(format!("gmusic:artist:{}", id)))
             } else { None };
 
             Ok(entity)

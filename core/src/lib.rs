@@ -107,6 +107,27 @@ impl Rustic {
         }
     }
 
+    pub fn query_album(&self, query: SingleQuery) -> Result<Option<Album>, failure::Error> {
+        debug!("Executing album query: {:?}", query);
+        let album = self.library.query_album(query.clone())?;
+        if let Some(album) = album {
+            Ok(Some(album))
+        } else {
+            if let SingleQueryIdentifier::Uri(ref uri) = query.identifier {
+                trace!("Album is not in library, asking provider");
+                let provider = self.get_provider_for_url(uri)?;
+                let album = match provider {
+                    Some(provider) => provider.read().unwrap().resolve_album(uri)?,
+                    _ => None,
+                };
+                Ok(album)
+            } else {
+                // Only library albums have an id
+                Ok(None)
+            }
+        }
+    }
+
     fn get_provider_for_url(&self, uri: &str) -> Result<Option<&SharedProvider>, failure::Error> {
         trace!("get_provider for {}", uri);
         let url = Url::parse(uri)?;

@@ -23,7 +23,7 @@ pub fn search(query: &str, rustic: &Arc<Rustic>) -> Result<SearchResults, Error>
         .flat_map(|items| items)
         .filter(|result| result.is_track())
         .map(Track::from)
-        .map(|track| TrackModel::new(track, rustic))
+        .map(|track| TrackModel::new(track))
         .collect();
 
     let albums: Vec<AlbumModel> = results
@@ -32,7 +32,7 @@ pub fn search(query: &str, rustic: &Arc<Rustic>) -> Result<SearchResults, Error>
         .flat_map(|items| items)
         .filter(|result| result.is_album())
         .map(Album::from)
-        .map(|album| AlbumModel::new(album, rustic))
+        .map(|album| AlbumModel::new(album))
         .collect();
 
     let artists: Vec<ArtistModel> = results
@@ -41,7 +41,7 @@ pub fn search(query: &str, rustic: &Arc<Rustic>) -> Result<SearchResults, Error>
         .flat_map(|items| items)
         .filter(|result| result.is_artist())
         .map(Artist::from)
-        .map(|artist| ArtistModel::new(artist, rustic))
+        .map(|artist| ArtistModel::new(artist))
         .collect();
 
     Ok(SearchResults {

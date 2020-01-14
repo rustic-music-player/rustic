@@ -18,19 +18,18 @@ pub struct AlbumModel {
 }
 
 impl AlbumModel {
-    pub fn new(album: Album, app: &Arc<Rustic>) -> AlbumModel {
-        let coverart = album.coverart(app);
+    pub fn new(album: Album) -> AlbumModel {
         AlbumModel {
             cursor: to_cursor(&album.uri),
             title: album.title,
-            artist: album.artist.map(|artist| ArtistModel::new(artist, app)),
+            artist: album.artist.map(|artist| ArtistModel::new(artist)),
             tracks: album
                 .tracks
                 .into_iter()
-                .map(|track| TrackModel::new(track, app))
+                .map(|track| TrackModel::new(track))
                 .collect(),
             provider: album.provider,
-            coverart,
+            coverart: album.image_url.clone(),
         }
     }
 }
