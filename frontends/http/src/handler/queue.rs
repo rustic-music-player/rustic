@@ -3,7 +3,7 @@ use std::sync::Arc;
 use failure::Error;
 
 use cursor::from_cursor;
-use rustic_core::{Playlist, Rustic, SingleQuery, Track};
+use rustic_core::{Playlist, Rustic, SingleQuery, Track, PlayerState};
 use viewmodels::TrackModel;
 
 pub fn fetch(rustic: &Arc<Rustic>) -> Result<Vec<TrackModel>, Error> {
@@ -27,7 +27,11 @@ pub fn queue_track(cursor: &str, rustic: &Arc<Rustic>) -> Result<Option<()>, Err
             let player = rustic
                 .get_default_player()
                 .ok_or_else(|| format_err!("Missing default player"))?;
+            let play = player.get_queue().is_empty() && player.state() == PlayerState::Stop;
             player.queue_single(&track);
+            if play {
+                player.set_state(PlayerState::Play)?;
+            }
 
             Ok(Some(()))
         }
@@ -45,7 +49,11 @@ pub fn queue_playlist(cursor: &str, rustic: &Arc<Rustic>) -> Result<Option<()>, 
             let player = rustic
                 .get_default_player()
                 .ok_or_else(|| format_err!("Missing default player"))?;
+            let play = player.get_queue().is_empty() && player.state() == PlayerState::Stop;
             player.queue_multiple(&playlist.tracks);
+            if play {
+                player.set_state(PlayerState::Play)?;
+            }
 
             Ok(Some(()))
         }
