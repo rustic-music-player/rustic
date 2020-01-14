@@ -1570,7 +1570,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 [[package]]
 name = "gmusic"
 version = "0.1.0"
-source = "git+https://github.com/maxjoehnk/gmusic-rs.git#6ee78ad7e6ad6ef30f2c407d38e91c848e491465"
+source = "git+https://github.com/maxjoehnk/gmusic-rs.git#7405ab0d28ca91c185f75544fdc694d92bd3ae85"
 dependencies = [
  "base64 0.11.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "failure 0.1.6 (registry+https://github.com/rust-lang/crates.io-index)",
