@@ -1,3 +1,5 @@
+use std::convert::TryFrom;
+
 use failure::{format_err, Error};
 use log::error;
 use serde_derive::Deserialize;
@@ -38,6 +40,14 @@ pub struct GooglePlayMusicProvider {
     client: Option<GoogleMusicApi>,
 }
 
+impl GooglePlayMusicProvider {
+    fn get_client(&self) -> Result<&GoogleMusicApi, Error> {
+        self.client
+            .as_ref()
+            .ok_or_else(|| format_err!("Provider Google Play Music is not setup yet"))
+    }
+}
+
 impl provider::ProviderInstance for GooglePlayMusicProvider {
     fn setup(&mut self) -> Result<(), Error> {
         let api = GoogleMusicApi::new(self.client_id.clone(), self.client_secret.clone())?;
@@ -61,7 +71,7 @@ impl provider::ProviderInstance for GooglePlayMusicProvider {
     }
 
     fn sync(&mut self, library: SharedLibrary) -> Result<provider::SyncResult, Error> {
-        let client = self.client.as_ref().unwrap();
+        let client = self.get_client()?;
         let mut playlists: Vec<Playlist> = client
             .get_all_playlists()?
             .into_iter()
@@ -105,11 +115,20 @@ impl provider::ProviderInstance for GooglePlayMusicProvider {
     }
 
     fn search(&self, query: String) -> Result<Vec<provider::ProviderItem>, Error> {
-        unimplemented!()
+        let client = self.get_client()?;
+        let results = client.search(&query, None)?;
+        let items = results
+            .into_iter()
+            .flat_map(|cluster| cluster.entries.into_iter().map(GoogleSearchResult::from))
+            .map(provider::ProviderItem::try_from)
+            .filter_map(|result| result.ok())
+            .collect();
+
+        Ok(items)
     }
 
     fn resolve_track(&self, uri: &str) -> Result<Option<Track>, Error> {
-        let client = self.client.as_ref().unwrap();
+        let client = self.get_client()?;
         let track_id = &uri["gmusic:track:".len()..];
         let track = client.get_store_track(track_id)?;
         let track = GmusicTrack::from(track);
@@ -118,7 +137,7 @@ impl provider::ProviderInstance for GooglePlayMusicProvider {
     }
 
     fn resolve_album(&self, uri: &str) -> Result<Option<Album>, Error> {
-        let client = self.client.as_ref().unwrap();
+        let client = self.get_client()?;
         let album_id = &uri["gmusic:album:".len()..];
         let album = client.get_album(album_id)?;
         let album = GmusicAlbum::from(album);
@@ -132,7 +151,7 @@ impl provider::ProviderInstance for GooglePlayMusicProvider {
             .get(META_GMUSIC_STORE_ID)
             .ok_or_else(|| format_err!("missing track id"))?;
         if let MetaValue::String(ref id) = id {
-            let client = self.client.as_ref().unwrap();
+            let client = self.get_client()?;
             // HACK: sometimes gmusic returns 403, not sure why but retrying fixes it most of the time
             let mut url = None;
             for _ in 0..2 {
@@ -205,6 +224,37 @@ impl provider::ProviderInstance for GooglePlayMusicProvider {
             ))))
         } else {
             Ok(None)
+        }
+    }
+}
+
+struct GoogleSearchResult(gmusic::SearchResult);
+
+impl From<gmusic::SearchResult> for GoogleSearchResult {
+    fn from(result: gmusic::SearchResult) -> Self {
+        GoogleSearchResult(result)
+    }
+}
+
+impl TryFrom<GoogleSearchResult> for provider::ProviderItem {
+    type Error = ();
+
+    fn try_from(result: GoogleSearchResult) -> Result<Self, Self::Error> {
+        let result = result.0;
+        if let Some(track) = result.track {
+            let track = GmusicTrack::from(track);
+            let track = Track::from(track);
+            Ok(provider::ProviderItem::from(track))
+        } else if let Some(playlist) = result.playlist {
+            let playlist = GmusicPlaylist::from(playlist);
+            let playlist = Playlist::from(playlist);
+            Ok(provider::ProviderItem::from(playlist))
+        } else if let Some(album) = result.album {
+            let album = GmusicAlbum::from(album);
+            let album = Album::from(album);
+            Ok(provider::ProviderItem::from(album))
+        } else {
+            Err(())
         }
     }
 }
