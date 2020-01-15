@@ -190,6 +190,7 @@ impl PlayerBackend for GstBackend {
 
     fn clear_queue(&self) {
         self.queue.clear();
+        self.set_state(PlayerState::Stop);
     }
 
     fn current(&self) -> Option<Track> {
