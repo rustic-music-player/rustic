@@ -28,6 +28,7 @@ fn build_api(app: Arc<Rustic>, ws_server: Addr<SocketServer>) -> Scope {
         .service(controller::queue::fetch)
         .service(controller::queue::clear)
         .service(controller::queue::queue_playlist)
+        .service(controller::queue::queue_album)
         .service(controller::queue::queue_track)
         .service(controller::search::search)
         .service(controller::search::open)

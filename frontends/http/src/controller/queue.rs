@@ -29,6 +29,19 @@ pub fn queue_track(
     }
 }
 
+#[post("/queue/album/{cursor}")]
+pub fn queue_album(
+    data: web::Data<ApiState>,
+    params: web::Path<AddToQueueQuery>,
+) -> Result<impl Responder> {
+    let rustic = &data.app;
+    let result = queue_handler::queue_album(&params.cursor, &rustic)?;
+    match result {
+        Some(_) => Ok(HttpResponse::NoContent().finish()),
+        None => Err(error::ErrorNotFound("Not Found")),
+    }
+}
+
 #[post("/queue/playlist/{cursor}")]
 pub fn queue_playlist(
     data: web::Data<ApiState>,
