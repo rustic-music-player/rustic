@@ -2,8 +2,8 @@ use std::fs::create_dir_all;
 use std::sync::Arc;
 
 use actix::{Addr, System};
-use actix_files::Files;
-use actix_web::{middleware, web, App, HttpServer, Result, Scope};
+use actix_files::{Files, NamedFile};
+use actix_web::{middleware, web, App, HttpServer, Result, Scope, Responder};
 
 use controller;
 use rustic_core::Rustic;
@@ -43,6 +43,12 @@ fn build_api(app: Arc<Rustic>, ws_server: Addr<SocketServer>) -> Scope {
         .service(socket_service(ws_server))
 }
 
+fn index() -> Result<impl Responder> {
+    let file = NamedFile::open("static/index.html")?;
+
+    Ok(file)
+}
+
 pub fn start(config: &HttpConfig, app: Arc<Rustic>) -> Result<()> {
     create_dir_all(&config.static_files)?;
     let sys = System::new("rustic-http-frontend");
@@ -56,7 +62,8 @@ pub fn start(config: &HttpConfig, app: Arc<Rustic>) -> Result<()> {
             .wrap(middleware::Logger::default())
             .service(build_api(Arc::clone(&app), ws_server.clone()))
             .service(Files::new("/cache", ".cache"))
-            .service(Files::new("", &static_file_dir).index_file("index.html"))
+            .service(Files::new("", &static_file_dir).index_file("index.html")
+                .default_handler(web::get().to(index)))
     })
     .bind(format!("{}:{}", config.ip, config.port))?
     .start();
