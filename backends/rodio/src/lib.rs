@@ -7,7 +7,7 @@ use std::time::Duration;
 
 use crossbeam_channel::{Receiver, Sender};
 use failure::{bail, Error};
-use log::{debug, trace};
+use log::{debug, trace, error};
 use pinboard::NonEmptyPinboard;
 use url::Url;
 
@@ -61,7 +61,9 @@ impl RodioBackend {
         thread::spawn(move || {
             let backend = receiver_backend;
             for _ in next_receiver {
-                backend.next().unwrap();
+                if let Err(err) = backend.next() {
+                    error!("Failed to select next track {}", err)
+                }
             }
         });
 
