@@ -26,6 +26,7 @@ crossbeam-channel = "0.4"
 base64 = "0.11"
 itertools = "0.8"
 urlencoding = { git = "https://github.com/bt/rust_urlencoding" }
+serde_qs = { version = "0.5", features = ["actix"] }
 
 [dependencies.rustic-core]
 path = "../../core"

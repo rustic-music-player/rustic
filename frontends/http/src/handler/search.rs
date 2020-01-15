@@ -3,16 +3,24 @@ use std::sync::Arc;
 use failure::Error;
 use rayon::prelude::*;
 
-use rustic_core::{Album, Artist, Rustic, Track};
+use rustic_core::{Album, Artist, Rustic, Track, Provider};
 use viewmodels::*;
 
-pub fn search(query: &str, rustic: &Arc<Rustic>) -> Result<SearchResults, Error> {
+pub fn search(query: &str, provider_filter: Option<&Vec<Provider>>, rustic: &Arc<Rustic>) -> Result<SearchResults, Error> {
     let providers = &rustic.providers;
     trace!("search {}", query);
 
     let sw = stopwatch::Stopwatch::start_new();
     let results = providers
         .iter()
+        .filter(|provider| {
+            if let Some(provider_filter) = provider_filter {
+                let p = provider.read().unwrap().provider();
+                provider_filter.contains(&p)
+            }else {
+                true
+            }
+        })
         .map(|provider| provider.read().unwrap().search(query.to_string()))
         .collect::<Result<Vec<_>, Error>>()?;
     debug!("Searching took {}ms", sw.elapsed_ms());
