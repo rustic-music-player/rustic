@@ -43,7 +43,7 @@ pub trait ProviderInstance: Debug {
     fn title(&self) -> &'static str;
     fn uri_scheme(&self) -> &'static str;
     fn provider(&self) -> Provider;
-    fn sync(&mut self, library: SharedLibrary) -> Result<SyncResult, Error>;
+    fn sync(&self, library: SharedLibrary) -> Result<SyncResult, Error>;
     fn root(&self) -> ProviderFolder;
     fn navigate(&self, path: Vec<String>) -> Result<ProviderFolder, Error>;
     fn search(&self, query: String) -> Result<Vec<ProviderItem>, Error>;

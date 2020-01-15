@@ -15,7 +15,7 @@ pub fn start(app: Arc<Rustic>) -> Result<thread::JoinHandle<()>, Error> {
             while *keep_running {
                 let providers = app.providers.clone();
                 for provider in providers {
-                    let mut provider = provider.write().unwrap();
+                    let provider = provider.read().unwrap();
                     info!("Syncing {} library", provider.title());
                     match provider.sync(Arc::clone(&app.library)) {
                         Ok(result) => info!(

@@ -55,7 +55,7 @@ impl provider::ProviderInstance for PocketcastsProvider {
         provider::Provider::Pocketcasts
     }
 
-    fn sync(&mut self, library: SharedLibrary) -> Result<provider::SyncResult, Error> {
+    fn sync(&self, library: SharedLibrary) -> Result<provider::SyncResult, Error> {
         let client = self
             .client
             .clone()

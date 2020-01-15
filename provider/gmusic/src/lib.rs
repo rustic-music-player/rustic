@@ -70,7 +70,7 @@ impl provider::ProviderInstance for GooglePlayMusicProvider {
         provider::Provider::GooglePlayMusic
     }
 
-    fn sync(&mut self, library: SharedLibrary) -> Result<provider::SyncResult, Error> {
+    fn sync(&self, library: SharedLibrary) -> Result<provider::SyncResult, Error> {
         let client = self.get_client()?;
         let mut playlists: Vec<Playlist> = client
             .get_all_playlists()?

@@ -31,7 +31,7 @@ impl ProviderInstance for LocalProvider {
         Ok(())
     }
 
-    fn sync(&mut self, library: SharedLibrary) -> Result<SyncResult, Error> {
+    fn sync(&self, library: SharedLibrary) -> Result<SyncResult, Error> {
         let scanner = scanner::Scanner::new(self.path.clone());
         let tracks = scanner.scan()?;
         let albums: Vec<library::Album> = tracks

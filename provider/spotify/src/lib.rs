@@ -38,7 +38,7 @@ pub struct SpotifyProvider {
 }
 
 impl SpotifyProvider {
-    fn sync_tracks(&mut self, library: &SharedLibrary) -> Result<(usize, usize), Error> {
+    fn sync_tracks(&self, library: &SharedLibrary) -> Result<(usize, usize), Error> {
         let spotify = self.client.as_ref().unwrap();
 
         let albums = spotify.current_user_saved_albums(None, None)?.items;
@@ -73,7 +73,7 @@ impl SpotifyProvider {
         Ok((tracks.len(), albums_len))
     }
 
-    fn sync_playlists(&mut self, library: &SharedLibrary) -> Result<usize, Error> {
+    fn sync_playlists(&self, library: &SharedLibrary) -> Result<usize, Error> {
         let spotify = self.client.as_ref().unwrap();
 
         let playlists = spotify.current_user_playlists(None, None)?;
@@ -144,7 +144,7 @@ impl rustic_core::provider::ProviderInstance for SpotifyProvider {
         provider::Provider::Spotify
     }
 
-    fn sync(&mut self, library: SharedLibrary) -> Result<provider::SyncResult, Error> {
+    fn sync(&self, library: SharedLibrary) -> Result<provider::SyncResult, Error> {
         let (tracks, albums) = self.sync_tracks(&library)?;
 
         let playlists = self.sync_playlists(&library)?;

@@ -57,7 +57,7 @@ impl provider::ProviderInstance for SoundcloudProvider {
         provider::Provider::Soundcloud
     }
 
-    fn sync(&mut self, library: SharedLibrary) -> Result<provider::SyncResult, Error> {
+    fn sync(&self, library: SharedLibrary) -> Result<provider::SyncResult, Error> {
         let client = self.client();
         let mut playlists: Vec<Playlist> = client
             .playlists()?
