@@ -172,6 +172,7 @@ impl PlayerBackend for RodioBackend {
 
     fn clear_queue(&self) {
         self.queue.clear();
+        self.set_state(PlayerState::Stop);
         self.queue_changed();
     }
 
