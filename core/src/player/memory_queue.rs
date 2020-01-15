@@ -41,6 +41,7 @@ impl MemoryQueue {
 
     pub fn clear(&self) {
         self.queue.set(vec![]);
+        self.current_index.store(0, atomic::Ordering::Relaxed);
     }
 
     pub fn prev(&self) -> Option<Track> {
