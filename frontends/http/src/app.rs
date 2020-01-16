@@ -3,12 +3,15 @@ use std::sync::Arc;
 
 use actix::{Addr, System};
 use actix_files::{Files, NamedFile};
-use actix_web::{middleware, web, App, HttpServer, Result, Scope, Responder};
+use actix_web::{middleware, web, App, HttpServer, Result, Scope, Responder, FromRequest};
 
 use controller;
 use rustic_core::Rustic;
 use socket::{create_socket_server, socket_service, SocketServer};
 use HttpConfig;
+use serde_qs::actix::{QsQuery};
+use serde_qs::Config;
+use controller::search::SearchQuery;
 
 pub struct ApiState {
     pub app: Arc<Rustic>,
@@ -17,6 +20,7 @@ pub struct ApiState {
 fn build_api(app: Arc<Rustic>, ws_server: Addr<SocketServer>) -> Scope {
     web::scope("/api")
         .data(ApiState { app })
+        .data(QsQuery::<SearchQuery>::configure(|cfg| cfg.qs_config(Config::new(2, false))))
         .service(controller::library::get_albums)
         .service(controller::library::get_album)
         .service(controller::library::get_artists)
