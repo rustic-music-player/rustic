@@ -1,12 +1,10 @@
 use std::cmp::Ordering;
 use std::collections::HashMap;
-use std::sync::Arc;
 
 use serde_derive::{Deserialize, Serialize};
 
 use crate::library::{Album, Artist, MetaValue};
 use crate::provider::Provider;
-use crate::Rustic;
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct Track {

@@ -10,7 +10,7 @@ use rustic_core::library::MetaValue;
 use rustic_core::{provider, Album, Playlist, SharedLibrary, Track};
 
 use crate::album::GmusicAlbum;
-use crate::meta::{META_GMUSIC_COVER_ART_URL, META_GMUSIC_STORE_ID, META_GMUSIC_TRACK_ID};
+use crate::meta::{META_GMUSIC_COVER_ART_URL, META_GMUSIC_STORE_ID};
 use crate::playlist::GmusicPlaylist;
 use crate::track::GmusicTrack;
 

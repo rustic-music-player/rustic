@@ -5,7 +5,7 @@ use failure::{Error, Fail};
 use serde_derive::{Deserialize, Serialize};
 use url::Url;
 
-use crate::library::{Album, Artist, Playlist, SharedLibrary, Track};
+use crate::library::{Album, SharedLibrary, Track};
 
 pub use self::explorer::Explorer;
 pub use self::folder::ProviderFolder;

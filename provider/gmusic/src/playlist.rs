@@ -1,4 +1,4 @@
-use rustic_core::{Playlist, Provider, Track};
+use rustic_core::{Playlist, Provider};
 
 #[derive(Debug, Clone)]
 pub struct GmusicPlaylist(gmusic::Playlist);

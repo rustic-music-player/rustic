@@ -1,10 +1,8 @@
 use std::cmp::Ordering;
-use std::sync::Arc;
 
 use cursor::to_cursor;
 use rustic_core::library::Album;
 use rustic_core::provider::Provider;
-use rustic_core::Rustic;
 use viewmodels::{ArtistModel, TrackModel};
 
 #[derive(Clone, Debug, Serialize, Eq)]
