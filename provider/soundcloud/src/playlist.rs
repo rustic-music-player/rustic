@@ -29,6 +29,7 @@ impl From<soundcloud::Playlist> for SoundcloudPlaylist {
             title: playlist.title,
             tracks: playlist
                 .tracks
+                .expect("soundcloud playlist is missing tracks")
                 .iter()
                 .cloned()
                 .filter(|track| track.stream_url.is_some())
