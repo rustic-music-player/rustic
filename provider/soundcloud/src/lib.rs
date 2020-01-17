@@ -71,7 +71,7 @@ impl provider::ProviderInstance for SoundcloudProvider {
     fn sync(&self, library: SharedLibrary) -> Result<provider::SyncResult, Error> {
         let client = self.client();
         let mut playlists: Vec<Playlist> = client
-            .playlists()?
+            .user_playlists()?
             .iter()
             .cloned()
             .map(playlist::SoundcloudPlaylist::from)
