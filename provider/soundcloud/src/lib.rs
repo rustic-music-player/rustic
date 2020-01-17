@@ -9,6 +9,9 @@ extern crate serde;
 #[macro_use]
 extern crate serde_derive;
 extern crate soundcloud;
+extern crate regex;
+#[macro_use]
+extern crate lazy_static;
 
 use std::str::FromStr;
 
@@ -23,6 +26,15 @@ mod meta;
 mod playlist;
 mod track;
 
+lazy_static! {
+    static ref SOUNDCLOUD_RESOLVE_REGEX: regex::Regex = regex::RegexBuilder::new("^/([a-z]+)/([0-9]+)")
+        .case_insensitive(true)
+        .build()
+        .unwrap();
+}
+
+const TRACK_URI_PREFIX: &str = "soundcloud://track/";
+
 #[derive(Debug, Clone, Deserialize)]
 pub struct SoundcloudProvider {
     client_id: String,
@@ -32,9 +44,8 @@ pub struct SoundcloudProvider {
 impl SoundcloudProvider {
     fn client(&self) -> soundcloud::Client {
         let mut client = soundcloud::Client::new(self.client_id.as_str());
-        if self.auth_token.is_some() {
-            let token = self.auth_token.clone().unwrap();
-            client.authenticate_with_token(token);
+        if let Some(token) = self.auth_token.as_ref() {
+            client.authenticate_with_token(token.clone());
         }
         client
     }
@@ -109,6 +120,7 @@ impl provider::ProviderInstance for SoundcloudProvider {
             _ => Err(Error::from(provider::NavigationError::PathNotFound)),
         }
     }
+
     fn search(&self, query: String) -> Result<Vec<provider::ProviderItem>, Error> {
         trace!("search {}", query);
         let client = self.client();
@@ -130,13 +142,14 @@ impl provider::ProviderInstance for SoundcloudProvider {
             .collect();
         Ok(results)
     }
+
     fn resolve_track(&self, uri: &str) -> Result<Option<Track>, Error> {
         ensure!(
-            uri.starts_with("soundcloud://track/"),
+            uri.starts_with(TRACK_URI_PREFIX),
             "Invalid Uri: {}",
             uri
         );
-        let id = &uri["soundcloud://track/".len()..];
+        let id = &uri[TRACK_URI_PREFIX.len()..];
         let id = usize::from_str(id)?;
         let client = self.client();
         let track = client
@@ -186,7 +199,25 @@ impl provider::ProviderInstance for SoundcloudProvider {
         Ok(url)
     }
 
-    fn resolve_share_url(&self, _url: url::Url) -> Result<Option<provider::InternalUri>, Error> {
-        Ok(None)
+    fn resolve_share_url(&self, url: url::Url) -> Result<Option<provider::InternalUri>, Error> {
+        if url.domain() != Some("soundcloud.com") {
+            return Ok(None)
+        }
+        let client = self.client();
+        let url = client.resolve(url.as_str())?;
+        let path = url.path();
+        if let Some(captures) = SOUNDCLOUD_RESOLVE_REGEX.captures(path) {
+            let entity_type = &captures[1];
+            let id = &captures[2];
+            let entity = match entity_type {
+                "tracks" => Some(provider::InternalUri::Track(format!("{}{}", TRACK_URI_PREFIX, id))),
+                "playlists" => Some(provider::InternalUri::Playlist(format!("soundcloud://playlist/{}", id))),
+                "users" => Some(provider::InternalUri::Artist(format!("soundcloud://user/{}", id))),
+                _ => None
+            };
+            Ok(entity)
+        }else {
+            Ok(None)
+        }
     }
 }
