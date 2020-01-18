@@ -3995,7 +3995,7 @@ dependencies = [
 [[package]]
 name = "soundcloud"
 version = "0.3.0"
-source = "git+https://github.com/maxjoehnk/soundcloud-rs#0452f0363295b5835735793eb86a2008bdf0b7ae"
+source = "git+https://github.com/maxjoehnk/soundcloud-rs#fff613b2385686e87279ee205d2e3ff81e6ee631"
 dependencies = [
  "env_logger 0.3.5 (registry+https://github.com/rust-lang/crates.io-index)",
  "log 0.3.9 (registry+https://github.com/rust-lang/crates.io-index)",

@@ -1,26 +1,26 @@
 #[macro_use]
 extern crate failure;
 #[macro_use]
+extern crate lazy_static;
+#[macro_use]
 extern crate log;
 #[macro_use]
 extern crate maplit;
+extern crate regex;
 extern crate rustic_core as rustic;
 extern crate serde;
 #[macro_use]
 extern crate serde_derive;
 extern crate soundcloud;
-extern crate regex;
-#[macro_use]
-extern crate lazy_static;
 
 use std::str::FromStr;
 
 use failure::Error;
 
+use playlist::SoundcloudPlaylist;
 use rustic::library::{Album, MetaValue, Playlist, SharedLibrary, Track};
 use rustic::provider;
 use track::SoundcloudTrack;
-use playlist::SoundcloudPlaylist;
 
 mod error;
 mod meta;
@@ -100,17 +100,9 @@ impl provider::ProviderInstance for SoundcloudProvider {
                 let items = likes
                     .iter()
                     .cloned()
-                    .filter(|like| like.track.is_some() || like.playlist.is_some())
-                    .map(|like| (like.track, like.playlist))
-                    .map(|like| match like {
-                        (Some(track), _) => {
-                            provider::ProviderItem::from(Track::from(SoundcloudTrack::from(track)))
-                        }
-                        (_, Some(playlist)) => provider::ProviderItem::from(Playlist::from(
-                            playlist::SoundcloudPlaylist::from(playlist),
-                        )),
-                        _ => panic!("something went horribly wrong"),
-                    })
+                    .map(|track|
+                        provider::ProviderItem::from(Track::from(SoundcloudTrack::from(track)))
+                    )
                     .collect();
                 let folder = provider::ProviderFolder {
                     folders: vec![],
@@ -188,7 +180,7 @@ impl provider::ProviderInstance for SoundcloudProvider {
     fn stream_url(&self, track: &Track) -> Result<String, Error> {
         if track.provider == provider::Provider::Soundcloud {
             if let rustic::library::MetaValue::String(stream_url) =
-                track.meta.get(meta::META_SOUNDCLOUD_STREAM_URL).unwrap()
+            track.meta.get(meta::META_SOUNDCLOUD_STREAM_URL).unwrap()
             {
                 return Ok(format!(
                     "{}?client_id={}",
@@ -220,7 +212,7 @@ impl provider::ProviderInstance for SoundcloudProvider {
 
     fn resolve_share_url(&self, url: url::Url) -> Result<Option<provider::InternalUri>, Error> {
         if url.domain() != Some("soundcloud.com") {
-            return Ok(None)
+            return Ok(None);
         }
         let client = self.client();
         let url = client.resolve(url.as_str())?;
@@ -235,7 +227,7 @@ impl provider::ProviderInstance for SoundcloudProvider {
                 _ => None
             };
             Ok(entity)
-        }else {
+        } else {
             Ok(None)
         }
     }
