@@ -61,10 +61,9 @@ pub fn queue_album(cursor: &str, rustic: &Arc<Rustic>) -> Result<Option<()>, Err
 }
 
 pub fn queue_playlist(cursor: &str, rustic: &Arc<Rustic>) -> Result<Option<()>, Error> {
-    let library = &rustic.library;
     let uri = from_cursor(cursor)?;
     debug!("adding playlist to queue {}", uri);
-    let playlist: Option<Playlist> = library.query_playlist(SingleQuery::uri(uri))?;
+    let playlist: Option<Playlist> = rustic.query_playlist(SingleQuery::uri(uri))?;
     match playlist {
         Some(playlist) => {
             let player = rustic

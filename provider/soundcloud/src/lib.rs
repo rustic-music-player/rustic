@@ -20,6 +20,7 @@ use failure::Error;
 use rustic::library::{Album, MetaValue, Playlist, SharedLibrary, Track};
 use rustic::provider;
 use track::SoundcloudTrack;
+use playlist::SoundcloudPlaylist;
 
 mod error;
 mod meta;
@@ -164,6 +165,24 @@ impl provider::ProviderInstance for SoundcloudProvider {
 
     fn resolve_album(&self, _uri: &str) -> Result<Option<Album>, Error> {
         Ok(None)
+    }
+
+    fn resolve_playlist(&self, uri: &str) -> Result<Option<Playlist>, Error> {
+        ensure!(
+            uri.starts_with("soundcloud://playlist/"),
+            "Invalid Uri: {}",
+            uri
+        );
+        let id = &uri["soundcloud://playlist/".len()..];
+        let id = usize::from_str(id)?;
+        let client = self.client();
+        let playlist = client
+            .playlist(id)
+            .get()?;
+        let playlist = SoundcloudPlaylist::from(playlist);
+        let playlist = Playlist::from(playlist);
+
+        Ok(Some(playlist))
     }
 
     fn stream_url(&self, track: &Track) -> Result<String, Error> {

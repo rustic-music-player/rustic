@@ -70,13 +70,12 @@ pub fn fetch_playlists(rustic: &Arc<Rustic>) -> Result<Vec<PlaylistModel>, Error
 }
 
 pub fn fetch_playlist(cursor: &str, rustic: &Arc<Rustic>) -> Result<Option<PlaylistModel>, Error> {
-    let library = &rustic.library;
     let sw = stopwatch::Stopwatch::start_new();
 
     let uri = from_cursor(cursor)?;
     let mut query = SingleQuery::uri(uri);
     query.join_all();
-    let playlist = library
+    let playlist = rustic
         .query_playlist(query)?
         .map(|playlist| PlaylistModel::new(playlist));
     debug!("Fetching playlist took {}ms", sw.elapsed_ms());

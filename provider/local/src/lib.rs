@@ -93,11 +93,15 @@ impl ProviderInstance for LocalProvider {
     }
 
     fn resolve_track(&self, _uri: &str) -> Result<Option<library::Track>, Error> {
-        Ok(None)
+        unimplemented!()
     }
 
     fn resolve_album(&self, _uri: &str) -> Result<Option<library::Album>, Error> {
-        Ok(None)
+        unimplemented!()
+    }
+
+    fn resolve_playlist(&self, _uri: &str) -> Result<Option<library::Playlist>, Error> {
+        unimplemented!()
     }
 
     fn stream_url(&self, track: &library::Track) -> Result<String, Error> {

@@ -11,6 +11,7 @@ pub use self::explorer::Explorer;
 pub use self::folder::ProviderFolder;
 pub use self::item::{ProviderItem, ProviderItemType};
 pub use self::sync_error::SyncError;
+use crate::Playlist;
 
 mod explorer;
 mod folder;
@@ -49,6 +50,7 @@ pub trait ProviderInstance: Debug {
     fn search(&self, query: String) -> Result<Vec<ProviderItem>, Error>;
     fn resolve_track(&self, uri: &str) -> Result<Option<Track>, Error>;
     fn resolve_album(&self, uri: &str) -> Result<Option<Album>, Error>;
+    fn resolve_playlist(&self, uri: &str) -> Result<Option<Playlist>, Error>;
     fn stream_url(&self, track: &Track) -> Result<String, Error>;
     fn cover_art(&self, track: &Track) -> Result<Option<CoverArt>, Error>;
     fn resolve_share_url(&self, url: Url) -> Result<Option<InternalUri>, Error>;

@@ -145,6 +145,10 @@ impl provider::ProviderInstance for GooglePlayMusicProvider {
         Ok(Some(album))
     }
 
+    fn resolve_playlist(&self, _uri: &str) -> Result<Option<Playlist>, Error> {
+        unimplemented!()
+    }
+
     fn stream_url(&self, track: &Track) -> Result<String, Error> {
         let id = track
             .meta

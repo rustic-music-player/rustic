@@ -20,7 +20,7 @@ use episode::PocketcastTrack;
 use meta::META_POCKETCASTS_COVER_ART_URL;
 use podcast::{PocketcastAlbum, PocketcastAlbums, PocketcastSearchResult};
 use rustic::library::{Album, Artist, MetaValue, SharedLibrary, Track};
-use rustic::provider;
+use rustic::{provider, Playlist};
 
 mod episode;
 mod meta;
@@ -185,11 +185,15 @@ impl provider::ProviderInstance for PocketcastsProvider {
     }
 
     fn resolve_track(&self, _uri: &str) -> Result<Option<Track>, Error> {
-        Ok(None)
+        unimplemented!()
     }
 
     fn resolve_album(&self, _uri: &str) -> Result<Option<Album>, Error> {
-        Ok(None)
+        unimplemented!()
+    }
+
+    fn resolve_playlist(&self, _uri: &str) -> Result<Option<Playlist>, Error> {
+        unimplemented!()
     }
 
     fn stream_url(&self, track: &Track) -> Result<String, Error> {

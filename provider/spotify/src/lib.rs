@@ -209,6 +209,16 @@ impl rustic_core::provider::ProviderInstance for SpotifyProvider {
         Ok(None)
     }
 
+    fn resolve_playlist(&self, uri: &str) -> Result<Option<Playlist>, Error> {
+        let spotify = self.client.clone().unwrap();
+        let id = &uri["spotify://playlists/".len()..];
+        let playlist = spotify.playlist(id, None, None)?;
+        let playlist = SpotifyPlaylist::from(playlist);
+        let playlist = Playlist::from(playlist);
+
+        Ok(Some(playlist))
+    }
+
     fn stream_url(&self, track: &Track) -> Result<String, Error> {
         let uri = track
             .meta

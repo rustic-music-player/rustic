@@ -129,6 +129,27 @@ impl Rustic {
         }
     }
 
+    pub fn query_playlist(&self, query: SingleQuery) -> Result<Option<Playlist>, failure::Error> {
+        debug!("Executing playlist query: {:?}", query);
+        let playlist = self.library.query_playlist(query.clone())?;
+        if let Some(playlist) = playlist {
+            Ok(Some(playlist))
+        } else {
+            if let SingleQueryIdentifier::Uri(ref uri) = query.identifier {
+                trace!("Playlist is not in library, asking provider");
+                let provider = self.get_provider_for_url(uri)?;
+                let playlist = match provider {
+                    Some(provider) => provider.read().unwrap().resolve_playlist(uri)?,
+                    _ => None,
+                };
+                Ok(playlist)
+            } else {
+                // Only library playlists have an id
+                Ok(None)
+            }
+        }
+    }
+
     fn get_provider_for_url(&self, uri: &str) -> Result<Option<&SharedProvider>, failure::Error> {
         trace!("get_provider for {}", uri);
         let url = Url::parse(uri)?;
