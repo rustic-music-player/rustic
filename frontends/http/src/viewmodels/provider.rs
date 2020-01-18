@@ -22,6 +22,7 @@ pub struct ProviderItemModel {
 }
 
 #[derive(Clone, Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
 pub enum ProviderItemTypeModel {
     Track(TrackModel),
     Album(AlbumModel),
