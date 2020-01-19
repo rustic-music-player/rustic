@@ -106,6 +106,7 @@ impl RodioBackend {
     fn set_track(&self, track: &Track) -> Result<(), Error> {
         debug!("Selecting {:?}", track);
         {
+            self.tx.send(PlayerEvent::TrackChanged(track.clone()))?;
             let source = self.decode_stream(track, self.core.stream_url(track)?)?;
             let sink = rodio::Sink::new(&self.device);
             sink.append(source);
@@ -115,7 +116,6 @@ impl RodioBackend {
                 prev_sink.stop();
             }
             *current_sink = Some(sink);
-            self.tx.send(PlayerEvent::TrackChanged(track.clone()))?;
         } // Drop the lock
         if self.state.read() == PlayerState::Play {
             self.play();
