@@ -1,7 +1,9 @@
 pipeline {
     agent {
-        docker {
-            image 'rust'
+        dockerfile {
+            filename '.jenkins/Dockerfile'
+            additionalBuildArgs '--pull'
+            args '-v /usr/share/jenkins/cache:/build_cache'
         }
     }
 
