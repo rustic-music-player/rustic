@@ -13,7 +13,7 @@ pipeline {
 
             post {
                 always {
-                    recordIssues tool: cargo(pattern: 'cargo-build.json')
+                    recordIssues enabledForFailure: true, tool: cargo(pattern: 'cargo-build.json')
                 }
             }
         }
