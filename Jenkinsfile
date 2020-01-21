@@ -10,7 +10,7 @@ pipeline {
     stages {
         stage('Build') {
             steps {
-                sh 'cargo build --workspace --release --message-format json > cargo-build.json'
+                sh 'cargo build --bins --workspace --release --message-format json > cargo-build.json'
             }
 
             post {
