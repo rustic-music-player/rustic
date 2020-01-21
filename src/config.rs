@@ -1,10 +1,10 @@
 use std::fs::File;
 use std::io::prelude::*;
-use std::path::PathBuf;
+use std::path::Path;
 
 use failure::Error;
 
-#[derive(Deserialize, Clone, Default)]
+#[derive(Deserialize, Clone)]
 pub struct Config {
     #[cfg(feature = "mpd")]
     pub mpd: Option<mpd_frontend::MpdConfig>,
@@ -23,6 +23,31 @@ pub struct Config {
     pub library: Option<LibraryConfig>,
     #[serde(rename = "player", default = "default_backend")]
     pub players: Vec<PlayerBackendConfig>,
+    #[serde(default)]
+    pub extensions: ExtensionConfig
+}
+
+impl Default for Config {
+    fn default() -> Self {
+        Config {
+            #[cfg(feature = "mpd")]
+            mpd: None,
+            #[cfg(feature = "web-api")]
+            http: Some(http_frontend::HttpConfig::default()),
+            pocketcasts: None,
+            #[cfg(feature = "soundcloud")]
+            soundcloud: None,
+            #[cfg(feature = "spotify")]
+            spotify: None,
+            #[cfg(feature = "gmusic")]
+            gmusic: None,
+            #[cfg(feature = "local-files")]
+            local: local_provider::LocalProvider::default(),
+            library: Some(LibraryConfig::default()),
+            players: default_backend(),
+            extensions: ExtensionConfig::default()
+        }
+    }
 }
 
 #[derive(Deserialize, Clone)]
@@ -37,6 +62,12 @@ pub enum LibraryConfig {
     Sled {
         path: String,
     },
+}
+
+impl Default for LibraryConfig {
+    fn default() -> Self {
+        LibraryConfig::Memory
+    }
 }
 
 #[derive(Deserialize, Clone, PartialEq, Eq)]
@@ -59,6 +90,11 @@ pub enum PlayerBackend {
     GoogleCast,
 }
 
+#[derive(Deserialize, Clone, Serialize, Default)]
+pub struct ExtensionConfig {
+    pub path: Option<String>
+}
+
 fn default_backend() -> Vec<PlayerBackendConfig> {
     #[cfg(feature = "gstreamer")]
     let backend_type = PlayerBackend::GStreamer;
@@ -73,10 +109,14 @@ fn default_backend() -> Vec<PlayerBackendConfig> {
     vec![config]
 }
 
-pub fn read_config(path: PathBuf) -> Result<Config, Error> {
-    let mut config_file = File::open(path)?;
-    let mut config = String::new();
-    config_file.read_to_string(&mut config)?;
-    let config = toml::from_str(config.as_str())?;
-    Ok(config)
+pub fn read_config(path: &Path) -> Result<Config, Error> {
+    if path.exists() {
+        let mut config_file = File::open(path)?;
+        let mut config = String::new();
+        config_file.read_to_string(&mut config)?;
+        let config = toml::from_str(config.as_str())?;
+        Ok(config)
+    } else {
+        Ok(Config::default())
+    }
 }

@@ -1,5 +1,6 @@
 use failure::Error;
 use log::error;
+use std::path::{Path, PathBuf};
 
 #[derive(Debug, PartialEq, Clone)]
 pub struct Track {
@@ -12,7 +13,7 @@ pub struct Track {
 
 #[derive(Debug, Clone)]
 pub struct Scanner {
-    path: String,
+    path: PathBuf,
 }
 
 fn is_mp3(entry: &walkdir::DirEntry) -> bool {
@@ -28,7 +29,7 @@ fn is_mp3(entry: &walkdir::DirEntry) -> bool {
 }
 
 impl Scanner {
-    pub fn new<P: Into<String>>(path: P) -> Scanner {
+    pub fn new(path: &Path) -> Scanner {
         Scanner { path: path.into() }
     }
 

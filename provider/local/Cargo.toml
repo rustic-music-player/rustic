@@ -13,6 +13,7 @@ walkdir = "2.1"
 id3 = "0.3"
 maplit = "1.0.1"
 url = "1.7"
+dirs = "2"
 
 [dependencies.rustic-core]
 path = "../../core"

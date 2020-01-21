@@ -4,6 +4,7 @@ use serde_derive::Deserialize;
 
 use rustic_core::library::{self, MetaValue, SharedLibrary};
 use rustic_core::provider::*;
+use std::path::PathBuf;
 
 pub mod scanner;
 
@@ -11,7 +12,16 @@ const META_LOCAL_FILE_URL: &str = "LOCAL_FILE_URL";
 
 #[derive(Clone, Deserialize, Debug)]
 pub struct LocalProvider {
-    path: String,
+    path: PathBuf,
+}
+
+impl LocalProvider {
+    pub fn default() -> Option<Self> {
+        dirs::audio_dir()
+            .map(|path| LocalProvider {
+                path
+            })
+    }
 }
 
 impl ProviderInstance for LocalProvider {
@@ -32,7 +42,7 @@ impl ProviderInstance for LocalProvider {
     }
 
     fn sync(&self, library: SharedLibrary) -> Result<SyncResult, Error> {
-        let scanner = scanner::Scanner::new(self.path.clone());
+        let scanner = scanner::Scanner::new(&self.path);
         let tracks = scanner.scan()?;
         let albums: Vec<library::Album> = tracks
             .iter()

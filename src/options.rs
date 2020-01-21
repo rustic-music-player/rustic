@@ -16,4 +16,8 @@ pub(crate) struct CliOptions {
         parse(from_os_str)
     )]
     pub(crate) config: PathBuf,
+
+    /// Extensions path
+    #[structopt(long = "extensions")]
+    pub(crate) extensions_path: Option<String>
 }
