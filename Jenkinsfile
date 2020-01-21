@@ -8,6 +8,18 @@ pipeline {
     }
 
     stages {
+        stage('Test') {
+            steps {
+                sh 'cargo test --bins --workspace --message-format json > cargo-build.json'
+            }
+            
+            post {
+                always {
+                    recordIssues enabledForFailure: true, tool: cargo(pattern: 'cargo-build.json')
+                }
+            }
+        }
+        
         stage('Build') {
             steps {
                 sh 'cargo build --bins --workspace --release --message-format json > cargo-build.json'
