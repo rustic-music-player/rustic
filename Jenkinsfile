@@ -16,6 +16,8 @@ pipeline {
             post {
                 always {
                     recordIssues enabledForFailure: true, tool: cargo(pattern: 'cargo-build.json')
+                    archiveArtifacts artifacts: 'target/release/rustic', fingerprint: true
+                    archiveArtifacts artifacts: 'target/release/rustic-*-extension', fingerprint: true
                 }
             }
         }
