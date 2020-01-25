@@ -6,7 +6,7 @@ use std::thread;
 use std::time::Duration;
 
 use crossbeam_channel::{Receiver, Sender};
-use failure::{bail, Error};
+use failure::{bail, Error, format_err};
 use log::{debug, error, trace};
 use pinboard::NonEmptyPinboard;
 use url::Url;
@@ -41,7 +41,7 @@ impl std::fmt::Debug for RodioBackend {
 
 impl RodioBackend {
     pub fn new(core: Arc<Rustic>) -> Result<Arc<Box<dyn PlayerBackend>>, Error> {
-        let device = rodio::default_output_device().unwrap();
+        let device = rodio::default_output_device().ok_or_else(|| format_err!("Unable to open output device"))?;
         let (tx, rx) = crossbeam_channel::unbounded();
         let (next_sender, next_receiver) = crossbeam_channel::unbounded();
         let backend = RodioBackend {
