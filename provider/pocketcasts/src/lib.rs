@@ -55,6 +55,27 @@ impl provider::ProviderInstance for PocketcastsProvider {
         provider::Provider::Pocketcasts
     }
 
+    fn auth_state(&self) -> provider::AuthState {
+        provider::AuthState::Authenticated(Some(provider::User {
+            email: Some(self.email.clone()),
+            ..provider::User::default()
+        }))
+    }
+
+    fn authenticate(&mut self, authentication: provider::Authentication) -> Result<(), Error> {
+        use provider::Authentication::*;
+
+        match authentication {
+            Password(email, password) => {
+                self.email = email;
+                self.password = password;
+                self.setup()?;
+                Ok(())
+            },
+            _ => Err(format_err!("Invalid authentication method"))
+        }
+    }
+
     fn sync(&self, library: SharedLibrary) -> Result<provider::SyncResult, Error> {
         let client = self
             .client

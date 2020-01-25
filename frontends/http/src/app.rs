@@ -45,6 +45,8 @@ fn build_api(app: Arc<Rustic>, ws_server: Addr<SocketServer>) -> Scope {
         .service(controller::extensions::get_extensions)
         .service(controller::providers::get_providers)
         .service(controller::providers::navigate)
+        .service(controller::providers::get_available_providers)
+        .service(controller::providers::provider_token_auth)
         .service(socket_service(ws_server))
 }
 

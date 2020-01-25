@@ -7,7 +7,9 @@ pub use self::playlist::PlaylistModel;
 pub use self::provider::{ProviderFolderModel, ProviderModel};
 pub use self::search::SearchResults;
 pub use self::track::TrackModel;
+pub use self::available_provider::{AvailableProviderModel, ProviderAuthenticationState};
 
+mod available_provider;
 mod album;
 mod artist;
 mod extension;

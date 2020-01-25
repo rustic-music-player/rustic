@@ -16,6 +16,9 @@ pub fn start(app: Arc<Rustic>) -> Result<thread::JoinHandle<()>, Error> {
                 let providers = app.providers.clone();
                 for provider in providers {
                     let provider = provider.read().unwrap();
+                    if !provider.auth_state().is_authenticated() {
+                        continue;
+                    }
                     info!("Syncing {} library", provider.title());
                     match provider.sync(Arc::clone(&app.library)) {
                         Ok(result) => info!(

@@ -1,10 +1,10 @@
 use std::thread;
 
-use failure::{err_msg, format_err, Error};
+use failure::{err_msg, Error, format_err};
 use log::{debug, trace};
 use rspotify::spotify::client::Spotify;
-use rspotify::spotify::oauth2::{SpotifyClientCredentials, SpotifyOAuth};
-use rspotify::spotify::util::get_token;
+use rspotify::spotify::oauth2::{SpotifyClientCredentials, SpotifyOAuth, TokenInfo};
+use rspotify::spotify::util::{generate_random_string, get_token};
 use serde_derive::Deserialize;
 
 use rustic_core::library::{Album, Artist, MetaValue, Playlist, SharedLibrary, Track};
@@ -25,16 +25,19 @@ mod playlist;
 mod track;
 mod util;
 
+// TODO: configurable host
+const SPOTIFY_REDIRECT_URI: &str = "http://localhost:8080/api/providers/spotify/auth/redirect";
+
 #[derive(Clone, Deserialize, Debug)]
 pub struct SpotifyProvider {
     client_id: String,
     client_secret: String,
-    username: String,
-    password: String,
+    //    username: String,
+//    password: String,
     #[serde(skip)]
     client: Option<Spotify>,
-    #[serde(skip)]
-    player: SpotifyPlayer,
+//    #[serde(skip)]
+//    player: SpotifyPlayer,
 }
 
 impl SpotifyProvider {
@@ -94,11 +97,9 @@ impl SpotifyProvider {
 
         Ok(playlist_count)
     }
-}
 
-impl rustic_core::provider::ProviderInstance for SpotifyProvider {
-    fn setup(&mut self) -> Result<(), Error> {
-        let mut oauth = SpotifyOAuth::default()
+    fn get_oauth_client(&self) -> SpotifyOAuth {
+        SpotifyOAuth::default()
             .client_id(&self.client_id)
             .client_secret(&self.client_secret)
             .scope(
@@ -109,27 +110,69 @@ impl rustic_core::provider::ProviderInstance for SpotifyProvider {
                     "user-read-recently-played",
                     "playlist-read-collaborative",
                 ]
-                .join(" "),
+                    .join(" "),
             )
-            .redirect_uri("http://localhost:8888/callback")
+            .redirect_uri(SPOTIFY_REDIRECT_URI)
+    }
+
+    fn setup_client(&mut self, token: TokenInfo) {
+        let client_credential = SpotifyClientCredentials::default()
+            .token_info(token)
+            .build();
+        let spotify = Spotify::default()
+            .client_credentials_manager(client_credential)
             .build();
 
-        let spotify = get_token(&mut oauth)
-            .map(|token_info| {
-                let client_credential = SpotifyClientCredentials::default()
-                    .token_info(token_info)
-                    .build();
-                Spotify::default()
-                    .client_credentials_manager(client_credential)
-                    .build()
-            })
-            .ok_or_else(|| err_msg("Spotify auth failed"))?;
-
         self.client = Some(spotify);
+    }
+}
 
-        self.player.setup(&self.username, &self.password)?;
+impl rustic_core::provider::ProviderInstance for SpotifyProvider {
+    fn setup(&mut self) -> Result<(), Error> {
+        let mut oauth = self.get_oauth_client();
+
+        if let Some(token) = oauth.get_cached_token() {
+            self.setup_client(token);
+        }
 
         Ok(())
+    }
+
+    fn auth_state(&self) -> provider::AuthState {
+        if self.client.is_some() {
+            provider::AuthState::Authenticated(None)
+        } else {
+            let mut oauth = self.get_oauth_client()
+                .build();
+            let state = generate_random_string(16);
+            let auth_url = oauth.get_authorize_url(Some(&state), None);
+            provider::AuthState::RequiresOAuth(auth_url)
+        }
+    }
+
+    fn authenticate(&mut self, auth: provider::Authentication) -> Result<(), Error> {
+        use provider::Authentication::*;
+        match auth {
+            Token(token) => {
+                let mut oauth = self.get_oauth_client();
+                if let Some(token) = oauth.get_access_token(&token) {
+                    self.setup_client(token);
+                    Ok(())
+                } else {
+                    Err(format_err!("Can't get access token"))
+                }
+            },
+            TokenWithState(token, state) => {
+                let mut oauth = self.get_oauth_client().state(&state);
+                if let Some(token) = oauth.get_access_token(&token) {
+                    self.setup_client(token);
+                    Ok(())
+                } else {
+                    Err(format_err!("Can't get access token"))
+                }
+            }
+            _ => Err(format_err!("Invalid authentication method"))
+        }
     }
 
     fn title(&self) -> &'static str {
@@ -224,13 +267,13 @@ impl rustic_core::provider::ProviderInstance for SpotifyProvider {
             .meta
             .get(META_SPOTIFY_URI)
             .ok_or_else(|| format_err!("Missing spotify uri"))?;
-        if let MetaValue::String(uri) = uri {
-            let uri = uri.clone();
-            let player = self.player.clone();
-            let t = thread::spawn(move || player.get_audio_file(&uri))
-                .join()
-                .unwrap()
-                .unwrap();
+        if let MetaValue::String(_uri) = uri {
+//            let uri = uri.clone();
+//            let player = self.player.clone();
+//            let t = thread::spawn(move || player.get_audio_file(&uri))
+//                .join()
+//                .unwrap()
+//                .unwrap();
 
             unimplemented!()
         } else {

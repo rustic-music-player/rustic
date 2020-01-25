@@ -1,4 +1,4 @@
-use actix_web::{get, web, Responder, Result};
+use actix_web::{get, Responder, Result, web};
 
 use app::ApiState;
 use handler::providers as providers_handler;
@@ -12,6 +12,12 @@ pub struct NavigateQuery {
 #[derive(Deserialize)]
 pub struct ProviderParams {
     provider: Provider,
+}
+
+#[derive(Deserialize)]
+pub struct AuthRedirectParams {
+    code: String,
+    state: String
 }
 
 #[get("/providers")]
@@ -32,4 +38,24 @@ pub fn navigate(
     let folder = providers_handler::navigate(&rustic, params.provider, &query.path)?;
 
     Ok(web::Json(folder))
+}
+
+#[get("/providers/available")]
+pub fn get_available_providers(data: web::Data<ApiState>) -> Result<impl Responder> {
+    let rustic = &data.app;
+    let providers = providers_handler::get_available_providers(&rustic);
+
+    Ok(web::Json(providers))
+}
+
+#[get("/providers/{provider}/auth/redirect")]
+pub fn provider_token_auth(
+    query: web::Query<AuthRedirectParams>,
+    params: web::Path<ProviderParams>,
+    data: web::Data<ApiState>
+) -> Result<impl Responder> {
+    let rustic = &data.app;
+    providers_handler::authenticate(&rustic, params.provider, &query.code)?;
+
+    Ok(web::HttpResponse::Ok().body("<html><body>You can close this window now<script>window.close()</script></body></html>"))
 }

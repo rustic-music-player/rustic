@@ -27,6 +27,9 @@ mod meta;
 mod playlist;
 mod track;
 
+// TODO: configurable host
+const SOUNDCLOUD_REDIRECT_URI: &str = "http://localhost:8080/api/providers/soundcloud/auth/redirect";
+
 lazy_static! {
     static ref SOUNDCLOUD_RESOLVE_REGEX: regex::Regex = regex::RegexBuilder::new("^/([a-z]+)/([0-9]+)")
         .case_insensitive(true)
@@ -67,6 +70,27 @@ impl provider::ProviderInstance for SoundcloudProvider {
 
     fn provider(&self) -> provider::Provider {
         provider::Provider::Soundcloud
+    }
+
+    fn auth_state(&self) -> provider::AuthState {
+        if self.auth_token.is_some() {
+            provider::AuthState::Authenticated(None)
+        }else {
+            provider::AuthState::RequiresOAuth(
+                format!("https://soundcloud.com/connect?client_id={}&response_type=token&redirect_uri={}/api/auth/soundcloud", self.client_id, SOUNDCLOUD_REDIRECT_URI)
+            )
+        }
+    }
+
+    fn authenticate(&mut self, auth: provider::Authentication) -> Result<(), Error> {
+        use provider::Authentication::*;
+        match auth {
+            Token(token) => {
+                self.auth_token = Some(token);
+                Ok(())
+            },
+            _ => Err(format_err!("Invalid authentication method"))
+        }
     }
 
     fn sync(&self, library: SharedLibrary) -> Result<provider::SyncResult, Error> {

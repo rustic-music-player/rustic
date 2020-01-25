@@ -41,6 +41,14 @@ impl ProviderInstance for LocalProvider {
         Ok(())
     }
 
+    fn auth_state(&self) -> AuthState {
+        AuthState::NoAuthentication
+    }
+
+    fn authenticate(&mut self, _: Authentication) -> Result<(), Error> {
+        Ok(())
+    }
+
     fn sync(&self, library: SharedLibrary) -> Result<SyncResult, Error> {
         let scanner = scanner::Scanner::new(&self.path);
         let tracks = scanner.scan()?;

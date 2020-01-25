@@ -1,7 +1,8 @@
 use std::convert::TryFrom;
+use std::sync::Mutex;
 
 use failure::{format_err, Error};
-use log::error;
+use log::{debug, error};
 use serde_derive::Deserialize;
 
 use gmusic::{auth::stdio_login, GoogleMusicApi};
@@ -29,7 +30,11 @@ lazy_static! {
             .case_insensitive(true)
             .build()
             .unwrap();
+    static ref STATE_CACHE: Mutex<Option<String>> = Mutex::new(None);
 }
+
+// TODO: configurable host
+const GMUSIC_REDIRECT_URI: &str = "http://localhost:8080/api/providers/gmusic/auth/redirect";
 
 #[derive(Clone, Deserialize, Debug)]
 pub struct GooglePlayMusicProvider {
@@ -50,12 +55,40 @@ impl GooglePlayMusicProvider {
 
 impl provider::ProviderInstance for GooglePlayMusicProvider {
     fn setup(&mut self) -> Result<(), Error> {
-        let api = GoogleMusicApi::new(self.client_id.clone(), self.client_secret.clone())?;
-        api.load_token()
-            .or_else(|_| api.login(stdio_login).and_then(|_| api.store_token()))?;
+        let api = GoogleMusicApi::new(self.client_id.clone(), self.client_secret.clone(), Some(GMUSIC_REDIRECT_URI))?;
+        api.load_token();
         self.client = Some(api);
 
         Ok(())
+    }
+
+    fn auth_state(&self) -> provider::AuthState {
+        let client = self.client.as_ref().expect("client isn't setup yet");
+        if client.has_token() {
+            provider::AuthState::Authenticated(None)
+        }else {
+            let (url, state) = client.get_oauth_url();
+            let mut state_cache = STATE_CACHE.lock().unwrap();
+            *state_cache = Some(state);
+            provider::AuthState::RequiresOAuth(url)
+        }
+    }
+
+    fn authenticate(&mut self, authenticate: provider::Authentication) -> Result<(), Error> {
+        let client = self.client.as_mut().expect("client isn't setup yet");
+        use provider::Authentication::*;
+
+        match authenticate {
+            Token(token) => {
+                let mut state_cache = STATE_CACHE.lock().unwrap();
+                let state = state_cache.take().ok_or_else(|| format_err!("Missing state"))?;
+                debug!("State: {}", state);
+                client.request_token(token, state)?;
+                client.store_token()?;
+                Ok(())
+            },
+            _ => Err(format_err!("Invalid authentication method"))
+        }
     }
 
     fn title(&self) -> &'static str {

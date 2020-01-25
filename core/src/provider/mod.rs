@@ -33,6 +33,7 @@ pub struct SyncResult {
 pub enum Provider {
     Pocketcasts,
     Soundcloud,
+    #[serde(rename = "gmusic")]
     GooglePlayMusic,
     Spotify,
     #[serde(rename = "local")]
@@ -44,6 +45,8 @@ pub trait ProviderInstance: Debug {
     fn title(&self) -> &'static str;
     fn uri_scheme(&self) -> &'static str;
     fn provider(&self) -> Provider;
+    fn auth_state(&self) -> AuthState;
+    fn authenticate(&mut self, auth: Authentication) -> Result<(), Error>;
     fn sync(&self, library: SharedLibrary) -> Result<SyncResult, Error>;
     fn root(&self) -> ProviderFolder;
     fn navigate(&self, path: Vec<String>) -> Result<ProviderFolder, Error>;
@@ -54,6 +57,38 @@ pub trait ProviderInstance: Debug {
     fn stream_url(&self, track: &Track) -> Result<String, Error>;
     fn cover_art(&self, track: &Track) -> Result<Option<CoverArt>, Error>;
     fn resolve_share_url(&self, url: Url) -> Result<Option<InternalUri>, Error>;
+}
+
+#[derive(Debug, Clone)]
+pub enum AuthState {
+    NoAuthentication,
+    RequiresOAuth(String),
+    RequiresPassword,
+    Authenticated(Option<User>)
+}
+
+impl AuthState {
+    pub fn is_authenticated(&self) -> bool {
+        match self {
+            AuthState::NoAuthentication => true,
+            AuthState::Authenticated(_) => true,
+            _ => false
+        }
+    }
+}
+
+#[derive(Debug, Clone, Default)]
+pub struct User {
+    pub display_name: Option<String>,
+    pub email: Option<String>
+}
+
+// TODO: what about refresh and auth token?
+#[derive(Debug, Clone)]
+pub enum Authentication {
+    Token(String),
+    TokenWithState(String, String),
+    Password(String, String)
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
