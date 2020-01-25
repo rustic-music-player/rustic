@@ -195,19 +195,8 @@ impl provider::ProviderInstance for GooglePlayMusicProvider {
             .ok_or_else(|| format_err!("missing track id"))?;
         if let MetaValue::String(ref id) = id {
             let client = self.get_client()?;
-            // HACK: sometimes gmusic returns 403, not sure why but retrying fixes it most of the time
-            let mut url = None;
-            for _ in 0..2 {
-                match client.get_stream_url(&id, &self.device_id) {
-                    Ok(stream_url) => {
-                        url = Some(stream_url);
-                        break;
-                    }
-                    Err(err) => error!("Stream Url {:?}", err),
-                }
-            }
-            url.ok_or_else(|| format_err!("Could not get stream url"))
-                .map(|url| url.to_string())
+            let url = client.get_stream_url(&id, &self.device_id)?;
+            Ok(url.to_string())
         } else {
             unreachable!()
         }
