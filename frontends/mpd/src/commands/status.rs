@@ -51,14 +51,14 @@ impl MpdCommand<StatusResponse> for StatusCommand {
             .get_default_player()
             .ok_or(format_err!("Missing default player"))?;
         Ok(StatusResponse {
-            volume: (player.volume() * 100f32) as u32,
+            volume: (player.backend.volume() * 100f32) as u32,
             repeat: false,
             random: false,
             single: false,
             consume: false,
             playlist: 0,
             playlistlength: player.get_queue().len(),
-            state: player.state(),
+            state: player.backend.state(),
             xfade: 0,
         })
     }

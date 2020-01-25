@@ -16,6 +16,6 @@ impl MpdCommand<()> for NextCommand {
         let player = app
             .get_default_player()
             .ok_or(format_err!("Missing default player"))?;
-        player.next().map(|_| ())
+        player.queue.next().map(|_| ())
     }
 }

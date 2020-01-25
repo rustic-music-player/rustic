@@ -1,68 +1,99 @@
-use std::any::Any;
 use std::fmt::Debug;
-use std::time::Duration;
+use std::sync::Arc;
+use std::thread;
 
+use crossbeam_channel::{select, Receiver};
 use failure::Error;
 
-use crate::channel::Receiver;
 use crate::library::Track;
+pub use crate::player::backend::PlayerBackend;
 
+pub use self::builder::PlayerBuilder;
 pub use self::event::PlayerEvent;
-pub use self::memory_queue::MemoryQueue;
+pub use self::queue::PlayerQueue;
 pub use self::state::PlayerState;
 
+pub mod backend;
+pub mod builder;
 pub mod event;
-mod memory_queue;
+pub mod queue;
 pub mod state;
 
-pub trait PlayerBackend: Send + Sync + Debug {
-    /// Put a single track at the end of the current queue
-    fn queue_single(&self, track: &Track);
+#[derive(Debug)]
+pub struct Player {
+    pub backend: Box<dyn PlayerBackend>,
+    pub queue: Box<dyn PlayerQueue>,
+    event_rx: Receiver<PlayerEvent>,
+}
 
-    /// Put multiple tracks at the end of the current queue
-    fn queue_multiple(&self, tracks: &[Track]);
+impl Player {
+    pub fn new(
+        backend: Box<dyn PlayerBackend>,
+        queue: Box<dyn PlayerQueue>,
+        player_rx: Receiver<PlayerCommand>,
+        queue_rx: Receiver<QueueCommand>,
+        event_rx: Receiver<PlayerEvent>,
+    ) -> Arc<Self> {
+        let player = Player {
+            backend,
+            queue,
+            event_rx,
+        };
+        let player = Arc::new(player);
 
-    /// Queue single track behind the current
-    fn queue_next(&self, track: &Track);
+        let player_2 = Arc::clone(&player);
+        thread::spawn(move || {
+            let player = player_2;
+            loop {
+                select! {
+                    recv(player_rx) -> msg => {
+                        msg.map_err(|err| err.into()).and_then(|msg| player.handle_player_msg(msg));
+                    },
+                    recv(queue_rx) -> msg => {
+                        msg.map_err(|err| err.into()).and_then(|msg| player.handle_queue_msg(msg));
+                    }
+                }
+            }
+        });
 
-    /// Returns all tracks which are queued up right now
-    fn get_queue(&self) -> Vec<Track>;
+        player
+    }
 
-    /// Clear the current queue
-    /// Does not stop playback
-    fn clear_queue(&self);
+    pub fn clear_queue(&self) {
+        self.queue.clear();
+    }
 
-    /// Returns the currently playing track or None when nothing is playing
-    fn current(&self) -> Option<Track>;
+    pub fn get_queue(&self) -> Vec<Track> {
+        self.queue.get_queue()
+    }
 
-    /// Play the previous track in the current queue
-    fn prev(&self) -> Result<Option<()>, Error>;
+    fn handle_player_msg(&self, msg: PlayerCommand) -> Result<(), Error> {
+        match msg {
+            PlayerCommand::Play(track) => self.backend.set_track(&track)?,
+            PlayerCommand::Stop => self.backend.set_state(PlayerState::Stop)?,
+        };
+        Ok(())
+    }
 
-    /// Play the next track in the current queue
-    fn next(&self) -> Result<Option<()>, Error>;
+    fn handle_queue_msg(&self, msg: QueueCommand) -> Result<(), Error> {
+        match msg {
+            QueueCommand::Next => self.queue.next()?,
+        };
+        Ok(())
+    }
 
-    /// Set the player state
-    fn set_state(&self, state: PlayerState) -> Result<(), Error>;
+    pub fn observe(&self) -> Receiver<PlayerEvent> {
+        self.event_rx.clone()
+    }
+}
 
-    /// Get the player state
-    fn state(&self) -> PlayerState;
+#[derive(Debug, Clone)]
+pub enum PlayerCommand {
+    Play(Track),
+    Stop,
+}
 
-    /// Set the volume of this player (from 0 to 1)
-    fn set_volume(&self, volume: f32) -> Result<(), Error>;
-
-    /// Get the volume of this player (from 0 to 1)
-    fn volume(&self) -> f32;
-
-    /// Set time from the end of the current track when the next track should start playing
-    fn set_blend_time(&self, duration: Duration) -> Result<(), Error>;
-
-    /// Get time from the end of the current track when the next track should start playing
-    fn blend_time(&self) -> Duration;
-
-    /// Seek to a point in the current track
-    fn seek(&self, duration: Duration) -> Result<(), Error>;
-
-    fn observe(&self) -> Receiver<PlayerEvent>;
-
-    fn as_any(&self) -> &dyn Any;
+#[derive(Debug, Clone)]
+pub enum QueueCommand {
+    Next,
 }

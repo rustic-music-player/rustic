@@ -16,6 +16,6 @@ impl MpdCommand<()> for PauseCommand {
         let player = app
             .get_default_player()
             .ok_or(format_err!("Missing default player"))?;
-        player.set_state(PlayerState::Pause)
+        player.backend.set_state(PlayerState::Pause)
     }
 }

@@ -20,6 +20,6 @@ impl MpdCommand<()> for SetVolumeCommand {
             .ok_or(format_err!("Missing default player"))?;
         let volume = (self.volume as f32) / 100f32;
 
-        player.set_volume(volume)
+        player.backend.set_volume(volume)
     }
 }

@@ -1,7 +1,6 @@
 use std::collections::HashMap;
 use std::sync::{Arc, Condvar, Mutex};
 
-use crossbeam_channel as channel;
 use failure::format_err;
 use log::{debug, info, trace};
 use url::Url;
@@ -11,6 +10,7 @@ pub use crate::library::{
     Album, Artist, Library, LibraryQueryJoins, MultiQuery, Playlist, QueryJoins, SearchResults,
     SharedLibrary, SingleQuery, SingleQueryIdentifier, Track,
 };
+use crate::player::Player;
 pub use crate::player::{PlayerBackend, PlayerEvent, PlayerState};
 use crate::provider::{CoverArt, InternalUri, SharedProvider};
 pub use crate::provider::{Explorer, Provider};
@@ -23,7 +23,7 @@ pub mod provider;
 pub mod sync;
 
 pub struct Rustic {
-    player: Arc<Mutex<HashMap<String, Arc<Box<dyn PlayerBackend>>>>>,
+    player: Arc<Mutex<HashMap<String, Arc<Player>>>>,
     pub library: library::SharedLibrary,
     pub providers: provider::SharedProviders,
     pub cache: cache::SharedCache,
@@ -50,18 +50,18 @@ impl Rustic {
         }))
     }
 
-    pub fn add_player(&self, id: String, backend: Arc<Box<dyn PlayerBackend>>) {
-        debug!("Adding player {}: {:?}", id, backend);
-        let mut player = self.player.lock().unwrap();
-        player.insert(id, backend);
+    pub fn add_player(&self, id: String, player: Arc<Player>) {
+        debug!("Adding player {}: {:?}", id, player);
+        let mut players = self.player.lock().unwrap();
+        players.insert(id, player);
     }
 
-    pub fn get_player(&self, id: String) -> Option<Arc<Box<dyn PlayerBackend>>> {
+    pub fn get_player(&self, id: String) -> Option<Arc<Player>> {
         let player = self.player.lock().unwrap();
         player.get(&id).map(Arc::clone)
     }
 
-    pub fn get_default_player(&self) -> Option<Arc<Box<dyn PlayerBackend>>> {
+    pub fn get_default_player(&self) -> Option<Arc<Player>> {
         let default_player = self.default_player.lock().unwrap();
         default_player.as_ref().and_then(|id| {
             let player = self.player.lock().unwrap();
@@ -79,7 +79,7 @@ impl Rustic {
         *default_player = Some(id);
     }
 
-    pub fn get_players(&self) -> Vec<(String, Arc<Box<dyn PlayerBackend>>)> {
+    pub fn get_players(&self) -> Vec<(String, Arc<Player>)> {
         let players = self.player.lock().unwrap();
         players
             .iter()

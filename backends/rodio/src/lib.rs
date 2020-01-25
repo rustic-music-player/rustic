@@ -5,13 +5,14 @@ use std::sync::{Arc, Mutex};
 use std::thread;
 use std::time::Duration;
 
-use crossbeam_channel::{Receiver, Sender};
-use failure::{bail, Error, format_err};
-use log::{debug, error, trace};
+use crossbeam_channel::Sender;
+use failure::{bail, format_err, Error};
+use log::{debug, trace};
 use pinboard::NonEmptyPinboard;
 use url::Url;
 
-use rustic_core::{player::MemoryQueue, PlayerBackend, PlayerEvent, PlayerState, Rustic, Track};
+use rustic_core::player::{PlayerBackend, PlayerBuilder, QueueCommand};
+use rustic_core::{PlayerEvent, PlayerState, Rustic, Track};
 
 use crate::file::RodioFile;
 
@@ -19,13 +20,11 @@ mod file;
 
 pub struct RodioBackend {
     core: Arc<Rustic>,
-    queue: MemoryQueue,
     state: NonEmptyPinboard<PlayerState>,
     blend_time: Duration,
     current_sink: Arc<Mutex<Option<rodio::Sink>>>,
     device: rodio::Device,
-    tx: Sender<PlayerEvent>,
-    rx: Receiver<PlayerEvent>,
+    player_events: Sender<PlayerEvent>,
     next_sender: Sender<()>,
 }
 
@@ -33,41 +32,38 @@ impl std::fmt::Debug for RodioBackend {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> Result<(), std::fmt::Error> {
         write!(
             f,
-            "RodioBackend {{ queue: {:?}, state: {:?}, blend_time: {:?} }}",
-            self.queue, self.state, self.blend_time
+            "RodioBackend {{ state: {:?}, blend_time: {:?} }}",
+            self.state, self.blend_time
         )
     }
 }
 
 impl RodioBackend {
-    pub fn new(core: Arc<Rustic>) -> Result<Arc<Box<dyn PlayerBackend>>, Error> {
-        let device = rodio::default_output_device().ok_or_else(|| format_err!("Unable to open output device"))?;
-        let (tx, rx) = crossbeam_channel::unbounded();
+    pub fn new(
+        core: Arc<Rustic>,
+        queue_tx: Sender<QueueCommand>,
+        player_events: Sender<PlayerEvent>,
+    ) -> Result<Box<dyn PlayerBackend>, Error> {
+        let device = rodio::default_output_device()
+            .ok_or_else(|| format_err!("Unable to open output device"))?;
         let (next_sender, next_receiver) = crossbeam_channel::unbounded();
         let backend = RodioBackend {
             core,
-            queue: MemoryQueue::new(),
             state: NonEmptyPinboard::new(PlayerState::Stop),
             blend_time: Duration::default(),
             current_sink: Arc::new(Mutex::new(None)),
             device,
-            tx,
-            rx,
+            player_events,
             next_sender,
         };
-        let backend: Arc<Box<dyn PlayerBackend>> = Arc::new(Box::new(backend));
 
-        let receiver_backend = Arc::clone(&backend);
         thread::spawn(move || {
-            let backend = receiver_backend;
             for _ in next_receiver {
-                if let Err(err) = backend.next() {
-                    error!("Failed to select next track {}", err)
-                }
+                queue_tx.send(QueueCommand::Next);
             }
         });
 
-        Ok(backend)
+        Ok(Box::new(backend))
     }
 
     fn decode_stream(
@@ -100,27 +96,7 @@ impl RodioBackend {
             return;
         }
         self.state.set(state);
-        self.tx.send(PlayerEvent::StateChanged(state));
-    }
-
-    fn set_track(&self, track: &Track) -> Result<(), Error> {
-        debug!("Selecting {:?}", track);
-        {
-            self.tx.send(PlayerEvent::TrackChanged(track.clone()))?;
-            let source = self.decode_stream(track, self.core.stream_url(track)?)?;
-            let sink = rodio::Sink::new(&self.device);
-            sink.append(source);
-            let mut current_sink = self.current_sink.lock().unwrap();
-            if let Some(prev_sink) = current_sink.take() {
-                trace!("Removing previous sink");
-                prev_sink.stop();
-            }
-            *current_sink = Some(sink);
-        } // Drop the lock
-        if self.state.read() == PlayerState::Play {
-            self.play();
-        }
-        Ok(())
+        self.player_events.send(PlayerEvent::StateChanged(state));
     }
 
     fn play(&self) {
@@ -143,73 +119,39 @@ impl RodioBackend {
             self.write_state(PlayerState::Stop);
         }
     }
-
-    fn queue_changed(&self) {
-        self.tx
-            .send(PlayerEvent::QueueUpdated(self.queue.get_queue()));
-    }
+    //
+    //    fn queue_changed(&self) {
+    //        self.tx
+    //            .send(PlayerEvent::QueueUpdated(self.queue.get_queue()));
+    //    }
 }
 
 impl PlayerBackend for RodioBackend {
-    fn queue_single(&self, track: &Track) {
-        self.queue.queue_single(track);
-        self.queue_changed();
-    }
-
-    fn queue_multiple(&self, tracks: &[Track]) {
-        self.queue.queue_multiple(tracks);
-        self.queue_changed();
-    }
-
-    fn queue_next(&self, track: &Track) {
-        self.queue.queue_next(track);
-        self.queue_changed();
-    }
-
-    fn get_queue(&self) -> Vec<Track> {
-        self.queue.get_queue()
-    }
-
-    fn clear_queue(&self) {
-        self.queue.clear();
-        self.set_state(PlayerState::Stop);
-        self.queue_changed();
-    }
-
-    fn current(&self) -> Option<Track> {
-        self.queue.get_current_track()
-    }
-
-    fn prev(&self) -> Result<Option<()>, Error> {
-        if let Some(track) = self.queue.prev() {
-            self.set_track(&track)?;
-            Ok(Some(()))
-        } else {
-            self.stop();
-            Ok(None)
+    fn set_track(&self, track: &Track) -> Result<(), Error> {
+        debug!("Selecting {:?}", track);
+        {
+            self.player_events
+                .send(PlayerEvent::TrackChanged(track.clone()))?;
+            let source = self.decode_stream(track, self.core.stream_url(track)?)?;
+            let sink = rodio::Sink::new(&self.device);
+            sink.append(source);
+            let mut current_sink = self.current_sink.lock().unwrap();
+            if let Some(prev_sink) = current_sink.take() {
+                trace!("Removing previous sink");
+                prev_sink.stop();
+            }
+            *current_sink = Some(sink);
+        } // Drop the lock
+        if self.state.read() == PlayerState::Play {
+            self.play();
         }
-    }
-
-    fn next(&self) -> Result<Option<()>, Error> {
-        if let Some(track) = self.queue.next() {
-            self.set_track(&track)?;
-            Ok(Some(()))
-        } else {
-            self.stop();
-            Ok(None)
-        }
+        Ok(())
     }
 
     fn set_state(&self, state: PlayerState) -> Result<(), Error> {
         match state {
             PlayerState::Play => {
-                let is_paused = self.state.read() == PlayerState::Pause;
-                if is_paused {
-                    self.play();
-                } else if let Some(track) = self.current() {
-                    self.set_track(&track)?;
-                    self.play();
-                }
+                self.play();
             }
             PlayerState::Pause => self.pause(),
             PlayerState::Stop => self.stop(),
@@ -248,11 +190,17 @@ impl PlayerBackend for RodioBackend {
         unimplemented!()
     }
 
-    fn observe(&self) -> Receiver<PlayerEvent> {
-        self.rx.clone()
-    }
-
     fn as_any(&self) -> &dyn Any {
         self
+    }
+}
+
+pub trait RodioPlayerBuilder {
+    fn with_rodio(&mut self) -> Result<&mut Self, Error>;
+}
+
+impl RodioPlayerBuilder for PlayerBuilder {
+    fn with_rodio(&mut self) -> Result<&mut Self, Error> {
+        self.with_player(|core, queue_tx, _, event_tx| RodioBackend::new(core, queue_tx, event_tx))
     }
 }

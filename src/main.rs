@@ -52,8 +52,15 @@ use log::LevelFilter;
 use structopt::StructOpt;
 
 use config::*;
+#[cfg(feature = "gstreamer")]
+use gst_backend::GstreamerPlayerBuilder;
 use memory_store::MemoryLibrary;
+#[cfg(feature = "rodio")]
+use rodio_backend::RodioPlayerBuilder;
+#[cfg(feature = "google-cast")]
+use google_cast_backend::GoogleCastBuilder;
 use rustic::extension::HostedExtension;
+use rustic::player::{queue::MemoryQueueBuilder, PlayerBuilder};
 #[cfg(feature = "sled-store")]
 use sled_store::SledLibrary;
 #[cfg(feature = "sqlite-store")]
@@ -91,29 +98,36 @@ fn main() -> Result<(), Error> {
 
     setup_interrupt(&app)?;
 
-    for player in config.players.iter() {
-        match player.backend_type {
+    for player_config in config.players.iter() {
+        match player_config.backend_type {
             #[cfg(feature = "gstreamer")]
             PlayerBackend::GStreamer => {
-                let backend = gst_backend::GstBackend::new(Arc::clone(&app))?;
-                app.add_player(player.name.clone(), backend);
-                if player.default {
-                    app.set_default_player(player.name.clone());
+                let player = PlayerBuilder::new(Arc::clone(&app))
+                    .with_memory_queue()
+                    .with_gstreamer()?
+                    .build();
+                app.add_player(player_config.name.clone(), player);
+                if player_config.default {
+                    app.set_default_player(player_config.name.clone());
                 }
             }
             #[cfg(feature = "google-cast")]
-            PlayerBackend::GoogleCast => {
-                let discovery = google_cast_backend::GoogleCastBackend::start_discovery(
-                    Arc::clone(&app),
-                    Arc::clone(&keep_running),
-                );
+            PlayerBackend::GoogleCast { ip } => {
+                let player = PlayerBuilder::new(Arc::clone(&app))
+                    .with_memory_queue()
+                    .with_google_cast(ip)?
+                    .build();
+                app.add_player(player_config.name.clone(), player);
             }
             #[cfg(feature = "rodio")]
             PlayerBackend::Rodio => {
-                let backend = rodio_backend::RodioBackend::new(Arc::clone(&app))?;
-                app.add_player(player.name.clone(), backend);
-                if player.default {
-                    app.set_default_player(player.name.clone());
+                let player = PlayerBuilder::new(Arc::clone(&app))
+                    .with_memory_queue()
+                    .with_rodio()?
+                    .build();
+                app.add_player(player_config.name.clone(), player);
+                if player_config.default {
+                    app.set_default_player(player_config.name.clone());
                 }
             }
         }

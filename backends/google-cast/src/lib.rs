@@ -12,7 +12,8 @@ use rust_cast::{
     CastDevice,
 };
 
-use rustic_core::{PlayerEvent, PlayerState, Track};
+use rustic_core::Track;
+use rustic_core::player::{PlayerEvent, PlayerState, PlayerBuilder, queue::MemoryQueueBuilder};
 
 use crate::discovery::DiscoverMessage;
 
@@ -24,29 +25,29 @@ enum InternalCommand {
 }
 
 pub struct GoogleCastBackend {
-    tx: Sender<PlayerEvent>,
-    rx: Receiver<PlayerEvent>,
+    player_events: Sender<PlayerEvent>,
     core: Arc<rustic_core::Rustic>,
-    queue: NonEmptyPinboard<Vec<Track>>,
-    current_index: atomic::AtomicUsize,
-    current_track: NonEmptyPinboard<Option<Track>>,
     handle: thread::JoinHandle<Result<(), failure::Error>>,
     internal_sender: crossbeam_channel::Sender<InternalCommand>,
 }
 
 impl GoogleCastBackend {
-    pub fn start_discovery(core: Arc<rustic_core::Rustic>, running: Arc<(Mutex<bool>, Condvar)>) {
+    pub fn start_discovery(core: Arc<rustic_core::Rustic>) {
         let (tx, rx) = crossbeam_channel::unbounded();
+        let running = core.running();
         thread::spawn(move || {
-            discovery::discover(tx, Arc::clone(&running));
+            discovery::discover(tx, running);
         });
         let core = Arc::clone(&core);
         thread::spawn(move || {
             for msg in rx {
                 match msg {
                     DiscoverMessage::AddBackend(target) => {
-                        let player =
-                            GoogleCastBackend::new(Arc::clone(&core), target.addr).unwrap();
+                        let player = PlayerBuilder::new(Arc::clone(&core))
+                            .with_memory_queue()
+                            .with_google_cast(target.addr)
+                            .unwrap()
+                            .build();
                         core.add_player(target.name, player)
                     }
                 }
@@ -56,10 +57,10 @@ impl GoogleCastBackend {
 
     pub fn new(
         core: Arc<rustic_core::Rustic>,
+        player_events: Sender<PlayerEvent>,
         ip: IpAddr,
-    ) -> Result<Arc<Box<dyn rustic_core::PlayerBackend>>, Error> {
+    ) -> Result<Box<dyn rustic_core::PlayerBackend>, Error> {
         let (internal_sender, internal_receiver) = crossbeam_channel::unbounded();
-        let (tx, rx) = crossbeam_channel::unbounded();
         let handle = {
             let core = Arc::clone(&core);
             thread::spawn(move || {
@@ -104,56 +105,17 @@ impl GoogleCastBackend {
             })
         };
 
-        Ok(Arc::new(Box::new(GoogleCastBackend {
-            tx,
-            rx,
+        Ok(Box::new(GoogleCastBackend {
+            player_events,
             core,
-            queue: NonEmptyPinboard::new(vec![]),
-            current_index: atomic::AtomicUsize::new(0),
-            current_track: NonEmptyPinboard::new(None),
             handle,
             internal_sender,
-        })))
+        }))
     }
 }
 
 impl rustic_core::PlayerBackend for GoogleCastBackend {
-    fn queue_single(&self, track: &Track) {
-        let mut queue = self.queue.read();
-        queue.push(track.clone());
-        self.queue.set(queue);
-    }
-
-    fn queue_multiple(&self, tracks: &[Track]) {
-        let mut queue = self.queue.read();
-        queue.append(&mut tracks.to_vec());
-        self.queue.set(queue);
-    }
-
-    fn queue_next(&self, track: &Track) {
-        let mut queue = self.queue.read();
-        let current_index = self.current_index.load(atomic::Ordering::Relaxed);
-        queue.insert(current_index + 1, track.clone());
-        self.queue.set(queue);
-    }
-
-    fn get_queue(&self) -> Vec<Track> {
-        self.queue.read()
-    }
-
-    fn clear_queue(&self) {
-        self.queue.set(vec![]);
-    }
-
-    fn current(&self) -> Option<Track> {
-        self.current_track.read()
-    }
-
-    fn prev(&self) -> Result<Option<()>, Error> {
-        unimplemented!()
-    }
-
-    fn next(&self) -> Result<Option<()>, Error> {
+    fn set_track(&self, track: &Track) -> Result<(), Error> {
         unimplemented!()
     }
 
@@ -185,10 +147,6 @@ impl rustic_core::PlayerBackend for GoogleCastBackend {
         unimplemented!()
     }
 
-    fn observe(&self) -> Receiver<PlayerEvent> {
-        self.rx.clone()
-    }
-
     fn as_any(&self) -> &dyn Any {
         self
     }
@@ -197,5 +155,17 @@ impl rustic_core::PlayerBackend for GoogleCastBackend {
 impl std::fmt::Debug for GoogleCastBackend {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         write!(f, "GoogleCastBackend {{}}")
+    }
+}
+
+pub trait GoogleCastBuilder {
+    fn with_google_cast(&mut self, ip: IpAddr) -> Result<&mut Self, Error>;
+}
+
+impl GoogleCastBuilder for PlayerBuilder {
+    fn with_google_cast(&mut self, ip: IpAddr) -> Result<&mut Self, Error> {
+        self.with_player(|core, _, _, events_tx| {
+            GoogleCastBackend::new(core, events_tx, ip)
+        })
     }
 }

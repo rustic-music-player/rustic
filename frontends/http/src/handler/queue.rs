@@ -27,10 +27,10 @@ pub fn queue_track(cursor: &str, rustic: &Arc<Rustic>) -> Result<Option<()>, Err
             let player = rustic
                 .get_default_player()
                 .ok_or_else(|| format_err!("Missing default player"))?;
-            let play = player.get_queue().is_empty() && player.state() == PlayerState::Stop;
-            player.queue_single(&track);
+            let play = player.get_queue().is_empty() && player.backend.state() == PlayerState::Stop;
+            player.queue.queue_single(&track);
             if play {
-                player.set_state(PlayerState::Play)?;
+                player.backend.set_state(PlayerState::Play)?;
             }
 
             Ok(Some(()))
@@ -48,10 +48,10 @@ pub fn queue_album(cursor: &str, rustic: &Arc<Rustic>) -> Result<Option<()>, Err
             let player = rustic
                 .get_default_player()
                 .ok_or_else(|| format_err!("Missing default player"))?;
-            let play = player.get_queue().is_empty() && player.state() == PlayerState::Stop;
-            player.queue_multiple(&album.tracks);
+            let play = player.get_queue().is_empty() && player.backend.state() == PlayerState::Stop;
+            player.queue.queue_multiple(&album.tracks);
             if play {
-                player.set_state(PlayerState::Play)?;
+                player.backend.set_state(PlayerState::Play)?;
             }
 
             Ok(Some(()))
@@ -69,10 +69,10 @@ pub fn queue_playlist(cursor: &str, rustic: &Arc<Rustic>) -> Result<Option<()>, 
             let player = rustic
                 .get_default_player()
                 .ok_or_else(|| format_err!("Missing default player"))?;
-            let play = player.get_queue().is_empty() && player.state() == PlayerState::Stop;
-            player.queue_multiple(&playlist.tracks);
+            let play = player.get_queue().is_empty() && player.backend.state() == PlayerState::Stop;
+            player.queue.queue_multiple(&playlist.tracks);
             if play {
-                player.set_state(PlayerState::Play)?;
+                player.backend.set_state(PlayerState::Play)?;
             }
 
             Ok(Some(()))

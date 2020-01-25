@@ -3,6 +3,7 @@ use std::io::prelude::*;
 use std::path::Path;
 
 use failure::Error;
+use std::net::IpAddr;
 
 #[derive(Deserialize, Clone)]
 pub struct Config {
@@ -76,7 +77,7 @@ pub struct PlayerBackendConfig {
     pub name: String,
     #[serde(default)]
     pub default: bool,
-    #[serde(rename = "type")]
+    #[serde(rename = "type", flatten)]
     pub backend_type: PlayerBackend,
 }
 
@@ -88,7 +89,9 @@ pub enum PlayerBackend {
     #[cfg(feature = "rodio")]
     Rodio,
     #[cfg(feature = "google-cast")]
-    GoogleCast,
+    GoogleCast {
+        ip: IpAddr
+    },
 }
 
 #[derive(Deserialize, Clone, Serialize, Default)]
