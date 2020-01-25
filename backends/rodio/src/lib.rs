@@ -6,13 +6,13 @@ use std::thread;
 use std::time::Duration;
 
 use crossbeam_channel::Sender;
-use failure::{bail, format_err, Error};
+use failure::{bail, Error, format_err};
 use log::{debug, trace};
 use pinboard::NonEmptyPinboard;
 use url::Url;
 
-use rustic_core::player::{PlayerBackend, PlayerBuilder, QueueCommand};
 use rustic_core::{PlayerEvent, PlayerState, Rustic, Track};
+use rustic_core::player::{PlayerBackend, PlayerBuilder, QueueCommand};
 
 use crate::file::RodioFile;
 
@@ -100,9 +100,9 @@ impl RodioBackend {
     }
 
     fn play(&self) {
+        self.write_state(PlayerState::Play);
         if let Some(sink) = self.current_sink.lock().unwrap().deref_mut() {
             sink.play();
-            self.write_state(PlayerState::Play);
         }
     }
 
@@ -114,16 +114,11 @@ impl RodioBackend {
     }
 
     fn stop(&self) {
+        self.write_state(PlayerState::Stop);
         if let Some(sink) = self.current_sink.lock().unwrap().deref_mut() {
             sink.stop();
-            self.write_state(PlayerState::Stop);
         }
     }
-    //
-    //    fn queue_changed(&self) {
-    //        self.tx
-    //            .send(PlayerEvent::QueueUpdated(self.queue.get_queue()));
-    //    }
 }
 
 impl PlayerBackend for RodioBackend {
@@ -135,6 +130,9 @@ impl PlayerBackend for RodioBackend {
             let source = self.decode_stream(track, self.core.stream_url(track)?)?;
             let sink = rodio::Sink::new(&self.device);
             sink.append(source);
+            if self.state() != PlayerState::Play {
+                sink.stop();
+            }
             let mut current_sink = self.current_sink.lock().unwrap();
             if let Some(prev_sink) = current_sink.take() {
                 trace!("Removing previous sink");
@@ -150,9 +148,7 @@ impl PlayerBackend for RodioBackend {
 
     fn set_state(&self, state: PlayerState) -> Result<(), Error> {
         match state {
-            PlayerState::Play => {
-                self.play();
-            }
+            PlayerState::Play => self.play(),
             PlayerState::Pause => self.pause(),
             PlayerState::Stop => self.stop(),
         }
