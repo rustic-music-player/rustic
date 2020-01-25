@@ -55,7 +55,11 @@ impl GooglePlayMusicProvider {
 
 impl provider::ProviderInstance for GooglePlayMusicProvider {
     fn setup(&mut self) -> Result<(), Error> {
-        let api = GoogleMusicApi::new(self.client_id.clone(), self.client_secret.clone(), Some(GMUSIC_REDIRECT_URI))?;
+        let api = GoogleMusicApi::new(
+            self.client_id.clone(),
+            self.client_secret.clone(),
+            Some(GMUSIC_REDIRECT_URI),
+        )?;
         api.load_token();
         self.client = Some(api);
 
@@ -66,7 +70,7 @@ impl provider::ProviderInstance for GooglePlayMusicProvider {
         let client = self.client.as_ref().expect("client isn't setup yet");
         if client.has_token() {
             provider::AuthState::Authenticated(None)
-        }else {
+        } else {
             let (url, state) = client.get_oauth_url();
             let mut state_cache = STATE_CACHE.lock().unwrap();
             *state_cache = Some(state);
@@ -81,13 +85,15 @@ impl provider::ProviderInstance for GooglePlayMusicProvider {
         match authenticate {
             Token(token) => {
                 let mut state_cache = STATE_CACHE.lock().unwrap();
-                let state = state_cache.take().ok_or_else(|| format_err!("Missing state"))?;
+                let state = state_cache
+                    .take()
+                    .ok_or_else(|| format_err!("Missing state"))?;
                 debug!("State: {}", state);
                 client.request_token(token, state)?;
                 client.store_token()?;
                 Ok(())
-            },
-            _ => Err(format_err!("Invalid authentication method"))
+            }
+            _ => Err(format_err!("Invalid authentication method")),
         }
     }
 

@@ -3,7 +3,7 @@ use std::sync::Arc;
 use failure::Error;
 
 use cursor::from_cursor;
-use rustic_core::{PlayerState, Playlist, Rustic, SingleQuery, Track, Album};
+use rustic_core::{Album, PlayerState, Playlist, Rustic, SingleQuery, Track};
 use viewmodels::TrackModel;
 
 pub fn fetch(rustic: &Arc<Rustic>) -> Result<Vec<TrackModel>, Error> {

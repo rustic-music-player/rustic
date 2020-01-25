@@ -2,17 +2,20 @@ use std::sync::Arc;
 
 use failure::err_msg;
 
+use rustic_core::provider::Authentication;
 use rustic_core::{Provider, Rustic};
 use viewmodels::*;
-use rustic_core::provider::Authentication;
 
 pub fn get_providers(rustic: &Arc<Rustic>) -> Vec<ProviderModel> {
     rustic
         .providers
         .iter()
-        .filter(|provider| provider.read()
-            .map(|provider| provider.auth_state().is_authenticated())
-            .unwrap_or(false))
+        .filter(|provider| {
+            provider
+                .read()
+                .map(|provider| provider.auth_state().is_authenticated())
+                .unwrap_or(false)
+        })
         .map(|provider| {
             let provider = provider.read().unwrap();
             let title = provider.title().to_owned();
@@ -48,7 +51,9 @@ pub fn navigate(
 }
 
 pub fn get_available_providers(rustic: &Arc<Rustic>) -> Vec<AvailableProviderModel> {
-    rustic.providers.iter()
+    rustic
+        .providers
+        .iter()
         .map(|provider| {
             let provider = provider.read().expect("can't read provider");
             let provider_type = provider.provider();
@@ -58,14 +63,19 @@ pub fn get_available_providers(rustic: &Arc<Rustic>) -> Vec<AvailableProviderMod
                 provider: provider_type,
                 title: provider.title().to_owned(),
                 enabled: true,
-                auth_state: auth_state.into()
+                auth_state: auth_state.into(),
             }
         })
         .collect()
 }
 
-pub fn authenticate(rustic: &Arc<Rustic>, provider: Provider, token: &str) -> Result<(), failure::Error> {
-    let provider = rustic.providers
+pub fn authenticate(
+    rustic: &Arc<Rustic>,
+    provider: Provider,
+    token: &str,
+) -> Result<(), failure::Error> {
+    let provider = rustic
+        .providers
         .iter()
         .find(|p| p.read().unwrap().provider() == provider);
 

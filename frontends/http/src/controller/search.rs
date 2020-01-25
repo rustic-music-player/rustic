@@ -9,7 +9,7 @@ use serde_qs::actix::QsQuery;
 #[derive(Deserialize)]
 pub struct SearchQuery {
     query: String,
-    providers: Option<Vec<Provider>>
+    providers: Option<Vec<Provider>>,
 }
 
 #[derive(Deserialize)]

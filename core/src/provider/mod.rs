@@ -64,7 +64,7 @@ pub enum AuthState {
     NoAuthentication,
     RequiresOAuth(String),
     RequiresPassword,
-    Authenticated(Option<User>)
+    Authenticated(Option<User>),
 }
 
 impl AuthState {
@@ -72,7 +72,7 @@ impl AuthState {
         match self {
             AuthState::NoAuthentication => true,
             AuthState::Authenticated(_) => true,
-            _ => false
+            _ => false,
         }
     }
 }
@@ -80,7 +80,7 @@ impl AuthState {
 #[derive(Debug, Clone, Default)]
 pub struct User {
     pub display_name: Option<String>,
-    pub email: Option<String>
+    pub email: Option<String>,
 }
 
 // TODO: what about refresh and auth token?
@@ -88,7 +88,7 @@ pub struct User {
 pub enum Authentication {
     Token(String),
     TokenWithState(String, String),
-    Password(String, String)
+    Password(String, String),
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]

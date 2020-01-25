@@ -17,10 +17,7 @@ pub struct LocalProvider {
 
 impl LocalProvider {
     pub fn default() -> Option<Self> {
-        dirs::audio_dir()
-            .map(|path| LocalProvider {
-                path
-            })
+        dirs::audio_dir().map(|path| LocalProvider { path })
     }
 }
 

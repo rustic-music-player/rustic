@@ -1,4 +1,4 @@
-use actix_web::{get, Responder, Result, web};
+use actix_web::{get, web, Responder, Result};
 
 use app::ApiState;
 use handler::providers as providers_handler;
@@ -17,7 +17,7 @@ pub struct ProviderParams {
 #[derive(Deserialize)]
 pub struct AuthRedirectParams {
     code: String,
-    state: String
+    state: String,
 }
 
 #[get("/providers")]
@@ -52,10 +52,12 @@ pub fn get_available_providers(data: web::Data<ApiState>) -> Result<impl Respond
 pub fn provider_token_auth(
     query: web::Query<AuthRedirectParams>,
     params: web::Path<ProviderParams>,
-    data: web::Data<ApiState>
+    data: web::Data<ApiState>,
 ) -> Result<impl Responder> {
     let rustic = &data.app;
     providers_handler::authenticate(&rustic, params.provider, &query.code)?;
 
-    Ok(web::HttpResponse::Ok().body("<html><body>You can close this window now<script>window.close()</script></body></html>"))
+    Ok(web::HttpResponse::Ok().body(
+        "<html><body>You can close this window now<script>window.close()</script></body></html>",
+    ))
 }

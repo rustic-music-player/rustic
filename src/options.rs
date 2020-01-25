@@ -9,15 +9,10 @@ pub(crate) struct CliOptions {
     pub(crate) verbose: u8,
 
     /// Config file
-    #[structopt(
-        short,
-        long,
-        default_value = "config.toml",
-        parse(from_os_str)
-    )]
+    #[structopt(short, long, default_value = "config.toml", parse(from_os_str))]
     pub(crate) config: PathBuf,
 
     /// Extensions path
     #[structopt(long = "extensions")]
-    pub(crate) extensions_path: Option<String>
+    pub(crate) extensions_path: Option<String>,
 }

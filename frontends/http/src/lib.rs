@@ -18,10 +18,10 @@ extern crate serde;
 #[macro_use]
 extern crate serde_derive;
 extern crate serde_json;
+extern crate serde_qs;
 extern crate stopwatch;
 extern crate urlencoding;
 extern crate uuid;
-extern crate serde_qs;
 
 use std::sync::Arc;
 use std::thread;

@@ -7,7 +7,7 @@ use std::time::Duration;
 
 use crossbeam_channel::{Receiver, Sender};
 use failure::{bail, Error};
-use log::{debug, trace, error};
+use log::{debug, error, trace};
 use pinboard::NonEmptyPinboard;
 use url::Url;
 

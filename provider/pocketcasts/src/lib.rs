@@ -71,8 +71,8 @@ impl provider::ProviderInstance for PocketcastsProvider {
                 self.password = password;
                 self.setup()?;
                 Ok(())
-            },
-            _ => Err(format_err!("Invalid authentication method"))
+            }
+            _ => Err(format_err!("Invalid authentication method")),
         }
     }
 

@@ -28,13 +28,15 @@ mod playlist;
 mod track;
 
 // TODO: configurable host
-const SOUNDCLOUD_REDIRECT_URI: &str = "http://localhost:8080/api/providers/soundcloud/auth/redirect";
+const SOUNDCLOUD_REDIRECT_URI: &str =
+    "http://localhost:8080/api/providers/soundcloud/auth/redirect";
 
 lazy_static! {
-    static ref SOUNDCLOUD_RESOLVE_REGEX: regex::Regex = regex::RegexBuilder::new("^/([a-z]+)/([0-9]+)")
-        .case_insensitive(true)
-        .build()
-        .unwrap();
+    static ref SOUNDCLOUD_RESOLVE_REGEX: regex::Regex =
+        regex::RegexBuilder::new("^/([a-z]+)/([0-9]+)")
+            .case_insensitive(true)
+            .build()
+            .unwrap();
 }
 
 const TRACK_URI_PREFIX: &str = "soundcloud://track/";
@@ -75,7 +77,7 @@ impl provider::ProviderInstance for SoundcloudProvider {
     fn auth_state(&self) -> provider::AuthState {
         if self.auth_token.is_some() {
             provider::AuthState::Authenticated(None)
-        }else {
+        } else {
             provider::AuthState::RequiresOAuth(
                 format!("https://soundcloud.com/connect?client_id={}&response_type=token&redirect_uri={}/api/auth/soundcloud", self.client_id, SOUNDCLOUD_REDIRECT_URI)
             )
@@ -88,8 +90,8 @@ impl provider::ProviderInstance for SoundcloudProvider {
             Token(token) => {
                 self.auth_token = Some(token);
                 Ok(())
-            },
-            _ => Err(format_err!("Invalid authentication method"))
+            }
+            _ => Err(format_err!("Invalid authentication method")),
         }
     }
 
@@ -124,9 +126,9 @@ impl provider::ProviderInstance for SoundcloudProvider {
                 let items = likes
                     .iter()
                     .cloned()
-                    .map(|track|
+                    .map(|track| {
                         provider::ProviderItem::from(Track::from(SoundcloudTrack::from(track)))
-                    )
+                    })
                     .collect();
                 let folder = provider::ProviderFolder {
                     folders: vec![],
@@ -161,11 +163,7 @@ impl provider::ProviderInstance for SoundcloudProvider {
     }
 
     fn resolve_track(&self, uri: &str) -> Result<Option<Track>, Error> {
-        ensure!(
-            uri.starts_with(TRACK_URI_PREFIX),
-            "Invalid Uri: {}",
-            uri
-        );
+        ensure!(uri.starts_with(TRACK_URI_PREFIX), "Invalid Uri: {}", uri);
         let id = &uri[TRACK_URI_PREFIX.len()..];
         let id = usize::from_str(id)?;
         let client = self.client();
@@ -192,9 +190,7 @@ impl provider::ProviderInstance for SoundcloudProvider {
         let id = &uri["soundcloud://playlist/".len()..];
         let id = usize::from_str(id)?;
         let client = self.client();
-        let playlist = client
-            .playlist(id)
-            .get()?;
+        let playlist = client.playlist(id).get()?;
         let playlist = SoundcloudPlaylist::from(playlist);
         let playlist = Playlist::from(playlist);
 
@@ -204,7 +200,7 @@ impl provider::ProviderInstance for SoundcloudProvider {
     fn stream_url(&self, track: &Track) -> Result<String, Error> {
         if track.provider == provider::Provider::Soundcloud {
             if let rustic::library::MetaValue::String(stream_url) =
-            track.meta.get(meta::META_SOUNDCLOUD_STREAM_URL).unwrap()
+                track.meta.get(meta::META_SOUNDCLOUD_STREAM_URL).unwrap()
             {
                 return Ok(format!(
                     "{}?client_id={}",
@@ -245,10 +241,19 @@ impl provider::ProviderInstance for SoundcloudProvider {
             let entity_type = &captures[1];
             let id = &captures[2];
             let entity = match entity_type {
-                "tracks" => Some(provider::InternalUri::Track(format!("{}{}", TRACK_URI_PREFIX, id))),
-                "playlists" => Some(provider::InternalUri::Playlist(format!("soundcloud://playlist/{}", id))),
-                "users" => Some(provider::InternalUri::Artist(format!("soundcloud://user/{}", id))),
-                _ => None
+                "tracks" => Some(provider::InternalUri::Track(format!(
+                    "{}{}",
+                    TRACK_URI_PREFIX, id
+                ))),
+                "playlists" => Some(provider::InternalUri::Playlist(format!(
+                    "soundcloud://playlist/{}",
+                    id
+                ))),
+                "users" => Some(provider::InternalUri::Artist(format!(
+                    "soundcloud://user/{}",
+                    id
+                ))),
+                _ => None,
             };
             Ok(entity)
         } else {

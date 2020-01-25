@@ -1,5 +1,6 @@
 pub use self::album::AlbumModel;
 pub use self::artist::ArtistModel;
+pub use self::available_provider::{AvailableProviderModel, ProviderAuthenticationState};
 pub use self::extension::ExtensionModel;
 pub use self::open_result::OpenResultModel;
 pub use self::player::PlayerModel;
@@ -7,11 +8,10 @@ pub use self::playlist::PlaylistModel;
 pub use self::provider::{ProviderFolderModel, ProviderModel};
 pub use self::search::SearchResults;
 pub use self::track::TrackModel;
-pub use self::available_provider::{AvailableProviderModel, ProviderAuthenticationState};
 
-mod available_provider;
 mod album;
 mod artist;
+mod available_provider;
 mod extension;
 mod open_result;
 mod player;

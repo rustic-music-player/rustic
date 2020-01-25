@@ -53,11 +53,11 @@ use structopt::StructOpt;
 
 use config::*;
 use memory_store::MemoryLibrary;
+use rustic::extension::HostedExtension;
 #[cfg(feature = "sled-store")]
 use sled_store::SledLibrary;
 #[cfg(feature = "sqlite-store")]
 use sqlite_store::SqliteLibrary;
-use rustic::extension::HostedExtension;
 
 mod config;
 mod options;
@@ -86,7 +86,6 @@ fn main() -> Result<(), Error> {
         #[cfg(feature = "sled-store")]
         LibraryConfig::Sled { path } => Box::new(SledLibrary::new(path)?),
     };
-
 
     let app = rustic::Rustic::new(store, providers, extensions)?;
 
@@ -159,11 +158,14 @@ fn main() -> Result<(), Error> {
     Ok(())
 }
 
-fn load_extensions(options: &options::CliOptions, config: &Config) -> Result<Vec<HostedExtension>, Error> {
+fn load_extensions(
+    options: &options::CliOptions,
+    config: &Config,
+) -> Result<Vec<HostedExtension>, Error> {
     let mut paths = vec![
         Path::new("target/debug"),
         Path::new("target/release"),
-        Path::new("extensions")
+        Path::new("extensions"),
     ];
     if let Some(ref path) = config.extensions.path {
         paths.insert(0, Path::new(path));
@@ -171,9 +173,7 @@ fn load_extensions(options: &options::CliOptions, config: &Config) -> Result<Vec
     if let Some(ref path) = options.extensions_path {
         paths.insert(0, Path::new(path));
     }
-    let path = paths
-        .iter()
-        .find(|path| path.exists());
+    let path = paths.iter().find(|path| path.exists());
     if let Some(path) = path {
         let extensions = rustic::extension::load_extensions(path)?;
         Ok(extensions)

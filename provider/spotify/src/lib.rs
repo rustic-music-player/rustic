@@ -1,6 +1,6 @@
 use std::thread;
 
-use failure::{err_msg, Error, format_err};
+use failure::{err_msg, format_err, Error};
 use log::{debug, trace};
 use rspotify::spotify::client::Spotify;
 use rspotify::spotify::oauth2::{SpotifyClientCredentials, SpotifyOAuth, TokenInfo};
@@ -33,11 +33,11 @@ pub struct SpotifyProvider {
     client_id: String,
     client_secret: String,
     //    username: String,
-//    password: String,
+    //    password: String,
     #[serde(skip)]
     client: Option<Spotify>,
-//    #[serde(skip)]
-//    player: SpotifyPlayer,
+    //    #[serde(skip)]
+    //    player: SpotifyPlayer,
 }
 
 impl SpotifyProvider {
@@ -110,7 +110,7 @@ impl SpotifyProvider {
                     "user-read-recently-played",
                     "playlist-read-collaborative",
                 ]
-                    .join(" "),
+                .join(" "),
             )
             .redirect_uri(SPOTIFY_REDIRECT_URI)
     }
@@ -142,8 +142,7 @@ impl rustic_core::provider::ProviderInstance for SpotifyProvider {
         if self.client.is_some() {
             provider::AuthState::Authenticated(None)
         } else {
-            let mut oauth = self.get_oauth_client()
-                .build();
+            let mut oauth = self.get_oauth_client().build();
             let state = generate_random_string(16);
             let auth_url = oauth.get_authorize_url(Some(&state), None);
             provider::AuthState::RequiresOAuth(auth_url)
@@ -161,7 +160,7 @@ impl rustic_core::provider::ProviderInstance for SpotifyProvider {
                 } else {
                     Err(format_err!("Can't get access token"))
                 }
-            },
+            }
             TokenWithState(token, state) => {
                 let mut oauth = self.get_oauth_client().state(&state);
                 if let Some(token) = oauth.get_access_token(&token) {
@@ -171,7 +170,7 @@ impl rustic_core::provider::ProviderInstance for SpotifyProvider {
                     Err(format_err!("Can't get access token"))
                 }
             }
-            _ => Err(format_err!("Invalid authentication method"))
+            _ => Err(format_err!("Invalid authentication method")),
         }
     }
 
@@ -268,12 +267,12 @@ impl rustic_core::provider::ProviderInstance for SpotifyProvider {
             .get(META_SPOTIFY_URI)
             .ok_or_else(|| format_err!("Missing spotify uri"))?;
         if let MetaValue::String(_uri) = uri {
-//            let uri = uri.clone();
-//            let player = self.player.clone();
-//            let t = thread::spawn(move || player.get_audio_file(&uri))
-//                .join()
-//                .unwrap()
-//                .unwrap();
+            //            let uri = uri.clone();
+            //            let player = self.player.clone();
+            //            let t = thread::spawn(move || player.get_audio_file(&uri))
+            //                .join()
+            //                .unwrap()
+            //                .unwrap();
 
             unimplemented!()
         } else {
