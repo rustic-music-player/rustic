@@ -24,7 +24,7 @@ pub struct Config {
     #[serde(rename = "player", default = "default_backend")]
     pub players: Vec<PlayerBackendConfig>,
     #[serde(default)]
-    pub extensions: ExtensionConfig
+    pub extensions: ExtensionConfig,
 }
 
 impl Default for Config {
@@ -34,6 +34,7 @@ impl Default for Config {
             mpd: None,
             #[cfg(feature = "web-api")]
             http: Some(http_frontend::HttpConfig::default()),
+            #[cfg(feature = "pocketcasts")]
             pocketcasts: None,
             #[cfg(feature = "soundcloud")]
             soundcloud: None,
@@ -45,7 +46,7 @@ impl Default for Config {
             local: local_provider::LocalProvider::default(),
             library: Some(LibraryConfig::default()),
             players: default_backend(),
-            extensions: ExtensionConfig::default()
+            extensions: ExtensionConfig::default(),
         }
     }
 }
@@ -92,7 +93,7 @@ pub enum PlayerBackend {
 
 #[derive(Deserialize, Clone, Serialize, Default)]
 pub struct ExtensionConfig {
-    pub path: Option<String>
+    pub path: Option<String>,
 }
 
 fn default_backend() -> Vec<PlayerBackendConfig> {
