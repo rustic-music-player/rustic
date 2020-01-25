@@ -27,7 +27,7 @@ impl MemoryQueue {
         }
     }
 
-    fn select_track(&self, queue: Vec<Track>, index: usize) -> Option<()> {
+    fn select_track(&self, queue: &Vec<Track>, index: usize) -> Option<()> {
         if let Some(track) = queue.get(index).cloned() {
             self.player_tx.send(PlayerCommand::Play(track));
             Some(())
@@ -80,6 +80,21 @@ impl PlayerQueue for MemoryQueue {
         self.queue.read()
     }
 
+    fn remove_item(&self, index: usize) -> Result<(), Error> {
+        let current_index = self.current_index.load(atomic::Ordering::Relaxed);
+        let mut queue = self.queue.read();
+
+        queue.remove(index);
+
+        if current_index == index {
+            self.select_track(&queue, current_index);
+        }
+        self.queue.set(queue);
+        self.queue_changed();
+
+        Ok(())
+    }
+
     fn clear(&self) {
         self.queue.set(vec![]);
         self.current_index.store(0, atomic::Ordering::Relaxed);
@@ -99,7 +114,7 @@ impl PlayerQueue for MemoryQueue {
         self.current_index
             .store(current_index, atomic::Ordering::Relaxed);
 
-        Ok(self.select_track(queue, current_index))
+        Ok(self.select_track(&queue, current_index))
     }
 
     fn next(&self) -> Result<Option<()>, Error> {
@@ -113,7 +128,7 @@ impl PlayerQueue for MemoryQueue {
         self.current_index
             .store(current_index, atomic::Ordering::Relaxed);
 
-        Ok(self.select_track(queue, current_index))
+        Ok(self.select_track(&queue, current_index))
     }
 
     fn current(&self) -> Option<Track> {

@@ -89,3 +89,11 @@ pub fn clear(rustic: &Arc<Rustic>) -> Result<(), Error> {
     player.clear_queue();
     Ok(())
 }
+
+pub fn remove_item(index: usize, rustic: &Arc<Rustic>) -> Result<(), Error> {
+    let player = rustic
+        .get_default_player()
+        .ok_or_else(|| format_err!("Missing default player"))?;
+    player.queue.remove_item(index)?;
+    Ok(())
+}

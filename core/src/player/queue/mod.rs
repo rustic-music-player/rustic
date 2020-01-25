@@ -19,8 +19,9 @@ pub trait PlayerQueue: Send + Sync + Debug {
     /// Returns all tracks which are queued up right now
     fn get_queue(&self) -> Vec<Track>;
 
+    fn remove_item(&self, index: usize) -> Result<(), Error>;
+
     /// Clear the current queue
-    /// Does not stop playback
     fn clear(&self);
 
     /// Returns the currently playing track or None when nothing is playing

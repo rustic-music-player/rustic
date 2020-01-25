@@ -1,4 +1,4 @@
-use actix_web::{error, get, post, web, HttpResponse, Responder, Result};
+use actix_web::{error, get, post, delete, web, HttpResponse, Responder, Result};
 
 use app::ApiState;
 use handler::queue as queue_handler;
@@ -6,6 +6,11 @@ use handler::queue as queue_handler;
 #[derive(Deserialize)]
 pub struct AddToQueueQuery {
     cursor: String,
+}
+
+#[derive(Deserialize)]
+pub struct QueueItemParams {
+    index: usize,
 }
 
 #[get("/queue")]
@@ -59,5 +64,13 @@ pub fn queue_playlist(
 pub fn clear(data: web::Data<ApiState>) -> Result<impl Responder> {
     let rustic = &data.app;
     queue_handler::clear(&rustic)?;
+    Ok(HttpResponse::NoContent().finish())
+}
+
+#[delete("/queue/{index}")]
+pub fn remove_item(params: web::Path<QueueItemParams>, data: web::Data<ApiState>) -> Result<impl Responder> {
+    let rustic = &data.app;
+    queue_handler::remove_item(params.index, &rustic)?;
+
     Ok(HttpResponse::NoContent().finish())
 }
