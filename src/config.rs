@@ -77,12 +77,12 @@ pub struct PlayerBackendConfig {
     pub name: String,
     #[serde(default)]
     pub default: bool,
-    #[serde(rename = "type", flatten)]
+    #[serde(flatten)]
     pub backend_type: PlayerBackend,
 }
 
 #[derive(Deserialize, Clone, PartialEq, Eq)]
-#[serde(rename_all = "lowercase")]
+#[serde(rename_all = "lowercase", tag = "type")]
 pub enum PlayerBackend {
     #[cfg(feature = "gstreamer")]
     GStreamer,
