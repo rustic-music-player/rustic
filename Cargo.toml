@@ -33,7 +33,6 @@ homepage = "https://github.com/rustic-music-player/rustic"
 default = [
 	"sled-store",
 	"web-api",
-	"gstreamer",
 	"rodio",
 	"local-files",
 	"pocketcasts",
