@@ -42,7 +42,7 @@ pipeline {
                         label "windows"
                     }
                     steps {
-                        sh 'cargo build --bins --workspace --release'
+                        bat 'cargo build --bins --workspace --release'
                     }
                     post {
                         always {
