@@ -13,6 +13,7 @@ use super::PlayerQueue;
 pub struct MemoryQueue {
     queue: NonEmptyPinboard<Vec<Track>>,
     current_index: atomic::AtomicUsize,
+    current_track: NonEmptyPinboard<Option<Track>>,
     player_tx: Sender<PlayerCommand>,
     event_tx: Sender<PlayerEvent>,
 }
@@ -22,6 +23,7 @@ impl MemoryQueue {
         MemoryQueue {
             queue: NonEmptyPinboard::new(vec![]),
             current_index: atomic::AtomicUsize::new(0),
+            current_track: NonEmptyPinboard::new(None),
             player_tx,
             event_tx,
         }
@@ -42,9 +44,15 @@ impl MemoryQueue {
     }
 
     fn emit_current_track(&self) {
+        let current = self.current();
+        if self.current_track.read() == current {
+            return;
+        }
         if let Some(track) = self.current() {
+            self.current_track.set(Some(track.clone()));
             self.player_tx.send(PlayerCommand::Play(track));
         } else {
+            self.current_track.set(None);
             self.player_tx.send(PlayerCommand::Stop);
         }
     }
