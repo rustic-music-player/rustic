@@ -10,6 +10,7 @@ use failure::{bail, Error, format_err};
 use log::{debug, trace};
 use pinboard::NonEmptyPinboard;
 use url::Url;
+use rodio::DeviceTrait;
 
 use rustic_core::{PlayerEvent, PlayerState, Rustic, Track};
 use rustic_core::player::{PlayerBackend, PlayerBuilder, QueueCommand};
@@ -30,11 +31,10 @@ pub struct RodioBackend {
 
 impl std::fmt::Debug for RodioBackend {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> Result<(), std::fmt::Error> {
-        write!(
-            f,
-            "RodioBackend {{ state: {:?}, blend_time: {:?} }}",
-            self.state, self.blend_time
-        )
+        f.debug_struct("RodioBackend")
+            .field("state", &self.state)
+            .field("blend_time", &self.blend_time)
+            .finish()
     }
 }
 
@@ -46,6 +46,7 @@ impl RodioBackend {
     ) -> Result<Box<dyn PlayerBackend>, Error> {
         let device = rodio::default_output_device()
             .ok_or_else(|| format_err!("Unable to open output device"))?;
+        trace!("Got device {:?}", &device.name()?);
         let (next_sender, next_receiver) = crossbeam_channel::unbounded();
         let backend = RodioBackend {
             core,
