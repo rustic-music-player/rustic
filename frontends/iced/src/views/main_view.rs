@@ -1,10 +1,10 @@
 use crate::component::Component;
 use crate::messages::Message;
-use iced::{Column, Element, HorizontalAlignment, Length, Scrollable, Text};
+use iced::{Column, Element, HorizontalAlignment, Length, Text};
 use rustic_core::{MultiQuery, Rustic};
 use std::sync::Arc;
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum MainView {
     Library,
     Playlists,
@@ -26,7 +26,7 @@ impl Component for MainView {
         };
         let title = Text::new(title)
             .width(Length::Fill)
-            .size(100)
+            .size(50)
             .horizontal_alignment(HorizontalAlignment::Center);
 
         Column::new().spacing(20).push(title).push(element).into()

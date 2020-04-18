@@ -21,6 +21,7 @@ pub mod state;
 
 #[derive(Debug)]
 pub struct Player {
+    pub display_name: String,
     pub backend: Box<dyn PlayerBackend>,
     pub queue: Box<dyn PlayerQueue>,
     event_rx: Receiver<PlayerEvent>,
@@ -28,6 +29,7 @@ pub struct Player {
 
 impl Player {
     pub fn new(
+        display_name: String,
         backend: Box<dyn PlayerBackend>,
         queue: Box<dyn PlayerQueue>,
         player_rx: Receiver<PlayerCommand>,
@@ -35,6 +37,7 @@ impl Player {
         event_rx: Receiver<PlayerEvent>,
     ) -> Arc<Self> {
         let player = Player {
+            display_name,
             backend,
             queue,
             event_rx,

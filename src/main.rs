@@ -105,16 +105,19 @@ fn main() -> Result<(), Error> {
         let player = match player_config.backend_type {
             #[cfg(feature = "gstreamer")]
             PlayerBackend::GStreamer => PlayerBuilder::new(Arc::clone(&app))
+                .with_name(&name)
                 .with_memory_queue()
                 .with_gstreamer()?
                 .build(),
             #[cfg(feature = "google-cast")]
             PlayerBackend::GoogleCast { ip } => PlayerBuilder::new(Arc::clone(&app))
+                .with_name(&name)
                 .with_memory_queue()
                 .with_google_cast(ip)?
                 .build(),
             #[cfg(feature = "rodio")]
             PlayerBackend::Rodio => PlayerBuilder::new(Arc::clone(&app))
+                .with_name(&name)
                 .with_memory_queue()
                 .with_rodio()?
                 .build(),

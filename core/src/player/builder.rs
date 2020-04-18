@@ -6,6 +6,7 @@ use std::sync::Arc;
 
 pub struct PlayerBuilder {
     core: Arc<Rustic>,
+    name: Option<String>,
     backend: Option<Box<dyn PlayerBackend>>,
     queue: Option<Box<dyn PlayerQueue>>,
     player_rx: Receiver<PlayerCommand>,
@@ -24,6 +25,7 @@ impl PlayerBuilder {
 
         PlayerBuilder {
             core,
+            name: None,
             backend: None,
             queue: None,
             player_rx,
@@ -33,6 +35,11 @@ impl PlayerBuilder {
             event_rx,
             event_tx,
         }
+    }
+
+    pub fn with_name<S: Into<String>>(&mut self, name: S) -> &mut Self {
+        self.name = Some(name.into());
+        self
     }
 
     pub fn with_player<P>(&mut self, builder: P) -> Result<&mut Self, Error>
@@ -78,10 +85,13 @@ impl PlayerBuilder {
     pub fn build(&mut self) -> Arc<Player> {
         assert!(self.backend.is_some());
         assert!(self.queue.is_some());
+        assert!(self.name.is_some());
         let backend = self.backend.take().unwrap();
         let queue = self.queue.take().unwrap();
+        let name = self.name.take().unwrap();
 
         Player::new(
+            name,
             backend,
             queue,
             self.player_rx.clone(),
