@@ -28,6 +28,8 @@ extern crate rustic_mpd_frontend as mpd_frontend;
 extern crate rustic_pocketcasts_provider as pocketcasts_provider;
 #[cfg(feature = "qt")]
 extern crate rustic_qt_frontend as qt_frontend;
+#[cfg(feature = "iced")]
+extern crate rustic_iced_frontend as iced_frontend;
 #[cfg(feature = "rodio")]
 extern crate rustic_rodio_backend as rodio_backend;
 #[cfg(feature = "sled-store")]
@@ -163,6 +165,11 @@ fn main() -> Result<(), Error> {
     #[cfg(feature = "qt")]
     {
         qt_frontend::start(Arc::clone(&app));
+    }
+
+    #[cfg(feature = "iced")]
+    {
+        iced_frontend::start(Arc::clone(&app));
     }
 
     for handle in threads {

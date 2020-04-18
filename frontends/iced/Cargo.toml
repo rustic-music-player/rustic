@@ -1,0 +1,15 @@
+[package]
+name = "rustic-iced-frontend"
+version = "0.1.0"
+authors = ["Max Jöhnk <maxjoehnk@gmail.com>"]
+edition = "2018"
+license = "GPL-3.0"
+repository = "https://github.com/rustic-music-player/rustic"
+homepage = "https://github.com/rustic-music-player/rustic"
+
+[dependencies]
+iced = "0.1"
+log = "0.4"
+
+[dependencies.rustic-core]
+path = "../../core"
