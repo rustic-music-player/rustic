@@ -1,4 +1,4 @@
-use actix_web::{error, get, post, delete, web, HttpResponse, Responder, Result};
+use actix_web::{delete, error, get, post, web, HttpResponse, Responder, Result};
 
 use app::ApiState;
 use handler::queue as queue_handler;
@@ -68,7 +68,10 @@ pub fn clear(data: web::Data<ApiState>) -> Result<impl Responder> {
 }
 
 #[delete("/queue/{index}")]
-pub fn remove_item(params: web::Path<QueueItemParams>, data: web::Data<ApiState>) -> Result<impl Responder> {
+pub fn remove_item(
+    params: web::Path<QueueItemParams>,
+    data: web::Data<ApiState>,
+) -> Result<impl Responder> {
     let rustic = &data.app;
     queue_handler::remove_item(params.index, &rustic)?;
 

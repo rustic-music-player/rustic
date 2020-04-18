@@ -1,12 +1,15 @@
-use std::sync::Arc;
-use iced::{Application, Command, Element, Settings, Column, Text, Length, HorizontalAlignment, button, Row, Scrollable, scrollable};
-use rustic_core::Rustic;
+use crate::component::Component;
 use crate::messages::Message;
 use crate::views::MainView;
-use crate::component::Component;
+use iced::{
+    button, scrollable, Application, Column, Command, Element, HorizontalAlignment, Length, Row,
+    Scrollable, Settings, Text,
+};
+use rustic_core::Rustic;
+use std::sync::Arc;
 
-mod messages;
 mod component;
+mod messages;
 mod views;
 
 pub fn start(app: Arc<Rustic>) {
@@ -17,7 +20,7 @@ struct IcedApplication {
     app: Arc<Rustic>,
     sidenav: Vec<(String, button::State, MainView)>,
     current_view: MainView,
-    main_scroll: scrollable::State
+    main_scroll: scrollable::State,
 }
 
 impl Application for IcedApplication {
@@ -28,7 +31,11 @@ impl Application for IcedApplication {
     fn new(app: Self::Flags) -> (Self, Command<Self::Message>) {
         let sidenav = vec![
             ("Library".into(), button::State::new(), MainView::Library),
-            ("Playlists".into(), button::State::new(), MainView::Playlists),
+            (
+                "Playlists".into(),
+                button::State::new(),
+                MainView::Playlists,
+            ),
             ("Explore".into(), button::State::new(), MainView::Explore),
         ];
         (
@@ -36,9 +43,9 @@ impl Application for IcedApplication {
                 app,
                 sidenav,
                 current_view: MainView::default(),
-                main_scroll: scrollable::State::new()
+                main_scroll: scrollable::State::new(),
             },
-            Command::none()
+            Command::none(),
         )
     }
 
@@ -56,9 +63,7 @@ impl Application for IcedApplication {
     }
 
     fn view(&mut self) -> Element<'_, Self::Message> {
-        let mut sidenav = Column::new()
-            .max_width(300)
-            .spacing(20);
+        let mut sidenav = Column::new().max_width(300).spacing(20);
         for (label, state, view) in self.sidenav.iter_mut() {
             let btn = button::Button::new(state, Text::new(label.clone()))
                 .on_press(Message::OpenView(*view));
@@ -67,9 +72,6 @@ impl Application for IcedApplication {
         let content = self.current_view.view(&self.app);
         let scroll_container = Scrollable::new(&mut self.main_scroll).push(content);
 
-        Row::new()
-            .push(sidenav)
-            .push(scroll_container)
-            .into()
+        Row::new().push(sidenav).push(scroll_container).into()
     }
 }

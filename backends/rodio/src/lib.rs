@@ -6,14 +6,14 @@ use std::thread;
 use std::time::Duration;
 
 use crossbeam_channel::Sender;
-use failure::{bail, Error, format_err};
+use failure::{bail, format_err, Error};
 use log::{debug, trace};
 use pinboard::NonEmptyPinboard;
-use url::Url;
 use rodio::DeviceTrait;
+use url::Url;
 
-use rustic_core::{PlayerEvent, PlayerState, Rustic, Track};
 use rustic_core::player::{PlayerBackend, PlayerBuilder, QueueCommand};
+use rustic_core::{PlayerEvent, PlayerState, Rustic, Track};
 
 use crate::file::RodioFile;
 

@@ -54,13 +54,13 @@ use log::LevelFilter;
 use structopt::StructOpt;
 
 use config::*;
+#[cfg(feature = "google-cast")]
+use google_cast_backend::GoogleCastBuilder;
 #[cfg(feature = "gstreamer")]
 use gst_backend::GstreamerPlayerBuilder;
 use memory_store::MemoryLibrary;
 #[cfg(feature = "rodio")]
 use rodio_backend::RodioPlayerBuilder;
-#[cfg(feature = "google-cast")]
-use google_cast_backend::GoogleCastBuilder;
 use rustic::extension::HostedExtension;
 use rustic::player::{queue::MemoryQueueBuilder, PlayerBuilder};
 #[cfg(feature = "sled-store")]

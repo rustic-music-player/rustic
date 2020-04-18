@@ -1,14 +1,14 @@
 use crate::component::Component;
-use iced::{Element, Text, Length, HorizontalAlignment, Column, Scrollable};
 use crate::messages::Message;
+use iced::{Column, Element, HorizontalAlignment, Length, Scrollable, Text};
+use rustic_core::{MultiQuery, Rustic};
 use std::sync::Arc;
-use rustic_core::{Rustic, MultiQuery};
 
 #[derive(Debug, Clone, Copy)]
 pub enum MainView {
     Library,
     Playlists,
-    Explore
+    Explore,
 }
 
 impl Default for MainView {
@@ -22,24 +22,22 @@ impl Component for MainView {
         let (title, element): (&'static str, Element<_>) = match self {
             MainView::Library => ("Library", self.default_view()),
             MainView::Playlists => ("Playlists", self.playlists_view(app)),
-            MainView::Explore => ("Explore", self.default_view())
+            MainView::Explore => ("Explore", self.default_view()),
         };
         let title = Text::new(title)
             .width(Length::Fill)
             .size(100)
             .horizontal_alignment(HorizontalAlignment::Center);
 
-        Column::new()
-            .spacing(20)
-            .push(title)
-            .push(element)
-            .into()
+        Column::new().spacing(20).push(title).push(element).into()
     }
 }
 
 impl MainView {
     fn playlists_view(&self, app: &Arc<Rustic>) -> Element<'_, Message> {
-        let playlists = app.library.query_playlists(MultiQuery::new())
+        let playlists = app
+            .library
+            .query_playlists(MultiQuery::new())
             .unwrap_or_default();
         let mut list = Column::new();
         for playlist in playlists {

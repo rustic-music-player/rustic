@@ -1,5 +1,5 @@
-use iced::Element;
 use crate::messages::Message;
+use iced::Element;
 use rustic_core::Rustic;
 use std::sync::Arc;
 
