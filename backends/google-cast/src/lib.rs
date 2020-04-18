@@ -1,34 +1,37 @@
 use std::any::Any;
 use std::net::IpAddr;
-use std::sync::{atomic, Arc, Condvar, Mutex};
+use std::sync::Arc;
 use std::thread;
+use std::thread::sleep;
 use std::time::Duration;
 
 use crossbeam_channel::{Receiver, Sender};
 use failure::Error;
+use log::error;
 use pinboard::NonEmptyPinboard;
+use rust_cast::channels::receiver::Application;
 use rust_cast::{
     channels::{media::*, receiver::CastDeviceApp},
     CastDevice,
 };
 
+use rustic_core::player::{queue::MemoryQueueBuilder, PlayerBuilder, PlayerEvent, PlayerState};
 use rustic_core::Track;
-use rustic_core::player::{PlayerEvent, PlayerState, PlayerBuilder, queue::MemoryQueueBuilder};
 
+use crate::cast_state::CastState;
 use crate::discovery::DiscoverMessage;
+use crate::internal_command::InternalCommand;
+use crate::tasks::{CastCommandTask, CastStateSyncTask};
 
+mod cast_state;
 mod discovery;
-
-enum InternalCommand {
-    Play(Track),
-    Volume(f32),
-}
+mod internal_command;
+mod tasks;
 
 pub struct GoogleCastBackend {
     player_events: Sender<PlayerEvent>,
-    core: Arc<rustic_core::Rustic>,
-    handle: thread::JoinHandle<Result<(), failure::Error>>,
     internal_sender: crossbeam_channel::Sender<InternalCommand>,
+    cast_state: Arc<NonEmptyPinboard<CastState>>,
 }
 
 impl GoogleCastBackend {
@@ -61,78 +64,70 @@ impl GoogleCastBackend {
         ip: IpAddr,
     ) -> Result<Box<dyn rustic_core::PlayerBackend>, Error> {
         let (internal_sender, internal_receiver) = crossbeam_channel::unbounded();
-        let handle = {
+        let cast_state = Arc::new(NonEmptyPinboard::new(CastState::default()));
+        {
             let core = Arc::clone(&core);
-            thread::spawn(move || {
+            thread::spawn::<_, Result<(), failure::Error>>(move || {
                 let device = CastDevice::connect_without_host_verification(ip.to_string(), 8009)?;
-                let app = device
-                    .receiver
-                    .launch_app(&CastDeviceApp::DefaultMediaReceiver)?;
+                let mut task = CastCommandTask::new(internal_receiver, core);
 
                 loop {
-                    match internal_receiver.recv() {
-                        Ok(InternalCommand::Play(track)) => {
-                            device.connection.connect(app.transport_id.as_str())?;
-                            let media = Media {
-                                content_id: core.stream_url(&track)?,
-                                stream_type: StreamType::None,
-                                content_type: "audio/mp3".to_string(),
-                                metadata: Some(Metadata::MusicTrack(MusicTrackMediaMetadata {
-                                    album_name: track.album.map(|album| album.title),
-                                    title: Some(track.title),
-                                    album_artist: None,
-                                    artist: track.artist.map(|artist| artist.name),
-                                    composer: None,
-                                    track_number: None,
-                                    disc_number: None,
-                                    images: vec![],
-                                    release_date: None,
-                                })),
-                                duration: None,
-                            };
-                            device.media.load(
-                                app.transport_id.as_str(),
-                                app.session_id.as_str(),
-                                &media,
-                            )?;
-                        }
-                        Ok(InternalCommand::Volume(volume)) => {
-                            device.receiver.set_volume(volume)?;
-                        }
-                        _ => (),
+                    if let Err(e) = task.next(&device) {
+                        error!("CastStateTask failed {:?}", e);
                     }
                 }
-            })
-        };
+            });
+        }
+        {
+            let state = Arc::clone(&cast_state);
+            thread::spawn::<_, Result<(), failure::Error>>(move || {
+                let device = CastDevice::connect_without_host_verification(ip.to_string(), 8009)?;
+                let task = CastStateSyncTask::new(state);
+
+                loop {
+                    if let Err(e) = task.next(&device) {
+                        error!("CastStateTask failed {:?}", e);
+                    }
+
+                    sleep(Duration::from_secs(1))
+                }
+            });
+        }
 
         Ok(Box::new(GoogleCastBackend {
             player_events,
-            core,
-            handle,
             internal_sender,
+            cast_state,
         }))
     }
 }
 
 impl rustic_core::PlayerBackend for GoogleCastBackend {
     fn set_track(&self, track: &Track) -> Result<(), Error> {
-        unimplemented!()
+        self.internal_sender
+            .send(InternalCommand::Play(track.clone()))?;
+        Ok(())
     }
 
     fn set_state(&self, state: PlayerState) -> Result<(), Error> {
-        unimplemented!()
+        self.internal_sender
+            .send(InternalCommand::SetState(state))?;
+        Ok(())
     }
 
     fn state(&self) -> PlayerState {
-        unimplemented!()
+        let state = self.cast_state.read();
+        state.state
     }
 
     fn set_volume(&self, volume: f32) -> Result<(), Error> {
-        unimplemented!()
+        self.internal_sender.send(InternalCommand::Volume(volume))?;
+        Ok(())
     }
 
     fn volume(&self) -> f32 {
-        unimplemented!()
+        let state = self.cast_state.read();
+        state.volume
     }
 
     fn set_blend_time(&self, duration: Duration) -> Result<(), Error> {
@@ -164,8 +159,6 @@ pub trait GoogleCastBuilder {
 
 impl GoogleCastBuilder for PlayerBuilder {
     fn with_google_cast(&mut self, ip: IpAddr) -> Result<&mut Self, Error> {
-        self.with_player(|core, _, _, events_tx| {
-            GoogleCastBackend::new(core, events_tx, ip)
-        })
+        self.with_player(|core, _, _, events_tx| GoogleCastBackend::new(core, events_tx, ip))
     }
 }

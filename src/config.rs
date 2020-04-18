@@ -89,9 +89,7 @@ pub enum PlayerBackend {
     #[cfg(feature = "rodio")]
     Rodio,
     #[cfg(feature = "google-cast")]
-    GoogleCast {
-        ip: IpAddr
-    },
+    GoogleCast { ip: IpAddr },
 }
 
 #[derive(Deserialize, Clone, Serialize, Default)]

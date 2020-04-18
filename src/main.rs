@@ -101,37 +101,27 @@ fn main() -> Result<(), Error> {
     setup_interrupt(&app)?;
 
     for player_config in config.players.iter() {
-        match player_config.backend_type {
+        let name = player_config.name.clone();
+        let player = match player_config.backend_type {
             #[cfg(feature = "gstreamer")]
-            PlayerBackend::GStreamer => {
-                let player = PlayerBuilder::new(Arc::clone(&app))
-                    .with_memory_queue()
-                    .with_gstreamer()?
-                    .build();
-                app.add_player(player_config.name.clone(), player);
-                if player_config.default {
-                    app.set_default_player(player_config.name.clone());
-                }
-            }
+            PlayerBackend::GStreamer => PlayerBuilder::new(Arc::clone(&app))
+                .with_memory_queue()
+                .with_gstreamer()?
+                .build(),
             #[cfg(feature = "google-cast")]
-            PlayerBackend::GoogleCast { ip } => {
-                let player = PlayerBuilder::new(Arc::clone(&app))
-                    .with_memory_queue()
-                    .with_google_cast(ip)?
-                    .build();
-                app.add_player(player_config.name.clone(), player);
-            }
+            PlayerBackend::GoogleCast { ip } => PlayerBuilder::new(Arc::clone(&app))
+                .with_memory_queue()
+                .with_google_cast(ip)?
+                .build(),
             #[cfg(feature = "rodio")]
-            PlayerBackend::Rodio => {
-                let player = PlayerBuilder::new(Arc::clone(&app))
-                    .with_memory_queue()
-                    .with_rodio()?
-                    .build();
-                app.add_player(player_config.name.clone(), player);
-                if player_config.default {
-                    app.set_default_player(player_config.name.clone());
-                }
-            }
+            PlayerBackend::Rodio => PlayerBuilder::new(Arc::clone(&app))
+                .with_memory_queue()
+                .with_rodio()?
+                .build(),
+        };
+        app.add_player(name.clone(), player);
+        if player_config.default {
+            app.set_default_player(name);
         }
     }
 
