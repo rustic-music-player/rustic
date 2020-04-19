@@ -1,12 +1,15 @@
 use crate::component::Component;
 use crate::messages::Message;
 use crate::views::MainView;
-use iced::{button, scrollable, text_input, Application, Column, Command, Element, Row, Scrollable, Settings, Text, Vector, Background, Color, TextInput};
+use crate::overlay::{Overlay, OverlayState};
+use iced::{button, scrollable, text_input, Application, Column, Command, Element, Row, Scrollable, Settings, Text, Vector, Background, Color, TextInput, Align, Length};
 use rustic_core::Rustic;
 use std::sync::Arc;
+use rustic_core::player::Player;
 
 mod component;
 mod messages;
+mod overlay;
 mod views;
 
 pub fn start(app: Arc<Rustic>) {
@@ -20,7 +23,9 @@ struct IcedApplication {
     main_scroll: scrollable::State,
     search_state: text_input::State,
     search_query: String,
-    player_button: button::State
+    player_button: button::State,
+    overlay: Option<OverlayState>,
+    player: Option<Arc<Player>>,
 }
 
 impl Application for IcedApplication {
@@ -30,7 +35,9 @@ impl Application for IcedApplication {
 
     fn new(app: Self::Flags) -> (Self, Command<Self::Message>) {
         let sidenav = vec![
-            ("Library".into(), button::State::new(), MainView::Library),
+            ("Albums".into(), button::State::new(), MainView::Albums),
+            ("Artists".into(), button::State::new(), MainView::Artists),
+            ("Tracks".into(), button::State::new(), MainView::Tracks),
             (
                 "Playlists".into(),
                 button::State::new(),
@@ -38,6 +45,7 @@ impl Application for IcedApplication {
             ),
             ("Explore".into(), button::State::new(), MainView::Explore),
         ];
+        let player = app.get_default_player();
         (
             IcedApplication {
                 app,
@@ -46,7 +54,10 @@ impl Application for IcedApplication {
                 main_scroll: scrollable::State::new(),
                 search_state: text_input::State::new(),
                 search_query: String::new(),
-                player_button: button::State::new()
+                player_button: button::State::new(),
+                overlay: None,
+                player
+
             },
             Command::none(),
         )
@@ -64,36 +75,65 @@ impl Application for IcedApplication {
             Message::Search(query) => {
                 self.search_query = query;
             },
-            Message::ChangePlayer => {}
+            Message::OpenOverlay(overlay) => {
+                let state = match overlay {
+                    Overlay::PlayerList => {
+                        let players = self.app.get_players()
+                            .iter()
+                            .map(|(_, player)| (button::State::new(), Arc::clone(player)))
+                            .collect();
+                        OverlayState::PlayerList(players)
+                    }
+                };
+                self.overlay = Some(state);
+            },
+            Message::SelectPlayer(player) => {
+                self.overlay = None;
+                self.player = Some(player);
+            }
         }
         Command::none()
     }
 
     fn view(&mut self) -> Element<'_, Self::Message> {
-        let mut nav = Row::new();
-        for (label, state, view) in self.sidenav.iter_mut() {
-            let mut btn = button::Button::new(state, Text::new(label.clone()))
-                .on_press(Message::OpenView(*view));
-            if self.current_view == *view {
-                btn = btn.style(ActiveNavigationButtonStyle);
-            }else {
-                btn = btn.style(NavigationButtonStyle);
-            };
-            nav = nav.push(btn);
+        if let Some(OverlayState::PlayerList(players)) = self.overlay.as_mut() {
+            let mut list = Column::new()
+                .align_items(Align::Center)
+                .width(Length::Fill)
+                .spacing(20)
+                .push(Text::new("Players").size(100));
+            for (state, player) in players {
+                let btn = button::Button::new(state, Text::new(&player.display_name))
+                    .on_press(Message::SelectPlayer(Arc::clone(player)));
+                list = list.push(btn);
+            }
+            list.into()
+        }else {
+            let mut nav = Row::new();
+            for (label, state, view) in self.sidenav.iter_mut() {
+                let mut btn = button::Button::new(state, Text::new(label.clone()))
+                    .on_press(Message::OpenView(view.clone()));
+                if self.current_view == *view {
+                    btn = btn.style(ActiveNavigationButtonStyle);
+                }else {
+                    btn = btn.style(NavigationButtonStyle);
+                };
+                nav = nav.push(btn);
+            }
+            let search = TextInput::new(&mut self.search_state, "Search...", &self.search_query, |q| Message::Search(q));
+            nav = nav.push(search);
+
+            let player_label = Text::new(&self.player.as_ref().map(|p| format!("Player: {}", &p.display_name)).unwrap_or_else(|| String::from("-- Select Player -")));
+            let player_select = button::Button::new(&mut self.player_button, player_label)
+                .style(NavigationButtonStyle)
+                .on_press(Message::OpenOverlay(Overlay::PlayerList));
+            nav = nav.push(player_select);
+
+            let content = self.current_view.view(&self.app);
+            let scroll_container = Scrollable::new(&mut self.main_scroll).push(content);
+
+            Column::new().push(nav).push(scroll_container).into()
         }
-        let search = TextInput::new(&mut self.search_state, "Search...", &self.search_query, |q| Message::Search(q));
-        nav = nav.push(search);
-
-        let player = self.app.get_default_player().unwrap();
-        let player_select = button::Button::new(&mut self.player_button, Text::new(&player.display_name))
-            .style(NavigationButtonStyle)
-            .on_press(Message::ChangePlayer);
-        nav = nav.push(player_select);
-
-        let content = self.current_view.view(&self.app);
-        let scroll_container = Scrollable::new(&mut self.main_scroll).push(content);
-
-        Column::new().push(nav).push(scroll_container).into()
     }
 }
 
