@@ -20,7 +20,7 @@ use std::thread;
 
 use commands::MpdCommand;
 
-#[derive(Deserialize, Clone)]
+#[derive(Deserialize, Clone, Debug)]
 pub struct MpdConfig {
     pub ip: String,
     pub port: i32,

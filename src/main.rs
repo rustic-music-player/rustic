@@ -67,6 +67,7 @@ use rustic::player::{queue::MemoryQueueBuilder, PlayerBuilder};
 use sled_store::SledLibrary;
 #[cfg(feature = "sqlite-store")]
 use sqlite_store::SqliteLibrary;
+use google_cast_backend::GoogleCastBackend;
 
 mod config;
 mod options;
@@ -85,10 +86,12 @@ fn main() -> Result<(), Error> {
 
     let config = read_config(&options.config)?;
 
+    trace!("Config {:?}", config);
+
     let extensions = load_extensions(&options, &config)?;
     let providers = setup_providers(&config);
 
-    let store: Box<dyn rustic::Library> = match config.library.unwrap_or(LibraryConfig::Memory) {
+    let store: Box<dyn rustic::Library> = match config.library {
         LibraryConfig::Memory => Box::new(MemoryLibrary::new()),
         #[cfg(feature = "sqlite-store")]
         LibraryConfig::SQLite { path } => Box::new(SqliteLibrary::new(path)?),
@@ -101,30 +104,15 @@ fn main() -> Result<(), Error> {
     setup_interrupt(&app)?;
 
     for player_config in config.players.iter() {
-        let name = player_config.name.clone();
-        let player = match player_config.backend_type {
-            #[cfg(feature = "gstreamer")]
-            PlayerBackend::GStreamer => PlayerBuilder::new(Arc::clone(&app))
-                .with_name(&name)
-                .with_memory_queue()
-                .with_gstreamer()?
-                .build(),
-            #[cfg(feature = "google-cast")]
-            PlayerBackend::GoogleCast { ip } => PlayerBuilder::new(Arc::clone(&app))
-                .with_name(&name)
-                .with_memory_queue()
-                .with_google_cast(ip)?
-                .build(),
-            #[cfg(feature = "rodio")]
-            PlayerBackend::Rodio => PlayerBuilder::new(Arc::clone(&app))
-                .with_name(&name)
-                .with_memory_queue()
-                .with_rodio()?
-                .build(),
-        };
-        app.add_player(name.clone(), player);
-        if player_config.default {
-            app.set_default_player(name);
+        if let Err(e) = setup_player(&app, player_config) {
+            error!("Error setting up player {:?}", e);
+        }
+    }
+
+    #[cfg(feature = "google-cast")]
+    {
+        if config.discovery.google_cast {
+            GoogleCastBackend::start_discovery(Arc::clone(&app));
         }
     }
 
@@ -135,16 +123,16 @@ fn main() -> Result<(), Error> {
 
     #[cfg(feature = "mpd")]
     {
-        if config.mpd.is_some() {
-            let mpd_thread = mpd_frontend::start(config.mpd.clone(), Arc::clone(&app));
+        if config.frontend.mpd.is_some() {
+            let mpd_thread = mpd_frontend::start(config.frontend.mpd.clone(), Arc::clone(&app));
             threads.push(mpd_thread);
         }
     }
 
     #[cfg(feature = "web-api")]
     {
-        if config.http.is_some() {
-            let http_thread = http_frontend::start(config.http.clone(), Arc::clone(&app));
+        if config.frontend.http.is_some() {
+            let http_thread = http_frontend::start(config.frontend.http.clone(), Arc::clone(&app));
             threads.push(http_thread);
         }
     }
@@ -169,6 +157,35 @@ fn main() -> Result<(), Error> {
         let _ = handle.join();
     }
 
+    Ok(())
+}
+
+fn setup_player(app: &Arc<rustic::Rustic>, player_config: &PlayerBackendConfig) -> Result<(), failure::Error> {
+    let name = player_config.name.clone();
+    let player = match player_config.backend_type {
+        #[cfg(feature = "gstreamer")]
+        PlayerBackend::GStreamer => PlayerBuilder::new(Arc::clone(&app))
+            .with_name(&name)
+            .with_memory_queue()
+            .with_gstreamer()?
+            .build(),
+        #[cfg(feature = "google-cast")]
+        PlayerBackend::GoogleCast { ip } => PlayerBuilder::new(Arc::clone(&app))
+            .with_name(&name)
+            .with_memory_queue()
+            .with_google_cast(ip)?
+            .build(),
+        #[cfg(feature = "rodio")]
+        PlayerBackend::Rodio => PlayerBuilder::new(Arc::clone(&app))
+            .with_name(&name)
+            .with_memory_queue()
+            .with_rodio()?
+            .build(),
+    };
+    app.add_player(name.clone(), player);
+    if player_config.default {
+        app.set_default_player(name);
+    }
     Ok(())
 }
 
@@ -201,31 +218,31 @@ fn setup_providers(config: &Config) -> rustic::provider::SharedProviders {
 
     #[cfg(feature = "pocketcasts")]
     {
-        if let Some(pocketcasts) = config.pocketcasts.clone() {
+        if let Some(pocketcasts) = config.provider.pocketcasts.clone() {
             providers.push(Arc::new(RwLock::new(Box::new(pocketcasts))));
         }
     }
     #[cfg(feature = "soundcloud")]
     {
-        if let Some(soundcloud) = config.soundcloud.clone() {
+        if let Some(soundcloud) = config.provider.soundcloud.clone() {
             providers.push(Arc::new(RwLock::new(Box::new(soundcloud))));
         }
     }
     #[cfg(feature = "spotify")]
     {
-        if let Some(spotify) = config.spotify.clone() {
+        if let Some(spotify) = config.provider.spotify.clone() {
             providers.push(Arc::new(RwLock::new(Box::new(spotify))));
         }
     }
     #[cfg(feature = "local-files")]
     {
-        if let Some(local) = config.local.clone() {
+        if let Some(local) = config.provider.local.clone() {
             providers.push(Arc::new(RwLock::new(Box::new(local))));
         }
     }
     #[cfg(feature = "gmusic")]
     {
-        if let Some(gmusic) = config.gmusic.clone() {
+        if let Some(gmusic) = config.provider.gmusic.clone() {
             providers.push(Arc::new(RwLock::new(Box::new(gmusic))));
         }
     }

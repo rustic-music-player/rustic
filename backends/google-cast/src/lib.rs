@@ -47,6 +47,7 @@ impl GoogleCastBackend {
                 match msg {
                     DiscoverMessage::AddBackend(target) => {
                         let player = PlayerBuilder::new(Arc::clone(&core))
+                            .with_name(&target.name)
                             .with_memory_queue()
                             .with_google_cast(target.addr)
                             .unwrap()

@@ -35,7 +35,7 @@ mod handler;
 mod socket;
 mod viewmodels;
 
-#[derive(Deserialize, Clone)]
+#[derive(Deserialize, Clone, Debug)]
 #[serde(default)]
 pub struct HttpConfig {
     pub ip: String,
