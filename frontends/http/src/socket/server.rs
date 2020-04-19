@@ -38,9 +38,12 @@ impl Actor for SocketServer {
     type Context = Context<Self>;
 
     fn started(&mut self, ctx: &mut Self::Context) {
-        let events = PlayerEvents::new(Arc::clone(&self.app));
+        let players = self.app.get_players();
+        for (id, player) in players {
+            let events = PlayerEvents::new(id, player);
 
-        ctx.add_message_stream(events);
+            ctx.add_message_stream(events);
+        }
     }
 }
 

@@ -16,7 +16,7 @@ pub fn get_players(rustic: &Arc<Rustic>) -> Vec<PlayerModel> {
 
             PlayerModel {
                 cursor: to_cursor(&id),
-                name: id.clone(), // TODO: get actual name from player
+                name: player.display_name.clone(),
                 playing: (player.backend.state() == PlayerState::Play),
                 current: track,
             }
@@ -36,7 +36,7 @@ pub fn get_state(rustic: &Arc<Rustic>) -> Result<PlayerModel, Error> {
 
     let state = PlayerModel {
         cursor: to_cursor(&player_id),
-        name: player_id.clone(), // TODO: get actual name from player
+        name: player.display_name.clone(),
         playing: (player.backend.state() == PlayerState::Play),
         current,
     };
@@ -44,37 +44,41 @@ pub fn get_state(rustic: &Arc<Rustic>) -> Result<PlayerModel, Error> {
     Ok(state)
 }
 
-pub fn control_next(rustic: &Arc<Rustic>) -> Result<(), Error> {
-    let player = rustic
-        .get_default_player()
-        .ok_or_else(|| format_err!("Missing default player"))?;
+pub fn control_next(rustic: &Arc<Rustic>, player_id: Option<String>) -> Result<(), Error> {
+    let player = player_id
+        .and_then(|id| rustic.get_player(id))
+        .or_else(|| rustic.get_default_player())
+        .ok_or_else(|| format_err!("Missing player"))?;
     player.queue.next()?;
 
     Ok(())
 }
 
-pub fn control_prev(rustic: &Arc<Rustic>) -> Result<(), Error> {
-    let player = rustic
-        .get_default_player()
-        .ok_or_else(|| format_err!("Missing default player"))?;
+pub fn control_prev(rustic: &Arc<Rustic>, player_id: Option<String>) -> Result<(), Error> {
+    let player = player_id
+        .and_then(|id| rustic.get_player(id))
+        .or_else(|| rustic.get_default_player())
+        .ok_or_else(|| format_err!("Missing player"))?;
     player.queue.prev()?;
 
     Ok(())
 }
 
-pub fn control_pause(rustic: &Arc<Rustic>) -> Result<(), Error> {
-    let player = rustic
-        .get_default_player()
-        .ok_or_else(|| format_err!("Missing default player"))?;
+pub fn control_pause(rustic: &Arc<Rustic>, player_id: Option<String>) -> Result<(), Error> {
+    let player = player_id
+        .and_then(|id| rustic.get_player(id))
+        .or_else(|| rustic.get_default_player())
+        .ok_or_else(|| format_err!("Missing player"))?;
     player.backend.set_state(PlayerState::Pause)?;
 
     Ok(())
 }
 
-pub fn control_play(rustic: &Arc<Rustic>) -> Result<(), Error> {
-    let player = rustic
-        .get_default_player()
-        .ok_or_else(|| format_err!("Missing default player"))?;
+pub fn control_play(rustic: &Arc<Rustic>, player_id: Option<String>) -> Result<(), Error> {
+    let player = player_id
+        .and_then(|id| rustic.get_player(id))
+        .or_else(|| rustic.get_default_player())
+        .ok_or_else(|| format_err!("Missing player"))?;
     player.backend.set_state(PlayerState::Play)?;
 
     Ok(())

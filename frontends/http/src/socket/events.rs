@@ -8,6 +8,8 @@ use futures::{Async, Poll, Stream};
 use rustic_core::{PlayerEvent, PlayerState, Rustic};
 use socket::{messages, SocketServer};
 use viewmodels::TrackModel;
+use rustic_core::player::Player;
+use cursor::to_cursor;
 
 pub struct PlayerEventActor {
     addr: Addr<SocketServer>,
@@ -31,18 +33,15 @@ impl Actor for PlayerEventActor {
 }
 
 pub struct PlayerEvents {
+    id: String,
     receiver: Receiver<PlayerEvent>,
 }
 
 impl PlayerEvents {
-    pub fn new(app: Arc<Rustic>) -> PlayerEvents {
-        let player = app
-            .get_default_player()
-            .ok_or_else(|| format_err!("Missing default player"))
-            .unwrap();
+    pub fn new(id: String, player: Arc<Player>) -> PlayerEvents {
         let receiver = player.observe();
 
-        PlayerEvents { receiver }
+        PlayerEvents { id, receiver }
     }
 }
 
@@ -57,14 +56,20 @@ impl Stream for PlayerEvents {
             .and_then(|event| match event {
                 PlayerEvent::StateChanged(state) => {
                     debug!("received new playing state");
-                    Ok(messages::Message::PlayerStateChanged(
-                        state == PlayerState::Play,
-                    ))
+                    let msg = messages::PlayerMessageData::PlayerStateChanged(state == PlayerState::Play);
+                    Ok(messages::Message::PlayerMessage(messages::PlayerMessage {
+                        message: msg,
+                        player_cursor: to_cursor(&self.id)
+                    }))
                 }
                 PlayerEvent::TrackChanged(track) => {
                     debug!("received currently playing track");
                     let model = TrackModel::new(track);
-                    Ok(messages::Message::CurrentlyPlayingChanged(Some(model)))
+                    let msg = messages::PlayerMessageData::CurrentlyPlayingChanged(Some(model));
+                    Ok(messages::Message::PlayerMessage(messages::PlayerMessage {
+                        message: msg,
+                        player_cursor: to_cursor(&self.id)
+                    }))
                 }
                 PlayerEvent::QueueUpdated(queue) => {
                     debug!("received new queue");
@@ -72,7 +77,11 @@ impl Stream for PlayerEvents {
                         .into_iter()
                         .map(|track| TrackModel::new(track))
                         .collect();
-                    Ok(messages::Message::QueueUpdated(models))
+                    let msg = messages::PlayerMessageData::QueueUpdated(models);
+                    Ok(messages::Message::PlayerMessage(messages::PlayerMessage {
+                        message: msg,
+                        player_cursor: to_cursor(&self.id)
+                    }))
                 }
                 msg => {
                     debug!("unexpected msg {:?}", msg);

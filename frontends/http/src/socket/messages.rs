@@ -4,8 +4,21 @@ use viewmodels::TrackModel;
 
 #[derive(Message, Clone, Debug, Serialize)]
 #[rtype(result = "()")]
-#[serde(tag = "type", content = "payload", rename_all = "SCREAMING_SNAKE_CASE")]
+#[serde(untagged)]
 pub enum Message {
+    PlayerMessage(PlayerMessage),
+}
+
+#[derive(Clone, Debug, Serialize)]
+pub struct PlayerMessage {
+    pub player_cursor: String,
+    #[serde(flatten)]
+    pub message: PlayerMessageData
+}
+
+#[derive(Clone, Debug, Serialize)]
+#[serde(tag = "type", content = "payload", rename_all = "SCREAMING_SNAKE_CASE")]
+pub enum PlayerMessageData {
     PlayerStateChanged(bool),
     CurrentlyPlayingChanged(Option<TrackModel>),
     QueueUpdated(Vec<TrackModel>),

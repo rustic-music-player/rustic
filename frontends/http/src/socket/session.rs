@@ -62,6 +62,7 @@ impl Handler<messages::Message> for SocketSession {
 
     fn handle(&mut self, msg: messages::Message, ctx: &mut Self::Context) {
         let json = serde_json::to_string(&msg).unwrap();
+        debug!("Sending Socket Message {}", json);
         ctx.text(json);
     }
 }
