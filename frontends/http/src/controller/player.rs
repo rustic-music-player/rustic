@@ -1,7 +1,7 @@
 use actix_web::{get, post, web, HttpResponse, Responder, Result};
 use app::ApiState;
-use handler::player as player_handler;
 use cursor::from_cursor;
+use handler::player as player_handler;
 
 #[derive(Deserialize)]
 pub struct PlayerQuery {
@@ -33,8 +33,9 @@ pub fn default_control_next(data: web::Data<ApiState>) -> Result<impl Responder>
 }
 
 #[post("/players/{player}/next")]
-pub fn control_next(data: web::Data<ApiState>,
-                    params: web::Path<PlayerQuery>,
+pub fn control_next(
+    data: web::Data<ApiState>,
+    params: web::Path<PlayerQuery>,
 ) -> Result<impl Responder> {
     let rustic = &data.app;
     let player_id = from_cursor(&params.player)?;
@@ -52,8 +53,9 @@ pub fn default_control_prev(data: web::Data<ApiState>) -> Result<impl Responder>
 }
 
 #[post("/players/{player}/prev")]
-pub fn control_prev(data: web::Data<ApiState>,
-                    params: web::Path<PlayerQuery>,
+pub fn control_prev(
+    data: web::Data<ApiState>,
+    params: web::Path<PlayerQuery>,
 ) -> Result<impl Responder> {
     let rustic = &data.app;
     let player_id = from_cursor(&params.player)?;
@@ -71,8 +73,9 @@ pub fn default_control_pause(data: web::Data<ApiState>) -> Result<impl Responder
 }
 
 #[post("/players/{player}/pause")]
-pub fn control_pause(data: web::Data<ApiState>,
-                    params: web::Path<PlayerQuery>,
+pub fn control_pause(
+    data: web::Data<ApiState>,
+    params: web::Path<PlayerQuery>,
 ) -> Result<impl Responder> {
     let rustic = &data.app;
     let player_id = from_cursor(&params.player)?;
@@ -90,8 +93,9 @@ pub fn default_control_play(data: web::Data<ApiState>) -> Result<impl Responder>
 }
 
 #[post("/players/{player}/play")]
-pub fn control_play(data: web::Data<ApiState>,
-                    params: web::Path<PlayerQuery>,
+pub fn control_play(
+    data: web::Data<ApiState>,
+    params: web::Path<PlayerQuery>,
 ) -> Result<impl Responder> {
     let rustic = &data.app;
     let player_id = from_cursor(&params.player)?;

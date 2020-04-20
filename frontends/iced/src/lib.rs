@@ -1,11 +1,14 @@
 use crate::component::Component;
 use crate::messages::Message;
-use crate::views::MainView;
 use crate::overlay::{Overlay, OverlayState};
-use iced::{button, scrollable, text_input, Application, Column, Command, Element, Row, Scrollable, Settings, Text, Vector, Background, Color, TextInput, Align, Length};
+use crate::views::MainView;
+use iced::{
+    button, scrollable, text_input, Align, Application, Background, Color, Column, Command,
+    Element, Length, Row, Scrollable, Settings, Text, TextInput, Vector,
+};
+use rustic_core::player::Player;
 use rustic_core::Rustic;
 use std::sync::Arc;
-use rustic_core::player::Player;
 
 mod component;
 mod messages;
@@ -56,8 +59,7 @@ impl Application for IcedApplication {
                 search_query: String::new(),
                 player_button: button::State::new(),
                 overlay: None,
-                player
-
+                player,
             },
             Command::none(),
         )
@@ -71,14 +73,16 @@ impl Application for IcedApplication {
         match message {
             Message::OpenView(view) => {
                 self.current_view = view;
-            },
+            }
             Message::Search(query) => {
                 self.search_query = query;
-            },
+            }
             Message::OpenOverlay(overlay) => {
                 let state = match overlay {
                     Overlay::PlayerList => {
-                        let players = self.app.get_players()
+                        let players = self
+                            .app
+                            .get_players()
                             .iter()
                             .map(|(_, player)| (button::State::new(), Arc::clone(player)))
                             .collect();
@@ -86,7 +90,7 @@ impl Application for IcedApplication {
                     }
                 };
                 self.overlay = Some(state);
-            },
+            }
             Message::SelectPlayer(player) => {
                 self.overlay = None;
                 self.player = Some(player);
@@ -108,22 +112,33 @@ impl Application for IcedApplication {
                 list = list.push(btn);
             }
             list.into()
-        }else {
+        } else {
             let mut nav = Row::new();
             for (label, state, view) in self.sidenav.iter_mut() {
                 let mut btn = button::Button::new(state, Text::new(label.clone()))
                     .on_press(Message::OpenView(view.clone()));
                 if self.current_view == *view {
                     btn = btn.style(ActiveNavigationButtonStyle);
-                }else {
+                } else {
                     btn = btn.style(NavigationButtonStyle);
                 };
                 nav = nav.push(btn);
             }
-            let search = TextInput::new(&mut self.search_state, "Search...", &self.search_query, |q| Message::Search(q));
+            let search = TextInput::new(
+                &mut self.search_state,
+                "Search...",
+                &self.search_query,
+                |q| Message::Search(q),
+            );
             nav = nav.push(search);
 
-            let player_label = Text::new(&self.player.as_ref().map(|p| format!("Player: {}", &p.display_name)).unwrap_or_else(|| String::from("-- Select Player -")));
+            let player_label = Text::new(
+                &self
+                    .player
+                    .as_ref()
+                    .map(|p| format!("Player: {}", &p.display_name))
+                    .unwrap_or_else(|| String::from("-- Select Player -")),
+            );
             let player_select = button::Button::new(&mut self.player_button, player_label)
                 .style(NavigationButtonStyle)
                 .on_press(Message::OpenOverlay(Overlay::PlayerList));

@@ -13,7 +13,7 @@ pub enum Message {
 pub struct PlayerMessage {
     pub player_cursor: String,
     #[serde(flatten)]
-    pub message: PlayerMessageData
+    pub message: PlayerMessageData,
 }
 
 #[derive(Clone, Debug, Serialize)]

@@ -1,7 +1,7 @@
 use crate::component::Component;
 use crate::messages::Message;
-use iced::{Column, Element, HorizontalAlignment, Length, Text, Button, button};
-use rustic_core::{MultiQuery, Rustic, Album, Artist, Track, Playlist};
+use iced::{button, Button, Column, Element, HorizontalAlignment, Length, Text};
+use rustic_core::{Album, Artist, MultiQuery, Playlist, Rustic, Track};
 use std::sync::Arc;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -41,8 +41,7 @@ impl Component for MainView {
 
 impl MainView {
     fn playlists_view(&self, app: &Arc<Rustic>) -> Element<'_, Message> {
-        app
-            .library
+        app.library
             .query_playlists(MultiQuery::new())
             .unwrap_or_default()
             .iter()
@@ -54,8 +53,7 @@ impl MainView {
     }
 
     fn albums_view(&self, app: &Arc<Rustic>) -> Element<'_, Message> {
-        app
-            .library
+        app.library
             .query_albums(MultiQuery::new())
             .unwrap_or_default()
             .iter()
@@ -69,8 +67,7 @@ impl MainView {
     }
 
     fn artists_view(&self, app: &Arc<Rustic>) -> Element<'_, Message> {
-        app
-            .library
+        app.library
             .query_artists(MultiQuery::new())
             .unwrap_or_default()
             .iter()
@@ -82,8 +79,7 @@ impl MainView {
     }
 
     fn tracks_view(&self, app: &Arc<Rustic>) -> Element<'_, Message> {
-        app
-            .library
+        app.library
             .query_tracks(MultiQuery::new())
             .unwrap_or_default()
             .iter()

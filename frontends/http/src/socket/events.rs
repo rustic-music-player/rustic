@@ -5,11 +5,11 @@ use actix::prelude::*;
 use crossbeam_channel::Receiver;
 use futures::{Async, Poll, Stream};
 
-use rustic_core::{PlayerEvent, PlayerState, Rustic};
+use cursor::to_cursor;
+use rustic_core::player::Player;
+use rustic_core::{PlayerEvent, PlayerState};
 use socket::{messages, SocketServer};
 use viewmodels::TrackModel;
-use rustic_core::player::Player;
-use cursor::to_cursor;
 
 pub struct PlayerEventActor {
     addr: Addr<SocketServer>,
@@ -56,10 +56,11 @@ impl Stream for PlayerEvents {
             .and_then(|event| match event {
                 PlayerEvent::StateChanged(state) => {
                     debug!("received new playing state");
-                    let msg = messages::PlayerMessageData::PlayerStateChanged(state == PlayerState::Play);
+                    let msg =
+                        messages::PlayerMessageData::PlayerStateChanged(state == PlayerState::Play);
                     Ok(messages::Message::PlayerMessage(messages::PlayerMessage {
                         message: msg,
-                        player_cursor: to_cursor(&self.id)
+                        player_cursor: to_cursor(&self.id),
                     }))
                 }
                 PlayerEvent::TrackChanged(track) => {
@@ -68,7 +69,7 @@ impl Stream for PlayerEvents {
                     let msg = messages::PlayerMessageData::CurrentlyPlayingChanged(Some(model));
                     Ok(messages::Message::PlayerMessage(messages::PlayerMessage {
                         message: msg,
-                        player_cursor: to_cursor(&self.id)
+                        player_cursor: to_cursor(&self.id),
                     }))
                 }
                 PlayerEvent::QueueUpdated(queue) => {
@@ -80,7 +81,7 @@ impl Stream for PlayerEvents {
                     let msg = messages::PlayerMessageData::QueueUpdated(models);
                     Ok(messages::Message::PlayerMessage(messages::PlayerMessage {
                         message: msg,
-                        player_cursor: to_cursor(&self.id)
+                        player_cursor: to_cursor(&self.id),
                     }))
                 }
                 msg => {
