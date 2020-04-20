@@ -67,6 +67,7 @@ use rustic::player::{queue::MemoryQueueBuilder, PlayerBuilder};
 use sled_store::SledLibrary;
 #[cfg(feature = "sqlite-store")]
 use sqlite_store::SqliteLibrary;
+#[cfg(feature = "google-cast")]
 use google_cast_backend::GoogleCastBackend;
 
 mod config;
