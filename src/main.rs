@@ -3,8 +3,6 @@ extern crate env_logger;
 extern crate failure;
 #[macro_use]
 extern crate log;
-// Core
-extern crate rustic_core as rustic;
 #[cfg(feature = "dbus")]
 extern crate rustic_dbus_frontend as dbus_frontend;
 #[cfg(feature = "gmusic")]
@@ -53,18 +51,19 @@ use failure::Error;
 use log::LevelFilter;
 use structopt::StructOpt;
 
-use config::*;
+use crate::config::*;
 #[cfg(feature = "google-cast")]
 use google_cast_backend::GoogleCastBuilder;
 #[cfg(feature = "gstreamer")]
 use gst_backend::GstreamerPlayerBuilder;
-use memory_store::MemoryLibrary;
+use crate::memory_store::MemoryLibrary;
 #[cfg(feature = "rodio")]
-use rodio_backend::RodioPlayerBuilder;
-use rustic::extension::HostedExtension;
-use rustic::player::{queue::MemoryQueueBuilder, PlayerBuilder};
+use crate::rodio_backend::RodioPlayerBuilder;
+use rustic_core::Rustic;
+use rustic_core::extension::HostedExtension;
+use rustic_core::player::{queue::MemoryQueueBuilder, PlayerBuilder};
 #[cfg(feature = "sled-store")]
-use sled_store::SledLibrary;
+use crate::sled_store::SledLibrary;
 #[cfg(feature = "sqlite-store")]
 use sqlite_store::SqliteLibrary;
 #[cfg(feature = "google-cast")]
@@ -92,7 +91,7 @@ fn main() -> Result<(), Error> {
     let extensions = load_extensions(&options, &config)?;
     let providers = setup_providers(&config);
 
-    let store: Box<dyn rustic::Library> = match config.library {
+    let store: Box<dyn rustic_core::Library> = match config.library {
         LibraryConfig::Memory => Box::new(MemoryLibrary::new()),
         #[cfg(feature = "sqlite-store")]
         LibraryConfig::SQLite { path } => Box::new(SqliteLibrary::new(path)?),
@@ -100,7 +99,7 @@ fn main() -> Result<(), Error> {
         LibraryConfig::Sled { path } => Box::new(SledLibrary::new(path)?),
     };
 
-    let app = rustic::Rustic::new(store, providers, extensions)?;
+    let app = Rustic::new(store, providers, extensions)?;
 
     setup_interrupt(&app)?;
 
@@ -118,8 +117,8 @@ fn main() -> Result<(), Error> {
     }
 
     let mut threads = vec![
-        rustic::sync::start(Arc::clone(&app))?,
-        rustic::cache::start(Arc::clone(&app))?,
+        rustic_core::sync::start(Arc::clone(&app))?,
+        rustic_core::cache::start(Arc::clone(&app))?,
     ];
 
     #[cfg(feature = "mpd")]
@@ -161,7 +160,7 @@ fn main() -> Result<(), Error> {
     Ok(())
 }
 
-fn setup_player(app: &Arc<rustic::Rustic>, player_config: &PlayerBackendConfig) -> Result<(), failure::Error> {
+fn setup_player(app: &Arc<Rustic>, player_config: &PlayerBackendConfig) -> Result<(), failure::Error> {
     let name = player_config.name.clone();
     let player = match player_config.backend_type {
         #[cfg(feature = "gstreamer")]
@@ -207,15 +206,15 @@ fn load_extensions(
     }
     let path = paths.iter().find(|path| path.exists());
     if let Some(path) = path {
-        let extensions = rustic::extension::load_extensions(path)?;
+        let extensions = rustic_core::extension::load_extensions(path)?;
         Ok(extensions)
     } else {
         Ok(Vec::new())
     }
 }
 
-fn setup_providers(config: &Config) -> rustic::provider::SharedProviders {
-    let mut providers: rustic::provider::SharedProviders = vec![];
+fn setup_providers(config: &Config) -> rustic_core::provider::SharedProviders {
+    let mut providers: rustic_core::provider::SharedProviders = vec![];
 
     #[cfg(feature = "pocketcasts")]
     {
@@ -257,7 +256,7 @@ fn setup_providers(config: &Config) -> rustic::provider::SharedProviders {
     providers
 }
 
-fn setup_interrupt(app: &Arc<rustic::Rustic>) -> Result<(), Error> {
+fn setup_interrupt(app: &Arc<Rustic>) -> Result<(), Error> {
     let app = Arc::clone(app);
     ctrlc::set_handler(move || {
         app.exit();

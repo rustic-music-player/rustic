@@ -3,7 +3,6 @@ use std::io::prelude::*;
 use std::path::Path;
 
 use failure::Error;
-use std::net::IpAddr;
 
 #[derive(Deserialize, Debug, Clone)]
 pub struct Config {
