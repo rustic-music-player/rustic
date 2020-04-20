@@ -1,73 +1,23 @@
-extern crate ctrlc;
-extern crate env_logger;
-extern crate failure;
-#[macro_use]
-extern crate log;
-#[cfg(feature = "dbus")]
-extern crate rustic_dbus_frontend as dbus_frontend;
-#[cfg(feature = "gmusic")]
-extern crate rustic_gmusic_provider as gmusic_provider;
-// Backends
-#[cfg(feature = "google-cast")]
-extern crate rustic_google_cast_backend as google_cast_backend;
-#[cfg(feature = "gstreamer")]
-extern crate rustic_gstreamer_backend as gst_backend;
-// Frontends
-#[cfg(feature = "web-api")]
-extern crate rustic_http_frontend as http_frontend;
-// Provider
-#[cfg(feature = "local-files")]
-extern crate rustic_local_provider as local_provider;
-// Stores
-extern crate rustic_memory_store as memory_store;
-#[cfg(feature = "mpd")]
-extern crate rustic_mpd_frontend as mpd_frontend;
-#[cfg(feature = "pocketcasts")]
-extern crate rustic_pocketcasts_provider as pocketcasts_provider;
-#[cfg(feature = "qt")]
-extern crate rustic_qt_frontend as qt_frontend;
-#[cfg(feature = "iced")]
-extern crate rustic_iced_frontend as iced_frontend;
-#[cfg(feature = "rodio")]
-extern crate rustic_rodio_backend as rodio_backend;
-#[cfg(feature = "sled-store")]
-extern crate rustic_sled_store as sled_store;
-#[cfg(feature = "soundcloud")]
-extern crate rustic_soundcloud_provider as soundcloud_provider;
-#[cfg(feature = "spotify")]
-extern crate rustic_spotify_provider as spotify_provider;
-#[cfg(feature = "sqlite-store")]
-extern crate rustic_sqlite_store as sqlite_store;
-extern crate serde;
-#[macro_use]
-extern crate serde_derive;
-extern crate structopt;
-extern crate toml;
-
 use std::path::Path;
 use std::sync::{Arc, RwLock};
 
 use failure::Error;
-use log::LevelFilter;
+use log::{error, trace, LevelFilter};
 use structopt::StructOpt;
 
 use crate::config::*;
-#[cfg(feature = "google-cast")]
-use google_cast_backend::GoogleCastBuilder;
-#[cfg(feature = "gstreamer")]
-use gst_backend::GstreamerPlayerBuilder;
-use crate::memory_store::MemoryLibrary;
-#[cfg(feature = "rodio")]
-use crate::rodio_backend::RodioPlayerBuilder;
-use rustic_core::Rustic;
 use rustic_core::extension::HostedExtension;
 use rustic_core::player::{queue::MemoryQueueBuilder, PlayerBuilder};
-#[cfg(feature = "sled-store")]
-use crate::sled_store::SledLibrary;
-#[cfg(feature = "sqlite-store")]
-use sqlite_store::SqliteLibrary;
+use rustic_core::Rustic;
 #[cfg(feature = "google-cast")]
-use google_cast_backend::GoogleCastBackend;
+use rustic_google_cast_backend::GoogleCastBackend;
+#[cfg(feature = "google-cast")]
+use rustic_google_cast_backend::GoogleCastBuilder;
+#[cfg(feature = "gstreamer")]
+use rustic_gstreamer_backend::GstreamerPlayerBuilder;
+use rustic_memory_store::MemoryLibrary;
+#[cfg(feature = "rodio")]
+use rustic_rodio_backend::RodioPlayerBuilder;
 
 mod config;
 mod options;
@@ -94,9 +44,15 @@ fn main() -> Result<(), Error> {
     let store: Box<dyn rustic_core::Library> = match config.library {
         LibraryConfig::Memory => Box::new(MemoryLibrary::new()),
         #[cfg(feature = "sqlite-store")]
-        LibraryConfig::SQLite { path } => Box::new(SqliteLibrary::new(path)?),
+        LibraryConfig::SQLite { path } => {
+            let library = rustic_sqlite_store::SqliteLibrary::new(path)?;
+            Box::new(library)
+        }
         #[cfg(feature = "sled-store")]
-        LibraryConfig::Sled { path } => Box::new(SledLibrary::new(path)?),
+        LibraryConfig::Sled { path } => {
+            let library = rustic_sled_store::SledLibrary::new(path)?;
+            Box::new(library)
+        }
     };
 
     let app = Rustic::new(store, providers, extensions)?;
@@ -132,7 +88,8 @@ fn main() -> Result<(), Error> {
     #[cfg(feature = "web-api")]
     {
         if config.frontend.http.is_some() {
-            let http_thread = http_frontend::start(config.frontend.http.clone(), Arc::clone(&app));
+            let http_thread =
+                rustic_http_frontend::start(config.frontend.http.clone(), Arc::clone(&app));
             threads.push(http_thread);
         }
     }
@@ -160,7 +117,10 @@ fn main() -> Result<(), Error> {
     Ok(())
 }
 
-fn setup_player(app: &Arc<Rustic>, player_config: &PlayerBackendConfig) -> Result<(), failure::Error> {
+fn setup_player(
+    app: &Arc<Rustic>,
+    player_config: &PlayerBackendConfig,
+) -> Result<(), failure::Error> {
     let name = player_config.name.clone();
     let player = match player_config.backend_type {
         #[cfg(feature = "gstreamer")]

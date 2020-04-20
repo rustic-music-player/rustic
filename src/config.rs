@@ -3,6 +3,7 @@ use std::io::prelude::*;
 use std::path::Path;
 
 use failure::Error;
+use serde::{Deserialize, Serialize};
 
 #[derive(Deserialize, Debug, Clone)]
 pub struct Config {
@@ -17,15 +18,15 @@ pub struct Config {
     #[serde(default)]
     pub extensions: ExtensionConfig,
     #[serde(default)]
-    pub discovery: DiscoveryConfig
+    pub discovery: DiscoveryConfig,
 }
 
 #[derive(Deserialize, Debug, Clone)]
 pub struct FrontendConfig {
     #[cfg(feature = "mpd")]
-    pub mpd: Option<mpd_frontend::MpdConfig>,
+    pub mpd: Option<rustic_mpd_frontend::MpdConfig>,
     #[cfg(feature = "web-api")]
-    pub http: Option<http_frontend::HttpConfig>,
+    pub http: Option<rustic_http_frontend::HttpConfig>,
 }
 
 impl Default for FrontendConfig {
@@ -34,7 +35,7 @@ impl Default for FrontendConfig {
             #[cfg(feature = "mpd")]
             mpd: None,
             #[cfg(feature = "web-api")]
-            http: Some(http_frontend::HttpConfig::default()),
+            http: Some(rustic_http_frontend::HttpConfig::default()),
         }
     }
 }
@@ -42,15 +43,15 @@ impl Default for FrontendConfig {
 #[derive(Deserialize, Clone, Debug, Default)]
 pub struct ProviderConfig {
     #[cfg(feature = "pocketcasts")]
-    pub pocketcasts: Option<pocketcasts_provider::PocketcastsProvider>,
+    pub pocketcasts: Option<rustic_pocketcasts_provider::PocketcastsProvider>,
     #[cfg(feature = "soundcloud")]
-    pub soundcloud: Option<soundcloud_provider::SoundcloudProvider>,
+    pub soundcloud: Option<rustic_soundcloud_provider::SoundcloudProvider>,
     #[cfg(feature = "spotify")]
-    pub spotify: Option<spotify_provider::SpotifyProvider>,
+    pub spotify: Option<rustic_spotify_provider::SpotifyProvider>,
     #[cfg(feature = "gmusic")]
-    pub gmusic: Option<gmusic_provider::GooglePlayMusicProvider>,
+    pub gmusic: Option<rustic_gmusic_provider::GooglePlayMusicProvider>,
     #[cfg(feature = "local-files")]
-    pub local: Option<local_provider::LocalProvider>,
+    pub local: Option<rustic_local_provider::LocalProvider>,
 }
 
 impl Default for Config {
@@ -61,7 +62,7 @@ impl Default for Config {
             library: LibraryConfig::default(),
             players: default_backend(),
             extensions: ExtensionConfig::default(),
-            discovery: DiscoveryConfig::default()
+            discovery: DiscoveryConfig::default(),
         }
     }
 }
@@ -115,14 +116,14 @@ pub struct ExtensionConfig {
 pub struct DiscoveryConfig {
     #[cfg(feature = "google-cast")]
     #[serde(default = "default_cast_discovery")]
-    pub google_cast: bool
+    pub google_cast: bool,
 }
 
 impl Default for DiscoveryConfig {
     fn default() -> Self {
         DiscoveryConfig {
             #[cfg(feature = "google-cast")]
-            google_cast: default_cast_discovery()
+            google_cast: default_cast_discovery(),
         }
     }
 }
