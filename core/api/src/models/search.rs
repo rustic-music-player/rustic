@@ -1,9 +1,7 @@
-use viewmodels::AlbumModel;
-use viewmodels::ArtistModel;
-use viewmodels::PlaylistModel;
-use viewmodels::TrackModel;
+use crate::models::{AlbumModel, ArtistModel, PlaylistModel, TrackModel};
+use serde::{Deserialize, Serialize};
 
-#[derive(Serialize)]
+#[derive(Serialize, Deserialize)]
 pub struct SearchResults {
     pub tracks: Vec<TrackModel>,
     pub albums: Vec<AlbumModel>,

@@ -1,6 +1,7 @@
 [workspace]
 members = [
     "core",
+    "core/api",
     "backends/google-cast",
     "backends/gstreamer",
     "backends/rodio",
@@ -17,7 +18,10 @@ members = [
     "store/memory",
     "store/sled",
     "store/sqlite",
-    "extensions/party-mode"
+    "extensions/party-mode",
+    "clients/http",
+    "clients/http/native",
+    "clients/http/wasm"
 ]
 
 [package]

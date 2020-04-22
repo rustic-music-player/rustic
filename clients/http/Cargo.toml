@@ -1,0 +1,10 @@
+[package]
+name = "rustic-http-client"
+version = "0.1.0"
+authors = ["Max Jöhnk <maxjoehnk@gmail.com>"]
+edition = "2018"
+
+[dependencies]
+rustic-api = { path = "../../core/api", default-features = false }
+serde = { version = "1", features = ["derive"] }
+async-trait = "0.1"

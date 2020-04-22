@@ -1,7 +1,8 @@
 use actix_web::{delete, error, get, post, web, HttpResponse, Responder, Result};
+use serde::{Deserialize};
 
-use app::ApiState;
-use handler::queue as queue_handler;
+use crate::app::ApiState;
+use crate::handler::queue as queue_handler;
 
 #[derive(Deserialize)]
 pub struct AddToQueueQuery {

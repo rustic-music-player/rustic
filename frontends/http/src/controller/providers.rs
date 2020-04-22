@@ -1,7 +1,8 @@
 use actix_web::{get, web, Responder, Result};
+use serde::{Deserialize};
 
-use app::ApiState;
-use handler::providers as providers_handler;
+use crate::app::ApiState;
+use crate::handler::providers as providers_handler;
 use rustic_core::Provider;
 
 #[derive(Deserialize)]

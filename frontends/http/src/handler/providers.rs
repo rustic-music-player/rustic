@@ -4,7 +4,7 @@ use failure::err_msg;
 
 use rustic_core::provider::Authentication;
 use rustic_core::{Provider, Rustic};
-use viewmodels::*;
+use rustic_api::models::*;
 
 pub fn get_providers(rustic: &Arc<Rustic>) -> Vec<ProviderModel> {
     rustic
@@ -24,8 +24,8 @@ pub fn get_providers(rustic: &Arc<Rustic>) -> Vec<ProviderModel> {
 
             ProviderModel {
                 title,
-                provider: provider_type,
-                explore,
+                provider: provider_type.into(),
+                explore: explore.into(),
             }
         })
         .collect()
@@ -45,7 +45,7 @@ pub fn navigate(
     let provider = provider.read().unwrap();
     let path = path.split("/").map(String::from).collect();
     let folder = provider.navigate(path)?;
-    let folder = ProviderFolderModel::new(folder);
+    let folder = ProviderFolderModel::from(folder);
 
     Ok(folder)
 }
@@ -60,7 +60,7 @@ pub fn get_available_providers(rustic: &Arc<Rustic>) -> Vec<AvailableProviderMod
             let auth_state = provider.auth_state();
 
             AvailableProviderModel {
-                provider: provider_type,
+                provider: provider_type.into(),
                 title: provider.title().to_owned(),
                 enabled: true,
                 auth_state: auth_state.into(),

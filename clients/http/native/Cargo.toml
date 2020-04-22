@@ -1,0 +1,11 @@
+[package]
+name = "rustic-native-http-client"
+version = "0.1.0"
+authors = ["Max Jöhnk <maxjoehnk@gmail.com>"]
+edition = "2018"
+
+[dependencies]
+serde = { version = "1", features = ["derive"] }
+reqwest = { version = "0.10", features = ["json"] }
+async-trait = "0.1"
+rustic-http-client = { path = "../" }

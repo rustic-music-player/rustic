@@ -1,15 +1,16 @@
 use std::sync::Arc;
 use std::time::Duration;
 
+use log::debug;
 use actix::prelude::*;
 use crossbeam_channel::Receiver;
 use futures::{Async, Poll, Stream};
 
-use cursor::to_cursor;
+use crate::cursor::to_cursor;
 use rustic_core::player::Player;
 use rustic_core::{PlayerEvent, PlayerState};
-use socket::{messages, SocketServer};
-use viewmodels::TrackModel;
+use crate::socket::{messages, SocketServer};
+use rustic_api::models::TrackModel;
 
 pub struct PlayerEventActor {
     addr: Addr<SocketServer>,
@@ -65,7 +66,7 @@ impl Stream for PlayerEvents {
                 }
                 PlayerEvent::TrackChanged(track) => {
                     debug!("received currently playing track");
-                    let model = TrackModel::new(track);
+                    let model = TrackModel::from(track);
                     let msg = messages::PlayerMessageData::CurrentlyPlayingChanged(Some(model));
                     Ok(messages::Message::PlayerMessage(messages::PlayerMessage {
                         message: msg,
@@ -76,7 +77,7 @@ impl Stream for PlayerEvents {
                     debug!("received new queue");
                     let models = queue
                         .into_iter()
-                        .map(|track| TrackModel::new(track))
+                        .map(TrackModel::from)
                         .collect();
                     let msg = messages::PlayerMessageData::QueueUpdated(models);
                     Ok(messages::Message::PlayerMessage(messages::PlayerMessage {

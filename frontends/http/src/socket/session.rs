@@ -2,9 +2,10 @@ use actix::prelude::*;
 use actix::{fut, Addr};
 use actix_web_actors::ws;
 use serde_json;
+use log::{debug, trace, warn};
 
-use socket::messages;
-use socket::server::SocketServer;
+use crate::socket::messages;
+use crate::socket::server::SocketServer;
 
 pub struct SocketSession {
     pub id: String,

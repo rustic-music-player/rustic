@@ -5,13 +5,13 @@ use actix::{Addr, System};
 use actix_files::{Files, NamedFile};
 use actix_web::{middleware, web, App, FromRequest, HttpServer, Responder, Result, Scope};
 
-use controller;
-use controller::search::SearchQuery;
+use crate::controller;
+use crate::controller::search::SearchQuery;
 use rustic_core::Rustic;
 use serde_qs::actix::QsQuery;
 use serde_qs::Config;
-use socket::{create_socket_server, socket_service, SocketServer};
-use HttpConfig;
+use crate::socket::{create_socket_server, socket_service, SocketServer};
+use crate::HttpConfig;
 
 pub struct ApiState {
     pub app: Arc<Rustic>,

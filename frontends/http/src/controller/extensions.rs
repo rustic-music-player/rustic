@@ -1,7 +1,7 @@
 use actix_web::{get, web, Responder, Result};
 
-use app::ApiState;
-use handler::extensions as extensions_handler;
+use crate::app::ApiState;
+use crate::handler::extensions as extensions_handler;
 
 #[get("/extensions")]
 pub fn get_extensions(data: web::Data<ApiState>) -> Result<impl Responder> {

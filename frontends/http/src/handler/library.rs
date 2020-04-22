@@ -1,12 +1,13 @@
 use std::sync::Arc;
 
+use log::debug;
 use failure::Error;
 use itertools::Itertools;
 
-use cursor::from_cursor;
+use crate::cursor::from_cursor;
 use rustic_core::provider::CoverArt;
 use rustic_core::{MultiQuery, QueryJoins, Rustic, SingleQuery};
-use viewmodels::*;
+use rustic_api::models::*;
 
 pub fn fetch_album(cursor: &str, rustic: &Arc<Rustic>) -> Result<Option<AlbumModel>, Error> {
     let sw = stopwatch::Stopwatch::start_new();
@@ -16,7 +17,7 @@ pub fn fetch_album(cursor: &str, rustic: &Arc<Rustic>) -> Result<Option<AlbumMod
     query.join_all();
     let album = rustic
         .query_album(query)?
-        .map(|album| AlbumModel::new(album));
+        .map(AlbumModel::from);
     debug!("Fetching album took {}ms", sw.elapsed_ms());
 
     Ok(album)
@@ -33,7 +34,7 @@ pub fn fetch_albums(rustic: &Arc<Rustic>) -> Result<Vec<AlbumModel>, Error> {
 
     let albums = albums
         .into_iter()
-        .map(|album| AlbumModel::new(album))
+        .map(AlbumModel::from)
         .collect();
 
     Ok(albums)
@@ -48,7 +49,7 @@ pub fn fetch_artists(rustic: &Arc<Rustic>) -> Result<Vec<ArtistModel>, Error> {
 
     let artists = artists
         .into_iter()
-        .map(|artist| ArtistModel::new(artist))
+        .map(ArtistModel::from)
         .collect();
     Ok(artists)
 }
@@ -62,7 +63,7 @@ pub fn fetch_playlists(rustic: &Arc<Rustic>) -> Result<Vec<PlaylistModel>, Error
     debug!("Fetching playlists took {}ms", sw.elapsed_ms());
     let playlists = playlists
         .into_iter()
-        .map(|playlist| PlaylistModel::new(playlist))
+        .map(PlaylistModel::from)
         .sorted() // TODO: sorting should probably happen in library
         .collect();
 
@@ -77,7 +78,7 @@ pub fn fetch_playlist(cursor: &str, rustic: &Arc<Rustic>) -> Result<Option<Playl
     query.join_all();
     let playlist = rustic
         .query_playlist(query)?
-        .map(|playlist| PlaylistModel::new(playlist));
+        .map(PlaylistModel::from);
     debug!("Fetching playlist took {}ms", sw.elapsed_ms());
 
     Ok(playlist)
@@ -92,7 +93,7 @@ pub fn fetch_tracks(rustic: &Arc<Rustic>) -> Result<Vec<TrackModel>, Error> {
     debug!("Fetching tracks took {}ms", sw.elapsed_ms());
     let tracks = tracks
         .into_iter()
-        .map(|track| TrackModel::new(track))
+        .map(TrackModel::from)
         .collect();
     Ok(tracks)
 }
@@ -101,7 +102,7 @@ pub fn fetch_track(cursor: &str, rustic: &Arc<Rustic>) -> Result<Option<TrackMod
     let uri = from_cursor(cursor)?;
     let query = SingleQuery::uri(uri);
     let track = rustic.query_track(query)?;
-    let track = track.map(|track| TrackModel::new(track));
+    let track = track.map(TrackModel::from);
 
     Ok(track)
 }

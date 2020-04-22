@@ -1,13 +1,13 @@
 use crate::library::{Album, Artist, Playlist, Track};
-use serde_derive::Serialize;
+use serde_derive::{Serialize, Deserialize};
 
-#[derive(Debug, Clone, Serialize, PartialEq)]
+#[derive(Debug, Clone, Serialize, PartialEq, Deserialize)]
 pub struct ProviderItem {
     pub label: String,
     pub data: ProviderItemType,
 }
 
-#[derive(Debug, Clone, Serialize, PartialEq)]
+#[derive(Debug, Clone, Serialize, PartialEq, Deserialize)]
 pub enum ProviderItemType {
     Track(Track),
     Album(Album),

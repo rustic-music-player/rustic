@@ -1,10 +1,11 @@
 use std::sync::Arc;
 
+use log::{debug, trace};
 use failure::Error;
 use rayon::prelude::*;
 
 use rustic_core::{Album, Artist, Provider, Rustic, Track};
-use viewmodels::*;
+use rustic_api::models::*;
 
 pub fn search(
     query: &str,
@@ -35,7 +36,7 @@ pub fn search(
         .flat_map(|items| items)
         .filter(|result| result.is_track())
         .map(Track::from)
-        .map(|track| TrackModel::new(track))
+        .map(TrackModel::from)
         .collect();
 
     let albums: Vec<AlbumModel> = results
@@ -44,7 +45,7 @@ pub fn search(
         .flat_map(|items| items)
         .filter(|result| result.is_album())
         .map(Album::from)
-        .map(|album| AlbumModel::new(album))
+        .map(AlbumModel::from)
         .collect();
 
     let artists: Vec<ArtistModel> = results
@@ -53,7 +54,7 @@ pub fn search(
         .flat_map(|items| items)
         .filter(|result| result.is_artist())
         .map(Artist::from)
-        .map(|artist| ArtistModel::new(artist))
+        .map(ArtistModel::from)
         .collect();
 
     Ok(SearchResults {

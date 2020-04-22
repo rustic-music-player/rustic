@@ -1,10 +1,11 @@
 use std::sync::Arc;
 
-use failure::Error;
+use failure::{Error, format_err};
+use log::{debug};
 
-use cursor::from_cursor;
+use crate::cursor::from_cursor;
 use rustic_core::{Album, PlayerState, Playlist, Rustic, SingleQuery, Track};
-use viewmodels::TrackModel;
+use rustic_api::models::TrackModel;
 
 pub fn fetch(rustic: &Arc<Rustic>) -> Result<Vec<TrackModel>, Error> {
     let player = rustic
@@ -13,7 +14,7 @@ pub fn fetch(rustic: &Arc<Rustic>) -> Result<Vec<TrackModel>, Error> {
     let tracks = player
         .get_queue()
         .into_iter()
-        .map(|track| TrackModel::new(track))
+        .map(TrackModel::from)
         .collect();
     Ok(tracks)
 }

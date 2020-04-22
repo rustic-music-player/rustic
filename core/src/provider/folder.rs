@@ -1,7 +1,7 @@
 use crate::provider::item::ProviderItem;
-use serde_derive::Serialize;
+use serde_derive::{Serialize, Deserialize};
 
-#[derive(Debug, Clone, Serialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ProviderFolder {
     pub folders: Vec<String>,
     pub items: Vec<ProviderItem>,

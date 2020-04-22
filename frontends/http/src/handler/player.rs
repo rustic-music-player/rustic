@@ -1,18 +1,18 @@
 use std::sync::Arc;
 
-use failure::Error;
+use failure::{Error, format_err};
 
-use cursor::to_cursor;
 use rustic_core::player::PlayerState;
 use rustic_core::Rustic;
-use viewmodels::{PlayerModel, TrackModel};
+use rustic_api::models::{PlayerModel, TrackModel};
+use rustic_api::cursor::to_cursor;
 
 pub fn get_players(rustic: &Arc<Rustic>) -> Vec<PlayerModel> {
     let players = rustic.get_players();
     players
         .into_iter()
         .map(|(id, player)| {
-            let track = player.queue.current().map(|track| TrackModel::new(track));
+            let track = player.queue.current().map(TrackModel::from);
 
             PlayerModel {
                 cursor: to_cursor(&id),
@@ -29,10 +29,7 @@ pub fn get_state(rustic: &Arc<Rustic>) -> Result<PlayerModel, Error> {
         .get_default_player()
         .ok_or_else(|| format_err!("Missing default player"))?;
     let player_id = rustic.get_default_player_id().unwrap();
-    let current = match player.queue.current() {
-        Some(track) => Some(TrackModel::new(track)),
-        None => None,
-    };
+    let current = player.queue.current().map(TrackModel::from);
 
     let state = PlayerModel {
         cursor: to_cursor(&player_id),

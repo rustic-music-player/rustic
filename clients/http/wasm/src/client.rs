@@ -1,0 +1,42 @@
+use wasm_bindgen::prelude::*;
+use wasm_bindgen::JsCast;
+use wasm_bindgen_futures::JsFuture;
+use web_sys::{Request, RequestInit, Response};
+
+use async_trait::async_trait;
+use rustic_http_client::HttpClient;
+use serde::de::DeserializeOwned;
+
+#[derive(Debug, Clone)]
+pub struct RusticHttpClient;
+
+impl RusticHttpClient {
+    pub const fn new() -> RusticHttpClient {
+        RusticHttpClient
+    }
+}
+
+#[async_trait(?Send)]
+impl HttpClient for RusticHttpClient {
+    type Error = JsValue;
+
+    async fn get<T>(&self, url: &str) -> Result<T, Self::Error>
+        where T: DeserializeOwned {
+        let mut opts = RequestInit::new();
+        opts.method("GET");
+
+        let request = Request::new_with_str_and_init(url, &opts)?;
+
+        let window = web_sys::window().unwrap();
+        let resp_value = JsFuture::from(window.fetch_with_request(&request)).await?;
+
+        assert!(resp_value.is_instance_of::<Response>());
+        let resp: Response = resp_value.dyn_into().unwrap();
+
+        let json = JsFuture::from(resp.json()?).await?;
+
+        let model: T = json.into_serde().unwrap();
+
+        Ok(model)
+    }
+}
