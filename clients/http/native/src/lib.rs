@@ -1,6 +1,7 @@
 use async_trait::async_trait;
 use rustic_http_client::HttpClient;
 use serde::de::DeserializeOwned;
+use serde::Serialize;
 
 #[derive(Debug, Clone)]
 pub struct RusticHttpClient {
@@ -29,6 +30,19 @@ impl HttpClient for RusticHttpClient {
             .send()
             .await?
             .json::<T>()
+            .await?;
+
+        Ok(body)
+    }
+    async fn post<TReq, TRes>(&self, url: &str, body: TReq) -> Result<TRes, Self::Error>
+        where TRes: DeserializeOwned,
+              TReq: Serialize {
+        let url = format!("{}/{}", &self.base_url, url);
+        let body = self.client.post(&url)
+            .json(&body)
+            .send()
+            .await?
+            .json::<TRes>()
             .await?;
 
         Ok(body)

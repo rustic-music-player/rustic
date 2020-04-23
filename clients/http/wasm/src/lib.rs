@@ -18,3 +18,14 @@ pub async fn get_players() -> Result<JsValue, JsValue> {
 
     Ok(JsValue::from_serde(&players).unwrap())
 }
+
+#[wasm_bindgen]
+pub async fn search(query: JsValue) -> Result<JsValue, JsValue> {
+    if let Some(query) = query.as_string() {
+        let result = CLIENT.search(query).await?;
+
+        Ok(JsValue::from_serde(&result).unwrap())
+    }else {
+        Err(JsValue::from_str(""))
+    }
+}
