@@ -26,10 +26,10 @@ pipeline {
                         }
                     }
                     steps {
-                        sh 'curl https://rustwasm.github.io/wasm-pack/installer/init.sh -sSf | sh'
+                        //sh 'curl https://rustwasm.github.io/wasm-pack/installer/init.sh -sSf | sh'
                         sh 'cargo build --bins --workspace --release --message-format json > cargo-build.json'
-                        sh 'wasm-pack build clients/http/wasm'
-                        sh 'wasm-pack pack clients/http/wasm'
+                        //sh 'wasm-pack build clients/http/wasm'
+                        //sh 'wasm-pack pack clients/http/wasm'
                     }
                     post {
                         always {
