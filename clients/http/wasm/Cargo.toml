@@ -20,6 +20,7 @@ serde = { version = "1" }
 
 async-trait = "0.1"
 rustic-http-client = { path = "../" }
+rustic-api = { path = "../../../core/api" }
 
 # The `console_error_panic_hook` crate provides better debugging of panics by
 # logging them with `console.error`. This is great for development, but requires

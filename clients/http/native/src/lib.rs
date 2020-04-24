@@ -1,26 +1,28 @@
 use async_trait::async_trait;
-use rustic_http_client::HttpClient;
+use rustic_http_client::*;
 use serde::de::DeserializeOwned;
 use serde::Serialize;
 
 #[derive(Debug, Clone)]
-pub struct RusticHttpClient {
+pub struct RusticNativeHttpClient {
     base_url: String,
     client: reqwest::Client
 }
 
-impl RusticHttpClient {
-    pub fn new<S: Into<String>>(url: S) -> RusticHttpClient {
+impl RusticNativeHttpClient {
+    pub fn new<S: Into<String>>(url: S) -> RusticHttpClient<RusticNativeHttpClient> {
         let client = reqwest::Client::new();
         RusticHttpClient {
-            base_url: url.into(),
-            client
+            client: RusticNativeHttpClient {
+                base_url: url.into(),
+                client
+            }
         }
     }
 }
 
 #[async_trait(?Send)]
-impl HttpClient for RusticHttpClient {
+impl HttpClient for RusticNativeHttpClient {
     type Error = reqwest::Error;
 
     async fn get<T>(&self, url: &str) -> Result<T, Self::Error>

@@ -21,7 +21,8 @@ members = [
     "extensions/party-mode",
     "clients/http",
     "clients/http/native",
-    "clients/http/wasm"
+    "clients/http/wasm",
+    "clients/native"
 ]
 
 [package]
@@ -75,6 +76,12 @@ path = "core"
 
 [dependencies.rustic-memory-store]
 path = "store/memory"
+
+[dependencies.rustic-api]
+path = "core/api"
+
+[dependencies.rustic-native-client]
+path = "clients/native"
 
 [dependencies.rustic-sled-store]
 path = "store/sled"

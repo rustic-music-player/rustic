@@ -1,5 +1,6 @@
 use wasm_bindgen::prelude::*;
-use rustic_http_client::HttpClient;
+use rustic_http_client::*;
+use rustic_api::RusticApiClient;
 
 mod utils;
 mod client;
@@ -10,7 +11,7 @@ mod client;
 #[global_allocator]
 static ALLOC: wee_alloc::WeeAlloc = wee_alloc::WeeAlloc::INIT;
 
-static CLIENT: client::RusticHttpClient = client::RusticHttpClient::new();
+static CLIENT: RusticHttpClient<client::RusticWasmHttpClient> = client::RusticWasmHttpClient::new();
 
 #[wasm_bindgen]
 pub async fn get_players() -> Result<JsValue, JsValue> {

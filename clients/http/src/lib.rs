@@ -1,12 +1,18 @@
 use async_trait::async_trait;
 use rustic_api::models::*;
+use rustic_api::RusticApiClient;
 
 pub use rustic_api::models;
 use serde::de::DeserializeOwned;
 use serde::Serialize;
 
+#[derive(Clone)]
+pub struct RusticHttpClient<T> where T: HttpClient + Clone {
+    pub client: T
+}
+
 #[async_trait(?Send)]
-pub trait HttpClient {
+pub trait HttpClient: Clone {
     type Error;
 
     async fn get<T>(&self, url: &str) -> Result<T, Self::Error>
@@ -15,6 +21,27 @@ pub trait HttpClient {
     async fn post<TReq, TRes>(&self, url: &str, req: TReq) -> Result<TRes, Self::Error>
         where TRes: DeserializeOwned,
               TReq: Serialize;
+}
+
+#[async_trait(?Send)]
+impl<T> HttpClient for RusticHttpClient<T> where T: HttpClient + Clone {
+    type Error = T::Error;
+
+    async fn get<TReq>(&self, url: &str) -> Result<TReq, Self::Error>
+        where TReq: DeserializeOwned {
+        self.client.get(url).await
+    }
+
+    async fn post<TReq, TRes>(&self, url: &str, req: TReq) -> Result<TRes, Self::Error>
+        where TRes: DeserializeOwned,
+              TReq: Serialize {
+        self.client.post(url, req).await
+    }
+}
+
+#[async_trait(?Send)]
+impl<T> RusticApiClient for RusticHttpClient<T> where T: HttpClient + Clone {
+    type Error = T::Error;
 
     async fn get_players(&self) -> Result<Vec<PlayerModel>, Self::Error> {
         let res = self.get("/api/players").await?;

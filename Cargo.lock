@@ -4445,6 +4445,7 @@ dependencies = [
  "env_logger 0.7.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "failure 0.1.6 (registry+https://github.com/rust-lang/crates.io-index)",
  "log 0.4.8 (registry+https://github.com/rust-lang/crates.io-index)",
+ "rustic-api 0.1.0",
  "rustic-core 0.1.0",
  "rustic-dbus-frontend 0.1.0",
  "rustic-gmusic-provider 0.1.0",
@@ -4455,6 +4456,7 @@ dependencies = [
  "rustic-local-provider 0.1.0",
  "rustic-memory-store 0.1.0",
  "rustic-mpd-frontend 0.1.0",
+ "rustic-native-client 0.1.0",
  "rustic-pocketcasts-provider 0.1.0",
  "rustic-qt-frontend 0.1.0",
  "rustic-rodio-backend 0.1.0",
@@ -4472,6 +4474,7 @@ dependencies = [
 name = "rustic-api"
 version = "0.1.0"
 dependencies = [
+ "async-trait 0.1.30 (registry+https://github.com/rust-lang/crates.io-index)",
  "base64 0.12.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "rustic-core 0.1.0",
  "serde 1.0.104 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -4631,11 +4634,23 @@ dependencies = [
 ]
 
 [[package]]
+name = "rustic-native-client"
+version = "0.1.0"
+dependencies = [
+ "async-trait 0.1.30 (registry+https://github.com/rust-lang/crates.io-index)",
+ "failure 0.1.6 (registry+https://github.com/rust-lang/crates.io-index)",
+ "rustic-api 0.1.0",
+ "rustic-core 0.1.0",
+ "serde 1.0.104 (registry+https://github.com/rust-lang/crates.io-index)",
+]
+
+[[package]]
 name = "rustic-native-http-client"
 version = "0.1.0"
 dependencies = [
  "async-trait 0.1.30 (registry+https://github.com/rust-lang/crates.io-index)",
  "reqwest 0.10.4 (registry+https://github.com/rust-lang/crates.io-index)",
+ "rustic-api 0.1.0",
  "rustic-http-client 0.1.0",
  "serde 1.0.104 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
@@ -4754,6 +4769,7 @@ dependencies = [
  "async-trait 0.1.30 (registry+https://github.com/rust-lang/crates.io-index)",
  "console_error_panic_hook 0.1.6 (registry+https://github.com/rust-lang/crates.io-index)",
  "js-sys 0.3.37 (registry+https://github.com/rust-lang/crates.io-index)",
+ "rustic-api 0.1.0",
  "rustic-http-client 0.1.0",
  "serde 1.0.104 (registry+https://github.com/rust-lang/crates.io-index)",
  "wasm-bindgen 0.2.60 (registry+https://github.com/rust-lang/crates.io-index)",

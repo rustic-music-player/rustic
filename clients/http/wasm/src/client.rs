@@ -4,21 +4,23 @@ use wasm_bindgen_futures::JsFuture;
 use web_sys::{Request, RequestInit, Response};
 
 use async_trait::async_trait;
-use rustic_http_client::HttpClient;
+use rustic_http_client::{HttpClient, RusticHttpClient};
 use serde::de::DeserializeOwned;
 use serde::Serialize;
 
 #[derive(Debug, Clone)]
-pub struct RusticHttpClient;
+pub struct RusticWasmHttpClient;
 
-impl RusticHttpClient {
-    pub const fn new() -> RusticHttpClient {
-        RusticHttpClient
+impl RusticWasmHttpClient {
+    pub const fn new() -> RusticHttpClient<RusticWasmHttpClient> {
+        RusticHttpClient {
+            client: RusticWasmHttpClient
+        }
     }
 }
 
 #[async_trait(?Send)]
-impl HttpClient for RusticHttpClient {
+impl HttpClient for RusticWasmHttpClient {
     type Error = JsValue;
 
     async fn get<T>(&self, url: &str) -> Result<T, Self::Error>
