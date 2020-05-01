@@ -1,5 +1,4 @@
-use actix::prelude::*;
-use actix::{fut, Addr};
+use actix::*;
 use actix_web_actors::ws;
 use serde_json;
 use log::{debug, trace, warn};
@@ -44,7 +43,7 @@ impl Actor for SocketSession {
                     // something is wrong with chat server
                     _ => ctx.stop(),
                 }
-                fut::ok(())
+                fut::ready(())
             })
             .wait(ctx);
     }
@@ -68,18 +67,16 @@ impl Handler<messages::Message> for SocketSession {
     }
 }
 
-impl StreamHandler<ws::Message, ws::ProtocolError> for SocketSession {
-    fn handle(&mut self, msg: ws::Message, ctx: &mut Self::Context) {
+impl StreamHandler<Result<ws::Message, ws::ProtocolError>> for SocketSession {
+    fn handle(&mut self, msg: Result<ws::Message, ws::ProtocolError>, ctx: &mut Self::Context) {
         trace!("WEBSOCKET MESSAGE: {:?}", msg);
         match msg {
-            ws::Message::Ping(msg) => ctx.pong(&msg),
-            ws::Message::Pong(_) => {}
-            ws::Message::Text(_text) => {}
-            ws::Message::Binary(_) => warn!("Unexpected binary"),
-            ws::Message::Close(_) => {
+            Ok(ws::Message::Ping(msg)) => ctx.pong(&msg),
+            Ok(ws::Message::Binary(_)) => warn!("Unexpected binary"),
+            Ok(ws::Message::Close(_)) => {
                 ctx.stop();
             }
-            ws::Message::Nop => {}
+            _ => {}
         }
     }
 }

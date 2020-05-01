@@ -10,15 +10,14 @@ pub struct PlayerQuery {
 }
 
 #[get("/players")]
-pub fn get_players(data: web::Data<ApiState>) -> Result<impl Responder> {
-    let rustic = &data.app;
-    let players = player_handler::get_players(&rustic);
+pub async fn get_players(data: web::Data<ApiState>) -> Result<impl Responder> {
+    let players = data.client.get_players().await?;
 
     Ok(web::Json(players))
 }
 
 #[get("/player")]
-pub fn default_player_state(data: web::Data<ApiState>) -> Result<impl Responder> {
+pub async fn default_player_state(data: web::Data<ApiState>) -> Result<impl Responder> {
     let rustic = &data.app;
     let state = player_handler::get_state(&rustic)?;
 
@@ -26,7 +25,7 @@ pub fn default_player_state(data: web::Data<ApiState>) -> Result<impl Responder>
 }
 
 #[post("/player/next")]
-pub fn default_control_next(data: web::Data<ApiState>) -> Result<impl Responder> {
+pub async fn default_control_next(data: web::Data<ApiState>) -> Result<impl Responder> {
     let rustic = &data.app;
     player_handler::control_next(&rustic, None)?;
 
@@ -34,7 +33,7 @@ pub fn default_control_next(data: web::Data<ApiState>) -> Result<impl Responder>
 }
 
 #[post("/players/{player}/next")]
-pub fn control_next(
+pub async fn control_next(
     data: web::Data<ApiState>,
     params: web::Path<PlayerQuery>,
 ) -> Result<impl Responder> {
@@ -46,7 +45,7 @@ pub fn control_next(
 }
 
 #[post("/player/prev")]
-pub fn default_control_prev(data: web::Data<ApiState>) -> Result<impl Responder> {
+pub async fn default_control_prev(data: web::Data<ApiState>) -> Result<impl Responder> {
     let rustic = &data.app;
     player_handler::control_prev(&rustic, None)?;
 
@@ -54,7 +53,7 @@ pub fn default_control_prev(data: web::Data<ApiState>) -> Result<impl Responder>
 }
 
 #[post("/players/{player}/prev")]
-pub fn control_prev(
+pub async fn control_prev(
     data: web::Data<ApiState>,
     params: web::Path<PlayerQuery>,
 ) -> Result<impl Responder> {
@@ -66,7 +65,7 @@ pub fn control_prev(
 }
 
 #[post("/player/pause")]
-pub fn default_control_pause(data: web::Data<ApiState>) -> Result<impl Responder> {
+pub async fn default_control_pause(data: web::Data<ApiState>) -> Result<impl Responder> {
     let rustic = &data.app;
     player_handler::control_pause(&rustic, None)?;
 
@@ -74,7 +73,7 @@ pub fn default_control_pause(data: web::Data<ApiState>) -> Result<impl Responder
 }
 
 #[post("/players/{player}/pause")]
-pub fn control_pause(
+pub async fn control_pause(
     data: web::Data<ApiState>,
     params: web::Path<PlayerQuery>,
 ) -> Result<impl Responder> {
@@ -86,7 +85,7 @@ pub fn control_pause(
 }
 
 #[post("/player/play")]
-pub fn default_control_play(data: web::Data<ApiState>) -> Result<impl Responder> {
+pub async fn default_control_play(data: web::Data<ApiState>) -> Result<impl Responder> {
     let rustic = &data.app;
     player_handler::control_play(&rustic, None)?;
 
@@ -94,7 +93,7 @@ pub fn default_control_play(data: web::Data<ApiState>) -> Result<impl Responder>
 }
 
 #[post("/players/{player}/play")]
-pub fn control_play(
+pub async fn control_play(
     data: web::Data<ApiState>,
     params: web::Path<PlayerQuery>,
 ) -> Result<impl Responder> {

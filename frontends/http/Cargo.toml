@@ -12,10 +12,10 @@ homepage = "https://github.com/rustic-music-player/rustic"
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 mime = "0.2.6"
-actix = "0.8"
-actix-web = "1"
-actix-web-actors = "1.0.4"
-actix-files = "0.1.7"
+actix = "0.9"
+actix-web = "2"
+actix-web-actors = "2"
+actix-files = "0.2"
 log = "0.4"
 failure = "0.1"
 futures = "0.1"
@@ -26,7 +26,7 @@ crossbeam-channel = "0.4"
 base64 = "0.11"
 itertools = "0.8"
 urlencoding = { git = "https://github.com/bt/rust_urlencoding" }
-serde_qs = { version = "0.5", features = ["actix"] }
+serde_qs = { git = "https://github.com/Tarnadas/serde_qs", features = ["actix"] }
 rustic-api = { path = "../../core/api", features = ["conversion"] }
 
 [dependencies.rustic-core]

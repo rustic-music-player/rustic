@@ -12,3 +12,7 @@ serde = { version = "1", features = ["derive"] }
 async-trait = "0.1"
 rustic-core = { path = "../../core" }
 failure = "0.1"
+stopwatch = "0.0.7"
+rayon = "1"
+log = "0.4"
+itertools = "0.9"

@@ -6,31 +6,6 @@ use rustic_core::provider::Authentication;
 use rustic_core::{Provider, Rustic};
 use rustic_api::models::*;
 
-pub fn get_providers(rustic: &Arc<Rustic>) -> Vec<ProviderModel> {
-    rustic
-        .providers
-        .iter()
-        .filter(|provider| {
-            provider
-                .read()
-                .map(|provider| provider.auth_state().is_authenticated())
-                .unwrap_or(false)
-        })
-        .map(|provider| {
-            let provider = provider.read().unwrap();
-            let title = provider.title().to_owned();
-            let provider_type = provider.provider();
-            let explore = provider.root();
-
-            ProviderModel {
-                title,
-                provider: provider_type.into(),
-                explore: explore.into(),
-            }
-        })
-        .collect()
-}
-
 pub fn navigate(
     rustic: &Arc<Rustic>,
     provider_type: Provider,
@@ -48,25 +23,6 @@ pub fn navigate(
     let folder = ProviderFolderModel::from(folder);
 
     Ok(folder)
-}
-
-pub fn get_available_providers(rustic: &Arc<Rustic>) -> Vec<AvailableProviderModel> {
-    rustic
-        .providers
-        .iter()
-        .map(|provider| {
-            let provider = provider.read().expect("can't read provider");
-            let provider_type = provider.provider();
-            let auth_state = provider.auth_state();
-
-            AvailableProviderModel {
-                provider: provider_type.into(),
-                title: provider.title().to_owned(),
-                enabled: true,
-                auth_state: auth_state.into(),
-            }
-        })
-        .collect()
 }
 
 pub fn authenticate(

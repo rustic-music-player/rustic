@@ -12,10 +12,10 @@ addons:
         packages:
             - gstreamer1.0
             - libasound2-dev
-install:
-    - curl https://rustwasm.github.io/wasm-pack/installer/init.sh -sSf | sh
+install: []
+#    - curl https://rustwasm.github.io/wasm-pack/installer/init.sh -sSf | sh
 
 script:
     - cargo build --verbose
     - cargo test --verbose
-    - wasm-pack build clients/http/wasm
+#    - wasm-pack build clients/http/wasm

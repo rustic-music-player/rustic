@@ -7,23 +7,6 @@ use rustic_core::Rustic;
 use rustic_api::models::{PlayerModel, TrackModel};
 use rustic_api::cursor::to_cursor;
 
-pub fn get_players(rustic: &Arc<Rustic>) -> Vec<PlayerModel> {
-    let players = rustic.get_players();
-    players
-        .into_iter()
-        .map(|(id, player)| {
-            let track = player.queue.current().map(TrackModel::from);
-
-            PlayerModel {
-                cursor: to_cursor(&id),
-                name: player.display_name.clone(),
-                playing: (player.backend.state() == PlayerState::Play),
-                current: track,
-            }
-        })
-        .collect()
-}
-
 pub fn get_state(rustic: &Arc<Rustic>) -> Result<PlayerModel, Error> {
     let player = rustic
         .get_default_player()

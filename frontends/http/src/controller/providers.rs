@@ -22,15 +22,14 @@ pub struct AuthRedirectParams {
 }
 
 #[get("/providers")]
-pub fn get_providers(data: web::Data<ApiState>) -> Result<impl Responder> {
-    let rustic = &data.app;
-    let providers = providers_handler::get_providers(&rustic);
+pub async fn get_providers(data: web::Data<ApiState>) -> Result<impl Responder> {
+    let providers = data.client.get_providers().await?;
 
     Ok(web::Json(providers))
 }
 
 #[get("/providers/{provider}/navigate")]
-pub fn navigate(
+pub async fn navigate(
     data: web::Data<ApiState>,
     params: web::Path<ProviderParams>,
     query: web::Query<NavigateQuery>,
@@ -42,15 +41,14 @@ pub fn navigate(
 }
 
 #[get("/providers/available")]
-pub fn get_available_providers(data: web::Data<ApiState>) -> Result<impl Responder> {
-    let rustic = &data.app;
-    let providers = providers_handler::get_available_providers(&rustic);
+pub async fn get_available_providers(data: web::Data<ApiState>) -> Result<impl Responder> {
+    let providers = data.client.get_available_providers().await?;
 
     Ok(web::Json(providers))
 }
 
 #[get("/providers/{provider}/auth/redirect")]
-pub fn provider_token_auth(
+pub async fn provider_token_auth(
     query: web::Query<AuthRedirectParams>,
     params: web::Path<ProviderParams>,
     data: web::Data<ApiState>,

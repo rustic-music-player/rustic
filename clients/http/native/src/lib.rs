@@ -21,11 +21,9 @@ impl RusticNativeHttpClient {
     }
 }
 
-#[async_trait(?Send)]
+#[async_trait]
 impl HttpClient for RusticNativeHttpClient {
-    type Error = reqwest::Error;
-
-    async fn get<T>(&self, url: &str) -> Result<T, Self::Error>
+    async fn get<T>(&self, url: &str) -> Result<T, failure::Error>
         where T: DeserializeOwned {
         let url = format!("{}/{}", &self.base_url, url);
         let body = self.client.get(&url)
@@ -36,9 +34,9 @@ impl HttpClient for RusticNativeHttpClient {
 
         Ok(body)
     }
-    async fn post<TReq, TRes>(&self, url: &str, body: TReq) -> Result<TRes, Self::Error>
+    async fn post<TReq, TRes>(&self, url: &str, body: TReq) -> Result<TRes, failure::Error>
         where TRes: DeserializeOwned,
-              TReq: Serialize {
+              TReq: Serialize + Send + Sync {
         let url = format!("{}/{}", &self.base_url, url);
         let body = self.client.post(&url)
             .json(&body)

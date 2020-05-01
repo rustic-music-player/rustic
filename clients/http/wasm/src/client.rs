@@ -19,11 +19,9 @@ impl RusticWasmHttpClient {
     }
 }
 
-#[async_trait(?Send)]
+#[async_trait]
 impl HttpClient for RusticWasmHttpClient {
-    type Error = JsValue;
-
-    async fn get<T>(&self, url: &str) -> Result<T, Self::Error>
+    async fn get<T>(&self, url: &str) -> Result<T, failure::Error>
         where T: DeserializeOwned {
         let mut opts = RequestInit::new();
         opts.method("GET");
@@ -43,7 +41,7 @@ impl HttpClient for RusticWasmHttpClient {
         Ok(model)
     }
 
-    async fn post<TReq, TRes>(&self, url: &str, body: TReq) -> Result<TRes, Self::Error>
+    async fn post<TReq, TRes>(&self, url: &str, body: TReq) -> Result<TRes, failure::Error>
         where TRes: DeserializeOwned,
         TReq: Serialize {
         let body = JsValue::from_serde(&body).unwrap();

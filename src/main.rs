@@ -18,6 +18,7 @@ use rustic_gstreamer_backend::GstreamerPlayerBuilder;
 use rustic_memory_store::MemoryLibrary;
 #[cfg(feature = "rodio")]
 use rustic_rodio_backend::RodioPlayerBuilder;
+use rustic_api::RusticApiClient;
 
 mod config;
 mod options;
@@ -56,6 +57,9 @@ fn main() -> Result<(), Error> {
     };
 
     let app = Rustic::new(store, providers, extensions)?;
+    let client = rustic_native_client::RusticNativeClient::new(Arc::clone(&app));
+    let client: Box<dyn RusticApiClient> = Box::new(client);
+    let client = Arc::new(client);
 
     setup_interrupt(&app)?;
 
@@ -89,7 +93,7 @@ fn main() -> Result<(), Error> {
     {
         if config.frontend.http.is_some() {
             let http_thread =
-                rustic_http_frontend::start(config.frontend.http.clone(), Arc::clone(&app));
+                rustic_http_frontend::start(config.frontend.http.clone(), Arc::clone(&app), Arc::clone(&client));
             threads.push(http_thread);
         }
     }

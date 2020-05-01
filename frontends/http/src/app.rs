@@ -12,14 +12,16 @@ use serde_qs::actix::QsQuery;
 use serde_qs::Config;
 use crate::socket::{create_socket_server, socket_service, SocketServer};
 use crate::HttpConfig;
+use rustic_api::RusticApiClient;
 
 pub struct ApiState {
     pub app: Arc<Rustic>,
+    pub client: Arc<Box<dyn RusticApiClient>>
 }
 
-fn build_api(app: Arc<Rustic>, ws_server: Addr<SocketServer>) -> Scope {
+fn build_api(app: Arc<Rustic>, client: Arc<Box<dyn RusticApiClient>>, ws_server: Addr<SocketServer>) -> Scope {
     web::scope("/api")
-        .data(ApiState { app })
+        .data(ApiState { app, client })
         .data(QsQuery::<SearchQuery>::configure(|cfg| {
             cfg.qs_config(Config::new(2, false))
         }))
@@ -57,13 +59,13 @@ fn build_api(app: Arc<Rustic>, ws_server: Addr<SocketServer>) -> Scope {
         .service(socket_service(ws_server))
 }
 
-fn index() -> Result<impl Responder> {
+async fn index() -> Result<impl Responder> {
     let file = NamedFile::open("static/index.html")?;
 
     Ok(file)
 }
 
-pub fn start(config: &HttpConfig, app: Arc<Rustic>) -> Result<()> {
+pub fn start(config: &HttpConfig, app: Arc<Rustic>, client: Arc<Box<dyn RusticApiClient>>) -> Result<()> {
     create_dir_all(&config.static_files)?;
     let sys = System::new("rustic-http-frontend");
 
@@ -74,7 +76,7 @@ pub fn start(config: &HttpConfig, app: Arc<Rustic>) -> Result<()> {
     HttpServer::new(move || {
         App::new()
             .wrap(middleware::Logger::default())
-            .service(build_api(Arc::clone(&app), ws_server.clone()))
+            .service(build_api(Arc::clone(&app), client.clone(), ws_server.clone()))
             .service(Files::new("/cache", ".cache"))
             .service(
                 Files::new("", &static_file_dir)
@@ -83,7 +85,7 @@ pub fn start(config: &HttpConfig, app: Arc<Rustic>) -> Result<()> {
             )
     })
     .bind(format!("{}:{}", config.ip, config.port))?
-    .start();
+    .run();
 
     sys.run()?;
     Ok(())

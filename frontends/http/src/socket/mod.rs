@@ -22,7 +22,7 @@ pub fn socket_service(server: Addr<SocketServer>) -> Resource {
     web::resource("/socket").data(server).to(open)
 }
 
-pub fn open(
+pub async fn open(
     req: HttpRequest,
     stream: web::Payload,
     srv: web::Data<Addr<server::SocketServer>>,

@@ -8,3 +8,4 @@ edition = "2018"
 rustic-api = { path = "../../core/api", default-features = false }
 serde = { version = "1", features = ["derive"] }
 async-trait = "0.1"
+failure = "0.1"

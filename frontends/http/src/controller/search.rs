@@ -5,13 +5,13 @@ use log::trace;
 use crate::app::ApiState;
 use crate::cursor::from_cursor;
 use crate::handler::search as search_handler;
-use rustic_core::Provider;
 use serde_qs::actix::QsQuery;
+use rustic_api::models::ProviderType;
 
 #[derive(Deserialize)]
 pub struct SearchQuery {
     query: String,
-    providers: Option<Vec<Provider>>,
+    providers: Option<Vec<ProviderType>>,
 }
 
 #[derive(Deserialize)]
@@ -20,18 +20,17 @@ pub struct OpenParams {
 }
 
 #[get("/search")]
-pub fn search(
+pub async fn search(
     data: web::Data<ApiState>,
     params: QsQuery<SearchQuery>,
 ) -> Result<impl Responder, error::Error> {
-    let rustic = &data.app;
     trace!("search {}", &params.query);
-    let result = search_handler::search(&params.query, params.providers.as_ref(), &rustic)?;
+    let result = data.client.search(&params.query, params.providers.as_ref()).await?;
     Ok(web::Json(result))
 }
 
 #[get("/open/{url}")]
-pub fn open(
+pub async fn open(
     data: web::Data<ApiState>,
     params: web::Path<OpenParams>,
 ) -> Result<impl Responder, error::Error> {

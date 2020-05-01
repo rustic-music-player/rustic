@@ -20,12 +20,12 @@ pub struct GetEntityQuery {
 //}
 
 #[get("/library/albums/{cursor}")]
-pub fn get_album(
+pub async fn get_album(
     data: web::Data<ApiState>,
     params: web::Path<GetEntityQuery>,
 ) -> Result<impl Responder> {
-    let rustic = &data.app;
-    let album = library_handler::fetch_album(&params.cursor, rustic)?;
+    let album = data.client.get_album(&params.cursor).await?;
+
     match album {
         Some(album) => Ok(web::Json(album)),
         None => Err(error::ErrorNotFound("Not Found")),
@@ -33,36 +33,33 @@ pub fn get_album(
 }
 
 #[get("/library/albums")]
-pub fn get_albums(data: web::Data<ApiState>) -> Result<impl Responder> {
-    let rustic = &data.app;
-    let albums = library_handler::fetch_albums(rustic)?;
+pub async fn get_albums(data: web::Data<ApiState>) -> Result<impl Responder> {
+    let albums = data.client.get_albums().await?;
 
     Ok(web::Json(albums))
 }
 
 #[get("/library/artists")]
-pub fn get_artists(data: web::Data<ApiState>) -> Result<impl Responder> {
-    let rustic = &data.app;
-    let artists = library_handler::fetch_artists(&rustic)?;
+pub async fn get_artists(data: web::Data<ApiState>) -> Result<impl Responder> {
+    let artists = data.client.get_artists().await?;
 
     Ok(web::Json(artists))
 }
 
 #[get("/library/playlists")]
-pub fn get_playlists(data: web::Data<ApiState>) -> Result<impl Responder> {
-    let rustic = &data.app;
-    let playlists = library_handler::fetch_playlists(&rustic)?;
+pub async fn get_playlists(data: web::Data<ApiState>) -> Result<impl Responder> {
+    let playlists = data.client.get_playlists().await?;
 
     Ok(web::Json(playlists))
 }
 
 #[get("/library/playlists/{cursor}")]
-pub fn get_playlist(
+pub async fn get_playlist(
     data: web::Data<ApiState>,
     params: web::Path<GetEntityQuery>,
 ) -> Result<impl Responder> {
-    let rustic = &data.app;
-    let playlist = library_handler::fetch_playlist(&params.cursor, rustic)?;
+    let playlist = data.client.get_playlist(&params.cursor).await?;
+
     match playlist {
         Some(playlist) => Ok(web::Json(playlist)),
         None => Err(error::ErrorNotFound("Not Found")),
@@ -70,20 +67,18 @@ pub fn get_playlist(
 }
 
 #[get("/library/tracks")]
-pub fn get_tracks(data: web::Data<ApiState>) -> Result<impl Responder> {
-    let rustic = &data.app;
-    let tracks = library_handler::fetch_tracks(&rustic)?;
+pub async fn get_tracks(data: web::Data<ApiState>) -> Result<impl Responder> {
+    let tracks = data.client.get_tracks().await?;
 
     Ok(web::Json(tracks))
 }
 
 #[get("/tracks/{cursor}")]
-pub fn get_track(
+pub async fn get_track(
     data: web::Data<ApiState>,
     params: web::Path<GetEntityQuery>,
 ) -> Result<impl Responder> {
-    let rustic = &data.app;
-    let track = library_handler::fetch_track(&params.cursor, &rustic)?;
+    let track = data.client.get_track(&params.cursor).await?;
 
     match track {
         Some(track) => Ok(web::Json(track)),
@@ -92,7 +87,7 @@ pub fn get_track(
 }
 
 #[get("/tracks/{cursor}/coverart")]
-pub fn get_track_cover_art(
+pub async fn get_track_cover_art(
     data: web::Data<ApiState>,
     params: web::Path<GetEntityQuery>,
 ) -> Result<impl Responder> {
