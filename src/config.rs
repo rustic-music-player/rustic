@@ -1,6 +1,7 @@
 use std::fs::File;
 use std::io::prelude::*;
 use std::path::Path;
+use std::net::IpAddr;
 
 use failure::Error;
 use serde::{Deserialize, Serialize};
