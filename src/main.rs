@@ -76,9 +76,10 @@ fn main() -> Result<(), Error> {
         }
     }
 
+    rustic_core::cache::setup()?;
+
     let mut threads = vec![
         rustic_core::sync::start(Arc::clone(&app))?,
-        rustic_core::cache::start(Arc::clone(&app))?,
     ];
 
     #[cfg(feature = "mpd")]
