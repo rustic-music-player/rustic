@@ -22,7 +22,8 @@ members = [
     "clients/http",
     "clients/http/native",
     "clients/http/wasm",
-    "clients/native"
+    "clients/native",
+    "clients/ffi"
 ]
 
 [package]
