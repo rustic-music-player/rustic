@@ -3,6 +3,8 @@ use rustic_http_client::*;
 use serde::de::DeserializeOwned;
 use serde::Serialize;
 
+pub use rustic_http_client::RusticHttpClient;
+
 #[derive(Debug, Clone)]
 pub struct RusticNativeHttpClient {
     base_url: String,

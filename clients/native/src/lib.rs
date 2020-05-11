@@ -1,7 +1,5 @@
 use std::sync::Arc;
 
-use failure;
-
 use log::{trace, debug};
 use rayon::prelude::*;
 
@@ -12,6 +10,7 @@ use rustic_api::models::*;
 
 mod library;
 mod queue;
+mod player;
 
 #[derive(Clone)]
 pub struct RusticNativeClient {
@@ -28,11 +27,7 @@ impl RusticNativeClient {
 
 #[async_trait]
 impl RusticApiClient for RusticNativeClient {
-    async fn get_players(&self) -> Result<Vec<PlayerModel>, failure::Error> {
-        unimplemented!()
-    }
-
-    async fn search(&self, query: &str, provider_filter: Option<&Vec<ProviderType>>) -> Result<SearchResults, failure::Error> {
+    async fn search(&self, query: &str, provider_filter: Option<&Vec<ProviderType>>) -> Result<SearchResults> {
         let providers = &self.app.providers;
         trace!("search {}", query);
 
@@ -48,7 +43,7 @@ impl RusticApiClient for RusticNativeClient {
                 }
             })
             .map(|provider| provider.read().unwrap().search(query.to_string()))
-            .collect::<Result<Vec<_>, failure::Error>>()?;
+            .collect::<Result<Vec<_>>>()?;
         debug!("Searching took {}ms", sw.elapsed_ms());
 
         let tracks: Vec<TrackModel> = results
@@ -86,13 +81,13 @@ impl RusticApiClient for RusticNativeClient {
         })
     }
 
-    async fn get_extensions(&self) -> Result<Vec<ExtensionModel>, failure::Error> {
+    async fn get_extensions(&self) -> Result<Vec<ExtensionModel>> {
         let extensions = self.app.extensions.iter().map(ExtensionModel::from).collect();
 
         Ok(extensions)
     }
 
-    async fn get_providers(&self) -> Result<Vec<ProviderModel>, failure::Error> {
+    async fn get_providers(&self) -> Result<Vec<ProviderModel>> {
         let providers = self.app
             .providers
             .iter()
@@ -119,7 +114,7 @@ impl RusticApiClient for RusticNativeClient {
         Ok(providers)
     }
 
-    async fn get_available_providers(&self) -> Result<Vec<AvailableProviderModel>, failure::Error> {
+    async fn get_available_providers(&self) -> Result<Vec<AvailableProviderModel>> {
         let providers = self.app
             .providers
             .iter()

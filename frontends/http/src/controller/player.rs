@@ -2,7 +2,6 @@ use actix_web::{get, post, web, HttpResponse, Responder, Result};
 use serde::{Deserialize};
 use crate::app::ApiState;
 use crate::cursor::from_cursor;
-use crate::handler::player as player_handler;
 
 #[derive(Deserialize)]
 pub struct PlayerQuery {
@@ -18,16 +17,17 @@ pub async fn get_players(data: web::Data<ApiState>) -> Result<impl Responder> {
 
 #[get("/player")]
 pub async fn default_player_state(data: web::Data<ApiState>) -> Result<impl Responder> {
-    let rustic = &data.app;
-    let state = player_handler::get_state(&rustic)?;
+    let player = data.client.get_player(None).await?;
 
-    Ok(web::Json(state))
+    match player {
+        Some(player) => Ok(HttpResponse::Ok().json(player)),
+        None => Ok(HttpResponse::NotFound().finish())
+    }
 }
 
 #[post("/player/next")]
 pub async fn default_control_next(data: web::Data<ApiState>) -> Result<impl Responder> {
-    let rustic = &data.app;
-    player_handler::control_next(&rustic, None)?;
+    data.client.player_control_next(None).await?;
 
     Ok(HttpResponse::NoContent().finish())
 }
@@ -37,17 +37,15 @@ pub async fn control_next(
     data: web::Data<ApiState>,
     params: web::Path<PlayerQuery>,
 ) -> Result<impl Responder> {
-    let rustic = &data.app;
     let player_id = from_cursor(&params.player)?;
-    player_handler::control_next(&rustic, Some(player_id))?;
+    data.client.player_control_next(Some(&player_id)).await?;
 
     Ok(HttpResponse::NoContent().finish())
 }
 
 #[post("/player/prev")]
 pub async fn default_control_prev(data: web::Data<ApiState>) -> Result<impl Responder> {
-    let rustic = &data.app;
-    player_handler::control_prev(&rustic, None)?;
+    data.client.player_control_prev(None).await?;
 
     Ok(HttpResponse::NoContent().finish())
 }
@@ -57,17 +55,15 @@ pub async fn control_prev(
     data: web::Data<ApiState>,
     params: web::Path<PlayerQuery>,
 ) -> Result<impl Responder> {
-    let rustic = &data.app;
     let player_id = from_cursor(&params.player)?;
-    player_handler::control_prev(&rustic, Some(player_id))?;
+    data.client.player_control_prev(Some(&player_id)).await?;
 
     Ok(HttpResponse::NoContent().finish())
 }
 
 #[post("/player/pause")]
 pub async fn default_control_pause(data: web::Data<ApiState>) -> Result<impl Responder> {
-    let rustic = &data.app;
-    player_handler::control_pause(&rustic, None)?;
+    data.client.player_control_pause(None).await?;
 
     Ok(HttpResponse::NoContent().finish())
 }
@@ -77,17 +73,15 @@ pub async fn control_pause(
     data: web::Data<ApiState>,
     params: web::Path<PlayerQuery>,
 ) -> Result<impl Responder> {
-    let rustic = &data.app;
     let player_id = from_cursor(&params.player)?;
-    player_handler::control_pause(&rustic, Some(player_id))?;
+    data.client.player_control_pause(Some(&player_id)).await?;
 
     Ok(HttpResponse::NoContent().finish())
 }
 
 #[post("/player/play")]
 pub async fn default_control_play(data: web::Data<ApiState>) -> Result<impl Responder> {
-    let rustic = &data.app;
-    player_handler::control_play(&rustic, None)?;
+    data.client.player_control_play(None).await?;
 
     Ok(HttpResponse::NoContent().finish())
 }
@@ -97,9 +91,8 @@ pub async fn control_play(
     data: web::Data<ApiState>,
     params: web::Path<PlayerQuery>,
 ) -> Result<impl Responder> {
-    let rustic = &data.app;
     let player_id = from_cursor(&params.player)?;
-    player_handler::control_play(&rustic, Some(player_id))?;
+    data.client.player_control_play(Some(&player_id)).await?;
 
     Ok(HttpResponse::NoContent().finish())
 }
