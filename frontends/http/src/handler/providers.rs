@@ -18,7 +18,7 @@ pub fn navigate(
         .ok_or_else(|| err_msg("Invalid provider"))?;
 
     let provider = provider.read().unwrap();
-    let path = path.split("/").map(String::from).collect();
+    let path = path.split('/').map(String::from).collect();
     let folder = provider.navigate(path)?;
     let folder = ProviderFolderModel::from(folder);
 

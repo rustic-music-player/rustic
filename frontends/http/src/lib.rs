@@ -36,7 +36,7 @@ impl Default for HttpConfig {
 }
 
 pub fn start(config: Option<HttpConfig>, app: Arc<Rustic>, client: Arc<Box<dyn RusticApiClient>>) -> thread::JoinHandle<()> {
-    let config = config.unwrap_or(HttpConfig::default());
+    let config = config.unwrap_or_default();
     thread::spawn(move || {
         app::start(&config, app, client).unwrap();
     })

@@ -1,6 +1,5 @@
 use actix::*;
 use actix_web_actors::ws;
-use serde_json;
 use log::{debug, trace, warn};
 
 use crate::socket::messages;

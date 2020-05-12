@@ -95,7 +95,7 @@ impl RusticNativeClient {
         player.ok_or_else(|| format_err!("Missing default player"))
     }
 
-    fn queue_multiple(&self, player: Arc<Player>, tracks: &Vec<Track>) -> Result<(), failure::Error> {
+    fn queue_multiple(&self, player: Arc<Player>, tracks: &[Track]) -> Result<(), failure::Error> {
         let play = player.get_queue().is_empty() && player.backend.state() == PlayerState::Stop;
         player.queue.queue_multiple(&tracks);
         if play {
