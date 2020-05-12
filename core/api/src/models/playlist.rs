@@ -2,18 +2,12 @@ use crate::models::{TrackModel, ProviderType};
 use serde::{Deserialize, Serialize};
 use std::cmp::Ordering;
 
-#[derive(Clone, Debug, Serialize, Eq, Deserialize)]
+#[derive(Clone, Debug, Serialize, PartialEq, Eq, Deserialize)]
 pub struct PlaylistModel {
     pub cursor: String,
     pub title: String,
     pub tracks: Vec<TrackModel>,
     pub provider: ProviderType,
-}
-
-impl PartialEq for PlaylistModel {
-    fn eq(&self, other: &Self) -> bool {
-        self.cursor == other.cursor
-    }
 }
 
 impl PartialOrd for PlaylistModel {

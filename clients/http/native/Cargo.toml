@@ -11,3 +11,10 @@ async-trait = "0.1"
 rustic-http-client = { path = "../" }
 rustic-api = { path = "../../../core/api" }
 failure = "0.1"
+log = "0.4"
+url = "2.1"
+
+[dev-dependencies]
+mockito = "0.25"
+tokio = { version = "0.2", features = ["rt-threaded", "macros"] }
+serde_json = "1"

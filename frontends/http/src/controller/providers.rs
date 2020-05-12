@@ -1,7 +1,7 @@
 use actix_web::{get, web, Responder, Result};
 use serde::{Deserialize};
 
-use crate::app::ApiState;
+use crate::app::{ApiState, ApiClient};
 use crate::handler::providers as providers_handler;
 use rustic_core::Provider;
 
@@ -18,12 +18,12 @@ pub struct ProviderParams {
 #[derive(Deserialize)]
 pub struct AuthRedirectParams {
     code: String,
-    state: String,
+    _state: String,
 }
 
 #[get("/providers")]
-pub async fn get_providers(data: web::Data<ApiState>) -> Result<impl Responder> {
-    let providers = data.client.get_providers().await?;
+pub async fn get_providers(client: web::Data<ApiClient>) -> Result<impl Responder> {
+    let providers = client.get_providers().await?;
 
     Ok(web::Json(providers))
 }
@@ -41,8 +41,8 @@ pub async fn navigate(
 }
 
 #[get("/providers/available")]
-pub async fn get_available_providers(data: web::Data<ApiState>) -> Result<impl Responder> {
-    let providers = data.client.get_available_providers().await?;
+pub async fn get_available_providers(client: web::Data<ApiClient>) -> Result<impl Responder> {
+    let providers = client.get_available_providers().await?;
 
     Ok(web::Json(providers))
 }

@@ -1,7 +1,7 @@
 use crate::models::provider::ProviderType;
 use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Serialize, Deserialize, Clone)]
+#[derive(Debug, Serialize, Deserialize, Clone, PartialEq, Eq)]
 #[serde(rename_all = "camelCase")]
 pub struct AvailableProviderModel {
     pub title: String,
@@ -10,7 +10,7 @@ pub struct AvailableProviderModel {
     pub auth_state: ProviderAuthenticationState,
 }
 
-#[derive(Debug, Serialize, Deserialize, Clone)]
+#[derive(Debug, Serialize, Deserialize, Clone, PartialEq, Eq)]
 #[serde(rename_all = "kebab-case", tag = "state")]
 pub enum ProviderAuthenticationState {
     NoAuthentication,

@@ -31,3 +31,8 @@ rustic-api = { path = "../../core/api", features = ["conversion"] }
 
 [dependencies.rustic-core]
 path = "../../core"
+
+[dev-dependencies]
+actix-rt = "1.1"
+actix-service = "1"
+rustic-api = { path = "../../core/api", features = ["conversion", "testing"] }

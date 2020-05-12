@@ -16,11 +16,14 @@ use rustic_api::RusticApiClient;
 
 pub struct ApiState {
     pub app: Arc<Rustic>,
-    pub client: Arc<Box<dyn RusticApiClient>>
+    pub client: ApiClient
 }
 
-fn build_api(app: Arc<Rustic>, client: Arc<Box<dyn RusticApiClient>>, ws_server: Addr<SocketServer>) -> Scope {
+pub type ApiClient = Arc<Box<dyn RusticApiClient>>;
+
+fn build_api(app: Arc<Rustic>, client: ApiClient, ws_server: Addr<SocketServer>) -> Scope {
     web::scope("/api")
+        .data(Arc::clone(&client))
         .data(ApiState { app, client })
         .data(QsQuery::<SearchQuery>::configure(|cfg| {
             cfg.qs_config(Config::new(2, false))

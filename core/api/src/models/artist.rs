@@ -2,19 +2,13 @@ use crate::models::{AlbumModel, TrackModel};
 use serde::{Deserialize, Serialize};
 use std::cmp::Ordering;
 
-#[derive(Clone, Debug, Serialize, Deserialize, Eq)]
+#[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Eq)]
 pub struct ArtistModel {
     pub cursor: String,
     pub name: String,
     pub albums: Option<Vec<AlbumModel>>,
     pub tracks: Option<Vec<TrackModel>>,
     pub image: Option<String>,
-}
-
-impl PartialEq for ArtistModel {
-    fn eq(&self, other: &Self) -> bool {
-        self.cursor == other.cursor
-    }
 }
 
 impl PartialOrd for ArtistModel {

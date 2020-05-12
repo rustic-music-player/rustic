@@ -2,7 +2,7 @@ use crate::models::{ArtistModel, ProviderType, TrackModel};
 use serde::{Deserialize, Serialize};
 use std::cmp::Ordering;
 
-#[derive(Clone, Debug, Serialize, Deserialize, Eq)]
+#[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Eq)]
 pub struct AlbumModel {
     pub cursor: String,
     pub title: String,
@@ -10,12 +10,6 @@ pub struct AlbumModel {
     pub tracks: Vec<TrackModel>,
     pub provider: ProviderType,
     pub coverart: Option<String>,
-}
-
-impl PartialEq for AlbumModel {
-    fn eq(&self, other: &Self) -> bool {
-        self.cursor == other.cursor
-    }
 }
 
 impl PartialOrd for AlbumModel {

@@ -14,6 +14,8 @@ mod controller;
 mod cursor;
 mod handler;
 mod socket;
+#[cfg(test)]
+pub(crate) mod test;
 
 #[derive(Deserialize, Clone, Debug)]
 #[serde(default)]

@@ -1,7 +1,7 @@
-use actix_web::{delete, error, get, post, web, HttpResponse, Responder, Result};
-use serde::{Deserialize};
+use actix_web::{delete, error, get, HttpResponse, post, Responder, Result, web};
+use serde::Deserialize;
 
-use crate::app::ApiState;
+use crate::app::ApiClient;
 
 #[derive(Deserialize)]
 pub struct AddToQueueQuery {
@@ -14,18 +14,18 @@ pub struct QueueItemParams {
 }
 
 #[get("/queue")]
-pub async fn fetch(data: web::Data<ApiState>) -> Result<impl Responder> {
-    let tracks = data.client.get_queue(None).await?;
+pub async fn fetch(client: web::Data<ApiClient>) -> Result<impl Responder> {
+    let tracks = client.get_queue(None).await?;
 
     Ok(web::Json(tracks))
 }
 
 #[post("/queue/track/{cursor}")]
 pub async fn queue_track(
-    data: web::Data<ApiState>,
+    client: web::Data<ApiClient>,
     params: web::Path<AddToQueueQuery>,
 ) -> Result<impl Responder> {
-    let result = data.client.queue_track(None, &params.cursor).await?;
+    let result = client.queue_track(None, &params.cursor).await?;
 
     match result {
         Some(_) => Ok(HttpResponse::NoContent().finish()),
@@ -35,10 +35,10 @@ pub async fn queue_track(
 
 #[post("/queue/album/{cursor}")]
 pub async fn queue_album(
-    data: web::Data<ApiState>,
+    client: web::Data<ApiClient>,
     params: web::Path<AddToQueueQuery>,
 ) -> Result<impl Responder> {
-    let result = data.client.queue_album(None, &params.cursor).await?;
+    let result = client.queue_album(None, &params.cursor).await?;
 
     match result {
         Some(_) => Ok(HttpResponse::NoContent().finish()),
@@ -48,10 +48,10 @@ pub async fn queue_album(
 
 #[post("/queue/playlist/{cursor}")]
 pub async fn queue_playlist(
-    data: web::Data<ApiState>,
+    client: web::Data<ApiClient>,
     params: web::Path<AddToQueueQuery>,
 ) -> Result<impl Responder> {
-    let result = data.client.queue_playlist(None, &params.cursor).await?;
+    let result = client.queue_playlist(None, &params.cursor).await?;
 
     match result {
         Some(_) => Ok(HttpResponse::NoContent().finish()),
@@ -60,18 +60,18 @@ pub async fn queue_playlist(
 }
 
 #[post("/queue/clear")]
-pub async fn clear(data: web::Data<ApiState>) -> Result<impl Responder> {
-    data.client.clear_queue(None).await?;
+pub async fn clear(client: web::Data<ApiClient>) -> Result<impl Responder> {
+    client.clear_queue(None).await?;
 
     Ok(HttpResponse::NoContent().finish())
 }
 
 #[delete("/queue/{index}")]
 pub async fn remove_item(
+    client: web::Data<ApiClient>,
     params: web::Path<QueueItemParams>,
-    data: web::Data<ApiState>,
 ) -> Result<impl Responder> {
-    data.client.remove_queue_item(None, params.index).await?;
+    client.remove_queue_item(None, params.index).await?;
 
     Ok(HttpResponse::NoContent().finish())
 }
