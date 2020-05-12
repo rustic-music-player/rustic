@@ -60,7 +60,7 @@ impl provider::ProviderInstance for GooglePlayMusicProvider {
             self.client_secret.clone(),
             Some(GMUSIC_REDIRECT_URI),
         )?;
-        api.load_token();
+        api.load_token()?;
         self.client = Some(api);
 
         Ok(())
