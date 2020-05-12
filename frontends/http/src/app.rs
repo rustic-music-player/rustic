@@ -13,13 +13,12 @@ use serde_qs::Config;
 use crate::socket::{create_socket_server, socket_service, SocketServer};
 use crate::HttpConfig;
 use rustic_api::RusticApiClient;
+pub use rustic_api::ApiClient;
 
 pub struct ApiState {
     pub app: Arc<Rustic>,
     pub client: ApiClient
 }
-
-pub type ApiClient = Arc<Box<dyn RusticApiClient>>;
 
 fn build_api(app: Arc<Rustic>, client: ApiClient, ws_server: Addr<SocketServer>) -> Scope {
     web::scope("/api")

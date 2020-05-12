@@ -1,8 +1,7 @@
 use crate::messages::Message;
 use iced::Element;
-use rustic_core::Rustic;
-use std::sync::Arc;
+use crate::SavedState;
 
 pub trait Component {
-    fn view(&mut self, app: &Arc<Rustic>) -> Element<'_, Message>;
+    fn view(&mut self, state: &SavedState) -> Element<'_, Message>;
 }

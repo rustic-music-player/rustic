@@ -112,7 +112,7 @@ fn main() -> Result<(), Error> {
 
     #[cfg(feature = "iced")]
     {
-        iced_frontend::start(Arc::clone(&app));
+        rustic_iced_frontend::start(Arc::clone(&client));
     }
 
     for handle in threads {

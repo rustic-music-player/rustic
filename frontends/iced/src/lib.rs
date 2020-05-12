@@ -7,20 +7,21 @@ use iced::{
     Element, Length, Row, Scrollable, Settings, Text, TextInput, Vector,
 };
 use rustic_core::player::Player;
-use rustic_core::Rustic;
+use rustic_api::ApiClient;
 use std::sync::Arc;
+use rustic_api::models::{PlayerModel, AlbumModel, ArtistModel, PlaylistModel, TrackModel};
 
 mod component;
 mod messages;
 mod overlay;
 mod views;
 
-pub fn start(app: Arc<Rustic>) {
-    IcedApplication::run(Settings::with_flags(app));
+pub fn start(api: ApiClient) {
+    IcedApplication::run(Settings::with_flags(api));
 }
 
 struct IcedApplication {
-    app: Arc<Rustic>,
+    api: ApiClient,
     sidenav: Vec<(String, button::State, MainView)>,
     current_view: MainView,
     main_scroll: scrollable::State,
@@ -29,14 +30,15 @@ struct IcedApplication {
     player_button: button::State,
     overlay: Option<OverlayState>,
     player: Option<Arc<Player>>,
+    state: SavedState
 }
 
 impl Application for IcedApplication {
     type Executor = iced::executor::Default;
     type Message = Message;
-    type Flags = Arc<Rustic>;
+    type Flags = ApiClient;
 
-    fn new(app: Self::Flags) -> (Self, Command<Self::Message>) {
+    fn new(api: Self::Flags) -> (Self, Command<Self::Message>) {
         let sidenav = vec![
             ("Albums".into(), button::State::new(), MainView::Albums),
             ("Artists".into(), button::State::new(), MainView::Artists),
@@ -44,14 +46,13 @@ impl Application for IcedApplication {
             (
                 "Playlists".into(),
                 button::State::new(),
-                MainView::Playlists,
+                MainView::Playlists(Vec::new()),
             ),
             ("Explore".into(), button::State::new(), MainView::Explore),
         ];
-        let player = app.get_default_player();
         (
             IcedApplication {
-                app,
+                api,
                 sidenav,
                 current_view: MainView::default(),
                 main_scroll: scrollable::State::new(),
@@ -59,7 +60,8 @@ impl Application for IcedApplication {
                 search_query: String::new(),
                 player_button: button::State::new(),
                 overlay: None,
-                player,
+                player: None,
+                state: SavedState::default()
             },
             Command::none(),
         )
@@ -71,30 +73,53 @@ impl Application for IcedApplication {
 
     fn update(&mut self, message: Self::Message) -> Command<Self::Message> {
         match message {
+            Message::Loaded(state) => {
+                self.state = state;
+                if let Some(OverlayState::PlayerList(players)) = self.overlay.as_mut() {
+                    *players = self.state.players
+                        .iter()
+                        .map(|player| (button::State::new(), player.clone()))
+                        .collect();
+                }
+                if let MainView::Playlists(playlists) = &mut self.current_view {
+                    *playlists = self.state.playlists
+                        .iter()
+                        .map(|playlist| (button::State::new(), playlist.clone()))
+                        .collect();
+                }
+            }
             Message::OpenView(view) => {
                 self.current_view = view;
+                let state = self.state.clone();
+                return match self.current_view {
+                    MainView::Albums => Command::perform(state.load_albums(self.api.clone()), Message::Loaded),
+                    MainView::Playlists(_) => Command::perform(state.load_playlists(self.api.clone()), Message::Loaded),
+                    MainView::Artists => Command::perform(state.load_artists(self.api.clone()), Message::Loaded),
+                    MainView::Tracks => Command::perform(state.load_tracks(self.api.clone()), Message::Loaded),
+                    _ => Command::none()
+                }
             }
             Message::Search(query) => {
                 self.search_query = query;
             }
+            Message::QueueTrack(track) => {
+                let api = self.api.clone();
+                return Command::perform(SavedState::queue_track(api, track.clone()), |_| Message::QueueUpdated)
+            }
             Message::OpenOverlay(overlay) => {
-                let state = match overlay {
+                return match overlay {
                     Overlay::PlayerList => {
-                        let players = self
-                            .app
-                            .get_players()
-                            .iter()
-                            .map(|(_, player)| (button::State::new(), Arc::clone(player)))
-                            .collect();
-                        OverlayState::PlayerList(players)
+                        self.overlay = Some(OverlayState::PlayerList(Vec::new()));
+                        let state = self.state.clone();
+                        Command::perform(state.load_players(self.api.clone()), Message::Loaded)
                     }
                 };
-                self.overlay = Some(state);
             }
             Message::SelectPlayer(player) => {
                 self.overlay = None;
-                self.player = Some(player);
+                // self.player = Some(player);
             }
+            Message::QueueUpdated => {}
         }
         Command::none()
     }
@@ -107,8 +132,8 @@ impl Application for IcedApplication {
                 .spacing(20)
                 .push(Text::new("Players").size(100));
             for (state, player) in players {
-                let btn = button::Button::new(state, Text::new(&player.display_name))
-                    .on_press(Message::SelectPlayer(Arc::clone(player)));
+                let btn = button::Button::new(state, Text::new(&player.name))
+                    .on_press(Message::SelectPlayer(player.cursor.clone()));
                 list = list.push(btn);
             }
             list.into()
@@ -144,10 +169,65 @@ impl Application for IcedApplication {
                 .on_press(Message::OpenOverlay(Overlay::PlayerList));
             nav = nav.push(player_select);
 
-            let content = self.current_view.view(&self.app);
+            let content = self.current_view.view(&self.state);
             let scroll_container = Scrollable::new(&mut self.main_scroll).push(content);
 
             Column::new().push(nav).push(scroll_container).into()
+        }
+    }
+}
+
+#[derive(Debug, Default, Clone)]
+pub struct SavedState {
+    pub players: Vec<PlayerModel>,
+    pub albums: Vec<AlbumModel>,
+    pub artists: Vec<ArtistModel>,
+    pub playlists: Vec<PlaylistModel>,
+    pub tracks: Vec<TrackModel>
+}
+
+impl SavedState {
+    async fn queue_track(api: ApiClient, track: TrackModel) {
+        api.queue_track(None, &track.cursor).await.unwrap();
+    }
+
+    async fn load_players(self, api: ApiClient) -> SavedState {
+        let players = api.get_players().await.unwrap();
+        SavedState {
+            players,
+            ..self
+        }
+    }
+
+    async fn load_albums(self, api: ApiClient) -> SavedState {
+        let albums = api.get_albums().await.unwrap();
+        SavedState {
+            albums,
+            ..self
+        }
+    }
+
+    async fn load_artists(self, api: ApiClient) -> SavedState {
+        let artists = api.get_artists().await.unwrap();
+        SavedState {
+            artists,
+            ..self
+        }
+    }
+
+    async fn load_playlists(self, api: ApiClient) -> SavedState {
+        let playlists = api.get_playlists().await.unwrap();
+        SavedState {
+            playlists,
+            ..self
+        }
+    }
+
+    async fn load_tracks(self, api: ApiClient) -> SavedState {
+        let tracks = api.get_tracks().await.unwrap();
+        SavedState {
+            tracks,
+            ..self
         }
     }
 }

@@ -11,3 +11,6 @@ pub use self::client::RusticApiClient;
 
 #[cfg(feature = "testing")]
 pub use self::test_client::TestApiClient;
+use std::sync::Arc;
+
+pub type ApiClient = Arc<Box<dyn RusticApiClient>>;

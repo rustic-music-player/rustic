@@ -1,6 +1,5 @@
 use iced::button;
-use rustic_core::player::Player;
-use std::sync::Arc;
+use rustic_api::models::PlayerModel;
 
 #[derive(Debug, Clone, Copy)]
 pub enum Overlay {
@@ -9,5 +8,5 @@ pub enum Overlay {
 
 #[derive(Debug, Clone)]
 pub enum OverlayState {
-    PlayerList(Vec<(button::State, Arc<Player>)>),
+    PlayerList(Vec<(button::State, PlayerModel)>),
 }

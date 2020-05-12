@@ -1,12 +1,15 @@
 use crate::overlay::Overlay;
 use crate::views::MainView;
-use rustic_core::player::Player;
-use std::sync::Arc;
+use crate::SavedState;
+use rustic_api::models::TrackModel;
 
 #[derive(Debug, Clone)]
 pub enum Message {
     OpenView(MainView),
     Search(String),
     OpenOverlay(Overlay),
-    SelectPlayer(Arc<Player>),
+    SelectPlayer(String),
+    Loaded(SavedState),
+    QueueTrack(TrackModel),
+    QueueUpdated
 }

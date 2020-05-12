@@ -1,8 +1,10 @@
 use crate::component::Component;
 use crate::messages::Message;
-use iced::{button, Button, Column, Element, HorizontalAlignment, Length, Text};
-use rustic_core::{Album, Artist, MultiQuery, Playlist, Rustic, Track};
-use std::sync::Arc;
+use iced::{button, Column, Element, HorizontalAlignment, Length, Text};
+use rustic_api::models::{AlbumModel, PlaylistModel, ArtistModel, TrackModel};
+use crate::SavedState;
+
+type ActionList<T> = Vec<(button::State, T)>;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum MainView {
@@ -10,7 +12,8 @@ pub enum MainView {
     Album(String),
     Artists,
     Tracks,
-    Playlists,
+    Playlists(ActionList<PlaylistModel>),
+    Playlist((String, ActionList<TrackModel>)),
     Explore,
 }
 
@@ -21,14 +24,18 @@ impl Default for MainView {
 }
 
 impl Component for MainView {
-    fn view(&mut self, app: &Arc<Rustic>) -> Element<'_, Message> {
-        let (title, element): (&'static str, Element<_>) = match self {
-            MainView::Albums => ("Albums", self.albums_view(app)),
-            MainView::Album(_) => ("Album", self.default_view()),
-            MainView::Artists => ("Artists", self.artists_view(app)),
-            MainView::Tracks => ("Tracks", self.tracks_view(app)),
-            MainView::Playlists => ("Playlists", self.playlists_view(app)),
-            MainView::Explore => ("Explore", self.default_view()),
+    fn view(&mut self, state: &SavedState) -> Element<'_, Message> {
+        let (title, element): (String, Element<_>) = match self {
+            MainView::Albums => ("Albums".into(), self.albums_view(&state.albums)),
+            MainView::Album(_) => ("Album".into(), self.default_view()),
+            MainView::Artists => ("Artists".into(), self.artists_view(&state.artists)),
+            MainView::Tracks => ("Tracks".into(), self.tracks_view(&state.tracks)),
+            MainView::Playlists(l) => ("Playlists".into(), MainView::playlists_view(l)),
+            MainView::Playlist((cursor, tracks)) => {
+                let playlist = state.playlists.iter().find(|p| &p.cursor == cursor).cloned().unwrap();
+                (playlist.title.clone(), MainView::playlist_view(tracks))
+            },
+            MainView::Explore => ("Explore".into(), self.default_view()),
         };
         let title = Text::new(title)
             .width(Length::Fill)
@@ -40,22 +47,32 @@ impl Component for MainView {
 }
 
 impl MainView {
-    fn playlists_view(&self, app: &Arc<Rustic>) -> Element<'_, Message> {
-        app.library
-            .query_playlists(MultiQuery::new())
-            .unwrap_or_default()
-            .iter()
-            .fold(Column::new(), |list, playlist| {
-                let item = Text::new(&playlist.title);
-                list.push(item)
+    fn playlists_view(playlists: &mut Vec<(button::State, PlaylistModel)>) -> Element<Message> {
+        playlists
+            .iter_mut()
+            .fold(Column::new(), |list, (state, playlist)| {
+                let btn = button::Button::new(state, Text::new(&playlist.title))
+                    .on_press(Message::OpenView(MainView::Playlist((playlist.cursor.clone(), playlist.tracks.iter().map(|track| {
+                        (button::State::new(), track.clone())
+                    }).collect()))));
+                list.push(btn)
             })
             .into()
     }
 
-    fn albums_view(&self, app: &Arc<Rustic>) -> Element<'_, Message> {
-        app.library
-            .query_albums(MultiQuery::new())
-            .unwrap_or_default()
+    fn playlist_view(tracks: &mut ActionList<TrackModel>) -> Element<Message> {
+        tracks
+            .iter_mut()
+            .fold(Column::new(), |list, (state, track)| {
+                let btn = button::Button::new(state, Text::new(&track.title))
+                    .on_press(Message::QueueTrack(track.clone()));
+                list.push(btn)
+            })
+            .into()
+    }
+
+    fn albums_view(&self, albums: &[AlbumModel]) -> Element<'_, Message> {
+        albums
             .iter()
             .fold(Column::new(), |list, album| {
                 let name = Text::new(&album.title);
@@ -66,10 +83,8 @@ impl MainView {
             .into()
     }
 
-    fn artists_view(&self, app: &Arc<Rustic>) -> Element<'_, Message> {
-        app.library
-            .query_artists(MultiQuery::new())
-            .unwrap_or_default()
+    fn artists_view(&self, artists: &[ArtistModel]) -> Element<'_, Message> {
+        artists
             .iter()
             .fold(Column::new(), |list, artist| {
                 let c = Text::new(&artist.name);
@@ -78,10 +93,8 @@ impl MainView {
             .into()
     }
 
-    fn tracks_view(&self, app: &Arc<Rustic>) -> Element<'_, Message> {
-        app.library
-            .query_tracks(MultiQuery::new())
-            .unwrap_or_default()
+    fn tracks_view(&self, tracks: &[TrackModel]) -> Element<'_, Message> {
+        tracks
             .iter()
             .fold(Column::new(), |list, track| {
                 let c = Text::new(&track.title);
