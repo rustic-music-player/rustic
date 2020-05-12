@@ -29,7 +29,14 @@ pub struct FrontendConfig {
     pub mpd: Option<rustic_mpd_frontend::MpdConfig>,
     #[cfg(feature = "web-api")]
     pub http: Option<rustic_http_frontend::HttpConfig>,
+    #[cfg(feature = "iced")]
+    #[serde(default)]
+    pub iced: Option<IcedConfig>
 }
+
+// TODO: fill with options and move to iced frontend crate
+#[derive(Deserialize, Debug, Clone)]
+pub struct IcedConfig {}
 
 impl Default for FrontendConfig {
     fn default() -> Self {
@@ -38,6 +45,8 @@ impl Default for FrontendConfig {
             mpd: None,
             #[cfg(feature = "web-api")]
             http: Some(rustic_http_frontend::HttpConfig::default()),
+            #[cfg(feature = "iced")]
+            iced: None
         }
     }
 }

@@ -43,7 +43,8 @@ default = [
 	"rodio",
 	"local-files",
 	"pocketcasts",
-	"soundcloud"
+	"soundcloud",
+	"iced"
 ]
 
 mpd = ["rustic-mpd-frontend"]

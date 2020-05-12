@@ -111,7 +111,7 @@ fn main() -> Result<(), Error> {
     }
 
     #[cfg(feature = "iced")]
-    {
+    if config.frontend.iced.is_some() {
         rustic_iced_frontend::start(Arc::clone(&client));
     }
 
