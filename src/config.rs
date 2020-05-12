@@ -1,6 +1,7 @@
 use std::fs::File;
 use std::io::prelude::*;
 use std::path::Path;
+#[cfg(feature = "google-cast")]
 use std::net::IpAddr;
 
 use failure::Error;
@@ -144,6 +145,7 @@ fn default_backend() -> Vec<PlayerBackendConfig> {
     vec![config]
 }
 
+#[cfg(feature = "google-cast")]
 fn default_cast_discovery() -> bool {
     true
 }
