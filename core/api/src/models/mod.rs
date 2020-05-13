@@ -7,6 +7,7 @@ pub use self::player::*;
 pub use self::playlist::*;
 pub use self::provider::*;
 pub use self::search::*;
+pub use self::sync_state::*;
 pub use self::track::*;
 
 mod album;
@@ -18,4 +19,5 @@ mod player;
 mod playlist;
 mod provider;
 mod search;
+mod sync_state;
 mod track;

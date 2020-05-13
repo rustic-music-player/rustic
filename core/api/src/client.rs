@@ -1,6 +1,7 @@
 use async_trait::async_trait;
 
 use crate::models::*;
+use futures::stream::BoxStream;
 
 pub type Result<T> = std::result::Result<T, failure::Error>;
 
@@ -30,6 +31,8 @@ pub trait LibraryApiClient: Sync + Send {
     async fn get_tracks(&self) -> Result<Vec<TrackModel>>;
 
     async fn get_track(&self, cursor: &str) -> Result<Option<TrackModel>>;
+
+    fn sync_state(&self) -> BoxStream<'static, SyncStateModel>;
 }
 
 #[async_trait]

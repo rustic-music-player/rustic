@@ -5,6 +5,7 @@ use rustic_core::provider::{
     AuthState, InternalUri, ProviderFolder, ProviderItem, ProviderItemType,
 };
 use rustic_core::{Album, Artist, Playlist, Provider, Track};
+use rustic_core::sync::{SyncEvent, SyncItem, SyncItemState};
 
 impl From<Album> for AlbumModel {
     fn from(album: Album) -> Self {
@@ -147,6 +148,35 @@ impl From<Provider> for ProviderType {
             Provider::LocalMedia => ProviderType::LocalMedia,
             Provider::Soundcloud => ProviderType::Soundcloud,
             Provider::Spotify => ProviderType::Spotify,
+        }
+    }
+}
+
+impl From<SyncEvent> for SyncStateModel {
+    fn from(event: SyncEvent) -> Self {
+        match event {
+            SyncEvent::Synchronizing(items) => SyncStateModel::Synchronizing(items.into_iter().map(SyncItemModel::from).collect()),
+            SyncEvent::Idle => SyncStateModel::Idle
+        }
+    }
+}
+
+impl From<SyncItem> for SyncItemModel {
+    fn from(item: SyncItem) -> Self {
+        SyncItemModel {
+            provider: item.provider.into(),
+            state: item.state.into()
+        }
+    }
+}
+
+impl From<SyncItemState> for SyncItemStateModel {
+    fn from(item: SyncItemState) -> Self {
+        match item {
+            SyncItemState::Idle => SyncItemStateModel::Idle,
+            SyncItemState::Syncing => SyncItemStateModel::Syncing,
+            SyncItemState::Done => SyncItemStateModel::Done,
+            SyncItemState::Error => SyncItemStateModel::Error,
         }
     }
 }

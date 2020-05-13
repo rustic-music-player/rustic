@@ -1,10 +1,11 @@
-use async_trait::async_trait;
-use rustic_api::models::*;
-use rustic_api::client::*;
-
-pub use rustic_api::models;
+use futures::stream::BoxStream;
 use serde::de::DeserializeOwned;
 use serde::Serialize;
+
+use async_trait::async_trait;
+use rustic_api::client::*;
+use rustic_api::models::*;
+pub use rustic_api::models;
 
 #[derive(Clone)]
 pub struct RusticHttpClient<T> where T: HttpClient {
@@ -109,6 +110,10 @@ impl<T> LibraryApiClient for RusticHttpClient<T> where T: HttpClient {
         let res = self.get(&format!("/api/library/tracks/{}", cursor)).await?;
 
         Ok(res)
+    }
+
+    fn sync_state(&self) -> BoxStream<'static, SyncStateModel> {
+        unimplemented!()
     }
 }
 

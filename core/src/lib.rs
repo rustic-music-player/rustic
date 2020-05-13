@@ -30,6 +30,7 @@ pub struct Rustic {
     pub extensions: Vec<HostedExtension>,
     default_player: Arc<Mutex<Option<String>>>,
     keep_running: Arc<(Mutex<bool>, Condvar)>,
+    pub sync: sync::SyncState,
 }
 
 impl Rustic {
@@ -47,6 +48,7 @@ impl Rustic {
             cache: Arc::new(cache::Cache::new()),
             default_player: Arc::new(Mutex::new(None)),
             keep_running: Arc::new((Mutex::new(true), Condvar::new())),
+            sync: sync::SyncState::new()
         }))
     }
 

@@ -17,4 +17,5 @@ rustic-core = { path = "../", optional = true }
 base64 = { version = "0.12", optional = true }
 async-trait = "0.1"
 failure = "0.1"
+futures = "0.3"
 simulacrum = { git = "https://github.com/pcsm/simulacrum.git", branch = "integration/v0.4", optional = true }

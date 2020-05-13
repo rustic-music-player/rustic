@@ -1,12 +1,14 @@
-use async_trait::async_trait;
+use futures::stream::{BoxStream, StreamExt};
+use itertools::Itertools;
 use log::debug;
 
+use async_trait::async_trait;
 use rustic_api::client::LibraryApiClient;
-use rustic_api::models::{TrackModel, PlaylistModel, ArtistModel, AlbumModel};
-use crate::RusticNativeClient;
-use rustic_core::{MultiQuery, QueryJoins, SingleQuery};
 use rustic_api::cursor::from_cursor;
-use itertools::Itertools;
+use rustic_api::models::{AlbumModel, ArtistModel, PlaylistModel, SyncStateModel, TrackModel};
+use rustic_core::{MultiQuery, QueryJoins, SingleQuery};
+
+use crate::RusticNativeClient;
 
 #[async_trait]
 impl LibraryApiClient for RusticNativeClient {
@@ -100,5 +102,9 @@ impl LibraryApiClient for RusticNativeClient {
         let track = track.map(TrackModel::from);
 
         Ok(track)
+    }
+
+    fn sync_state(&self) -> BoxStream<'static, SyncStateModel> {
+        self.app.sync.clone().map(SyncStateModel::from).boxed()
     }
 }
