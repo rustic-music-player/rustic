@@ -44,7 +44,8 @@ default = [
 	"local-files",
 	"pocketcasts",
 	"soundcloud",
-	"iced"
+	"iced",
+	"http-client"
 ]
 
 mpd = ["rustic-mpd-frontend"]
@@ -62,6 +63,7 @@ spotify = ["rustic-spotify-provider"]
 gmusic = ["rustic-gmusic-provider"]
 sled-store = ["rustic-sled-store"]
 sqlite-store = ["rustic-sqlite-store"]
+http-client = ["rustic-native-http-client"]
 
 [dependencies]
 env_logger = "0.7"
@@ -84,6 +86,10 @@ path = "core/api"
 
 [dependencies.rustic-native-client]
 path = "clients/native"
+
+[dependencies.rustic-native-http-client]
+path = "clients/http/native"
+optional = true
 
 [dependencies.rustic-sled-store]
 path = "store/sled"

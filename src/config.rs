@@ -21,6 +21,22 @@ pub struct Config {
     pub extensions: ExtensionConfig,
     #[serde(default)]
     pub discovery: DiscoveryConfig,
+    #[serde(default)]
+    pub client: ClientConfig,
+}
+
+impl Default for Config {
+    fn default() -> Self {
+        Config {
+            frontend: FrontendConfig::default(),
+            provider: ProviderConfig::default(),
+            library: LibraryConfig::default(),
+            players: default_backend(),
+            extensions: ExtensionConfig::default(),
+            discovery: DiscoveryConfig::default(),
+            client: ClientConfig::default()
+        }
+    }
 }
 
 #[derive(Deserialize, Debug, Clone)]
@@ -63,19 +79,6 @@ pub struct ProviderConfig {
     pub gmusic: Option<rustic_gmusic_provider::GooglePlayMusicProvider>,
     #[cfg(feature = "local-files")]
     pub local: Option<rustic_local_provider::LocalProvider>,
-}
-
-impl Default for Config {
-    fn default() -> Self {
-        Config {
-            frontend: FrontendConfig::default(),
-            provider: ProviderConfig::default(),
-            library: LibraryConfig::default(),
-            players: default_backend(),
-            extensions: ExtensionConfig::default(),
-            discovery: DiscoveryConfig::default(),
-        }
-    }
 }
 
 #[derive(Deserialize, Clone, Debug)]
@@ -136,6 +139,21 @@ impl Default for DiscoveryConfig {
             #[cfg(feature = "google-cast")]
             google_cast: default_cast_discovery(),
         }
+    }
+}
+
+#[derive(Deserialize, Clone, Debug)]
+#[serde(rename_all = "lowercase", tag = "type")]
+pub enum ClientConfig {
+    Native,
+    // TODO: should we disable player setup, provider setup etc when using remote client?
+    #[cfg(feature = "http-client")]
+    Http { url: String }
+}
+
+impl Default for ClientConfig {
+    fn default() -> Self {
+        ClientConfig::Native
     }
 }
 

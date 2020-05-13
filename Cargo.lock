@@ -4476,6 +4476,7 @@ dependencies = [
  "rustic-memory-store 0.1.0",
  "rustic-mpd-frontend 0.1.0",
  "rustic-native-client 0.1.0",
+ "rustic-native-http-client 0.1.0",
  "rustic-pocketcasts-provider 0.1.0",
  "rustic-qt-frontend 0.1.0",
  "rustic-rodio-backend 0.1.0",
@@ -4633,7 +4634,6 @@ dependencies = [
  "iced 0.1.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "log 0.4.8 (registry+https://github.com/rust-lang/crates.io-index)",
  "rustic-api 0.1.0",
- "rustic-core 0.1.0",
 ]
 
 [[package]]
