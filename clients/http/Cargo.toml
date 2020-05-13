@@ -7,5 +7,6 @@ edition = "2018"
 [dependencies]
 rustic-api = { path = "../../core/api", default-features = false }
 serde = { version = "1", features = ["derive"] }
+serde_json = "1"
 async-trait = "0.1"
 failure = "0.1"
