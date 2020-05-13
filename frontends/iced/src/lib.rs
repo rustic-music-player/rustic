@@ -6,9 +6,7 @@ use iced::{
     button, scrollable, text_input, Align, Application, Background, Color, Column, Command,
     Element, Length, Row, Scrollable, Settings, Text, TextInput, Vector,
 };
-use rustic_core::player::Player;
 use rustic_api::ApiClient;
-use std::sync::Arc;
 use rustic_api::models::{PlayerModel, AlbumModel, ArtistModel, PlaylistModel, TrackModel};
 
 mod component;
@@ -29,7 +27,7 @@ struct IcedApplication {
     search_query: String,
     player_button: button::State,
     overlay: Option<OverlayState>,
-    player: Option<Arc<Player>>,
+    player: Option<PlayerModel>,
     state: SavedState
 }
 
@@ -133,7 +131,7 @@ impl Application for IcedApplication {
                 .push(Text::new("Players").size(100));
             for (state, player) in players {
                 let btn = button::Button::new(state, Text::new(&player.name))
-                    .on_press(Message::SelectPlayer(player.cursor.clone()));
+                    .on_press(Message::SelectPlayer(player.clone()));
                 list = list.push(btn);
             }
             list.into()
@@ -161,7 +159,7 @@ impl Application for IcedApplication {
                 &self
                     .player
                     .as_ref()
-                    .map(|p| format!("Player: {}", &p.display_name))
+                    .map(|p| format!("Player: {}", &p.name))
                     .unwrap_or_else(|| String::from("-- Select Player -")),
             );
             let player_select = button::Button::new(&mut self.player_button, player_label)
