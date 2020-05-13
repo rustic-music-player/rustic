@@ -1,7 +1,7 @@
 use crate::overlay::Overlay;
 use crate::views::MainView;
 use crate::SavedState;
-use rustic_api::models::{TrackModel, PlayerModel};
+use rustic_api::models::{TrackModel, PlayerModel, SyncStateModel};
 
 #[derive(Debug, Clone)]
 pub enum Message {
@@ -11,5 +11,6 @@ pub enum Message {
     SelectPlayer(PlayerModel),
     Loaded(SavedState),
     QueueTrack(TrackModel),
-    QueueUpdated
+    QueueUpdated,
+    Syncing(SyncStateModel)
 }

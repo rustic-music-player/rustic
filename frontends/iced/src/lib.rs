@@ -4,15 +4,17 @@ use crate::overlay::{Overlay, OverlayState};
 use crate::views::MainView;
 use iced::{
     button, scrollable, text_input, Align, Application, Background, Color, Column, Command,
-    Element, Length, Row, Scrollable, Settings, Text, TextInput, Vector,
+    Element, Length, Row, Scrollable, Settings, Text, TextInput, Vector, Subscription
 };
 use rustic_api::ApiClient;
-use rustic_api::models::{PlayerModel, AlbumModel, ArtistModel, PlaylistModel, TrackModel};
+use rustic_api::models::{PlayerModel, AlbumModel, ArtistModel, PlaylistModel, TrackModel, SyncStateModel};
+use crate::recipes::SyncRecipe;
 
 mod component;
 mod messages;
 mod overlay;
 mod views;
+mod recipes;
 
 pub fn start(api: ApiClient) {
     IcedApplication::run(Settings::with_flags(api));
@@ -26,9 +28,11 @@ struct IcedApplication {
     search_state: text_input::State,
     search_query: String,
     player_button: button::State,
+    sync_button: button::State,
     overlay: Option<OverlayState>,
     player: Option<PlayerModel>,
-    state: SavedState
+    state: SavedState,
+    sync_state: SyncStateModel
 }
 
 impl Application for IcedApplication {
@@ -57,9 +61,11 @@ impl Application for IcedApplication {
                 search_state: text_input::State::new(),
                 search_query: String::new(),
                 player_button: button::State::new(),
+                sync_button: button::State::new(),
                 overlay: None,
                 player: None,
-                state: SavedState::default()
+                state: SavedState::default(),
+                sync_state: SyncStateModel::Idle
             },
             Command::none(),
         )
@@ -100,6 +106,18 @@ impl Application for IcedApplication {
             Message::Search(query) => {
                 self.search_query = query;
             }
+            Message::Syncing(model) => {
+                self.sync_state = model;
+                if self.sync_state == SyncStateModel::Idle {
+                    let state = self.state.clone();
+                    return Command::batch(vec![
+                        Command::perform(state.clone().load_albums(self.api.clone()), Message::Loaded),
+                        Command::perform(state.clone().load_playlists(self.api.clone()), Message::Loaded),
+                        Command::perform(state.clone().load_artists(self.api.clone()), Message::Loaded),
+                        Command::perform(state.clone().load_tracks(self.api.clone()), Message::Loaded)
+                    ]);
+                }
+            }
             Message::QueueTrack(track) => {
                 let api = self.api.clone();
                 return Command::perform(SavedState::queue_track(api, track.clone()), |_| Message::QueueUpdated)
@@ -115,7 +133,7 @@ impl Application for IcedApplication {
             }
             Message::SelectPlayer(player) => {
                 self.overlay = None;
-                // self.player = Some(player);
+                self.player = Some(player);
             }
             Message::QueueUpdated => {}
         }
@@ -167,11 +185,25 @@ impl Application for IcedApplication {
                 .on_press(Message::OpenOverlay(Overlay::PlayerList));
             nav = nav.push(player_select);
 
+            let sync_label = match self.sync_state {
+                SyncStateModel::Idle => String::from("Sync: Idle"),
+                SyncStateModel::Synchronizing(_) => String::from("Sync: Syncing")
+            };
+            let sync_label = Text::new(sync_label);
+            let sync_label = button::Button::new(&mut self.sync_button, sync_label)
+                .style(NavigationButtonStyle);
+            nav = nav.push(sync_label);
+
             let content = self.current_view.view(&self.state);
             let scroll_container = Scrollable::new(&mut self.main_scroll).push(content);
 
             Column::new().push(nav).push(scroll_container).into()
         }
+    }
+
+    fn subscription(&self) -> Subscription<Self::Message> {
+        let recipe = SyncRecipe::new(self.api.clone());
+        Subscription::from_recipe(recipe).map(Message::Syncing)
     }
 }
 

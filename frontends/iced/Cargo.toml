@@ -9,6 +9,7 @@ homepage = "https://github.com/rustic-music-player/rustic"
 
 [dependencies]
 iced = "0.1"
+iced_native = "*"
 log = "0.4"
 
 [dependencies.rustic-api]
