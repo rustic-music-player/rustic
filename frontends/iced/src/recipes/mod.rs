@@ -1,23 +1,22 @@
 use iced::futures;
-use rustic_api::ApiClient;
-use rustic_api::models::SyncStateModel;
 use log::trace;
+use rustic_api::models::SyncStateModel;
+use rustic_api::ApiClient;
 
 pub struct SyncRecipe {
-    api: ApiClient
+    api: ApiClient,
 }
 
 impl SyncRecipe {
     pub fn new(api: ApiClient) -> Self {
-        SyncRecipe {
-            api
-        }
+        SyncRecipe { api }
     }
 }
 
 impl<H, I> iced_native::subscription::Recipe<H, I> for SyncRecipe
-    where
-        H: std::hash::Hasher {
+where
+    H: std::hash::Hasher,
+{
     type Output = SyncStateModel;
 
     fn hash(&self, state: &mut H) {
@@ -28,7 +27,7 @@ impl<H, I> iced_native::subscription::Recipe<H, I> for SyncRecipe
 
     fn stream(
         self: Box<Self>,
-        _input: futures::stream::BoxStream<'static, I>
+        _input: futures::stream::BoxStream<'static, I>,
     ) -> futures::stream::BoxStream<'static, Self::Output> {
         trace!("stream");
         let api = self.api.clone();

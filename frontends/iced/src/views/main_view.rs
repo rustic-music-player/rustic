@@ -1,8 +1,8 @@
 use crate::component::Component;
 use crate::messages::Message;
-use iced::{button, Column, Element, HorizontalAlignment, Length, Text};
-use rustic_api::models::{AlbumModel, PlaylistModel, ArtistModel, TrackModel};
 use crate::SavedState;
+use iced::{button, Column, Element, HorizontalAlignment, Length, Text};
+use rustic_api::models::{AlbumModel, ArtistModel, PlaylistModel, TrackModel};
 
 type ActionList<T> = Vec<(button::State, T)>;
 
@@ -32,9 +32,14 @@ impl Component for MainView {
             MainView::Tracks => ("Tracks".into(), self.tracks_view(&state.tracks)),
             MainView::Playlists(l) => ("Playlists".into(), MainView::playlists_view(l)),
             MainView::Playlist((cursor, tracks)) => {
-                let playlist = state.playlists.iter().find(|p| &p.cursor == cursor).cloned().unwrap();
+                let playlist = state
+                    .playlists
+                    .iter()
+                    .find(|p| &p.cursor == cursor)
+                    .cloned()
+                    .unwrap();
                 (playlist.title.clone(), MainView::playlist_view(tracks))
-            },
+            }
             MainView::Explore => ("Explore".into(), self.default_view()),
         };
         let title = Text::new(title)
@@ -51,10 +56,16 @@ impl MainView {
         playlists
             .iter_mut()
             .fold(Column::new(), |list, (state, playlist)| {
-                let btn = button::Button::new(state, Text::new(&playlist.title))
-                    .on_press(Message::OpenView(MainView::Playlist((playlist.cursor.clone(), playlist.tracks.iter().map(|track| {
-                        (button::State::new(), track.clone())
-                    }).collect()))));
+                let btn = button::Button::new(state, Text::new(&playlist.title)).on_press(
+                    Message::OpenView(MainView::Playlist((
+                        playlist.cursor.clone(),
+                        playlist
+                            .tracks
+                            .iter()
+                            .map(|track| (button::State::new(), track.clone()))
+                            .collect(),
+                    ))),
+                );
                 list.push(btn)
             })
             .into()

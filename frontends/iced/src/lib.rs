@@ -1,20 +1,22 @@
 use crate::component::Component;
 use crate::messages::Message;
 use crate::overlay::{Overlay, OverlayState};
+use crate::recipes::SyncRecipe;
 use crate::views::MainView;
 use iced::{
     button, scrollable, text_input, Align, Application, Background, Color, Column, Command,
-    Element, Length, Row, Scrollable, Settings, Text, TextInput, Vector, Subscription
+    Element, Length, Row, Scrollable, Settings, Subscription, Text, TextInput, Vector,
+};
+use rustic_api::models::{
+    AlbumModel, ArtistModel, PlayerModel, PlaylistModel, SyncStateModel, TrackModel,
 };
 use rustic_api::ApiClient;
-use rustic_api::models::{PlayerModel, AlbumModel, ArtistModel, PlaylistModel, TrackModel, SyncStateModel};
-use crate::recipes::SyncRecipe;
 
 mod component;
 mod messages;
 mod overlay;
-mod views;
 mod recipes;
+mod views;
 
 pub fn start(api: ApiClient) {
     IcedApplication::run(Settings::with_flags(api));
@@ -32,7 +34,7 @@ struct IcedApplication {
     overlay: Option<OverlayState>,
     player: Option<PlayerModel>,
     state: SavedState,
-    sync_state: SyncStateModel
+    sync_state: SyncStateModel,
 }
 
 impl Application for IcedApplication {
@@ -65,7 +67,7 @@ impl Application for IcedApplication {
                 overlay: None,
                 player: None,
                 state: SavedState::default(),
-                sync_state: SyncStateModel::Idle
+                sync_state: SyncStateModel::Idle,
             },
             Command::none(),
         )
@@ -80,13 +82,17 @@ impl Application for IcedApplication {
             Message::Loaded(state) => {
                 self.state = state;
                 if let Some(OverlayState::PlayerList(players)) = self.overlay.as_mut() {
-                    *players = self.state.players
+                    *players = self
+                        .state
+                        .players
                         .iter()
                         .map(|player| (button::State::new(), player.clone()))
                         .collect();
                 }
                 if let MainView::Playlists(playlists) = &mut self.current_view {
-                    *playlists = self.state.playlists
+                    *playlists = self
+                        .state
+                        .playlists
                         .iter()
                         .map(|playlist| (button::State::new(), playlist.clone()))
                         .collect();
@@ -96,12 +102,20 @@ impl Application for IcedApplication {
                 self.current_view = view;
                 let state = self.state.clone();
                 return match self.current_view {
-                    MainView::Albums => Command::perform(state.load_albums(self.api.clone()), Message::Loaded),
-                    MainView::Playlists(_) => Command::perform(state.load_playlists(self.api.clone()), Message::Loaded),
-                    MainView::Artists => Command::perform(state.load_artists(self.api.clone()), Message::Loaded),
-                    MainView::Tracks => Command::perform(state.load_tracks(self.api.clone()), Message::Loaded),
-                    _ => Command::none()
-                }
+                    MainView::Albums => {
+                        Command::perform(state.load_albums(self.api.clone()), Message::Loaded)
+                    }
+                    MainView::Playlists(_) => {
+                        Command::perform(state.load_playlists(self.api.clone()), Message::Loaded)
+                    }
+                    MainView::Artists => {
+                        Command::perform(state.load_artists(self.api.clone()), Message::Loaded)
+                    }
+                    MainView::Tracks => {
+                        Command::perform(state.load_tracks(self.api.clone()), Message::Loaded)
+                    }
+                    _ => Command::none(),
+                };
             }
             Message::Search(query) => {
                 self.search_query = query;
@@ -111,16 +125,30 @@ impl Application for IcedApplication {
                 if self.sync_state == SyncStateModel::Idle {
                     let state = self.state.clone();
                     return Command::batch(vec![
-                        Command::perform(state.clone().load_albums(self.api.clone()), Message::Loaded),
-                        Command::perform(state.clone().load_playlists(self.api.clone()), Message::Loaded),
-                        Command::perform(state.clone().load_artists(self.api.clone()), Message::Loaded),
-                        Command::perform(state.clone().load_tracks(self.api.clone()), Message::Loaded)
+                        Command::perform(
+                            state.clone().load_albums(self.api.clone()),
+                            Message::Loaded,
+                        ),
+                        Command::perform(
+                            state.clone().load_playlists(self.api.clone()),
+                            Message::Loaded,
+                        ),
+                        Command::perform(
+                            state.clone().load_artists(self.api.clone()),
+                            Message::Loaded,
+                        ),
+                        Command::perform(
+                            state.clone().load_tracks(self.api.clone()),
+                            Message::Loaded,
+                        ),
                     ]);
                 }
             }
             Message::QueueTrack(track) => {
                 let api = self.api.clone();
-                return Command::perform(SavedState::queue_track(api, track.clone()), |_| Message::QueueUpdated)
+                return Command::perform(SavedState::queue_track(api, track.clone()), |_| {
+                    Message::QueueUpdated
+                });
             }
             Message::OpenOverlay(overlay) => {
                 return match overlay {
@@ -187,11 +215,11 @@ impl Application for IcedApplication {
 
             let sync_label = match self.sync_state {
                 SyncStateModel::Idle => String::from("Sync: Idle"),
-                SyncStateModel::Synchronizing(_) => String::from("Sync: Syncing")
+                SyncStateModel::Synchronizing(_) => String::from("Sync: Syncing"),
             };
             let sync_label = Text::new(sync_label);
-            let sync_label = button::Button::new(&mut self.sync_button, sync_label)
-                .style(NavigationButtonStyle);
+            let sync_label =
+                button::Button::new(&mut self.sync_button, sync_label).style(NavigationButtonStyle);
             nav = nav.push(sync_label);
 
             let content = self.current_view.view(&self.state);
@@ -213,7 +241,7 @@ pub struct SavedState {
     pub albums: Vec<AlbumModel>,
     pub artists: Vec<ArtistModel>,
     pub playlists: Vec<PlaylistModel>,
-    pub tracks: Vec<TrackModel>
+    pub tracks: Vec<TrackModel>,
 }
 
 impl SavedState {
@@ -223,42 +251,27 @@ impl SavedState {
 
     async fn load_players(self, api: ApiClient) -> SavedState {
         let players = api.get_players().await.unwrap();
-        SavedState {
-            players,
-            ..self
-        }
+        SavedState { players, ..self }
     }
 
     async fn load_albums(self, api: ApiClient) -> SavedState {
         let albums = api.get_albums().await.unwrap();
-        SavedState {
-            albums,
-            ..self
-        }
+        SavedState { albums, ..self }
     }
 
     async fn load_artists(self, api: ApiClient) -> SavedState {
         let artists = api.get_artists().await.unwrap();
-        SavedState {
-            artists,
-            ..self
-        }
+        SavedState { artists, ..self }
     }
 
     async fn load_playlists(self, api: ApiClient) -> SavedState {
         let playlists = api.get_playlists().await.unwrap();
-        SavedState {
-            playlists,
-            ..self
-        }
+        SavedState { playlists, ..self }
     }
 
     async fn load_tracks(self, api: ApiClient) -> SavedState {
         let tracks = api.get_tracks().await.unwrap();
-        SavedState {
-            tracks,
-            ..self
-        }
+        SavedState { tracks, ..self }
     }
 }
 
