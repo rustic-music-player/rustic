@@ -44,6 +44,7 @@ default = [
 	"local-files-provider",
 	"pocketcasts-provider",
 	"soundcloud-provider",
+	"gmusic-provider",
 	"iced-frontend",
 	"http-client"
 ]
