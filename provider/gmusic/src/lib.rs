@@ -2,10 +2,10 @@ use std::convert::TryFrom;
 use std::sync::Mutex;
 
 use failure::{format_err, Error};
-use log::{debug, error};
+use log::debug;
 use serde_derive::Deserialize;
 
-use gmusic::{auth::stdio_login, GoogleMusicApi};
+use gmusic::GoogleMusicApi;
 use lazy_static::lazy_static;
 use rustic_core::library::MetaValue;
 use rustic_core::{provider, Album, Playlist, SharedLibrary, Track};
