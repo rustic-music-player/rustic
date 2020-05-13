@@ -7,7 +7,7 @@ use structopt::StructOpt;
 use crate::config::*;
 use crate::setup::*;
 use rustic_core::Rustic;
-#[cfg(feature = "google-cast")]
+#[cfg(feature = "google-cast-backend")]
 use rustic_google_cast_backend::GoogleCastBackend;
 use rustic_memory_store::MemoryLibrary;
 
@@ -59,7 +59,7 @@ fn main() -> Result<(), Error> {
         }
     }
 
-    #[cfg(feature = "google-cast")]
+    #[cfg(feature = "google-cast-backend")]
     {
         if config.discovery.google_cast {
             GoogleCastBackend::start_discovery(Arc::clone(&app));
@@ -72,7 +72,7 @@ fn main() -> Result<(), Error> {
         rustic_core::sync::start(Arc::clone(&app))?,
     ];
 
-    #[cfg(feature = "mpd")]
+    #[cfg(feature = "mpd-frontend")]
     {
         if config.frontend.mpd.is_some() {
             let mpd_thread = mpd_frontend::start(config.frontend.mpd.clone(), Arc::clone(&app));
@@ -80,7 +80,7 @@ fn main() -> Result<(), Error> {
         }
     }
 
-    #[cfg(feature = "web-api")]
+    #[cfg(feature = "http-frontend")]
     {
         if config.frontend.http.is_some() {
             let http_thread =
@@ -89,18 +89,18 @@ fn main() -> Result<(), Error> {
         }
     }
 
-    #[cfg(feature = "dbus")]
+    #[cfg(feature = "dbus-frontend")]
     {
         let dbus_thread = dbus_frontend::start(Arc::clone(&app));
         threads.push(dbus_thread);
     }
 
-    #[cfg(feature = "qt")]
+    #[cfg(feature = "qt-frontend")]
     {
         qt_frontend::start(Arc::clone(&app));
     }
 
-    #[cfg(feature = "iced")]
+    #[cfg(feature = "iced-frontend")]
     if config.frontend.iced.is_some() {
         rustic_iced_frontend::start(Arc::clone(&client));
     }

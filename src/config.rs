@@ -1,7 +1,7 @@
 use std::fs::File;
 use std::io::prelude::*;
 use std::path::Path;
-#[cfg(feature = "google-cast")]
+#[cfg(feature = "google-cast-backend")]
 use std::net::IpAddr;
 
 use failure::Error;
@@ -41,11 +41,11 @@ impl Default for Config {
 
 #[derive(Deserialize, Debug, Clone)]
 pub struct FrontendConfig {
-    #[cfg(feature = "mpd")]
+    #[cfg(feature = "mpd-frontend")]
     pub mpd: Option<rustic_mpd_frontend::MpdConfig>,
-    #[cfg(feature = "web-api")]
+    #[cfg(feature = "http-frontend")]
     pub http: Option<rustic_http_frontend::HttpConfig>,
-    #[cfg(feature = "iced")]
+    #[cfg(feature = "iced-frontend")]
     #[serde(default)]
     pub iced: Option<IcedConfig>
 }
@@ -57,11 +57,11 @@ pub struct IcedConfig {}
 impl Default for FrontendConfig {
     fn default() -> Self {
         FrontendConfig {
-            #[cfg(feature = "mpd")]
+            #[cfg(feature = "mpd-frontend")]
             mpd: None,
-            #[cfg(feature = "web-api")]
+            #[cfg(feature = "http-frontend")]
             http: Some(rustic_http_frontend::HttpConfig::default()),
-            #[cfg(feature = "iced")]
+            #[cfg(feature = "iced-frontend")]
             iced: None
         }
     }
@@ -69,15 +69,15 @@ impl Default for FrontendConfig {
 
 #[derive(Deserialize, Clone, Debug, Default)]
 pub struct ProviderConfig {
-    #[cfg(feature = "pocketcasts")]
+    #[cfg(feature = "pocketcasts-provider")]
     pub pocketcasts: Option<rustic_pocketcasts_provider::PocketcastsProvider>,
-    #[cfg(feature = "soundcloud")]
+    #[cfg(feature = "soundcloud-provider")]
     pub soundcloud: Option<rustic_soundcloud_provider::SoundcloudProvider>,
-    #[cfg(feature = "spotify")]
+    #[cfg(feature = "spotify-provider")]
     pub spotify: Option<rustic_spotify_provider::SpotifyProvider>,
-    #[cfg(feature = "gmusic")]
+    #[cfg(feature = "gmusic-provider")]
     pub gmusic: Option<rustic_gmusic_provider::GooglePlayMusicProvider>,
-    #[cfg(feature = "local-files")]
+    #[cfg(feature = "local-files-provider")]
     pub local: Option<rustic_local_provider::LocalProvider>,
 }
 
@@ -113,11 +113,11 @@ pub struct PlayerBackendConfig {
 #[derive(Deserialize, Clone, Debug, PartialEq, Eq)]
 #[serde(rename_all = "lowercase", tag = "type")]
 pub enum PlayerBackend {
-    #[cfg(feature = "gstreamer")]
+    #[cfg(feature = "gstreamer-backend")]
     GStreamer,
-    #[cfg(feature = "rodio")]
+    #[cfg(feature = "rodio-backend")]
     Rodio,
-    #[cfg(feature = "google-cast")]
+    #[cfg(feature = "google-cast-backend")]
     GoogleCast { ip: IpAddr },
 }
 
@@ -128,7 +128,7 @@ pub struct ExtensionConfig {
 
 #[derive(Deserialize, Clone, Debug)]
 pub struct DiscoveryConfig {
-    #[cfg(feature = "google-cast")]
+    #[cfg(feature = "google-cast-backend")]
     #[serde(default = "default_cast_discovery")]
     pub google_cast: bool,
 }
@@ -136,7 +136,7 @@ pub struct DiscoveryConfig {
 impl Default for DiscoveryConfig {
     fn default() -> Self {
         DiscoveryConfig {
-            #[cfg(feature = "google-cast")]
+            #[cfg(feature = "google-cast-backend")]
             google_cast: default_cast_discovery(),
         }
     }
@@ -158,10 +158,10 @@ impl Default for ClientConfig {
 }
 
 fn default_backend() -> Vec<PlayerBackendConfig> {
-    #[cfg(feature = "gstreamer")]
+    #[cfg(feature = "gstreamer-backend")]
     #[allow(unused_variables)]
     let backend_type = PlayerBackend::GStreamer;
-    #[cfg(feature = "rodio")]
+    #[cfg(feature = "rodio-backend")]
     let backend_type = PlayerBackend::Rodio;
     let config = PlayerBackendConfig {
         name: "default".to_string(),
@@ -172,7 +172,7 @@ fn default_backend() -> Vec<PlayerBackendConfig> {
     vec![config]
 }
 
-#[cfg(feature = "google-cast")]
+#[cfg(feature = "google-cast-backend")]
 fn default_cast_discovery() -> bool {
     true
 }
