@@ -1,12 +1,9 @@
-use std::pin::Pin;
 use std::sync::Arc;
-use std::task::{Context, Poll};
 use std::thread;
 use std::time::Duration;
 
-use crossbeam_channel::{Receiver, Sender, TryRecvError, unbounded};
+use crossbeam_channel::{Receiver, Sender, unbounded};
 use failure::Error;
-use futures::Stream;
 use itertools::Itertools;
 use log::{error, info, trace};
 
