@@ -2,6 +2,7 @@
 members = [
     "core",
     "core/api",
+    "core/extensions",
     "backends/google-cast",
     "backends/gstreamer",
     "backends/rodio",
@@ -46,7 +47,8 @@ default = [
 	"soundcloud-provider",
 	"gmusic-provider",
 	"iced-frontend",
-	"http-client"
+	"http-client",
+	"extensions"
 ]
 
 mpd-frontend = ["rustic-mpd-frontend"]
@@ -65,6 +67,7 @@ gmusic-provider = ["rustic-gmusic-provider"]
 sled-store = ["rustic-sled-store"]
 sqlite-store = ["rustic-sqlite-store"]
 http-client = ["rustic-native-http-client"]
+extensions = ["rustic-party-mode-extension"]
 
 [dependencies]
 env_logger = "0.7"
@@ -78,6 +81,9 @@ structopt = "0.3"
 
 [dependencies.rustic-core]
 path = "core"
+
+[dependencies.rustic-extension-api]
+path = "core/extensions"
 
 [dependencies.rustic-memory-store]
 path = "store/memory"
@@ -150,4 +156,8 @@ optional = true
 
 [dependencies.rustic-gmusic-provider]
 path = "provider/gmusic"
+optional = true
+
+[dependencies.rustic-party-mode-extension]
+path = "extensions/party-mode"
 optional = true

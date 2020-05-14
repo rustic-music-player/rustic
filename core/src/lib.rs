@@ -5,7 +5,6 @@ use failure::format_err;
 use log::{debug, info, trace};
 use url::Url;
 
-use crate::extension::HostedExtension;
 pub use crate::library::{
     Album, Artist, Library, LibraryQueryJoins, MultiQuery, Playlist, QueryJoins, SearchResults,
     SharedLibrary, SingleQuery, SingleQueryIdentifier, Track,
@@ -16,7 +15,6 @@ use crate::provider::{CoverArt, InternalUri, SharedProvider};
 pub use crate::provider::{Explorer, Provider};
 
 pub mod cache;
-pub mod extension;
 pub mod library;
 pub mod player;
 pub mod provider;
@@ -27,7 +25,6 @@ pub struct Rustic {
     pub library: library::SharedLibrary,
     pub providers: provider::SharedProviders,
     pub cache: cache::SharedCache,
-    pub extensions: Vec<HostedExtension>,
     default_player: Arc<Mutex<Option<String>>>,
     keep_running: Arc<(Mutex<bool>, Condvar)>,
     pub sync: sync::SyncState,
@@ -36,15 +33,13 @@ pub struct Rustic {
 impl Rustic {
     pub fn new(
         library: Box<dyn Library>,
-        providers: provider::SharedProviders,
-        extensions: Vec<HostedExtension>,
+        providers: provider::SharedProviders
     ) -> Result<Arc<Rustic>, failure::Error> {
         let library = Arc::new(library);
         Ok(Arc::new(Rustic {
             player: Arc::new(Mutex::new(HashMap::new())),
             library,
             providers,
-            extensions,
             cache: Arc::new(cache::Cache::new()),
             default_player: Arc::new(Mutex::new(None)),
             keep_running: Arc::new((Mutex::new(true), Condvar::new())),

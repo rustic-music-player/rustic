@@ -7,6 +7,7 @@ use async_trait::async_trait;
 use rustic_api::client::*;
 use rustic_api::models::*;
 use rustic_core::{Album, Artist, Rustic, Track};
+use rustic_extension_api::ExtensionManager;
 
 mod library;
 mod queue;
@@ -15,13 +16,15 @@ mod stream_util;
 
 #[derive(Clone)]
 pub struct RusticNativeClient {
-    pub(crate) app: Arc<Rustic>
+    pub(crate) app: Arc<Rustic>,
+    pub(crate) extensions: ExtensionManager,
 }
 
 impl RusticNativeClient {
-    pub fn new(app: Arc<Rustic>) -> RusticNativeClient {
+    pub fn new(app: Arc<Rustic>, extensions: ExtensionManager) -> RusticNativeClient {
         RusticNativeClient {
-            app
+            app,
+            extensions,
         }
     }
 }
@@ -83,7 +86,7 @@ impl RusticApiClient for RusticNativeClient {
     }
 
     async fn get_extensions(&self) -> Result<Vec<ExtensionModel>> {
-        let extensions = self.app.extensions.iter().map(ExtensionModel::from).collect();
+        let extensions = self.extensions.get_extensions().into_iter().map(ExtensionModel::from).collect();
 
         Ok(extensions)
     }

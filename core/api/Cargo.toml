@@ -8,12 +8,13 @@ edition = "2018"
 
 [features]
 default = ["conversion"]
-conversion = ["rustic-core", "base64"]
+conversion = ["rustic-core", "rustic-extension-api", "base64"]
 testing = ["simulacrum"]
 
 [dependencies]
 serde = { version = "1", features = ["derive"] }
 rustic-core = { path = "../", optional = true }
+rustic-extension-api = { path = "../extensions", optional = true }
 base64 = { version = "0.12", optional = true }
 async-trait = "0.1"
 failure = "0.1"

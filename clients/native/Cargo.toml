@@ -11,6 +11,7 @@ rustic-api = { path = "../../core/api" }
 serde = { version = "1", features = ["derive"] }
 async-trait = "0.1"
 rustic-core = { path = "../../core" }
+rustic-extension-api = { path = "../../core/extensions" }
 failure = "0.1"
 stopwatch = "0.0.7"
 rayon = "1"

@@ -48,8 +48,8 @@ fn main() -> Result<(), Error> {
         }
     };
 
-    let app = Rustic::new(store, providers, extensions)?;
-    let client = setup_client(&app, &config.client);
+    let app = Rustic::new(store, providers)?;
+    let client = setup_client(&app, extensions, &config.client);
 
     setup_interrupt(&app)?;
 

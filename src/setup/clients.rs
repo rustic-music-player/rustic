@@ -2,11 +2,12 @@ use std::sync::Arc;
 use rustic_api::{RusticApiClient, ApiClient};
 use crate::config::ClientConfig;
 use rustic_core::Rustic;
+use rustic_extension_api::ExtensionManager;
 
-pub(crate) fn setup_client(app: &Arc<Rustic>, config: &ClientConfig) -> ApiClient {
+pub(crate) fn setup_client(app: &Arc<Rustic>, extensions: ExtensionManager, config: &ClientConfig) -> ApiClient {
     let client: Box<dyn RusticApiClient> = match config {
         ClientConfig::Native => {
-            let client = rustic_native_client::RusticNativeClient::new(Arc::clone(app));
+            let client = rustic_native_client::RusticNativeClient::new(Arc::clone(app), extensions);
             Box::new(client)
         },
         #[cfg(feature = "http-client")]

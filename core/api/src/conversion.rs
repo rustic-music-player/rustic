@@ -1,9 +1,9 @@
 use rustic_core::{Album, Artist, PlayerEvent, PlayerState, Playlist, Provider, Track};
-use rustic_core::extension::HostedExtension;
 use rustic_core::provider::{
     AuthState, InternalUri, ProviderFolder, ProviderItem, ProviderItemType,
 };
 use rustic_core::sync::{SyncEvent, SyncItem, SyncItemState};
+use rustic_extension_api::ExtensionMetadata;
 
 use crate::cursor::to_cursor;
 use crate::models::*;
@@ -46,12 +46,12 @@ impl From<AuthState> for ProviderAuthenticationState {
     }
 }
 
-impl From<&HostedExtension> for ExtensionModel {
-    fn from(extension: &HostedExtension) -> Self {
+impl From<ExtensionMetadata> for ExtensionModel {
+    fn from(metadata: ExtensionMetadata) -> Self {
         ExtensionModel {
-            name: extension.name.clone(),
-            id: extension.id.clone(),
-            version: extension.version.clone(),
+            name: metadata.name.clone(),
+            id: metadata.id.clone(),
+            version: metadata.version.clone(),
             enabled: true,
         }
     }
