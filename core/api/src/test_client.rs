@@ -1,9 +1,13 @@
+use std::collections::HashMap;
+
+use futures::stream::BoxStream;
+use simulacrum::create_expect_method;
+use simulacrum::Expectations;
+
 use async_trait::async_trait;
+
 use crate::client::*;
 use crate::models::*;
-use std::collections::HashMap;
-use simulacrum::Expectations;
-use simulacrum::create_expect_method;
 
 pub struct TestApiClient {
     pub extensions: Vec<ExtensionModel>,
@@ -70,6 +74,10 @@ impl PlayerApiClient for TestApiClient {
     async fn player_control_pause(&self, player_id: Option<&str>) -> Result<()> {
         unimplemented!()
     }
+
+    fn observe_player(&self, player_id: Option<&str>) -> BoxStream<'static, PlayerEventModel> {
+        unimplemented!()
+    }
 }
 
 #[async_trait]
@@ -95,6 +103,10 @@ impl QueueApiClient for TestApiClient {
     }
 
     async fn remove_queue_item(&self, player_id: Option<&str>, item: usize) -> Result<()> {
+        unimplemented!()
+    }
+
+    fn observe_queue(&self, player_id: Option<&str>) -> BoxStream<'static, QueueEventModel> {
         unimplemented!()
     }
 }
@@ -126,6 +138,10 @@ impl LibraryApiClient for TestApiClient {
     }
 
     async fn get_track(&self, cursor: &str) -> Result<Option<TrackModel>> {
+        unimplemented!()
+    }
+
+    fn sync_state(&self) -> BoxStream<'static, SyncStateModel> {
         unimplemented!()
     }
 }
