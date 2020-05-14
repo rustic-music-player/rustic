@@ -10,6 +10,7 @@ edition = "2018"
 async-trait = "0.1"
 serde = { version = "1", features = ["derive"] }
 failure = "0.1"
+log = "0.4"
 
 [dependencies.rustic-core]
 path = "../"

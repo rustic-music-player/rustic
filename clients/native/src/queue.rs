@@ -15,6 +15,7 @@ use rustic_core::player::Player;
 
 use crate::RusticNativeClient;
 use crate::stream_util::from_channel;
+use rustic_extension_api::ExtensionApi;
 
 #[async_trait]
 impl QueueApiClient for RusticNativeClient {
@@ -35,11 +36,7 @@ impl QueueApiClient for RusticNativeClient {
         let track: Option<Track> = self.app.query_track(SingleQuery::uri(uri))?;
         match track {
             Some(track) => {
-                let play = player.get_queue().is_empty() && player.backend.state() == PlayerState::Stop;
-                player.queue.queue_single(&track);
-                if play {
-                    player.backend.set_state(PlayerState::Play)?;
-                }
+                self.queue_multiple(player, &vec![track]).await?;
 
                 Ok(Some(()))
             }
@@ -54,7 +51,7 @@ impl QueueApiClient for RusticNativeClient {
         let album: Option<Album> = self.app.query_album(SingleQuery::uri(uri))?;
         match album {
             Some(album) => {
-                self.queue_multiple(player, &album.tracks)?;
+                self.queue_multiple(player, &album.tracks).await?;
 
                 Ok(Some(()))
             }
@@ -69,7 +66,7 @@ impl QueueApiClient for RusticNativeClient {
         let playlist: Option<Playlist> = self.app.query_playlist(SingleQuery::uri(uri))?;
         match playlist {
             Some(playlist) => {
-                self.queue_multiple(player, &playlist.tracks)?;
+                self.queue_multiple(player, &playlist.tracks).await?;
 
                 Ok(Some(()))
             }
@@ -112,7 +109,8 @@ impl RusticNativeClient {
         player.ok_or_else(|| format_err!("Missing default player"))
     }
 
-    fn queue_multiple(&self, player: Arc<Player>, tracks: &[Track]) -> Result<(), failure::Error> {
+    async fn queue_multiple(&self, player: Arc<Player>, tracks: &[Track]) -> Result<(), failure::Error> {
+        let tracks = self.extensions.on_add_to_queue(tracks.to_vec()).await?;
         let play = player.get_queue().is_empty() && player.backend.state() == PlayerState::Stop;
         player.queue.queue_multiple(&tracks);
         if play {

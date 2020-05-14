@@ -21,3 +21,7 @@ impl Extension for PartyModeExtension {
         }
     }
 }
+
+impl ExtensionApi for PartyModeExtension {
+
+}

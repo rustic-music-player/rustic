@@ -1,6 +1,7 @@
 use std::collections::HashMap;
 use std::sync::Arc;
 
+use log::info;
 use serde::{Deserialize, Serialize};
 
 use async_trait::async_trait;
@@ -25,8 +26,7 @@ pub trait ExtensionLibrary {
     fn new() -> Box<dyn Extension>;
 }
 
-#[async_trait]
-pub trait Extension: std::fmt::Debug + Send + Sync {
+pub trait Extension: std::fmt::Debug + Send + Sync + ExtensionApi {
     fn metadata(&self) -> ExtensionMetadata;
 
     fn setup(
@@ -35,8 +35,11 @@ pub trait Extension: std::fmt::Debug + Send + Sync {
     ) -> Result<(), failure::Error> {
         Ok(())
     }
+}
 
-    fn on_add_to_queue(&mut self, tracks: Vec<Track>) -> Result<Vec<Track>, failure::Error> {
+#[async_trait]
+pub trait ExtensionApi {
+    async fn on_add_to_queue(&self, tracks: Vec<Track>) -> Result<Vec<Track>, failure::Error> {
         Ok(tracks)
     }
 }
@@ -49,6 +52,8 @@ pub struct ExtensionManagerBuilder {
 impl ExtensionManagerBuilder {
     pub fn load<T>(&mut self) where T: ExtensionLibrary {
         let extension = T::new();
+        let metadata = extension.metadata();
+        info!("Loaded Extension: {} v{}", metadata.name, metadata.version);
         self.extensions.push(extension);
     }
 
@@ -69,6 +74,18 @@ impl ExtensionManager {
         self.extensions.iter()
             .map(|e| e.metadata())
             .collect()
+    }
+}
+
+#[async_trait]
+impl ExtensionApi for ExtensionManager {
+    async fn on_add_to_queue(&self, tracks: Vec<Track>) -> Result<Vec<Track>, failure::Error> {
+        let mut tracks = tracks;
+        for extension in self.extensions.iter() {
+            tracks = extension.on_add_to_queue(tracks).await?;
+        }
+
+        Ok(tracks)
     }
 }
 
