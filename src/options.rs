@@ -15,4 +15,8 @@ pub(crate) struct CliOptions {
     /// Extensions path
     #[structopt(long = "extensions")]
     pub(crate) extensions_path: Option<String>,
+
+    /// Connect to remote instance
+    #[structopt(long)]
+    pub(crate) connect: Option<String>
 }
