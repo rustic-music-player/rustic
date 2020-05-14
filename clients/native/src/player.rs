@@ -1,10 +1,15 @@
+use futures::future;
+use futures::stream::BoxStream;
+use futures::StreamExt;
+
 use async_trait::async_trait;
 use rustic_api::client::{PlayerApiClient, Result};
 use rustic_api::cursor::to_cursor;
 use rustic_api::models::*;
-use rustic_core::PlayerState;
+use rustic_core::{PlayerEvent, PlayerState};
 
 use crate::RusticNativeClient;
+use crate::stream_util::from_channel;
 
 #[async_trait]
 impl PlayerApiClient for RusticNativeClient {
@@ -65,5 +70,16 @@ impl PlayerApiClient for RusticNativeClient {
         let player = self.get_player_or_default(player_id)?;
 
         player.backend.set_state(PlayerState::Pause)
+    }
+
+    fn observe_player(&self, player_id: Option<&str>) -> BoxStream<'static, PlayerEventModel> {
+        let player = self.get_player_or_default(player_id).unwrap();
+
+        from_channel(player.observe()).filter(|e| {
+            match e {
+                &PlayerEvent::QueueUpdated(_) => future::ready(false),
+                _ => future::ready(true)
+            }
+        }).map(PlayerEventModel::from).boxed()
     }
 }

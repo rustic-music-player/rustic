@@ -1,7 +1,8 @@
+use futures::stream::BoxStream;
+
 use async_trait::async_trait;
 
 use crate::models::*;
-use futures::stream::BoxStream;
 
 pub type Result<T> = std::result::Result<T, failure::Error>;
 
@@ -48,6 +49,8 @@ pub trait QueueApiClient: Sync + Send {
     async fn clear_queue(&self, player_id: Option<&str>) -> Result<()>;
 
     async fn remove_queue_item(&self, player_id: Option<&str>, item: usize) -> Result<()>;
+
+    fn observe_queue(&self, player_id: Option<&str>) -> BoxStream<'static, QueueEventModel>;
 }
 
 #[async_trait]
@@ -63,4 +66,6 @@ pub trait PlayerApiClient: Sync + Send {
     async fn player_control_play(&self, player_id: Option<&str>) -> Result<()>;
 
     async fn player_control_pause(&self, player_id: Option<&str>) -> Result<()>;
+
+    fn observe_player(&self, player_id: Option<&str>) -> BoxStream<'static, PlayerEventModel>;
 }

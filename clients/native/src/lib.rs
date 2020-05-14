@@ -1,16 +1,17 @@
 use std::sync::Arc;
 
-use log::{trace, debug};
+use log::{debug, trace};
 use rayon::prelude::*;
 
 use async_trait::async_trait;
 use rustic_api::client::*;
-use rustic_core::{Album, Artist, Rustic, Track};
 use rustic_api::models::*;
+use rustic_core::{Album, Artist, Rustic, Track};
 
 mod library;
 mod queue;
 mod player;
+mod stream_util;
 
 #[derive(Clone)]
 pub struct RusticNativeClient {

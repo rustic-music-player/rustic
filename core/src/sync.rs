@@ -54,25 +54,6 @@ impl SyncState {
     }
 }
 
-impl Stream for SyncState {
-    type Item = SyncEvent;
-
-    fn poll_next(self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Option<Self::Item>> {
-        let result = self.events.try_recv();
-        let r = result.clone();
-        let poll = match result {
-            Ok(item) => Poll::Ready(Some(item)),
-            Err(TryRecvError::Empty) => {
-                // TODO: we should keep track of the wakers and only wake when a new event is emitted
-                cx.waker().wake_by_ref();
-                Poll::Pending
-            }
-            Err(TryRecvError::Disconnected) => Poll::Ready(None)
-        };
-        poll
-    }
-}
-
 pub fn start(app: Arc<Rustic>) -> Result<thread::JoinHandle<()>, Error> {
     thread::Builder::new()
         .name("Background Sync".into())

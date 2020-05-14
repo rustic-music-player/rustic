@@ -9,6 +9,7 @@ use rustic_api::models::{AlbumModel, ArtistModel, PlaylistModel, SyncStateModel,
 use rustic_core::{MultiQuery, QueryJoins, SingleQuery};
 
 use crate::RusticNativeClient;
+use crate::stream_util::from_channel;
 
 #[async_trait]
 impl LibraryApiClient for RusticNativeClient {
@@ -105,6 +106,6 @@ impl LibraryApiClient for RusticNativeClient {
     }
 
     fn sync_state(&self) -> BoxStream<'static, SyncStateModel> {
-        self.app.sync.clone().map(SyncStateModel::from).boxed()
+        from_channel(self.app.sync.events.clone()).map(SyncStateModel::from).boxed()
     }
 }

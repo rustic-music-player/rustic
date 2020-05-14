@@ -1,14 +1,20 @@
-use async_trait::async_trait;
-use log::debug;
-use failure::format_err;
-
-use rustic_api::models::TrackModel;
-use crate::RusticNativeClient;
-use rustic_api::client::QueueApiClient;
 use std::sync::Arc;
-use rustic_core::player::Player;
+
+use failure::format_err;
+use futures::future;
+use futures::stream::BoxStream;
+use futures::StreamExt;
+use log::debug;
+
+use async_trait::async_trait;
+use rustic_api::client::QueueApiClient;
 use rustic_api::cursor::from_cursor;
-use rustic_core::{SingleQuery, Track, PlayerState, Album, Playlist};
+use rustic_api::models::{QueueEventModel, TrackModel};
+use rustic_core::{Album, PlayerEvent, PlayerState, Playlist, SingleQuery, Track};
+use rustic_core::player::Player;
+
+use crate::RusticNativeClient;
+use crate::stream_util::from_channel;
 
 #[async_trait]
 impl QueueApiClient for RusticNativeClient {
@@ -83,6 +89,17 @@ impl QueueApiClient for RusticNativeClient {
         player.queue.remove_item(item)?;
 
         Ok(())
+    }
+
+    fn observe_queue(&self, player_id: Option<&str>) -> BoxStream<'static, QueueEventModel> {
+        let player = self.get_player_or_default(player_id).unwrap();
+
+        from_channel(player.observe()).filter(|e| {
+            match e {
+                &PlayerEvent::QueueUpdated(_) => future::ready(true),
+                _ => future::ready(false)
+            }
+        }).map(QueueEventModel::from).boxed()
     }
 }
 

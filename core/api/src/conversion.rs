@@ -1,11 +1,12 @@
-use crate::cursor::to_cursor;
-use crate::models::*;
+use rustic_core::{Album, Artist, PlayerEvent, PlayerState, Playlist, Provider, Track};
 use rustic_core::extension::HostedExtension;
 use rustic_core::provider::{
     AuthState, InternalUri, ProviderFolder, ProviderItem, ProviderItemType,
 };
-use rustic_core::{Album, Artist, Playlist, Provider, Track};
 use rustic_core::sync::{SyncEvent, SyncItem, SyncItemState};
+
+use crate::cursor::to_cursor;
+use crate::models::*;
 
 impl From<Album> for AlbumModel {
     fn from(album: Album) -> Self {
@@ -177,6 +178,27 @@ impl From<SyncItemState> for SyncItemStateModel {
             SyncItemState::Syncing => SyncItemStateModel::Syncing,
             SyncItemState::Done => SyncItemStateModel::Done,
             SyncItemState::Error => SyncItemStateModel::Error,
+        }
+    }
+}
+
+impl From<PlayerEvent> for PlayerEventModel {
+    fn from(event: PlayerEvent) -> Self {
+        match event {
+            PlayerEvent::TrackChanged(track) => PlayerEventModel::TrackChanged(TrackModel::from(track)),
+            PlayerEvent::Buffering => PlayerEventModel::Buffering,
+            PlayerEvent::Seek(seek) => PlayerEventModel::Seek(seek),
+            PlayerEvent::StateChanged(state) => PlayerEventModel::StateChanged(state == PlayerState::Play),
+            _ => unreachable!("this should be filtered before")
+        }
+    }
+}
+
+impl From<PlayerEvent> for QueueEventModel {
+    fn from(event: PlayerEvent) -> Self {
+        match event {
+            PlayerEvent::QueueUpdated(tracks) => QueueEventModel::QueueUpdated(tracks.into_iter().map(TrackModel::from).collect()),
+            _ => unreachable!("this should be filtered before")
         }
     }
 }

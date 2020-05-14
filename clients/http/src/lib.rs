@@ -175,6 +175,10 @@ impl<T> QueueApiClient for RusticHttpClient<T> where T: HttpClient {
     async fn remove_queue_item(&self, _player_id: Option<&str>, _item: usize) -> Result<()> {
         unimplemented!("required delete implementation")
     }
+
+    fn observe_queue(&self, player_id: Option<&str>) -> BoxStream<'static, QueueEventModel> {
+        unimplemented!()
+    }
 }
 
 #[async_trait]
@@ -233,5 +237,9 @@ impl<T> PlayerApiClient for RusticHttpClient<T> where T: HttpClient {
         self.post(&url, ()).await?;
 
         Ok(())
+    }
+
+    fn observe_player(&self, player_id: Option<&str>) -> BoxStream<'static, PlayerEventModel> {
+        unimplemented!()
     }
 }
