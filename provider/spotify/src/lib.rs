@@ -1,19 +1,17 @@
-use std::thread;
-
-use failure::{err_msg, format_err, Error};
-use log::{debug, trace};
+use failure::{Error, format_err};
+use log::trace;
 use rspotify::spotify::client::Spotify;
 use rspotify::spotify::oauth2::{SpotifyClientCredentials, SpotifyOAuth, TokenInfo};
-use rspotify::spotify::util::{generate_random_string, get_token};
+use rspotify::spotify::util::generate_random_string;
 use serde_derive::Deserialize;
 
+use async_trait::async_trait;
 use rustic_core::library::{Album, Artist, MetaValue, Playlist, SharedLibrary, Track};
 use rustic_core::provider;
 
 use crate::album::*;
 use crate::artist::*;
 use crate::meta::META_SPOTIFY_URI;
-use crate::player::SpotifyPlayer;
 use crate::playlist::*;
 use crate::track::*;
 
@@ -127,8 +125,9 @@ impl SpotifyProvider {
     }
 }
 
+#[async_trait]
 impl rustic_core::provider::ProviderInstance for SpotifyProvider {
-    fn setup(&mut self) -> Result<(), Error> {
+    async fn setup(&mut self) -> Result<(), Error> {
         let mut oauth = self.get_oauth_client();
 
         if let Some(token) = oauth.get_cached_token() {
@@ -149,7 +148,7 @@ impl rustic_core::provider::ProviderInstance for SpotifyProvider {
         }
     }
 
-    fn authenticate(&mut self, auth: provider::Authentication) -> Result<(), Error> {
+    async fn authenticate(&mut self, auth: provider::Authentication) -> Result<(), Error> {
         use provider::Authentication::*;
         match auth {
             Token(token) => {
@@ -186,7 +185,7 @@ impl rustic_core::provider::ProviderInstance for SpotifyProvider {
         provider::Provider::Spotify
     }
 
-    fn sync(&self, library: SharedLibrary) -> Result<provider::SyncResult, Error> {
+    async fn sync(&self, library: SharedLibrary) -> Result<provider::SyncResult, Error> {
         let (tracks, albums) = self.sync_tracks(&library)?;
 
         let playlists = self.sync_playlists(&library)?;
@@ -206,11 +205,11 @@ impl rustic_core::provider::ProviderInstance for SpotifyProvider {
         }
     }
 
-    fn navigate(&self, _path: Vec<String>) -> Result<provider::ProviderFolder, Error> {
+    async fn navigate(&self, _path: Vec<String>) -> Result<provider::ProviderFolder, Error> {
         Ok(self.root())
     }
 
-    fn search(&self, query: String) -> Result<Vec<provider::ProviderItem>, Error> {
+    async fn search(&self, query: String) -> Result<Vec<provider::ProviderItem>, Error> {
         trace!("search {}", query);
         let spotify = self.client.clone().unwrap();
 
@@ -243,15 +242,15 @@ impl rustic_core::provider::ProviderInstance for SpotifyProvider {
         Ok(albums.chain(artists).chain(tracks).collect())
     }
 
-    fn resolve_track(&self, _uri: &str) -> Result<Option<Track>, Error> {
+    async fn resolve_track(&self, _uri: &str) -> Result<Option<Track>, Error> {
         Ok(None)
     }
 
-    fn resolve_album(&self, _uri: &str) -> Result<Option<Album>, Error> {
+    async fn resolve_album(&self, _uri: &str) -> Result<Option<Album>, Error> {
         Ok(None)
     }
 
-    fn resolve_playlist(&self, uri: &str) -> Result<Option<Playlist>, Error> {
+    async fn resolve_playlist(&self, uri: &str) -> Result<Option<Playlist>, Error> {
         let spotify = self.client.clone().unwrap();
         let id = &uri["spotify://playlists/".len()..];
         let playlist = spotify.playlist(id, None, None)?;
@@ -261,7 +260,7 @@ impl rustic_core::provider::ProviderInstance for SpotifyProvider {
         Ok(Some(playlist))
     }
 
-    fn stream_url(&self, track: &Track) -> Result<String, Error> {
+    async fn stream_url(&self, track: &Track) -> Result<String, Error> {
         let uri = track
             .meta
             .get(META_SPOTIFY_URI)
@@ -280,7 +279,7 @@ impl rustic_core::provider::ProviderInstance for SpotifyProvider {
         }
     }
 
-    fn cover_art(&self, track: &Track) -> Result<Option<provider::CoverArt>, Error> {
+    async fn cover_art(&self, track: &Track) -> Result<Option<provider::CoverArt>, Error> {
         let url = track
             .meta
             .get(meta::META_SPOTIFY_COVER_ART_URL)
@@ -293,7 +292,7 @@ impl rustic_core::provider::ProviderInstance for SpotifyProvider {
         Ok(url)
     }
 
-    fn resolve_share_url(&self, _url: url::Url) -> Result<Option<provider::InternalUri>, Error> {
+    async fn resolve_share_url(&self, _url: url::Url) -> Result<Option<provider::InternalUri>, Error> {
         Ok(None)
     }
 }

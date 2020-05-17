@@ -1,7 +1,6 @@
-use rustic::library::{Playlist, Track};
-use rustic::provider;
-use soundcloud;
-use track::SoundcloudTrack;
+use rustic_core::library::{Playlist, Track};
+use rustic_core::provider;
+use crate::track::SoundcloudTrack;
 
 #[derive(Debug, Clone)]
 pub struct SoundcloudPlaylist {

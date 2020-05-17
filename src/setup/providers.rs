@@ -1,6 +1,7 @@
 use crate::config::Config;
 use std::sync::{RwLock, Arc};
 use log::error;
+use futures::executor::block_on;
 
 pub(crate) fn setup_providers(config: &Config) -> rustic_core::provider::SharedProviders {
     let mut providers: rustic_core::provider::SharedProviders = vec![];
@@ -37,8 +38,8 @@ pub(crate) fn setup_providers(config: &Config) -> rustic_core::provider::SharedP
         }
     for provider in &providers {
         let mut provider = provider.write().unwrap();
-        provider
-            .setup()
+        block_on(provider
+            .setup())
             .unwrap_or_else(|err| error!("Can't setup {} provider: {:?}", provider.title(), err));
     }
 

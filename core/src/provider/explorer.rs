@@ -85,7 +85,7 @@ impl Explorer {
                 let path = &self.path[1..];
                 provider
                     .ok_or_else(|| Error::from(NavigationError::PathNotFound))
-                    .and_then(|provider| provider.read().unwrap().navigate(path.to_vec()))
+                    .and_then(|provider| futures::executor::block_on(provider.read().unwrap().navigate(path.to_vec())))
             }
         }
     }

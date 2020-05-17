@@ -1,26 +1,16 @@
-#[macro_use]
-extern crate failure;
-#[macro_use]
-extern crate log;
-#[macro_use]
-extern crate maplit;
-extern crate pocketcasts;
-extern crate rayon;
-extern crate rustic_core as rustic;
-extern crate serde;
-#[macro_use]
-extern crate serde_derive;
-extern crate url;
-
-use failure::Error;
+use failure::{Error, format_err};
+use log::debug;
 use pocketcasts::{Episode, PocketcastClient, Podcast};
 use rayon::prelude::*;
+use serde::Deserialize;
 
-use episode::PocketcastTrack;
-use meta::META_POCKETCASTS_COVER_ART_URL;
-use podcast::{PocketcastAlbum, PocketcastAlbums, PocketcastSearchResult};
-use rustic::library::{Album, Artist, MetaValue, SharedLibrary, Track};
-use rustic::{provider, Playlist};
+use async_trait::async_trait;
+use rustic_core::{Playlist, provider};
+use rustic_core::library::{Album, Artist, MetaValue, SharedLibrary, Track};
+
+use crate::episode::PocketcastTrack;
+use crate::meta::META_POCKETCASTS_COVER_ART_URL;
+use crate::podcast::{PocketcastAlbum, PocketcastAlbums, PocketcastSearchResult};
 
 mod episode;
 mod meta;
@@ -34,8 +24,9 @@ pub struct PocketcastsProvider {
     client: Option<PocketcastClient>,
 }
 
+#[async_trait]
 impl provider::ProviderInstance for PocketcastsProvider {
-    fn setup(&mut self) -> Result<(), Error> {
+    async fn setup(&mut self) -> Result<(), Error> {
         let mut client = PocketcastClient::new(self.email.clone(), self.password.clone());
         client.login()?;
         self.client = Some(client);
@@ -62,21 +53,21 @@ impl provider::ProviderInstance for PocketcastsProvider {
         }))
     }
 
-    fn authenticate(&mut self, authentication: provider::Authentication) -> Result<(), Error> {
+    async fn authenticate(&mut self, authentication: provider::Authentication) -> Result<(), Error> {
         use provider::Authentication::*;
 
         match authentication {
             Password(email, password) => {
                 self.email = email;
                 self.password = password;
-                self.setup()?;
+                self.setup().await?;
                 Ok(())
             }
             _ => Err(format_err!("Invalid authentication method")),
         }
     }
 
-    fn sync(&self, library: SharedLibrary) -> Result<provider::SyncResult, Error> {
+    async fn sync(&self, library: SharedLibrary) -> Result<provider::SyncResult, Error> {
         let client = self
             .client
             .clone()
@@ -150,7 +141,7 @@ impl provider::ProviderInstance for PocketcastsProvider {
         }
     }
 
-    fn navigate(&self, path: Vec<String>) -> Result<provider::ProviderFolder, Error> {
+    async fn navigate(&self, path: Vec<String>) -> Result<provider::ProviderFolder, Error> {
         let client = self.client.clone().unwrap();
         let podcasts = match path[0].as_str() {
             "Subscriptions" => Ok(self.client.clone().unwrap().get_subscriptions()),
@@ -193,7 +184,7 @@ impl provider::ProviderInstance for PocketcastsProvider {
         }
     }
 
-    fn search(&self, query: String) -> Result<Vec<provider::ProviderItem>, Error> {
+    async fn search(&self, query: String) -> Result<Vec<provider::ProviderItem>, Error> {
         let client = self.client.clone().unwrap();
         let podcasts = client.search_podcasts(query)?;
         let podcasts = podcasts
@@ -205,21 +196,21 @@ impl provider::ProviderInstance for PocketcastsProvider {
         Ok(podcasts)
     }
 
-    fn resolve_track(&self, _uri: &str) -> Result<Option<Track>, Error> {
+    async fn resolve_track(&self, _uri: &str) -> Result<Option<Track>, Error> {
         unimplemented!()
     }
 
-    fn resolve_album(&self, _uri: &str) -> Result<Option<Album>, Error> {
+    async fn resolve_album(&self, _uri: &str) -> Result<Option<Album>, Error> {
         unimplemented!()
     }
 
-    fn resolve_playlist(&self, _uri: &str) -> Result<Option<Playlist>, Error> {
+    async fn resolve_playlist(&self, _uri: &str) -> Result<Option<Playlist>, Error> {
         unimplemented!()
     }
 
-    fn stream_url(&self, track: &Track) -> Result<String, Error> {
+    async fn stream_url(&self, track: &Track) -> Result<String, Error> {
         if track.provider == provider::Provider::Pocketcasts {
-            if let rustic::library::MetaValue::String(stream_url) =
+            if let rustic_core::library::MetaValue::String(stream_url) =
                 track.meta.get(meta::META_POCKETCASTS_STREAM_URL).unwrap()
             {
                 return Ok(stream_url.to_string());
@@ -233,7 +224,7 @@ impl provider::ProviderInstance for PocketcastsProvider {
         Err(format_err!("Invalid provider: {:?}", track.provider))
     }
 
-    fn cover_art(&self, track: &Track) -> Result<Option<provider::CoverArt>, Error> {
+    async fn cover_art(&self, track: &Track) -> Result<Option<provider::CoverArt>, Error> {
         let url = track
             .meta
             .get(meta::META_POCKETCASTS_COVER_ART_URL)
@@ -246,7 +237,7 @@ impl provider::ProviderInstance for PocketcastsProvider {
         Ok(url)
     }
 
-    fn resolve_share_url(&self, _: url::Url) -> Result<Option<provider::InternalUri>, Error> {
+    async fn resolve_share_url(&self, _: url::Url) -> Result<Option<provider::InternalUri>, Error> {
         Ok(None)
     }
 }

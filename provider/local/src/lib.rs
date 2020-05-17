@@ -1,10 +1,12 @@
-use failure::{format_err, Error};
+use std::path::PathBuf;
+
+use failure::{Error, format_err};
 use maplit::hashmap;
 use serde_derive::Deserialize;
 
+use async_trait::async_trait;
 use rustic_core::library::{self, MetaValue, SharedLibrary};
 use rustic_core::provider::*;
-use std::path::PathBuf;
 
 pub mod scanner;
 
@@ -21,6 +23,7 @@ impl LocalProvider {
     }
 }
 
+#[async_trait]
 impl ProviderInstance for LocalProvider {
     fn title(&self) -> &'static str {
         "Local"
@@ -34,7 +37,7 @@ impl ProviderInstance for LocalProvider {
         Provider::LocalMedia
     }
 
-    fn setup(&mut self) -> Result<(), Error> {
+    async fn setup(&mut self) -> Result<(), Error> {
         Ok(())
     }
 
@@ -42,11 +45,11 @@ impl ProviderInstance for LocalProvider {
         AuthState::NoAuthentication
     }
 
-    fn authenticate(&mut self, _: Authentication) -> Result<(), Error> {
+    async fn authenticate(&mut self, _: Authentication) -> Result<(), Error> {
         Ok(())
     }
 
-    fn sync(&self, library: SharedLibrary) -> Result<SyncResult, Error> {
+    async fn sync(&self, library: SharedLibrary) -> Result<SyncResult, Error> {
         let scanner = scanner::Scanner::new(&self.path);
         let tracks = scanner.scan()?;
         let albums: Vec<library::Album> = tracks
@@ -99,27 +102,27 @@ impl ProviderInstance for LocalProvider {
         }
     }
 
-    fn navigate(&self, _path: Vec<String>) -> Result<ProviderFolder, Error> {
+    async fn navigate(&self, _path: Vec<String>) -> Result<ProviderFolder, Error> {
         Ok(self.root())
     }
 
-    fn search(&self, _query: String) -> Result<Vec<ProviderItem>, Error> {
+    async fn search(&self, _query: String) -> Result<Vec<ProviderItem>, Error> {
         Ok(vec![])
     }
 
-    fn resolve_track(&self, _uri: &str) -> Result<Option<library::Track>, Error> {
+    async fn resolve_track(&self, _uri: &str) -> Result<Option<library::Track>, Error> {
         unimplemented!()
     }
 
-    fn resolve_album(&self, _uri: &str) -> Result<Option<library::Album>, Error> {
+    async fn resolve_album(&self, _uri: &str) -> Result<Option<library::Album>, Error> {
         unimplemented!()
     }
 
-    fn resolve_playlist(&self, _uri: &str) -> Result<Option<library::Playlist>, Error> {
+    async fn resolve_playlist(&self, _uri: &str) -> Result<Option<library::Playlist>, Error> {
         unimplemented!()
     }
 
-    fn stream_url(&self, track: &library::Track) -> Result<String, Error> {
+    async fn stream_url(&self, track: &library::Track) -> Result<String, Error> {
         if track.provider == Provider::LocalMedia {
             return Ok(track.uri.clone());
         }
@@ -127,7 +130,7 @@ impl ProviderInstance for LocalProvider {
         Err(format_err!("Invalid provider: {:?}", track.provider))
     }
 
-    fn cover_art(&self, track: &library::Track) -> Result<Option<CoverArt>, Error> {
+    async fn cover_art(&self, track: &library::Track) -> Result<Option<CoverArt>, Error> {
         if let MetaValue::String(url) = track.meta.get(META_LOCAL_FILE_URL).as_ref().unwrap() {
             let tag = id3::Tag::read_from_path(&url)?;
             let picture = tag.pictures().find(|_| true).map(|picture| CoverArt::Data {
@@ -141,7 +144,7 @@ impl ProviderInstance for LocalProvider {
         }
     }
 
-    fn resolve_share_url(&self, _url: url::Url) -> Result<Option<InternalUri>, Error> {
+    async fn resolve_share_url(&self, _url: url::Url) -> Result<Option<InternalUri>, Error> {
         Ok(None)
     }
 }

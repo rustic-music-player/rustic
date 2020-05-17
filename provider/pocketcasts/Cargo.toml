@@ -1,16 +1,17 @@
 [package]
 name = "rustic-pocketcasts-provider"
 version = "0.1.0"
+edition = "2018"
 authors = ["Max Jöhnk <maxjoehnk@gmail.com>"]
 
 [dependencies]
 failure = "0.1"
-serde = "1.0"
-serde_derive = "1.0"
+serde = { version = "1.0", features = ["derive"] }
 log = "0.4"
 rayon = "1.0"
 maplit = "1.0.1"
 url = "1.7"
+async-trait = "0.1"
 
 [dependencies.rustic-core]
 path = "../../core"

@@ -1,10 +1,13 @@
 use std::collections::HashMap;
 
+use maplit::hashmap;
 use pocketcasts::{Podcast, SearchPodcast};
-use rustic::library::{Album, Artist};
-use rustic::provider::{Provider, ProviderFolder};
+use serde::{Deserialize, Serialize};
 
-use meta::*;
+use rustic_core::library::{Album, Artist};
+use rustic_core::provider::{Provider, ProviderFolder};
+
+use crate::meta::*;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct PocketcastAlbum(Podcast);

@@ -94,7 +94,10 @@ impl Rustic {
                 trace!("Track is not in library, asking provider");
                 let provider = self.get_provider_for_url(uri)?;
                 let track = match provider {
-                    Some(provider) => provider.read().unwrap().resolve_track(uri)?,
+                    Some(provider) => {
+                        // TODO: we should await instead of blocking
+                        futures::executor::block_on(provider.read().unwrap().resolve_track(uri))?
+                    },
                     _ => None,
                 };
                 Ok(track)
@@ -115,7 +118,10 @@ impl Rustic {
                 trace!("Album is not in library, asking provider");
                 let provider = self.get_provider_for_url(uri)?;
                 let album = match provider {
-                    Some(provider) => provider.read().unwrap().resolve_album(uri)?,
+                    Some(provider) => {
+                        // TODO: we should await instead of blocking
+                        futures::executor::block_on(provider.read().unwrap().resolve_album(uri))?
+                    },
                     _ => None,
                 };
                 Ok(album)
@@ -136,7 +142,10 @@ impl Rustic {
                 trace!("Playlist is not in library, asking provider");
                 let provider = self.get_provider_for_url(uri)?;
                 let playlist = match provider {
-                    Some(provider) => provider.read().unwrap().resolve_playlist(uri)?,
+                    Some(provider) => {
+                        // TODO: we should await instead of blocking
+                        futures::executor::block_on(provider.read().unwrap().resolve_playlist(uri))?
+                    },
                     _ => None,
                 };
                 Ok(playlist)
@@ -159,14 +168,16 @@ impl Rustic {
 
     pub fn stream_url(&self, track: &Track) -> Result<String, failure::Error> {
         let provider = self.get_provider(track)?;
-        let stream_url = provider.read().unwrap().stream_url(track)?;
+        // TODO: we should await instead of blocking
+        let stream_url = futures::executor::block_on(provider.read().unwrap().stream_url(track))?;
 
         Ok(stream_url)
     }
 
     pub fn cover_art(&self, track: &Track) -> Result<Option<CoverArt>, failure::Error> {
         let provider = self.get_provider(track)?;
-        let cover = provider.read().unwrap().cover_art(track)?;
+        // TODO: we should await instead of blocking
+        let cover = futures::executor::block_on(provider.read().unwrap().cover_art(track))?;
 
         Ok(cover)
     }
@@ -187,7 +198,8 @@ impl Rustic {
         for provider in self.providers.iter() {
             let url = url.clone();
             let provider = provider.read().unwrap();
-            let uri = provider.resolve_share_url(url)?;
+            // TODO: we should await instead of blocking
+            let uri = futures::executor::block_on(provider.resolve_share_url(url))?;
 
             if uri.is_some() {
                 return Ok(uri);

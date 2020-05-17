@@ -5,13 +5,15 @@ use failure::{Error, Fail};
 use serde_derive::{Deserialize, Serialize};
 use url::Url;
 
+use async_trait::async_trait;
+
 use crate::library::{Album, SharedLibrary, Track};
+use crate::Playlist;
 
 pub use self::explorer::Explorer;
 pub use self::folder::ProviderFolder;
 pub use self::item::{ProviderItem, ProviderItemType};
 pub use self::sync_error::SyncError;
-use crate::Playlist;
 
 mod explorer;
 mod folder;
@@ -40,23 +42,24 @@ pub enum Provider {
     LocalMedia,
 }
 
+#[async_trait]
 pub trait ProviderInstance: Debug {
-    fn setup(&mut self) -> Result<(), Error>;
+    async fn setup(&mut self) -> Result<(), Error>;
     fn title(&self) -> &'static str;
     fn uri_scheme(&self) -> &'static str;
     fn provider(&self) -> Provider;
     fn auth_state(&self) -> AuthState;
-    fn authenticate(&mut self, auth: Authentication) -> Result<(), Error>;
-    fn sync(&self, library: SharedLibrary) -> Result<SyncResult, Error>;
+    async fn authenticate(&mut self, auth: Authentication) -> Result<(), Error>;
+    async fn sync(&self, library: SharedLibrary) -> Result<SyncResult, Error>;
     fn root(&self) -> ProviderFolder;
-    fn navigate(&self, path: Vec<String>) -> Result<ProviderFolder, Error>;
-    fn search(&self, query: String) -> Result<Vec<ProviderItem>, Error>;
-    fn resolve_track(&self, uri: &str) -> Result<Option<Track>, Error>;
-    fn resolve_album(&self, uri: &str) -> Result<Option<Album>, Error>;
-    fn resolve_playlist(&self, uri: &str) -> Result<Option<Playlist>, Error>;
-    fn stream_url(&self, track: &Track) -> Result<String, Error>;
-    fn cover_art(&self, track: &Track) -> Result<Option<CoverArt>, Error>;
-    fn resolve_share_url(&self, url: Url) -> Result<Option<InternalUri>, Error>;
+    async fn navigate(&self, path: Vec<String>) -> Result<ProviderFolder, Error>;
+    async fn search(&self, query: String) -> Result<Vec<ProviderItem>, Error>;
+    async fn resolve_track(&self, uri: &str) -> Result<Option<Track>, Error>;
+    async fn resolve_album(&self, uri: &str) -> Result<Option<Album>, Error>;
+    async fn resolve_playlist(&self, uri: &str) -> Result<Option<Playlist>, Error>;
+    async fn stream_url(&self, track: &Track) -> Result<String, Error>;
+    async fn cover_art(&self, track: &Track) -> Result<Option<CoverArt>, Error>;
+    async fn resolve_share_url(&self, url: Url) -> Result<Option<InternalUri>, Error>;
 }
 
 #[derive(Debug, Clone)]

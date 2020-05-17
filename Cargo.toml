@@ -78,6 +78,7 @@ url = "1.7"
 failure = "0.1"
 ctrlc = { version = "3.1", features = ["termination"] }
 structopt = "0.3"
+futures = "0.3"
 
 [dependencies.rustic-core]
 path = "core"

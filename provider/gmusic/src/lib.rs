@@ -4,6 +4,7 @@ use std::sync::Mutex;
 use failure::{format_err, Error};
 use log::debug;
 use serde_derive::Deserialize;
+use async_trait::async_trait;
 
 use gmusic::GoogleMusicApi;
 use lazy_static::lazy_static;
@@ -53,8 +54,9 @@ impl GooglePlayMusicProvider {
     }
 }
 
+#[async_trait]
 impl provider::ProviderInstance for GooglePlayMusicProvider {
-    fn setup(&mut self) -> Result<(), Error> {
+    async fn setup(&mut self) -> Result<(), Error> {
         let api = GoogleMusicApi::new(
             self.client_id.clone(),
             self.client_secret.clone(),
@@ -78,7 +80,7 @@ impl provider::ProviderInstance for GooglePlayMusicProvider {
         }
     }
 
-    fn authenticate(&mut self, authenticate: provider::Authentication) -> Result<(), Error> {
+    async fn authenticate(&mut self, authenticate: provider::Authentication) -> Result<(), Error> {
         let client = self.client.as_mut().expect("client isn't setup yet");
         use provider::Authentication::*;
 
@@ -109,7 +111,7 @@ impl provider::ProviderInstance for GooglePlayMusicProvider {
         provider::Provider::GooglePlayMusic
     }
 
-    fn sync(&self, library: SharedLibrary) -> Result<provider::SyncResult, Error> {
+    async fn sync(&self, library: SharedLibrary) -> Result<provider::SyncResult, Error> {
         let client = self.get_client()?;
         let mut playlists: Vec<Playlist> = client
             .get_all_playlists()?
@@ -149,11 +151,11 @@ impl provider::ProviderInstance for GooglePlayMusicProvider {
         }
     }
 
-    fn navigate(&self, _path: Vec<String>) -> Result<provider::ProviderFolder, Error> {
-        Ok(self.root())
+    async fn navigate(&self, _path: Vec<String>) -> Result<provider::ProviderFolder, Error> {
+        unimplemented!()
     }
 
-    fn search(&self, query: String) -> Result<Vec<provider::ProviderItem>, Error> {
+    async fn search(&self, query: String) -> Result<Vec<provider::ProviderItem>, Error> {
         let client = self.get_client()?;
         let results = client.search(&query, None)?;
         let items = results
@@ -166,7 +168,7 @@ impl provider::ProviderInstance for GooglePlayMusicProvider {
         Ok(items)
     }
 
-    fn resolve_track(&self, uri: &str) -> Result<Option<Track>, Error> {
+    async fn resolve_track(&self, uri: &str) -> Result<Option<Track>, Error> {
         let client = self.get_client()?;
         let track_id = &uri["gmusic:track:".len()..];
         let track = client.get_store_track(track_id)?;
@@ -175,7 +177,7 @@ impl provider::ProviderInstance for GooglePlayMusicProvider {
         Ok(Some(track))
     }
 
-    fn resolve_album(&self, uri: &str) -> Result<Option<Album>, Error> {
+    async fn resolve_album(&self, uri: &str) -> Result<Option<Album>, Error> {
         let client = self.get_client()?;
         let album_id = &uri["gmusic:album:".len()..];
         let album = client.get_album(album_id)?;
@@ -184,11 +186,11 @@ impl provider::ProviderInstance for GooglePlayMusicProvider {
         Ok(Some(album))
     }
 
-    fn resolve_playlist(&self, _uri: &str) -> Result<Option<Playlist>, Error> {
+    async fn resolve_playlist(&self, _uri: &str) -> Result<Option<Playlist>, Error> {
         unimplemented!()
     }
 
-    fn stream_url(&self, track: &Track) -> Result<String, Error> {
+    async fn stream_url(&self, track: &Track) -> Result<String, Error> {
         let id = track
             .meta
             .get(META_GMUSIC_STORE_ID)
@@ -202,7 +204,7 @@ impl provider::ProviderInstance for GooglePlayMusicProvider {
         }
     }
 
-    fn cover_art(&self, track: &Track) -> Result<Option<provider::CoverArt>, Error> {
+    async fn cover_art(&self, track: &Track) -> Result<Option<provider::CoverArt>, Error> {
         let url = track
             .meta
             .get(META_GMUSIC_COVER_ART_URL)
@@ -223,7 +225,7 @@ impl provider::ProviderInstance for GooglePlayMusicProvider {
     /// https://play.google.com/music/m/Aubs6vvsgfmxs5v4qnqkyvk37gi?t=Rick_Astley
     /// # Playlist
     /// https://play.google.com/music/playlist/AMaBXymwfjrAK6klYX211rdx5PPNaiqcV1GlfH2OF5DbJMCmnsgFLt5pR6VJ9S8hJiy1vzDdFVFHus05mf0HnZHQI9u8nYyFVw==
-    fn resolve_share_url(&self, url: url::Url) -> Result<Option<provider::InternalUri>, Error> {
+    async fn resolve_share_url(&self, url: url::Url) -> Result<Option<provider::InternalUri>, Error> {
         if url.domain() != Some("play.google.com") {
             return Ok(None);
         }

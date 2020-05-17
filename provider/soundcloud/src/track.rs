@@ -1,7 +1,7 @@
-use soundcloud;
+use maplit::hashmap;
 
-use rustic::library::{Artist, Track};
-use rustic::provider;
+use rustic_core::library::{Artist, Track};
+use rustic_core::provider;
 
 use crate::meta::*;
 

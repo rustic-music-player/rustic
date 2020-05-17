@@ -5,10 +5,10 @@ use rayon::prelude::*;
 
 use async_trait::async_trait;
 use rustic_api::client::*;
-use rustic_api::models::*;
-use rustic_core::{Album, Artist, Rustic, Track, SingleQuery};
-use rustic_extension_api::ExtensionManager;
 use rustic_api::cursor::from_cursor;
+use rustic_api::models::*;
+use rustic_core::{Album, Artist, Rustic, SingleQuery, Track};
+use rustic_extension_api::ExtensionManager;
 
 mod library;
 mod player;
@@ -48,7 +48,11 @@ impl RusticApiClient for RusticNativeClient {
                     true
                 }
             })
-            .map(|provider| provider.read().unwrap().search(query.to_string()))
+            .map(|provider| {
+                let provider = provider.read().unwrap();
+                // TODO: we should await all futures instead of blocking each one
+                futures::executor::block_on(provider.search(query.to_string()))
+            })
             .collect::<Result<Vec<_>>>()?;
         debug!("Searching took {}ms", sw.elapsed_ms());
 

@@ -1,26 +1,16 @@
-#[macro_use]
-extern crate failure;
-#[macro_use]
-extern crate lazy_static;
-#[macro_use]
-extern crate log;
-#[macro_use]
-extern crate maplit;
-extern crate regex;
-extern crate rustic_core as rustic;
-extern crate serde;
-#[macro_use]
-extern crate serde_derive;
-extern crate soundcloud;
-
 use std::str::FromStr;
 
-use failure::Error;
+use failure::{ensure, Error, format_err};
+use log::{trace, warn};
+use serde::Deserialize;
 
-use playlist::SoundcloudPlaylist;
-use rustic::library::{Album, MetaValue, Playlist, SharedLibrary, Track};
-use rustic::provider;
-use track::SoundcloudTrack;
+use async_trait::async_trait;
+use lazy_static::lazy_static;
+use rustic_core::library::{Album, MetaValue, Playlist, SharedLibrary, Track};
+use rustic_core::provider;
+
+use crate::playlist::SoundcloudPlaylist;
+use crate::track::SoundcloudTrack;
 
 mod error;
 mod meta;
@@ -57,8 +47,9 @@ impl SoundcloudProvider {
     }
 }
 
+#[async_trait]
 impl provider::ProviderInstance for SoundcloudProvider {
-    fn setup(&mut self) -> Result<(), Error> {
+    async fn setup(&mut self) -> Result<(), Error> {
         Ok(())
     }
 
@@ -84,7 +75,7 @@ impl provider::ProviderInstance for SoundcloudProvider {
         }
     }
 
-    fn authenticate(&mut self, auth: provider::Authentication) -> Result<(), Error> {
+    async fn authenticate(&mut self, auth: provider::Authentication) -> Result<(), Error> {
         use provider::Authentication::*;
         match auth {
             Token(token) => {
@@ -95,7 +86,7 @@ impl provider::ProviderInstance for SoundcloudProvider {
         }
     }
 
-    fn sync(&self, library: SharedLibrary) -> Result<provider::SyncResult, Error> {
+    async fn sync(&self, library: SharedLibrary) -> Result<provider::SyncResult, Error> {
         let client = self.client();
         let mut playlists: Vec<Playlist> = client
             .user_playlists()?
@@ -118,7 +109,7 @@ impl provider::ProviderInstance for SoundcloudProvider {
             items: vec![],
         }
     }
-    fn navigate(&self, path: Vec<String>) -> Result<provider::ProviderFolder, Error> {
+    async fn navigate(&self, path: Vec<String>) -> Result<provider::ProviderFolder, Error> {
         match path[0].as_str() {
             "Likes" => {
                 let client = self.client();
@@ -140,7 +131,7 @@ impl provider::ProviderInstance for SoundcloudProvider {
         }
     }
 
-    fn search(&self, query: String) -> Result<Vec<provider::ProviderItem>, Error> {
+    async fn search(&self, query: String) -> Result<Vec<provider::ProviderItem>, Error> {
         trace!("search {}", query);
         let client = self.client();
         let results = client
@@ -162,7 +153,7 @@ impl provider::ProviderInstance for SoundcloudProvider {
         Ok(results)
     }
 
-    fn resolve_track(&self, uri: &str) -> Result<Option<Track>, Error> {
+    async fn resolve_track(&self, uri: &str) -> Result<Option<Track>, Error> {
         ensure!(uri.starts_with(TRACK_URI_PREFIX), "Invalid Uri: {}", uri);
         let id = &uri[TRACK_URI_PREFIX.len()..];
         let id = usize::from_str(id)?;
@@ -177,11 +168,11 @@ impl provider::ProviderInstance for SoundcloudProvider {
         Ok(track)
     }
 
-    fn resolve_album(&self, _uri: &str) -> Result<Option<Album>, Error> {
+    async fn resolve_album(&self, _uri: &str) -> Result<Option<Album>, Error> {
         Ok(None)
     }
 
-    fn resolve_playlist(&self, uri: &str) -> Result<Option<Playlist>, Error> {
+    async fn resolve_playlist(&self, uri: &str) -> Result<Option<Playlist>, Error> {
         ensure!(
             uri.starts_with("soundcloud://playlist/"),
             "Invalid Uri: {}",
@@ -197,10 +188,10 @@ impl provider::ProviderInstance for SoundcloudProvider {
         Ok(Some(playlist))
     }
 
-    fn stream_url(&self, track: &Track) -> Result<String, Error> {
+    async fn stream_url(&self, track: &Track) -> Result<String, Error> {
         if track.provider == provider::Provider::Soundcloud {
-            if let rustic::library::MetaValue::String(stream_url) =
-                track.meta.get(meta::META_SOUNDCLOUD_STREAM_URL).unwrap()
+            if let rustic_core::library::MetaValue::String(stream_url) =
+            track.meta.get(meta::META_SOUNDCLOUD_STREAM_URL).unwrap()
             {
                 return Ok(format!(
                     "{}?client_id={}",
@@ -217,7 +208,7 @@ impl provider::ProviderInstance for SoundcloudProvider {
         Err(format_err!("Invalid provider: {:?}", track.provider))
     }
 
-    fn cover_art(&self, track: &Track) -> Result<Option<provider::CoverArt>, Error> {
+    async fn cover_art(&self, track: &Track) -> Result<Option<provider::CoverArt>, Error> {
         let url = track
             .meta
             .get(meta::META_SOUNDCLOUD_COVER_ART_URL)
@@ -230,7 +221,7 @@ impl provider::ProviderInstance for SoundcloudProvider {
         Ok(url)
     }
 
-    fn resolve_share_url(&self, url: url::Url) -> Result<Option<provider::InternalUri>, Error> {
+    async fn resolve_share_url(&self, url: url::Url) -> Result<Option<provider::InternalUri>, Error> {
         if url.domain() != Some("soundcloud.com") {
             return Ok(None);
         }

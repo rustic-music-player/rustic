@@ -1,8 +1,11 @@
+use maplit::hashmap;
 use pocketcasts::Episode;
-use rustic::library::Track;
-use rustic::provider::Provider;
+use serde::{Deserialize, Serialize};
 
-use meta::*;
+use rustic_core::library::Track;
+use rustic_core::provider::Provider;
+
+use crate::meta::*;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct PocketcastTrack(Episode);
