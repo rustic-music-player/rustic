@@ -32,4 +32,8 @@ pub trait PlayerQueue: Send + Sync + Debug {
 
     /// Play the next track in the current queue
     fn next(&self) -> Result<Option<()>, Error>;
+
+    /// Move item at index_before to index_after
+    /// Should fail when index_before or index_after are out of bounds
+    fn reorder_item(&self, index_before: usize, index_after: usize) -> Result<(), Error>;
 }

@@ -39,11 +39,11 @@ impl RusticApiClient for TestApiClient {
         Ok(self.extensions.clone())
     }
 
-    async fn get_providers(&self) -> Result<Vec<ProviderModel>> {
+    async fn open_share_url(&self, url: &str) -> Result<Option<OpenResultModel>> {
         unimplemented!()
     }
 
-    async fn get_available_providers(&self) -> Result<Vec<AvailableProviderModel>> {
+    async fn get_track_cover_art(&self, cursor: &str) -> Result<Option<CoverArtModel>> {
         unimplemented!()
     }
 }
@@ -106,6 +106,10 @@ impl QueueApiClient for TestApiClient {
         unimplemented!()
     }
 
+    async fn reorder_queue_item(&self, player_id: Option<&str>, before: usize, after: usize) -> Result<()> {
+        unimplemented!()
+    }
+
     fn observe_queue(&self, player_id: Option<&str>) -> BoxStream<'static, QueueEventModel> {
         unimplemented!()
     }
@@ -142,6 +146,25 @@ impl LibraryApiClient for TestApiClient {
     }
 
     fn sync_state(&self) -> BoxStream<'static, SyncStateModel> {
+        unimplemented!()
+    }
+}
+
+#[async_trait]
+impl ProviderApiClient for TestApiClient {
+    async fn get_providers(&self) -> Result<Vec<ProviderModel>> {
+        unimplemented!()
+    }
+
+    async fn get_available_providers(&self) -> Result<Vec<AvailableProviderModel>> {
+        unimplemented!()
+    }
+
+    async fn navigate_provider(&self, provider: ProviderType, path: &str) -> Result<ProviderFolderModel> {
+        unimplemented!()
+    }
+
+    async fn authenticate_provider(&self, provider: ProviderType, auth: ProviderAuthModel) -> Result<()> {
         unimplemented!()
     }
 }

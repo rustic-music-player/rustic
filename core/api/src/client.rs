@@ -61,6 +61,8 @@ pub trait QueueApiClient: Sync + Send {
 
     async fn remove_queue_item(&self, player_id: Option<&str>, item: usize) -> Result<()>;
 
+    async fn reorder_queue_item(&self, player_id: Option<&str>, before: usize, after: usize) -> Result<()>;
+
     fn observe_queue(&self, player_id: Option<&str>) -> BoxStream<'static, QueueEventModel>;
 }
 

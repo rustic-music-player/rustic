@@ -1,7 +1,7 @@
 use std::sync::atomic;
 
 use crossbeam_channel::Sender;
-use failure::Error;
+use failure::{Error, format_err};
 use pinboard::NonEmptyPinboard;
 
 use crate::player::{PlayerBuilder, PlayerCommand};
@@ -143,6 +143,19 @@ impl PlayerQueue for MemoryQueue {
         let queue = self.get_queue();
         let current_index = self.current_index.load(atomic::Ordering::Relaxed);
         queue.get(current_index).cloned()
+    }
+
+    fn reorder_item(&self, index_before: usize, index_after: usize) -> Result<(), Error> {
+        let mut queue = self.get_queue();
+        if index_before >= queue.len() || index_after >= queue.len() {
+            return Err(format_err!("index out of bounds\nreorder_item got index outside of the queue size"))
+        }
+        let item = queue.remove(index_before);
+        queue.insert(index_after, item);
+        self.queue.set(queue);
+        self.queue_changed();
+
+        Ok(())
     }
 }
 

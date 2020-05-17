@@ -13,6 +13,12 @@ pub struct QueueItemParams {
     index: usize,
 }
 
+#[derive(Deserialize)]
+pub struct ReorderQueueItemParams {
+    before: usize,
+    after: usize,
+}
+
 #[get("/queue")]
 pub async fn fetch(client: web::Data<ApiClient>) -> Result<impl Responder> {
     let tracks = client.get_queue(None).await?;
@@ -72,6 +78,16 @@ pub async fn remove_item(
     params: web::Path<QueueItemParams>,
 ) -> Result<impl Responder> {
     client.remove_queue_item(None, params.index).await?;
+
+    Ok(HttpResponse::NoContent().finish())
+}
+
+#[post("/queue/reorder/{before}/{after}")]
+pub async fn reorder_item(
+    client: web::Data<ApiClient>,
+    params: web::Path<ReorderQueueItemParams>,
+) -> Result<impl Responder> {
+    client.reorder_queue_item(None, params.before, params.after).await?;
 
     Ok(HttpResponse::NoContent().finish())
 }

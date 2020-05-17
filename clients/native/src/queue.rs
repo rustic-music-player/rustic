@@ -7,7 +7,7 @@ use futures::StreamExt;
 use log::debug;
 
 use async_trait::async_trait;
-use rustic_api::client::QueueApiClient;
+use rustic_api::client::{QueueApiClient, Result};
 use rustic_api::cursor::from_cursor;
 use rustic_api::models::{QueueEventModel, TrackModel};
 use rustic_core::{Album, PlayerEvent, PlayerState, Playlist, SingleQuery, Track};
@@ -19,7 +19,7 @@ use rustic_extension_api::ExtensionApi;
 
 #[async_trait]
 impl QueueApiClient for RusticNativeClient {
-    async fn get_queue(&self, player_id: Option<&str>) -> Result<Vec<TrackModel>, failure::Error> {
+    async fn get_queue(&self, player_id: Option<&str>) -> Result<Vec<TrackModel>> {
         let player = self.get_player_or_default(player_id)?;
         let tracks = player.get_queue()
             .into_iter()
@@ -29,7 +29,7 @@ impl QueueApiClient for RusticNativeClient {
         Ok(tracks)
     }
 
-    async fn queue_track(&self, player_id: Option<&str>, cursor: &str) -> Result<Option<()>, failure::Error> {
+    async fn queue_track(&self, player_id: Option<&str>, cursor: &str) -> Result<Option<()>> {
         let player = self.get_player_or_default(player_id)?;
         let uri = from_cursor(cursor)?;
         debug!("adding track to queue {}", uri);
@@ -44,7 +44,7 @@ impl QueueApiClient for RusticNativeClient {
         }
     }
 
-    async fn queue_album(&self, player_id: Option<&str>, cursor: &str) -> Result<Option<()>, failure::Error> {
+    async fn queue_album(&self, player_id: Option<&str>, cursor: &str) -> Result<Option<()>> {
         let player = self.get_player_or_default(player_id)?;
         let uri = from_cursor(cursor)?;
         debug!("adding album to queue {}", uri);
@@ -59,7 +59,7 @@ impl QueueApiClient for RusticNativeClient {
         }
     }
 
-    async fn queue_playlist(&self, player_id: Option<&str>, cursor: &str) -> Result<Option<()>, failure::Error> {
+    async fn queue_playlist(&self, player_id: Option<&str>, cursor: &str) -> Result<Option<()>> {
         let player = self.get_player_or_default(player_id)?;
         let uri = from_cursor(cursor)?;
         debug!("adding playlist to queue {}", uri);
@@ -74,16 +74,23 @@ impl QueueApiClient for RusticNativeClient {
         }
     }
 
-    async fn clear_queue(&self, player_id: Option<&str>) -> Result<(), failure::Error> {
+    async fn clear_queue(&self, player_id: Option<&str>) -> Result<()> {
         let player = self.get_player_or_default(player_id)?;
         player.queue.clear();
 
         Ok(())
     }
 
-    async fn remove_queue_item(&self, player_id: Option<&str>, item: usize) -> Result<(), failure::Error> {
+    async fn remove_queue_item(&self, player_id: Option<&str>, item: usize) -> Result<()> {
         let player = self.get_player_or_default(player_id)?;
         player.queue.remove_item(item)?;
+
+        Ok(())
+    }
+
+    async fn reorder_queue_item(&self, player_id: Option<&str>, before: usize, after: usize) -> Result<()> {
+        let player = self.get_player_or_default(player_id)?;
+        player.queue.reorder_item(before, after)?;
 
         Ok(())
     }
@@ -101,7 +108,7 @@ impl QueueApiClient for RusticNativeClient {
 }
 
 impl RusticNativeClient {
-    pub(crate) fn get_player_or_default(&self, player_id: Option<&str>) -> Result<Arc<Player>, failure::Error> {
+    pub(crate) fn get_player_or_default(&self, player_id: Option<&str>) -> Result<Arc<Player>> {
         let player = match player_id {
             Some(id) => self.app.get_player(id.into()),
             None => self.app.get_default_player()
@@ -109,7 +116,7 @@ impl RusticNativeClient {
         player.ok_or_else(|| format_err!("Missing default player"))
     }
 
-    async fn queue_multiple(&self, player: Arc<Player>, tracks: &[Track]) -> Result<(), failure::Error> {
+    async fn queue_multiple(&self, player: Arc<Player>, tracks: &[Track]) -> Result<()> {
         let tracks = self.extensions.on_add_to_queue(tracks.to_vec()).await?;
         let play = player.get_queue().is_empty() && player.backend.state() == PlayerState::Stop;
         player.queue.queue_multiple(&tracks);

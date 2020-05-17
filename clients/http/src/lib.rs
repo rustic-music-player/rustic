@@ -199,6 +199,16 @@ impl<T> QueueApiClient for RusticHttpClient<T> where T: HttpClient {
         unimplemented!("required delete implementation")
     }
 
+    async fn reorder_queue_item(&self, player_id: Option<&str>, before: usize, after: usize) -> Result<()> {
+        let url = match player_id {
+            Some(id) => format!("/api/queue/{}/reorder/{}/{}", id, before, after),
+            None => format!("/api/queue/reorder/{}/{}", before, after)
+        };
+        self.post::<(), ()>(&url, ()).await?;
+
+        Ok(())
+    }
+
     fn observe_queue(&self, player_id: Option<&str>) -> BoxStream<'static, QueueEventModel> {
         unimplemented!()
     }
