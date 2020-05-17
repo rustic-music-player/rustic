@@ -65,7 +65,8 @@ impl ProviderApiClient for RusticNativeClient {
         let provider = provider.read().unwrap();
         let path = path.split('/').map(String::from).collect();
         // TODO: we should await instead of blocking
-        let folder = futures::executor::block_on(provider.navigate(path))?;
+        let mut rt = tokio::runtime::Runtime::new()?;
+        let folder = rt.block_on(provider.navigate(path))?;
         let folder = ProviderFolderModel::from(folder);
 
         Ok(folder)
@@ -78,7 +79,8 @@ impl ProviderApiClient for RusticNativeClient {
             let mut provider = provider.write().unwrap();
             let auth = Authentication::from(auth);
             // TODO: we should await instead of blocking
-            futures::executor::block_on(provider.authenticate(auth))?;
+            let mut rt = tokio::runtime::Runtime::new()?;
+            rt.block_on(provider.authenticate(auth))?;
         }
 
         Ok(())

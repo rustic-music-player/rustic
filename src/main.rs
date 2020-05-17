@@ -53,7 +53,7 @@ fn is_remote(options: &options::CliOptions, config: &config::Config) -> bool {
 
 fn run_instance(options: options::CliOptions, config: config::Config) -> Result<(), failure::Error> {
     let extensions = load_extensions(&options, &config)?;
-    let providers = setup_providers(&config);
+    let providers = setup_providers(&config)?;
 
     let store: Box<dyn rustic_core::Library> = match config.library {
         LibraryConfig::Memory => Box::new(MemoryLibrary::new()),
@@ -107,9 +107,7 @@ fn connect_to_instance(options: options::CliOptions, config: config::Config) -> 
 
     // TOOD: allow support for more frontends when everything is decoupled from app instance
     #[cfg(feature = "iced-frontend")]
-    if config.frontend.iced.is_some() {
-        rustic_iced_frontend::start(Arc::clone(&client));
-    }
+    rustic_iced_frontend::start(Arc::clone(&client));
 
     Ok(())
 }

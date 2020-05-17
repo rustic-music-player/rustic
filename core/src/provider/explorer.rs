@@ -83,9 +83,10 @@ impl Explorer {
                     .iter()
                     .find(|provider| provider.read().unwrap().title() == path);
                 let path = &self.path[1..];
+                let mut rt = tokio::runtime::Runtime::new()?;
                 provider
                     .ok_or_else(|| Error::from(NavigationError::PathNotFound))
-                    .and_then(|provider| futures::executor::block_on(provider.read().unwrap().navigate(path.to_vec())))
+                    .and_then(|provider| rt.block_on(provider.read().unwrap().navigate(path.to_vec())))
             }
         }
     }

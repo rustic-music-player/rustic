@@ -57,11 +57,10 @@ pub fn start(app: Arc<Rustic>) -> Result<thread::JoinHandle<()>, Error> {
         .spawn(move || {
             info!("Starting Background Sync");
             let &(ref lock, ref cvar) = &*app.running();
+            let mut rt = tokio::runtime::Runtime::new().unwrap();
             let mut keep_running = lock.lock().unwrap();
             while *keep_running {
-                futures::executor::block_on(async {
-                    synchronize(&app).await
-                });
+                rt.block_on(synchronize(&app));
                 let result = cvar
                     .wait_timeout(keep_running, Duration::from_secs(5 * 60))
                     .unwrap();

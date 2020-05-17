@@ -8,7 +8,7 @@ repository = "https://github.com/rustic-music-player/rustic"
 homepage = "https://github.com/rustic-music-player/rustic"
 
 [dependencies]
-iced = "0.1"
+iced = { version = "0.1", features = ["tokio", "image", "svg"] }
 iced_native = "*"
 log = "0.4"
 

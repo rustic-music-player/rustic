@@ -15,7 +15,7 @@ tokio-core = "0.1"
 maplit = "^1"
 url = "1.7"
 async-trait = "0.1"
-futures = "0.3"
+futures = { version = "0.3", features = ["std", "async-await"], default-features = false }
 
 [dependencies.rustic-core]
 path = "../../core"

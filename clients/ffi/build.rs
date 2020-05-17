@@ -22,7 +22,6 @@ fn build_integration_tests() {
     let tool = cc::Build::new().get_compiler();
     let compiler = tool.path();
     build_integration_test(compiler, "sync_http_interop");
-    build_integration_test(compiler, "sync_http_interop");
 }
 
 fn build_integration_test(compiler: &Path, test: &str) {

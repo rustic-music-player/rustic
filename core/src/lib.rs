@@ -96,7 +96,8 @@ impl Rustic {
                 let track = match provider {
                     Some(provider) => {
                         // TODO: we should await instead of blocking
-                        futures::executor::block_on(provider.read().unwrap().resolve_track(uri))?
+                        let mut rt = tokio::runtime::Runtime::new()?;
+                        rt.block_on(provider.read().unwrap().resolve_track(uri))?
                     },
                     _ => None,
                 };
@@ -120,7 +121,8 @@ impl Rustic {
                 let album = match provider {
                     Some(provider) => {
                         // TODO: we should await instead of blocking
-                        futures::executor::block_on(provider.read().unwrap().resolve_album(uri))?
+                        let mut rt = tokio::runtime::Runtime::new()?;
+                        rt.block_on(provider.read().unwrap().resolve_album(uri))?
                     },
                     _ => None,
                 };
@@ -144,7 +146,8 @@ impl Rustic {
                 let playlist = match provider {
                     Some(provider) => {
                         // TODO: we should await instead of blocking
-                        futures::executor::block_on(provider.read().unwrap().resolve_playlist(uri))?
+                        let mut rt = tokio::runtime::Runtime::new()?;
+                        rt.block_on(provider.read().unwrap().resolve_playlist(uri))?
                     },
                     _ => None,
                 };
@@ -169,7 +172,8 @@ impl Rustic {
     pub fn stream_url(&self, track: &Track) -> Result<String, failure::Error> {
         let provider = self.get_provider(track)?;
         // TODO: we should await instead of blocking
-        let stream_url = futures::executor::block_on(provider.read().unwrap().stream_url(track))?;
+        let mut rt = tokio::runtime::Runtime::new()?;
+        let stream_url = rt.block_on(provider.read().unwrap().stream_url(track))?;
 
         Ok(stream_url)
     }
@@ -177,7 +181,8 @@ impl Rustic {
     pub fn cover_art(&self, track: &Track) -> Result<Option<CoverArt>, failure::Error> {
         let provider = self.get_provider(track)?;
         // TODO: we should await instead of blocking
-        let cover = futures::executor::block_on(provider.read().unwrap().cover_art(track))?;
+        let mut rt = tokio::runtime::Runtime::new()?;
+        let cover = rt.block_on(provider.read().unwrap().cover_art(track))?;
 
         Ok(cover)
     }
@@ -199,7 +204,8 @@ impl Rustic {
             let url = url.clone();
             let provider = provider.read().unwrap();
             // TODO: we should await instead of blocking
-            let uri = futures::executor::block_on(provider.resolve_share_url(url))?;
+            let mut rt = tokio::runtime::Runtime::new()?;
+            let uri = rt.block_on(provider.resolve_share_url(url))?;
 
             if uri.is_some() {
                 return Ok(uri);

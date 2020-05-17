@@ -1,9 +1,8 @@
 use crate::config::Config;
 use std::sync::{RwLock, Arc};
 use log::error;
-use futures::executor::block_on;
 
-pub(crate) fn setup_providers(config: &Config) -> rustic_core::provider::SharedProviders {
+pub(crate) fn setup_providers(config: &Config) -> Result<rustic_core::provider::SharedProviders, failure::Error> {
     let mut providers: rustic_core::provider::SharedProviders = vec![];
 
     #[cfg(feature = "pocketcasts-provider")]
@@ -36,12 +35,13 @@ pub(crate) fn setup_providers(config: &Config) -> rustic_core::provider::SharedP
                 providers.push(Arc::new(RwLock::new(Box::new(gmusic))));
             }
         }
+    let mut rt = tokio::runtime::Runtime::new()?;
     for provider in &providers {
         let mut provider = provider.write().unwrap();
-        block_on(provider
+        rt.block_on(provider
             .setup())
             .unwrap_or_else(|err| error!("Can't setup {} provider: {:?}", provider.title(), err));
     }
 
-    providers
+    Ok(providers)
 }

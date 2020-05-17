@@ -38,6 +38,7 @@ impl RusticApiClient for RusticNativeClient {
         trace!("search {}", query);
 
         let sw = stopwatch::Stopwatch::start_new();
+        let mut rt = tokio::runtime::Runtime::new()?;
         let results = providers
             .iter()
             .filter(|provider| {
@@ -51,7 +52,7 @@ impl RusticApiClient for RusticNativeClient {
             .map(|provider| {
                 let provider = provider.read().unwrap();
                 // TODO: we should await all futures instead of blocking each one
-                futures::executor::block_on(provider.search(query.to_string()))
+                rt.block_on(provider.search(query.to_string()))
             })
             .collect::<Result<Vec<_>>>()?;
         debug!("Searching took {}ms", sw.elapsed_ms());
