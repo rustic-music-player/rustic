@@ -6,6 +6,7 @@ use async_trait::async_trait;
 use rustic_api::client::*;
 use rustic_api::models::*;
 pub use rustic_api::models;
+use rustic_api::cursor::to_cursor;
 
 #[derive(Clone)]
 pub struct RusticHttpClient<T> where T: HttpClient {
@@ -55,6 +56,20 @@ impl<T> RusticApiClient for RusticHttpClient<T> where T: HttpClient {
         Ok(res)
     }
 
+    async fn open_share_url(&self, url: &str) -> Result<Option<OpenResultModel>> {
+        let url = format!("/api/open/{}", to_cursor(url));
+        let res = self.get(&url).await?;
+
+        Ok(res)
+    }
+
+    async fn get_track_cover_art(&self, cursor: &str) -> Result<Option<CoverArtModel>> {
+        unimplemented!("")
+    }
+}
+
+#[async_trait]
+impl<T> ProviderApiClient for RusticHttpClient<T> where T: HttpClient {
     async fn get_providers(&self) -> Result<Vec<ProviderModel>> {
         let res = self.get("/api/providers").await?;
 
@@ -65,6 +80,14 @@ impl<T> RusticApiClient for RusticHttpClient<T> where T: HttpClient {
         let res = self.get("/api/providers/available").await?;
 
         Ok(res)
+    }
+
+    async fn navigate_provider(&self, provider: ProviderType, path: &str) -> Result<ProviderFolderModel> {
+        unimplemented!()
+    }
+
+    async fn authenticate_provider(&self, provider: ProviderType, auth: ProviderAuthModel) -> Result<()> {
+        unimplemented!()
     }
 }
 

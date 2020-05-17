@@ -1,9 +1,9 @@
-use actix_web::{get, web, Responder, Result};
-use serde::{Deserialize};
+use actix_web::{get, Responder, Result, web};
+use serde::Deserialize;
 
-use crate::app::{ApiState, ApiClient};
-use crate::handler::providers as providers_handler;
-use rustic_core::Provider;
+use rustic_api::models::{ProviderType, ProviderAuthModel};
+
+use crate::app::ApiClient;
 
 #[derive(Deserialize)]
 pub struct NavigateQuery {
@@ -12,13 +12,7 @@ pub struct NavigateQuery {
 
 #[derive(Deserialize)]
 pub struct ProviderParams {
-    provider: Provider,
-}
-
-#[derive(Deserialize)]
-pub struct AuthRedirectParams {
-    code: String,
-    _state: String,
+    provider: ProviderType,
 }
 
 #[get("/providers")]
@@ -30,12 +24,11 @@ pub async fn get_providers(client: web::Data<ApiClient>) -> Result<impl Responde
 
 #[get("/providers/{provider}/navigate")]
 pub async fn navigate(
-    data: web::Data<ApiState>,
+    client: web::Data<ApiClient>,
     params: web::Path<ProviderParams>,
     query: web::Query<NavigateQuery>,
 ) -> Result<impl Responder> {
-    let rustic = &data.app;
-    let folder = providers_handler::navigate(&rustic, params.provider, &query.path)?;
+    let folder = client.navigate_provider(params.provider, &query.path).await?;
 
     Ok(web::Json(folder))
 }
@@ -49,12 +42,11 @@ pub async fn get_available_providers(client: web::Data<ApiClient>) -> Result<imp
 
 #[get("/providers/{provider}/auth/redirect")]
 pub async fn provider_token_auth(
-    query: web::Query<AuthRedirectParams>,
+    query: web::Query<ProviderAuthModel>,
     params: web::Path<ProviderParams>,
-    data: web::Data<ApiState>,
+    client: web::Data<ApiClient>,
 ) -> Result<impl Responder> {
-    let rustic = &data.app;
-    providers_handler::authenticate(&rustic, params.provider, &query.code)?;
+    client.authenticate_provider(params.provider, query.into_inner()).await?;
 
     Ok(web::HttpResponse::Ok().body(
         "<html><body>You can close this window now<script>window.close()</script></body></html>",

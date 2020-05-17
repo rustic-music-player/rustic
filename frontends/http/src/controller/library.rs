@@ -1,23 +1,15 @@
-use actix_web::{error, get, web, HttpResponse, Responder, Result};
-use serde::{Deserialize};
+use actix_web::{error, get, HttpResponse, Responder, Result, web};
+use futures::stream::StreamExt;
+use serde::Deserialize;
 
-use crate::app::{ApiState, ApiClient};
-use crate::handler::library as library_handler;
-use rustic_core::provider::CoverArt;
+use rustic_api::models::CoverArtModel;
+
+use crate::app::ApiClient;
 
 #[derive(Deserialize)]
 pub struct GetEntityQuery {
     cursor: String,
 }
-
-//pub fn library_controller() -> Scope {
-//    web::scope("/library")
-//        .service(get_album)
-//        .service(get_albums)
-//        .service(get_artists)
-//        .service(get_playlists)
-//        .service(get_tracks)
-//}
 
 #[get("/library/albums/{cursor}")]
 pub async fn get_album(
@@ -88,17 +80,17 @@ pub async fn get_track(
 
 #[get("/tracks/{cursor}/coverart")]
 pub async fn get_track_cover_art(
-    data: web::Data<ApiState>,
+    client: web::Data<ApiClient>,
     params: web::Path<GetEntityQuery>,
 ) -> Result<impl Responder> {
-    let rustic = &data.app;
-    let cover_art = library_handler::get_coverart_for_track(&params.cursor, &rustic)?;
+    let cover_art = client.get_track_cover_art(&params.cursor).await?;
     match cover_art {
-        Some(CoverArt::Data { data, mime_type }) => {
-            let response = HttpResponse::Ok().content_type(mime_type).body(data);
+        Some(CoverArtModel::Data { data, mime_type }) => {
+            let stream = data.map(|d| Ok(d.into()));
+            let response = HttpResponse::Ok().content_type(mime_type).streaming::<_, failure::Error>(stream);
             Ok(response)
         }
-        Some(CoverArt::Url(url)) => {
+        Some(CoverArtModel::Url(url)) => {
             let response = HttpResponse::Found().header("Location", url).finish();
             Ok(response)
         }

@@ -6,12 +6,14 @@ use rayon::prelude::*;
 use async_trait::async_trait;
 use rustic_api::client::*;
 use rustic_api::models::*;
-use rustic_core::{Album, Artist, Rustic, Track};
+use rustic_core::{Album, Artist, Rustic, Track, SingleQuery};
 use rustic_extension_api::ExtensionManager;
+use rustic_api::cursor::from_cursor;
 
 mod library;
-mod queue;
 mod player;
+mod provider;
+mod queue;
 mod stream_util;
 
 #[derive(Clone)]
@@ -91,52 +93,26 @@ impl RusticApiClient for RusticNativeClient {
         Ok(extensions)
     }
 
-    async fn get_providers(&self) -> Result<Vec<ProviderModel>> {
-        let providers = self.app
-            .providers
-            .iter()
-            .filter(|provider| {
-                provider
-                    .read()
-                    .map(|provider| provider.auth_state().is_authenticated())
-                    .unwrap_or(false)
-            })
-            .map(|provider| {
-                let provider = provider.read().unwrap();
-                let title = provider.title().to_owned();
-                let provider_type = provider.provider();
-                let explore = provider.root();
+    async fn open_share_url(&self, url: &str) -> Result<Option<OpenResultModel>> {
+        let internal_url = self.app.resolve_share_url(url.to_owned())?;
+        let result = internal_url.map(OpenResultModel::from);
 
-                ProviderModel {
-                    title,
-                    provider: provider_type.into(),
-                    explore: explore.into(),
-                }
-            })
-            .collect();
-
-        Ok(providers)
+        Ok(result)
     }
 
-    async fn get_available_providers(&self) -> Result<Vec<AvailableProviderModel>> {
-        let providers = self.app
-            .providers
-            .iter()
-            .map(|provider| {
-                let provider = provider.read().expect("can't read provider");
-                let provider_type = provider.provider();
-                let auth_state = provider.auth_state();
+    async fn get_track_cover_art(&self, cursor: &str) -> Result<Option<CoverArtModel>> {
+        let uri = from_cursor(cursor)?;
+        let query = SingleQuery::uri(uri);
+        let track = self.app.query_track(query)?;
 
-                AvailableProviderModel {
-                    provider: provider_type.into(),
-                    title: provider.title().to_owned(),
-                    enabled: true,
-                    auth_state: auth_state.into(),
-                }
-            })
-            .collect();
+        if let Some(track) = track {
+            let cover_art = self.app.cover_art(&track)?;
+            let cover_art = cover_art.map(CoverArtModel::from);
 
-        Ok(providers)
+            Ok(cover_art)
+        }else {
+            Ok(None)
+        }
     }
 }
 

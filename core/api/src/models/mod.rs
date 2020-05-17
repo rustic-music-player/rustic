@@ -1,6 +1,7 @@
 pub use self::album::*;
 pub use self::artist::*;
 pub use self::available_provider::*;
+pub use self::cover_art::*;
 pub use self::extension::*;
 pub use self::open_result::*;
 pub use self::player::*;
@@ -15,6 +16,7 @@ pub use self::track::*;
 mod album;
 mod artist;
 mod available_provider;
+mod cover_art;
 mod extension;
 mod open_result;
 mod player;

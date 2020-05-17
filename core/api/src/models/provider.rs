@@ -40,3 +40,11 @@ pub enum ProviderType {
     #[serde(rename = "local")]
     LocalMedia,
 }
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+pub enum ProviderAuthModel {
+    OAuthToken {
+        code: String,
+        state: Option<String>
+    }
+}

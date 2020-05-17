@@ -1,12 +1,12 @@
-use actix_web::{error, get, web, Responder};
-use serde::{Deserialize};
+use actix_web::{error, get, Responder, web};
 use log::trace;
-
-use crate::app::{ApiState, ApiClient};
-use crate::cursor::from_cursor;
-use crate::handler::search as search_handler;
+use serde::Deserialize;
 use serde_qs::actix::QsQuery;
+
 use rustic_api::models::ProviderType;
+
+use crate::app::ApiClient;
+use crate::cursor::from_cursor;
 
 #[derive(Deserialize)]
 pub struct SearchQuery {
@@ -31,13 +31,12 @@ pub async fn search(
 
 #[get("/open/{url}")]
 pub async fn open(
-    data: web::Data<ApiState>,
+    client: web::Data<ApiClient>,
     params: web::Path<OpenParams>,
 ) -> Result<impl Responder, error::Error> {
-    let rustic = &data.app;
     let url = from_cursor(&params.url)?;
 
-    match search_handler::open(url, rustic)? {
+    match client.open_share_url(&url).await? {
         Some(result) => Ok(web::Json(result)),
         None => Err(error::ErrorNotFound("no results")),
     }
@@ -48,10 +47,10 @@ mod test {
     use actix_web::{App, http, test};
     use actix_web::dev::*;
 
+    use rustic_api::models::{ProviderType, SearchResults};
     use rustic_api::TestApiClient;
 
     use crate::test::build_app;
-    use rustic_api::models::{SearchResults, ProviderType};
 
     #[actix_rt::test]
     async fn search_should_return_success() {

@@ -1,12 +1,11 @@
 use rustic_core::{Album, Artist, PlayerEvent, PlayerState, Playlist, Provider, Track};
-use rustic_core::provider::{
-    AuthState, InternalUri, ProviderFolder, ProviderItem, ProviderItemType,
-};
+use rustic_core::provider::{Authentication, AuthState, InternalUri, ProviderFolder, ProviderItem, ProviderItemType, CoverArt};
 use rustic_core::sync::{SyncEvent, SyncItem, SyncItemState};
 use rustic_extension_api::ExtensionMetadata;
 
 use crate::cursor::to_cursor;
 use crate::models::*;
+use futures::StreamExt;
 
 impl From<Album> for AlbumModel {
     fn from(album: Album) -> Self {
@@ -49,9 +48,9 @@ impl From<AuthState> for ProviderAuthenticationState {
 impl From<ExtensionMetadata> for ExtensionModel {
     fn from(metadata: ExtensionMetadata) -> Self {
         ExtensionModel {
-            name: metadata.name.clone(),
-            id: metadata.id.clone(),
-            version: metadata.version.clone(),
+            name: metadata.name,
+            id: metadata.id,
+            version: metadata.version,
             enabled: true,
         }
     }
@@ -153,6 +152,33 @@ impl From<Provider> for ProviderType {
     }
 }
 
+impl From<ProviderType> for Provider {
+    fn from(provider: ProviderType) -> Self {
+        match provider {
+            ProviderType::Pocketcasts => Provider::Pocketcasts,
+            ProviderType::GooglePlayMusic => Provider::GooglePlayMusic,
+            ProviderType::LocalMedia => Provider::LocalMedia,
+            ProviderType::Soundcloud => Provider::Soundcloud,
+            ProviderType::Spotify => Provider::Spotify,
+        }
+    }
+}
+
+impl From<ProviderAuthModel> for Authentication {
+    fn from(model: ProviderAuthModel) -> Self {
+        match model {
+            ProviderAuthModel::OAuthToken {
+                state: Some(state),
+                code
+            } => Authentication::TokenWithState(code, state),
+            ProviderAuthModel::OAuthToken {
+                state: None,
+                code
+            } => Authentication::Token(code)
+        }
+    }
+}
+
 impl From<SyncEvent> for SyncStateModel {
     fn from(event: SyncEvent) -> Self {
         match event {
@@ -199,6 +225,25 @@ impl From<PlayerEvent> for QueueEventModel {
         match event {
             PlayerEvent::QueueUpdated(tracks) => QueueEventModel::QueueUpdated(tracks.into_iter().map(TrackModel::from).collect()),
             _ => unreachable!("this should be filtered before")
+        }
+    }
+}
+
+impl From<CoverArt> for CoverArtModel {
+    fn from(cover_art: CoverArt) -> Self {
+        match cover_art {
+            CoverArt::Url(url) => CoverArtModel::Url(url),
+            CoverArt::Data {
+                data,
+                mime_type
+            } => {
+                let stream = futures::stream::once(async { data });
+
+                CoverArtModel::Data {
+                    data: stream.boxed(),
+                    mime_type
+                }
+            }
         }
     }
 }

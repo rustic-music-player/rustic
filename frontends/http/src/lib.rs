@@ -12,7 +12,6 @@ use rustic_api::RusticApiClient;
 mod app;
 mod controller;
 mod cursor;
-mod handler;
 mod socket;
 #[cfg(test)]
 pub(crate) mod test;
