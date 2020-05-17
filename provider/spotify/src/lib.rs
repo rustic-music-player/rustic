@@ -1,8 +1,8 @@
 use failure::{Error, format_err};
 use log::trace;
-use rspotify::spotify::client::Spotify;
-use rspotify::spotify::oauth2::{SpotifyClientCredentials, SpotifyOAuth, TokenInfo};
-use rspotify::spotify::util::generate_random_string;
+use rspotify::client::Spotify;
+use rspotify::oauth2::{SpotifyClientCredentials, SpotifyOAuth, TokenInfo};
+use rspotify::util::generate_random_string;
 use serde_derive::Deserialize;
 
 use async_trait::async_trait;
@@ -39,10 +39,10 @@ pub struct SpotifyProvider {
 }
 
 impl SpotifyProvider {
-    fn sync_tracks(&self, library: &SharedLibrary) -> Result<(usize, usize), Error> {
+    async fn sync_tracks(&self, library: &SharedLibrary) -> Result<(usize, usize), Error> {
         let spotify = self.client.as_ref().unwrap();
 
-        let albums = spotify.current_user_saved_albums(None, None)?.items;
+        let albums = spotify.current_user_saved_albums(None, None).await?.items;
 
         let albums_len = albums.len();
 
@@ -74,20 +74,18 @@ impl SpotifyProvider {
         Ok((tracks.len(), albums_len))
     }
 
-    fn sync_playlists(&self, library: &SharedLibrary) -> Result<usize, Error> {
+    async fn sync_playlists(&self, library: &SharedLibrary) -> Result<usize, Error> {
         let spotify = self.client.as_ref().unwrap();
 
-        let playlists = spotify.current_user_playlists(None, None)?;
-        let mut playlists = playlists
-            .items
-            .into_iter()
-            .map(|playlist| {
-                spotify
-                    .playlist(&playlist.id, None, None)
-                    .map(SpotifyPlaylist::from)
-                    .map(Playlist::from)
-            })
-            .collect::<Result<Vec<Playlist>, Error>>()?;
+        let user_playlists = spotify.current_user_playlists(None, None).await?;
+        let mut playlists = Vec::with_capacity(user_playlists.items.len());
+        for playlist in user_playlists.items {
+            // TODO: this should await all playlists at once
+            let p = spotify.playlist(&playlist.id, None, None).await
+                .map(SpotifyPlaylist::from)
+                .map(Playlist::from)?;
+            playlists.push(p);
+        }
 
         let playlist_count = playlists.len();
 
@@ -130,7 +128,7 @@ impl rustic_core::provider::ProviderInstance for SpotifyProvider {
     async fn setup(&mut self) -> Result<(), Error> {
         let mut oauth = self.get_oauth_client();
 
-        if let Some(token) = oauth.get_cached_token() {
+        if let Some(token) = oauth.get_cached_token().await {
             self.setup_client(token);
         }
 
@@ -141,7 +139,7 @@ impl rustic_core::provider::ProviderInstance for SpotifyProvider {
         if self.client.is_some() {
             provider::AuthState::Authenticated(None)
         } else {
-            let mut oauth = self.get_oauth_client().build();
+            let oauth = self.get_oauth_client().build();
             let state = generate_random_string(16);
             let auth_url = oauth.get_authorize_url(Some(&state), None);
             provider::AuthState::RequiresOAuth(auth_url)
@@ -152,8 +150,8 @@ impl rustic_core::provider::ProviderInstance for SpotifyProvider {
         use provider::Authentication::*;
         match auth {
             Token(token) => {
-                let mut oauth = self.get_oauth_client();
-                if let Some(token) = oauth.get_access_token(&token) {
+                let oauth = self.get_oauth_client();
+                if let Some(token) = oauth.get_access_token(&token).await {
                     self.setup_client(token);
                     Ok(())
                 } else {
@@ -161,8 +159,8 @@ impl rustic_core::provider::ProviderInstance for SpotifyProvider {
                 }
             }
             TokenWithState(token, state) => {
-                let mut oauth = self.get_oauth_client().state(&state);
-                if let Some(token) = oauth.get_access_token(&token) {
+                let oauth = self.get_oauth_client().state(&state);
+                if let Some(token) = oauth.get_access_token(&token).await {
                     self.setup_client(token);
                     Ok(())
                 } else {
@@ -186,9 +184,9 @@ impl rustic_core::provider::ProviderInstance for SpotifyProvider {
     }
 
     async fn sync(&self, library: SharedLibrary) -> Result<provider::SyncResult, Error> {
-        let (tracks, albums) = self.sync_tracks(&library)?;
+        let (tracks, albums) = self.sync_tracks(&library).await?;
 
-        let playlists = self.sync_playlists(&library)?;
+        let playlists = self.sync_playlists(&library).await?;
 
         Ok(provider::SyncResult {
             tracks,
@@ -213,9 +211,9 @@ impl rustic_core::provider::ProviderInstance for SpotifyProvider {
         trace!("search {}", query);
         let spotify = self.client.clone().unwrap();
 
-        let albums = spotify.search_album(&query, None, None, None)?;
-        let artists = spotify.search_artist(&query, None, None, None)?;
-        let tracks = spotify.search_track(&query, None, None, None)?;
+        let albums = spotify.search_album(&query, None, None, None).await?;
+        let artists = spotify.search_artist(&query, None, None, None).await?;
+        let tracks = spotify.search_track(&query, None, None, None).await?;
 
         let albums = albums
             .albums
@@ -253,7 +251,7 @@ impl rustic_core::provider::ProviderInstance for SpotifyProvider {
     async fn resolve_playlist(&self, uri: &str) -> Result<Option<Playlist>, Error> {
         let spotify = self.client.clone().unwrap();
         let id = &uri["spotify://playlists/".len()..];
-        let playlist = spotify.playlist(id, None, None)?;
+        let playlist = spotify.playlist(id, None, None).await?;
         let playlist = SpotifyPlaylist::from(playlist);
         let playlist = Playlist::from(playlist);
 

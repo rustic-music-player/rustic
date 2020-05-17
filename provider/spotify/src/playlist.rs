@@ -1,4 +1,4 @@
-use rspotify::spotify::model::playlist::*;
+use rspotify::model::playlist::*;
 use serde_derive::{Deserialize, Serialize};
 
 use rustic_core::{Playlist, Provider, Track};
@@ -27,7 +27,8 @@ impl From<SpotifyPlaylist> for Playlist {
                 .tracks
                 .items
                 .into_iter()
-                .map(|track| SpotifyFullTrack::from(track.track))
+                .map(|track| track.track.map(SpotifyFullTrack::from))
+                .filter_map(|t| t)
                 .map(Track::from)
                 .collect(),
         }

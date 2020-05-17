@@ -10,7 +10,7 @@ use librespot::core::cache::Cache;
 use librespot::core::config::SessionConfig;
 use librespot::core::session::Session;
 use librespot::core::spotify_id::SpotifyId;
-use librespot::metadata::{AudioItem, Metadata, Playlist};
+use librespot::metadata::AudioItem;
 use librespot::protocol::metadata::AudioFile_Format;
 use log::trace;
 use tokio_core::reactor::Core;

@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use rspotify::spotify::model::artist::{FullArtist, SimplifiedArtist};
+use rspotify::model::artist::{FullArtist, SimplifiedArtist};
 use serde_derive::{Deserialize, Serialize};
 
 use rustic_core::library::Artist;

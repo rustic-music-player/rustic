@@ -2,7 +2,7 @@ use std::collections::HashMap;
 
 use log::warn;
 use maplit::hashmap;
-use rspotify::spotify::model::track::{FullTrack, SimplifiedTrack};
+use rspotify::model::track::{FullTrack, SimplifiedTrack};
 use serde_derive::{Deserialize, Serialize};
 
 use rustic_core::library::{Album, MetaValue, Track};

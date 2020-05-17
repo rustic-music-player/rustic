@@ -7,7 +7,7 @@ edition = "2018"
 [dependencies]
 failure = "0.1"
 librespot = { git = "https://github.com/librespot-org/librespot.git", rev = "b63411" }
-rspotify = "0.7"
+rspotify = "0.9"
 serde = "1.0"
 serde_derive = "1.0"
 log = "0.4"
@@ -15,6 +15,7 @@ tokio-core = "0.1"
 maplit = "^1"
 url = "1.7"
 async-trait = "0.1"
+futures = "0.3"
 
 [dependencies.rustic-core]
 path = "../../core"

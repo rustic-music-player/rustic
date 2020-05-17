@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 
-use rspotify::spotify::model::artist::SimplifiedArtist;
-use rspotify::spotify::model::image::Image;
+use rspotify::model::artist::SimplifiedArtist;
+use rspotify::model::image::Image;
 
 use rustic_core::library::Artist;
 
