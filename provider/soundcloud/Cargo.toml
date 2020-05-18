@@ -19,3 +19,4 @@ path = "../../core"
 
 [dependencies.soundcloud]
 git = "https://github.com/maxjoehnk/soundcloud-rs"
+rev = "4728530"

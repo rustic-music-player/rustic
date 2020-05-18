@@ -89,7 +89,8 @@ impl provider::ProviderInstance for SoundcloudProvider {
     async fn sync(&self, library: SharedLibrary) -> Result<provider::SyncResult, Error> {
         let client = self.client();
         let mut playlists: Vec<Playlist> = client
-            .user_playlists()?
+            .user_playlists()
+            .await?
             .iter()
             .cloned()
             .map(playlist::SoundcloudPlaylist::from)
@@ -113,7 +114,7 @@ impl provider::ProviderInstance for SoundcloudProvider {
         match path[0].as_str() {
             "Likes" => {
                 let client = self.client();
-                let likes = client.likes()?;
+                let likes = client.likes().await?;
                 let items = likes
                     .iter()
                     .cloned()
@@ -137,7 +138,8 @@ impl provider::ProviderInstance for SoundcloudProvider {
         let results = client
             .tracks()
             .query(Some(query))
-            .get()?
+            .get()
+            .await?
             .unwrap_or_else(|| vec![])
             .into_iter()
             .filter(|track| {
@@ -162,6 +164,7 @@ impl provider::ProviderInstance for SoundcloudProvider {
             .tracks()
             .id(id)
             .get()
+            .await
             .ok()
             .map(SoundcloudTrack::from)
             .map(Track::from);
@@ -181,7 +184,7 @@ impl provider::ProviderInstance for SoundcloudProvider {
         let id = &uri["soundcloud://playlist/".len()..];
         let id = usize::from_str(id)?;
         let client = self.client();
-        let playlist = client.playlist(id).get()?;
+        let playlist = client.playlist(id).get().await?;
         let playlist = SoundcloudPlaylist::from(playlist);
         let playlist = Playlist::from(playlist);
 
@@ -226,7 +229,7 @@ impl provider::ProviderInstance for SoundcloudProvider {
             return Ok(None);
         }
         let client = self.client();
-        let url = client.resolve(url.as_str())?;
+        let url = client.resolve(url.as_str()).await?;
         let path = url.path();
         if let Some(captures) = SOUNDCLOUD_RESOLVE_REGEX.captures(path) {
             let entity_type = &captures[1];
