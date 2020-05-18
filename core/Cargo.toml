@@ -13,7 +13,7 @@ log = "0.4"
 serde = "1.0"
 serde_derive = "1.0"
 reqwest = "0.9"
-url = "1.7"
+url = "2.1"
 failure = "0.1"
 md5 = "0.7"
 image = "0.22"
@@ -26,3 +26,4 @@ rayon = "1.3"
 futures = { version = "0.3", features = ["std", "async-await"], default-features = false }
 async-trait = "0.1"
 tokio = { version = "0.2", features = ["rt-core"] }
+uuid = { version = "0.8", features = ["v4", "serde"] }

@@ -36,3 +36,9 @@ impl From<usize> for MetaValue {
         MetaValue::Int(value as u64)
     }
 }
+
+impl From<uuid::Uuid> for MetaValue {
+    fn from(value: uuid::Uuid) -> Self {
+        MetaValue::String(format!("{}", value))
+    }
+}

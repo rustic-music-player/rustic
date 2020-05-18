@@ -13,7 +13,7 @@ serde_derive = "1.0"
 log = "0.4"
 tokio-core = "0.1"
 maplit = "^1"
-url = "1.7"
+url = "2.1"
 async-trait = "0.1"
 futures = { version = "0.3", features = ["std", "async-await"], default-features = false }
 

@@ -13,6 +13,7 @@ rustic-api = { path = "../../../core/api" }
 failure = "0.1"
 log = "0.4"
 url = "2.1"
+#websocket = { version = "0.24", features = ["async", "async-ssl"] }
 
 [dev-dependencies]
 mockito = "0.25"

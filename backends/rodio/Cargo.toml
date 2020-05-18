@@ -12,7 +12,7 @@ homepage = "https://github.com/rustic-music-player/rustic"
 crossbeam-channel = "0.4"
 log = "0.4"
 failure = "0.1"
-url = "1.7"
+url = "2.1"
 rodio = "0.11"
 pinboard = "2"
 

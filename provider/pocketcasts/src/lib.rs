@@ -1,7 +1,5 @@
 use failure::{Error, format_err};
-use log::debug;
 use pocketcasts::{Episode, PocketcastClient, Podcast};
-use rayon::prelude::*;
 use serde::Deserialize;
 
 use async_trait::async_trait;
@@ -11,6 +9,7 @@ use rustic_core::library::{Album, Artist, MetaValue, SharedLibrary, Track};
 use crate::episode::PocketcastTrack;
 use crate::meta::META_POCKETCASTS_COVER_ART_URL;
 use crate::podcast::{PocketcastAlbum, PocketcastAlbums, PocketcastSearchResult};
+use futures::prelude::*;
 
 mod episode;
 mod meta;
@@ -27,8 +26,7 @@ pub struct PocketcastsProvider {
 #[async_trait]
 impl provider::ProviderInstance for PocketcastsProvider {
     async fn setup(&mut self) -> Result<(), Error> {
-        let mut client = PocketcastClient::new(self.email.clone(), self.password.clone());
-        client.login()?;
+        let client = PocketcastClient::login(self.email.clone(), self.password.clone()).await?;
         self.client = Some(client);
 
         Ok(())
@@ -72,20 +70,12 @@ impl provider::ProviderInstance for PocketcastsProvider {
             .client
             .clone()
             .ok_or_else(|| format_err!("Pocketcasts not setup"))?;
-        let podcasts = client.get_subscriptions()?;
+        let podcasts = client.get_subscriptions().await?;
         let albums = podcasts.len();
-        let mut episodes: Vec<Track> = podcasts
-            .par_iter()
-            .cloned()
-            .map(|podcast| {
-                let episodes = client.get_episodes(&podcast.uuid)?;
-                Ok((podcast, episodes))
-            })
-            .filter(|result: &Result<(Podcast, Vec<Episode>), Error>| {
-                debug!("{:?}", result);
-                result.is_ok()
-            })
-            .map(|result| result.unwrap())
+        let futures: Vec<future::BoxFuture<_>> = podcasts.into_iter().map(|p| get_episodes(&client, p)).collect();
+        let podcast_episodes: Vec<(Podcast, Vec<Episode>)> = futures::future::try_join_all(futures).await?;
+        let mut episodes: Vec<Track> = podcast_episodes
+            .into_iter()
             .map(|(podcast, episodes)| {
                 let mut artist = Artist::from(PocketcastAlbum::from(podcast.clone()));
                 let mut album = Album::from(PocketcastAlbum::from(podcast));
@@ -112,8 +102,8 @@ impl provider::ProviderInstance for PocketcastsProvider {
                     .collect();
                 tracks
             })
-            .reduce(
-                || vec![],
+            .fold(
+                vec![],
                 |mut a, b| {
                     a.extend(b);
                     a
@@ -144,49 +134,40 @@ impl provider::ProviderInstance for PocketcastsProvider {
     async fn navigate(&self, path: Vec<String>) -> Result<provider::ProviderFolder, Error> {
         let client = self.client.clone().unwrap();
         let podcasts = match path[0].as_str() {
-            "Subscriptions" => Ok(self.client.clone().unwrap().get_subscriptions()),
+            "Subscriptions" => client.get_subscriptions().await,
             //            "Top Charts" => Ok(PocketcastClient::get_top_charts()),
             //            "Featured" => Ok(PocketcastClient::get_featured()),
             //            "Trending" => Ok(PocketcastClient::get_trending()),
             _ => Err(Error::from(provider::NavigationError::PathNotFound)),
         }?;
         match path.len() {
-            1 => podcasts
-                .map(PocketcastAlbums::from)
-                .map(provider::ProviderFolder::from),
-            2 => podcasts.and_then(|podcasts| {
-                podcasts
+            1 => Ok(provider::ProviderFolder::from(PocketcastAlbums::from(podcasts))),
+            2 => {
+                let podcast = podcasts.iter().find(|podcast| podcast.title == path[1]).ok_or(provider::NavigationError::PathNotFound)?;
+                let episodes = client
+                    .get_episodes(podcast.uuid)
+                    .await
+                    .map_err(|_err| Error::from(provider::NavigationError::FetchError))?;
+                let items = episodes
                     .iter()
-                    .find(|podcast| podcast.title == path[1])
-                    .ok_or(provider::NavigationError::PathNotFound)
-                    .map_err(Error::from)
-                    .and_then(|podcast| {
-                        client
-                            .get_episodes(&podcast.uuid)
-                            .map_err(|_err| Error::from(provider::NavigationError::FetchError))
-                    })
-                    .map(|episodes| {
-                        episodes
-                            .iter()
-                            .cloned()
-                            .map(PocketcastTrack::from)
-                            .map(Track::from)
-                            .map(provider::ProviderItem::from)
-                            .collect()
-                    })
-                    // .ok_or(Error::from(provider::NavigationError::FetchError))
-                    .map(|items| provider::ProviderFolder {
-                        folders: vec![],
-                        items,
-                    })
-            }),
+                    .cloned()
+                    .map(PocketcastTrack::from)
+                    .map(Track::from)
+                    .map(provider::ProviderItem::from)
+                    .collect();
+
+                Ok(provider::ProviderFolder {
+                    folders: vec![],
+                    items
+                })
+            },
             _ => Err(Error::from(provider::NavigationError::PathNotFound)),
         }
     }
 
     async fn search(&self, query: String) -> Result<Vec<provider::ProviderItem>, Error> {
         let client = self.client.clone().unwrap();
-        let podcasts = client.search_podcasts(query)?;
+        let podcasts = client.search_podcasts(query).await?;
         let podcasts = podcasts
             .into_iter()
             .map(PocketcastSearchResult::from)
@@ -240,4 +221,8 @@ impl provider::ProviderInstance for PocketcastsProvider {
     async fn resolve_share_url(&self, _: url::Url) -> Result<Option<provider::InternalUri>, Error> {
         Ok(None)
     }
+}
+
+fn get_episodes(client: &PocketcastClient, podcast: Podcast) -> future::BoxFuture<Result<(Podcast, Vec<Episode>), Error>> {
+    client.get_episodes(podcast.uuid).map(|result| result.map(|episodes| (podcast, episodes))).boxed()
 }

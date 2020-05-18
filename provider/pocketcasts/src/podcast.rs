@@ -33,7 +33,7 @@ impl From<PocketcastAlbum> for Album {
                 name: podcast.author,
                 image_url: None,
                 meta: hashmap!(
-                    META_POCKETCASTS_PODCAST_UUID.into() => id.clone().into()
+                    META_POCKETCASTS_PODCAST_UUID.into() => podcast.uuid.into()
                 ),
             }),
             tracks: vec![],
