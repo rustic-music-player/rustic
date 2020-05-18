@@ -40,8 +40,8 @@ impl provider::ProviderInstance for PocketcastsProvider {
         "pocketcasts"
     }
 
-    fn provider(&self) -> provider::Provider {
-        provider::Provider::Pocketcasts
+    fn provider(&self) -> provider::ProviderType {
+        provider::ProviderType::Pocketcasts
     }
 
     fn auth_state(&self) -> provider::AuthState {
@@ -190,7 +190,7 @@ impl provider::ProviderInstance for PocketcastsProvider {
     }
 
     async fn stream_url(&self, track: &Track) -> Result<String, Error> {
-        if track.provider == provider::Provider::Pocketcasts {
+        if track.provider == provider::ProviderType::Pocketcasts {
             if let rustic_core::library::MetaValue::String(stream_url) =
                 track.meta.get(meta::META_POCKETCASTS_STREAM_URL).unwrap()
             {

@@ -39,7 +39,7 @@ impl<T> HttpClient for RusticHttpClient<T> where T: HttpClient {
 
 #[async_trait]
 impl<T> RusticApiClient for RusticHttpClient<T> where T: HttpClient {
-    async fn search(&self, query: &str, provider: Option<&Vec<ProviderType>>) -> Result<SearchResults> {
+    async fn search(&self, query: &str, provider: Option<&Vec<ProviderTypeModel>>) -> Result<SearchResults> {
         let providers: String = provider.map(|p| p.clone()).unwrap_or_default()
             .iter()
             .map(|p| format!("&providers[]={}", serde_json::to_string(p).unwrap()))
@@ -82,11 +82,11 @@ impl<T> ProviderApiClient for RusticHttpClient<T> where T: HttpClient {
         Ok(res)
     }
 
-    async fn navigate_provider(&self, provider: ProviderType, path: &str) -> Result<ProviderFolderModel> {
+    async fn navigate_provider(&self, provider: ProviderTypeModel, path: &str) -> Result<ProviderFolderModel> {
         unimplemented!()
     }
 
-    async fn authenticate_provider(&self, provider: ProviderType, auth: ProviderAuthModel) -> Result<()> {
+    async fn authenticate_provider(&self, provider: ProviderTypeModel, auth: ProviderAuthModel) -> Result<()> {
         unimplemented!()
     }
 }

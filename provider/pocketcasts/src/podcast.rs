@@ -5,7 +5,7 @@ use pocketcasts::{Podcast, SearchPodcast};
 use serde::{Deserialize, Serialize};
 
 use rustic_core::library::{Album, Artist};
-use rustic_core::provider::{Provider, ProviderFolder};
+use rustic_core::provider::{ProviderType, ProviderFolder};
 
 use crate::meta::*;
 
@@ -37,7 +37,7 @@ impl From<PocketcastAlbum> for Album {
                 ),
             }),
             tracks: vec![],
-            provider: Provider::Pocketcasts,
+            provider: ProviderType::Pocketcasts,
             image_url: Some(thumbnail_url.clone()),
             uri: format!("pocketcasts://podcast/{}", podcast.uuid),
             meta: hashmap!(
@@ -91,7 +91,7 @@ impl From<PocketcastSearchResult> for Album {
                 meta: HashMap::new(),
             }),
             tracks: vec![],
-            provider: Provider::Pocketcasts,
+            provider: ProviderType::Pocketcasts,
             image_url: Some(thumbnail_url.clone()),
             uri: format!("pocketcasts://podcast/{}", podcast.uuid),
             meta: hashmap!(

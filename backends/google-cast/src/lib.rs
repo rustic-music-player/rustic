@@ -37,9 +37,8 @@ pub struct GoogleCastBackend {
 impl GoogleCastBackend {
     pub fn start_discovery(core: Arc<rustic_core::Rustic>) {
         let (tx, rx) = crossbeam_channel::unbounded();
-        let running = core.running();
         thread::spawn(move || {
-            discovery::discover(tx, running);
+            discovery::discover(tx);
         });
         let core = Arc::clone(&core);
         thread::spawn(move || {

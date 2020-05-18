@@ -1,4 +1,4 @@
-use crate::models::{AlbumModel, ArtistModel, ProviderType};
+use crate::models::{AlbumModel, ArtistModel, ProviderTypeModel};
 use serde::{Deserialize, Serialize};
 use std::cmp::Ordering;
 
@@ -8,7 +8,7 @@ pub struct TrackModel {
     pub title: String,
     pub artist: Option<ArtistModel>,
     pub album: Option<AlbumModel>,
-    pub provider: ProviderType,
+    pub provider: ProviderTypeModel,
     pub coverart: Option<String>,
     pub duration: Option<u64>,
 }

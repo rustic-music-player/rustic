@@ -33,7 +33,7 @@ impl QueueApiClient for RusticNativeClient {
         let player = self.get_player_or_default(player_id)?;
         let uri = from_cursor(cursor)?;
         debug!("adding track to queue {}", uri);
-        let track: Option<Track> = self.app.query_track(SingleQuery::uri(uri))?;
+        let track: Option<Track> = self.app.query_track(SingleQuery::uri(uri)).await?;
         match track {
             Some(track) => {
                 self.queue_multiple(player, &vec![track]).await?;
@@ -48,7 +48,7 @@ impl QueueApiClient for RusticNativeClient {
         let player = self.get_player_or_default(player_id)?;
         let uri = from_cursor(cursor)?;
         debug!("adding album to queue {}", uri);
-        let album: Option<Album> = self.app.query_album(SingleQuery::uri(uri))?;
+        let album: Option<Album> = self.app.query_album(SingleQuery::uri(uri)).await?;
         match album {
             Some(album) => {
                 self.queue_multiple(player, &album.tracks).await?;
@@ -63,7 +63,7 @@ impl QueueApiClient for RusticNativeClient {
         let player = self.get_player_or_default(player_id)?;
         let uri = from_cursor(cursor)?;
         debug!("adding playlist to queue {}", uri);
-        let playlist: Option<Playlist> = self.app.query_playlist(SingleQuery::uri(uri))?;
+        let playlist: Option<Playlist> = self.app.query_playlist(SingleQuery::uri(uri)).await?;
         match playlist {
             Some(playlist) => {
                 self.queue_multiple(player, &playlist.tracks).await?;

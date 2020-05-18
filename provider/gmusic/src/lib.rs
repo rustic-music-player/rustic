@@ -107,8 +107,8 @@ impl provider::ProviderInstance for GooglePlayMusicProvider {
         "gmusic"
     }
 
-    fn provider(&self) -> provider::Provider {
-        provider::Provider::GooglePlayMusic
+    fn provider(&self) -> provider::ProviderType {
+        provider::ProviderType::GooglePlayMusic
     }
 
     async fn sync(&self, library: SharedLibrary) -> Result<provider::SyncResult, Error> {

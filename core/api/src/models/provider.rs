@@ -4,7 +4,7 @@ use serde::{Deserialize, Serialize};
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Eq)]
 pub struct ProviderModel {
     pub title: String,
-    pub provider: ProviderType,
+    pub provider: ProviderTypeModel,
     pub explore: ProviderFolderModel
  }
 
@@ -31,7 +31,7 @@ pub enum ProviderItemTypeModel {
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
 #[serde(rename_all = "lowercase")]
-pub enum ProviderType {
+pub enum ProviderTypeModel {
     Pocketcasts,
     Soundcloud,
     #[serde(rename = "gmusic")]

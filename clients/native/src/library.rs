@@ -35,7 +35,8 @@ impl LibraryApiClient for RusticNativeClient {
         let mut query = SingleQuery::uri(uri);
         query.join_all();
         let album = self.app
-            .query_album(query)?
+            .query_album(query)
+            .await?
             .map(AlbumModel::from);
         debug!("Fetching album took {}ms", sw.elapsed_ms());
 
@@ -76,7 +77,8 @@ impl LibraryApiClient for RusticNativeClient {
         let mut query = SingleQuery::uri(uri);
         query.join_all();
         let playlist = self.app
-            .query_playlist(query)?
+            .query_playlist(query)
+            .await?
             .map(PlaylistModel::from);
         debug!("Fetching playlist took {}ms", sw.elapsed_ms());
 
@@ -99,7 +101,7 @@ impl LibraryApiClient for RusticNativeClient {
     async fn get_track(&self, cursor: &str) -> Result<Option<TrackModel>, failure::Error> {
         let uri = from_cursor(cursor)?;
         let query = SingleQuery::uri(uri);
-        let track = self.app.query_track(query)?;
+        let track = self.app.query_track(query).await?;
         let track = track.map(TrackModel::from);
 
         Ok(track)

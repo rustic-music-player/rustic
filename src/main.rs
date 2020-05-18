@@ -13,6 +13,7 @@ use rustic_memory_store::MemoryLibrary;
 
 use crate::config::*;
 use crate::setup::*;
+use std::thread;
 
 mod config;
 mod options;
@@ -35,10 +36,12 @@ fn main() -> Result<(), Error> {
     trace!("Config {:?}", config);
 
     if is_remote(&options, &config) {
-        connect_to_instance(options, config)
+        connect_to_instance(options, config)?;
     } else {
-        run_instance(options, config)
+        run_instance(options, config)?;
     }
+
+    Ok(())
 }
 
 fn is_remote(options: &options::CliOptions, config: &config::Config) -> bool {
@@ -51,9 +54,9 @@ fn is_remote(options: &options::CliOptions, config: &config::Config) -> bool {
     }
 }
 
-fn run_instance(options: options::CliOptions, config: config::Config) -> Result<(), failure::Error> {
+async fn setup_instance(options: &options::CliOptions, config: &config::Config) -> Result<(Arc<Rustic>, ApiClient), failure::Error> {
     let extensions = load_extensions(&options, &config)?;
-    let providers = setup_providers(&config)?;
+    let providers = setup_providers(&config).await?;
 
     let store: Box<dyn rustic_core::Library> = match config.library {
         LibraryConfig::Memory => Box::new(MemoryLibrary::new()),
@@ -72,8 +75,6 @@ fn run_instance(options: options::CliOptions, config: config::Config) -> Result<
     let app = Rustic::new(store, providers)?;
     let client = setup_client(&app, extensions);
 
-    setup_interrupt(&app)?;
-
     for player_config in config.players.iter() {
         if let Err(e) = setup_player(&app, player_config) {
             error!("Error setting up player {:?}", e);
@@ -89,8 +90,18 @@ fn run_instance(options: options::CliOptions, config: config::Config) -> Result<
 
     rustic_core::cache::setup()?;
 
+    Ok((app, client))
+}
+
+fn run_instance(options: options::CliOptions, config: config::Config) -> Result<(), failure::Error> {
+    let mut rt = tokio::runtime::Runtime::new()?;
+    let (app, client) = rt.block_on(setup_instance(&options, &config))?;
+
+    let sync_app = Arc::clone(&app);
     let mut threads = vec![
-        rustic_core::sync::start(Arc::clone(&app))?,
+        thread::spawn(move|| {
+            rt.block_on(rustic_core::sync::start(sync_app));
+        })
     ];
 
     setup_frontends(&config, &app, &client, &mut threads);
@@ -145,12 +156,4 @@ fn setup_frontends(config: &config::Config, app: &Arc<Rustic>, client: &ApiClien
     if config.frontend.iced.is_some() {
         rustic_iced_frontend::start(Arc::clone(&client));
     }
-}
-
-fn setup_interrupt(app: &Arc<Rustic>) -> Result<(), Error> {
-    let app = Arc::clone(app);
-    ctrlc::set_handler(move || {
-        app.exit();
-    })?;
-    Ok(())
 }

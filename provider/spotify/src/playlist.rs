@@ -1,7 +1,7 @@
 use rspotify::model::playlist::*;
 use serde_derive::{Deserialize, Serialize};
 
-use rustic_core::{Playlist, Provider, Track};
+use rustic_core::{Playlist, ProviderType, Track};
 
 use crate::track::SpotifyFullTrack;
 
@@ -21,7 +21,7 @@ impl From<SpotifyPlaylist> for Playlist {
         Playlist {
             id: None,
             title: playlist.name,
-            provider: Provider::Spotify,
+            provider: ProviderType::Spotify,
             uri: format!("spotify://playlists/{}", playlist.id),
             tracks: playlist
                 .tracks

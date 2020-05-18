@@ -3,7 +3,7 @@ use log::trace;
 use serde::Deserialize;
 use serde_qs::actix::QsQuery;
 
-use rustic_api::models::ProviderType;
+use rustic_api::models::ProviderTypeModel;
 
 use crate::app::ApiClient;
 use crate::cursor::from_cursor;
@@ -11,7 +11,7 @@ use crate::cursor::from_cursor;
 #[derive(Deserialize)]
 pub struct SearchQuery {
     query: String,
-    providers: Option<Vec<ProviderType>>,
+    providers: Option<Vec<ProviderTypeModel>>,
 }
 
 #[derive(Deserialize)]
@@ -47,7 +47,7 @@ mod test {
     use actix_web::{App, http, test};
     use actix_web::dev::*;
 
-    use rustic_api::models::{ProviderType, SearchResults};
+    use rustic_api::models::{ProviderTypeModel, SearchResults};
     use rustic_api::TestApiClient;
 
     use crate::test::build_app;
@@ -85,7 +85,7 @@ mod test {
     #[actix_rt::test]
     async fn search_should_perform_search_with_providers() {
         let mut client = TestApiClient::new();
-        let providers = vec![ProviderType::Soundcloud, ProviderType::Spotify];
+        let providers = vec![ProviderTypeModel::Soundcloud, ProviderTypeModel::Spotify];
         client.expect_search()
             .called_once()
             .with((String::from("test"), Some(providers)))

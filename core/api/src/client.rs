@@ -8,7 +8,7 @@ pub type Result<T> = std::result::Result<T, failure::Error>;
 
 #[async_trait]
 pub trait RusticApiClient: Sync + Send + QueueApiClient + LibraryApiClient + PlayerApiClient + ProviderApiClient {
-    async fn search(&self, query: &str, providers: Option<&Vec<ProviderType>>) -> Result<SearchResults>;
+    async fn search(&self, query: &str, providers: Option<&Vec<ProviderTypeModel>>) -> Result<SearchResults>;
 
     async fn get_extensions(&self) -> Result<Vec<ExtensionModel>>;
 
@@ -23,9 +23,9 @@ pub trait ProviderApiClient: Sync + Send {
 
     async fn get_available_providers(&self) -> Result<Vec<AvailableProviderModel>>;
 
-    async fn navigate_provider(&self, provider: ProviderType, path: &str) -> Result<ProviderFolderModel>;
+    async fn navigate_provider(&self, provider: ProviderTypeModel, path: &str) -> Result<ProviderFolderModel>;
 
-    async fn authenticate_provider(&self, provider: ProviderType, auth: ProviderAuthModel) -> Result<()>;
+    async fn authenticate_provider(&self, provider: ProviderTypeModel, auth: ProviderAuthModel) -> Result<()>;
 }
 
 #[async_trait]

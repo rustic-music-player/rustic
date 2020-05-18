@@ -19,4 +19,3 @@ log = "0.4"
 itertools = "0.9"
 futures = { version = "0.3", features = ["std", "async-await"], default-features = false }
 crossbeam-channel = "*"
-tokio = { version = "0.2", features = ["rt-core"] }

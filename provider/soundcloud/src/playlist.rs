@@ -15,7 +15,7 @@ impl From<SoundcloudPlaylist> for Playlist {
             id: None,
             title: playlist.title,
             tracks: playlist.tracks,
-            provider: provider::Provider::Soundcloud,
+            provider: provider::ProviderType::Soundcloud,
             uri: format!("soundcloud://playlist/{}", playlist.id),
         }
     }

@@ -79,7 +79,7 @@ failure = "0.1"
 ctrlc = { version = "3.1", features = ["termination"] }
 structopt = "0.3"
 futures = { version = "0.3", features = ["std", "async-await"], default-features = false }
-tokio = { version = "0.2", features = ["rt-core"] }
+tokio = { version = "0.2", features = ["rt-threaded", "macros", "sync"] }
 
 [dependencies.rustic-core]
 path = "core"

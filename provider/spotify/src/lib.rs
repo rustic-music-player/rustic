@@ -179,8 +179,8 @@ impl rustic_core::provider::ProviderInstance for SpotifyProvider {
         "spotify"
     }
 
-    fn provider(&self) -> provider::Provider {
-        provider::Provider::Spotify
+    fn provider(&self) -> provider::ProviderType {
+        provider::ProviderType::Spotify
     }
 
     async fn sync(&self, library: SharedLibrary) -> Result<provider::SyncResult, Error> {

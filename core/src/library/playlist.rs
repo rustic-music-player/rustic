@@ -1,5 +1,5 @@
 use crate::library::Track;
-use crate::provider::Provider;
+use crate::provider::ProviderType;
 use serde_derive::{Deserialize, Serialize};
 use std::cmp::Ordering;
 
@@ -8,7 +8,7 @@ pub struct Playlist {
     pub id: Option<usize>,
     pub title: String,
     pub tracks: Vec<Track>,
-    pub provider: Provider,
+    pub provider: ProviderType,
     pub uri: String,
 }
 

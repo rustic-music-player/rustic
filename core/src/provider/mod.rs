@@ -1,5 +1,6 @@
 use std::fmt::Debug;
-use std::sync::{Arc, RwLock};
+use std::sync::Arc;
+use tokio::sync::{RwLock, RwLockReadGuard, RwLockWriteGuard};
 
 use failure::{Error, Fail};
 use serde_derive::{Deserialize, Serialize};
@@ -20,8 +21,45 @@ mod folder;
 mod item;
 mod sync_error;
 
-pub type SharedProvider = Arc<RwLock<Box<dyn ProviderInstance + Send + Sync>>>;
-pub type SharedProviders = Vec<SharedProvider>;
+type SharedProvider = Arc<RwLock<Box<dyn ProviderInstance + Send + Sync>>>;
+pub type SharedProviders = Vec<Provider>;
+
+#[derive(Debug, Clone)]
+pub struct Provider {
+    title: String,
+    pub uri_scheme: String,
+    pub provider_type: ProviderType,
+    pub provider: SharedProvider
+}
+
+impl Provider {
+    pub fn title(&self) -> String {
+        self.title.clone()
+    }
+
+    pub async fn get(&self) -> RwLockReadGuard<'_, Box<dyn ProviderInstance + Send + Sync>> {
+        self.provider.read().await
+    }
+
+    pub async fn get_mut(&self) -> RwLockWriteGuard<'_, Box<dyn ProviderInstance + Send + Sync>> {
+        self.provider.write().await
+    }
+}
+
+impl From<Box<dyn ProviderInstance + Send + Sync>> for Provider {
+    fn from(instance: Box<dyn ProviderInstance + Send + Sync>) -> Self {
+        let title = instance.title().to_owned();
+        let uri_scheme = instance.uri_scheme().to_owned();
+        let provider_type = instance.provider();
+
+        Provider {
+            title,
+            uri_scheme,
+            provider_type,
+            provider: Arc::new(RwLock::new(instance))
+        }
+    }
+}
 
 pub struct SyncResult {
     pub tracks: usize,
@@ -32,7 +70,7 @@ pub struct SyncResult {
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
 #[serde(rename_all = "lowercase")]
-pub enum Provider {
+pub enum ProviderType {
     Pocketcasts,
     Soundcloud,
     #[serde(rename = "gmusic")]
@@ -47,7 +85,7 @@ pub trait ProviderInstance: Debug {
     async fn setup(&mut self) -> Result<(), Error>;
     fn title(&self) -> &'static str;
     fn uri_scheme(&self) -> &'static str;
-    fn provider(&self) -> Provider;
+    fn provider(&self) -> ProviderType;
     fn auth_state(&self) -> AuthState;
     async fn authenticate(&mut self, auth: Authentication) -> Result<(), Error>;
     async fn sync(&self, library: SharedLibrary) -> Result<SyncResult, Error>;

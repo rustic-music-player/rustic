@@ -1,8 +1,8 @@
 use std::collections::HashMap;
-use std::sync::{Arc, Condvar, Mutex};
+use std::sync::{Arc, Mutex};
 
 use failure::format_err;
-use log::{debug, info, trace};
+use log::{debug, trace};
 use url::Url;
 
 pub use crate::library::{
@@ -11,8 +11,8 @@ pub use crate::library::{
 };
 use crate::player::Player;
 pub use crate::player::{PlayerBackend, PlayerEvent, PlayerState};
-use crate::provider::{CoverArt, InternalUri, SharedProvider};
-pub use crate::provider::{Explorer, Provider};
+use crate::provider::{CoverArt, InternalUri};
+pub use crate::provider::{Explorer, ProviderType, Provider};
 
 pub mod cache;
 pub mod library;
@@ -23,17 +23,16 @@ pub mod sync;
 pub struct Rustic {
     player: Arc<Mutex<HashMap<String, Arc<Player>>>>,
     pub library: library::SharedLibrary,
-    pub providers: provider::SharedProviders,
+    pub providers: Vec<Provider>,
     pub cache: cache::SharedCache,
     default_player: Arc<Mutex<Option<String>>>,
-    keep_running: Arc<(Mutex<bool>, Condvar)>,
     pub sync: sync::SyncState,
 }
 
 impl Rustic {
     pub fn new(
         library: Box<dyn Library>,
-        providers: provider::SharedProviders
+        providers: Vec<Provider>
     ) -> Result<Arc<Rustic>, failure::Error> {
         let library = Arc::new(library);
         Ok(Arc::new(Rustic {
@@ -42,7 +41,6 @@ impl Rustic {
             providers,
             cache: Arc::new(cache::Cache::new()),
             default_player: Arc::new(Mutex::new(None)),
-            keep_running: Arc::new((Mutex::new(true), Condvar::new())),
             sync: sync::SyncState::new()
         }))
     }
@@ -84,7 +82,7 @@ impl Rustic {
             .collect()
     }
 
-    pub fn query_track(&self, query: SingleQuery) -> Result<Option<Track>, failure::Error> {
+    pub async fn query_track(&self, query: SingleQuery) -> Result<Option<Track>, failure::Error> {
         debug!("Executing track query: {:?}", query);
         let track = self.library.query_track(query.clone())?;
         if let Some(track) = track {
@@ -94,11 +92,7 @@ impl Rustic {
                 trace!("Track is not in library, asking provider");
                 let provider = self.get_provider_for_url(uri)?;
                 let track = match provider {
-                    Some(provider) => {
-                        // TODO: we should await instead of blocking
-                        let mut rt = tokio::runtime::Runtime::new()?;
-                        rt.block_on(provider.read().unwrap().resolve_track(uri))?
-                    },
+                    Some(provider) => provider.get().await.resolve_track(uri).await?,
                     _ => None,
                 };
                 Ok(track)
@@ -109,7 +103,7 @@ impl Rustic {
         }
     }
 
-    pub fn query_album(&self, query: SingleQuery) -> Result<Option<Album>, failure::Error> {
+    pub async fn query_album(&self, query: SingleQuery) -> Result<Option<Album>, failure::Error> {
         debug!("Executing album query: {:?}", query);
         let album = self.library.query_album(query.clone())?;
         if let Some(album) = album {
@@ -119,11 +113,7 @@ impl Rustic {
                 trace!("Album is not in library, asking provider");
                 let provider = self.get_provider_for_url(uri)?;
                 let album = match provider {
-                    Some(provider) => {
-                        // TODO: we should await instead of blocking
-                        let mut rt = tokio::runtime::Runtime::new()?;
-                        rt.block_on(provider.read().unwrap().resolve_album(uri))?
-                    },
+                    Some(provider) => provider.get().await.resolve_album(uri).await?,
                     _ => None,
                 };
                 Ok(album)
@@ -134,7 +124,7 @@ impl Rustic {
         }
     }
 
-    pub fn query_playlist(&self, query: SingleQuery) -> Result<Option<Playlist>, failure::Error> {
+    pub async fn query_playlist(&self, query: SingleQuery) -> Result<Option<Playlist>, failure::Error> {
         debug!("Executing playlist query: {:?}", query);
         let playlist = self.library.query_playlist(query.clone())?;
         if let Some(playlist) = playlist {
@@ -145,9 +135,7 @@ impl Rustic {
                 let provider = self.get_provider_for_url(uri)?;
                 let playlist = match provider {
                     Some(provider) => {
-                        // TODO: we should await instead of blocking
-                        let mut rt = tokio::runtime::Runtime::new()?;
-                        rt.block_on(provider.read().unwrap().resolve_playlist(uri))?
+                            provider.get().await.resolve_playlist(uri).await?
                     },
                     _ => None,
                 };
@@ -159,13 +147,13 @@ impl Rustic {
         }
     }
 
-    fn get_provider_for_url(&self, uri: &str) -> Result<Option<&SharedProvider>, failure::Error> {
+    fn get_provider_for_url(&self, uri: &str) -> Result<Option<&Provider>, failure::Error> {
         trace!("get_provider for {}", uri);
         let url = Url::parse(uri)?;
         let provider = self
             .providers
             .iter()
-            .find(|provider| provider.read().unwrap().uri_scheme() == url.scheme());
+            .find(|provider| provider.uri_scheme == url.scheme());
         Ok(provider)
     }
 
@@ -173,57 +161,42 @@ impl Rustic {
         let provider = self.get_provider(track)?;
         // TODO: we should await instead of blocking
         let mut rt = tokio::runtime::Runtime::new()?;
-        let stream_url = rt.block_on(provider.read().unwrap().stream_url(track))?;
+        let stream_url = rt.block_on(async {
+            provider.get().await.stream_url(track).await
+        })?;
 
         Ok(stream_url)
     }
 
-    pub fn cover_art(&self, track: &Track) -> Result<Option<CoverArt>, failure::Error> {
+    pub async fn cover_art(&self, track: &Track) -> Result<Option<CoverArt>, failure::Error> {
         let provider = self.get_provider(track)?;
-        // TODO: we should await instead of blocking
-        let mut rt = tokio::runtime::Runtime::new()?;
-        let cover = rt.block_on(provider.read().unwrap().cover_art(track))?;
+        let cover = provider.get().await.cover_art(track).await?;
 
         Ok(cover)
     }
 
-    fn get_provider(&self, track: &Track) -> Result<&SharedProvider, failure::Error> {
+    fn get_provider(&self, track: &Track) -> Result<&Provider, failure::Error> {
         let provider = self
             .providers
             .iter()
-            .find(|p| p.read().unwrap().provider() == track.provider)
+            .find(|p| p.provider_type == track.provider)
             .ok_or_else(|| format_err!("provider for track {:?} not found", track))?;
 
         Ok(provider)
     }
 
-    pub fn resolve_share_url(&self, url: String) -> Result<Option<InternalUri>, failure::Error> {
+    pub async fn resolve_share_url(&self, url: String) -> Result<Option<InternalUri>, failure::Error> {
         trace!("resolving share url {}", url);
         let url = Url::parse(&url)?;
         for provider in self.providers.iter() {
             let url = url.clone();
-            let provider = provider.read().unwrap();
-            // TODO: we should await instead of blocking
-            let mut rt = tokio::runtime::Runtime::new()?;
-            let uri = rt.block_on(provider.resolve_share_url(url))?;
+            let provider = provider.get().await;
+            let uri = provider.resolve_share_url(url).await?;
 
             if uri.is_some() {
                 return Ok(uri);
             }
         }
         Ok(None)
-    }
-
-    pub fn exit(&self) {
-        let interrupt = Arc::clone(&self.keep_running);
-        info!("Shutting down");
-        let &(ref lock, ref cvar) = &*interrupt;
-        let mut running = lock.lock().unwrap();
-        *running = false;
-        cvar.notify_all();
-    }
-
-    pub fn running(&self) -> Arc<(Mutex<bool>, Condvar)> {
-        Arc::clone(&self.keep_running)
     }
 }

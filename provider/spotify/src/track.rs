@@ -49,7 +49,7 @@ impl From<SpotifyFullTrack> for Track {
                 artist_id: None,
                 artist,
                 tracks: vec![],
-                provider: provider::Provider::Spotify,
+                provider: provider::ProviderType::Spotify,
                 image_url: convert_images(&track.album.images),
                 uri: track
                     .album
@@ -61,7 +61,7 @@ impl From<SpotifyFullTrack> for Track {
                     }),
                 meta: HashMap::new(),
             }),
-            provider: provider::Provider::Spotify,
+            provider: provider::ProviderType::Spotify,
             has_coverart: !track.album.images.is_empty(),
             uri: track
                 .id
@@ -97,7 +97,7 @@ impl From<SpotifySimplifiedTrack> for Track {
             artist,
             album_id: None,
             album: None,
-            provider: provider::Provider::Spotify,
+            provider: provider::ProviderType::Spotify,
             has_coverart: false,
             uri: track
                 .id

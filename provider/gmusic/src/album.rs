@@ -2,7 +2,7 @@ use std::collections::HashMap;
 
 use maplit::hashmap;
 
-use rustic_core::{Album, Artist, Provider, Track};
+use rustic_core::{Album, Artist, ProviderType, Track};
 
 use crate::meta::*;
 use crate::track::GmusicTrack;
@@ -31,7 +31,7 @@ impl From<GmusicAlbum> for Album {
             }),
             artist_id: None,
             uri: format!("gmusic:album:{}", &album.id),
-            provider: Provider::GooglePlayMusic,
+            provider: ProviderType::GooglePlayMusic,
             meta: hashmap!(
                 META_GMUSIC_ALBUM_ID.into() => album.id.into()
             ),

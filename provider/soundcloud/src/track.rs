@@ -40,7 +40,7 @@ impl From<SoundcloudTrack> for Track {
             artist_id: None,
             album: None,
             album_id: None,
-            provider: provider::Provider::Soundcloud,
+            provider: provider::ProviderType::Soundcloud,
             uri: format!("soundcloud://track/{}", track.id),
             has_coverart: track.artwork_url.is_some(),
             duration: Some(track.duration / 1000),

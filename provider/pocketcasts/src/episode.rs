@@ -3,7 +3,7 @@ use pocketcasts::Episode;
 use serde::{Deserialize, Serialize};
 
 use rustic_core::library::Track;
-use rustic_core::provider::Provider;
+use rustic_core::provider::ProviderType;
 
 use crate::meta::*;
 
@@ -20,7 +20,7 @@ impl From<PocketcastTrack> for Track {
             artist: None,
             album_id: None,
             album: None,
-            provider: Provider::Pocketcasts,
+            provider: ProviderType::Pocketcasts,
             uri: format!("pocketcasts://episode/{}", episode.uuid),
             has_coverart: false,
             duration: Some(episode.duration),

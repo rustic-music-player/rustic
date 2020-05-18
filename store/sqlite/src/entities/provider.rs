@@ -1,25 +1,25 @@
 use failure::Error;
-use rustic_core::Provider;
+use rustic_core::ProviderType;
 
 pub struct SerializedProvider(i32);
 
-pub fn provider_to_int(provider: Provider) -> i32 {
+pub fn provider_to_int(provider: ProviderType) -> i32 {
     match provider {
-        Provider::Pocketcasts => 0,
-        Provider::Soundcloud => 1,
-        Provider::GooglePlayMusic => 2,
-        Provider::Spotify => 3,
-        Provider::LocalMedia => 4,
+        ProviderType::Pocketcasts => 0,
+        ProviderType::Soundcloud => 1,
+        ProviderType::GooglePlayMusic => 2,
+        ProviderType::Spotify => 3,
+        ProviderType::LocalMedia => 4,
     }
 }
 
-pub fn int_to_provider(provider: i32) -> Result<Provider, Error> {
+pub fn int_to_provider(provider: i32) -> Result<ProviderType, Error> {
     match provider {
-        0 => Ok(Provider::Pocketcasts),
-        1 => Ok(Provider::Soundcloud),
-        2 => Ok(Provider::GooglePlayMusic),
-        3 => Ok(Provider::Spotify),
-        4 => Ok(Provider::LocalMedia),
+        0 => Ok(ProviderType::Pocketcasts),
+        1 => Ok(ProviderType::Soundcloud),
+        2 => Ok(ProviderType::GooglePlayMusic),
+        3 => Ok(ProviderType::Spotify),
+        4 => Ok(ProviderType::LocalMedia),
         _ => Err(format_err!("Unknown provider type {}", provider)),
     }
 }

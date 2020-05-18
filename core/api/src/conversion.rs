@@ -1,11 +1,12 @@
-use rustic_core::{Album, Artist, PlayerEvent, PlayerState, Playlist, Provider, Track};
-use rustic_core::provider::{Authentication, AuthState, InternalUri, ProviderFolder, ProviderItem, ProviderItemType, CoverArt};
+use futures::StreamExt;
+
+use rustic_core::{Album, Artist, PlayerEvent, PlayerState, Playlist, ProviderType, Track};
+use rustic_core::provider::{Authentication, AuthState, CoverArt, InternalUri, ProviderFolder, ProviderItem, ProviderItemType};
 use rustic_core::sync::{SyncEvent, SyncItem, SyncItemState};
 use rustic_extension_api::ExtensionMetadata;
 
 use crate::cursor::to_cursor;
 use crate::models::*;
-use futures::StreamExt;
 
 impl From<Album> for AlbumModel {
     fn from(album: Album) -> Self {
@@ -140,26 +141,26 @@ impl From<&ProviderItemType> for ProviderItemTypeModel {
     }
 }
 
-impl From<Provider> for ProviderType {
-    fn from(provider: Provider) -> Self {
+impl From<ProviderType> for ProviderTypeModel {
+    fn from(provider: ProviderType) -> Self {
         match provider {
-            Provider::Pocketcasts => ProviderType::Pocketcasts,
-            Provider::GooglePlayMusic => ProviderType::GooglePlayMusic,
-            Provider::LocalMedia => ProviderType::LocalMedia,
-            Provider::Soundcloud => ProviderType::Soundcloud,
-            Provider::Spotify => ProviderType::Spotify,
+            ProviderType::Pocketcasts => ProviderTypeModel::Pocketcasts,
+            ProviderType::GooglePlayMusic => ProviderTypeModel::GooglePlayMusic,
+            ProviderType::LocalMedia => ProviderTypeModel::LocalMedia,
+            ProviderType::Soundcloud => ProviderTypeModel::Soundcloud,
+            ProviderType::Spotify => ProviderTypeModel::Spotify,
         }
     }
 }
 
-impl From<ProviderType> for Provider {
-    fn from(provider: ProviderType) -> Self {
+impl From<ProviderTypeModel> for ProviderType {
+    fn from(provider: ProviderTypeModel) -> Self {
         match provider {
-            ProviderType::Pocketcasts => Provider::Pocketcasts,
-            ProviderType::GooglePlayMusic => Provider::GooglePlayMusic,
-            ProviderType::LocalMedia => Provider::LocalMedia,
-            ProviderType::Soundcloud => Provider::Soundcloud,
-            ProviderType::Spotify => Provider::Spotify,
+            ProviderTypeModel::Pocketcasts => ProviderType::Pocketcasts,
+            ProviderTypeModel::GooglePlayMusic => ProviderType::GooglePlayMusic,
+            ProviderTypeModel::LocalMedia => ProviderType::LocalMedia,
+            ProviderTypeModel::Soundcloud => ProviderType::Soundcloud,
+            ProviderTypeModel::Spotify => ProviderType::Spotify,
         }
     }
 }

@@ -1,5 +1,5 @@
 use serde::{Deserialize, Serialize};
-use crate::models::ProviderType;
+use crate::models::ProviderTypeModel;
 
 #[derive(Debug, Clone, Deserialize, Serialize, PartialEq, Eq)]
 pub enum SyncStateModel {
@@ -9,7 +9,7 @@ pub enum SyncStateModel {
 
 #[derive(Debug, Clone, Deserialize, Serialize, PartialEq, Eq)]
 pub struct SyncItemModel {
-    pub provider: ProviderType,
+    pub provider: ProviderTypeModel,
     pub state: SyncItemStateModel,
 }
 

@@ -1,4 +1,4 @@
-use rustic_core::{Playlist, Provider};
+use rustic_core::{Playlist, ProviderType};
 
 #[derive(Debug, Clone)]
 pub struct GmusicPlaylist(gmusic::Playlist);
@@ -15,7 +15,7 @@ impl From<GmusicPlaylist> for Playlist {
         Playlist {
             id: None,
             title: playlist.name,
-            provider: Provider::GooglePlayMusic,
+            provider: ProviderType::GooglePlayMusic,
             tracks: Vec::new(),
             uri: format!("gmusic:playlist:{}", playlist.id),
         }

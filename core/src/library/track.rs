@@ -4,7 +4,7 @@ use std::collections::HashMap;
 use serde_derive::{Deserialize, Serialize};
 
 use crate::library::{Album, Artist, MetaValue};
-use crate::provider::Provider;
+use crate::provider::ProviderType;
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct Track {
@@ -14,7 +14,7 @@ pub struct Track {
     pub artist: Option<Artist>,
     pub album_id: Option<usize>,
     pub album: Option<Album>,
-    pub provider: Provider,
+    pub provider: ProviderType,
     pub uri: String,
     pub has_coverart: bool,
     pub duration: Option<u64>,

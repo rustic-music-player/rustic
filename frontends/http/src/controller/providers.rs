@@ -1,7 +1,7 @@
 use actix_web::{get, Responder, Result, web};
 use serde::Deserialize;
 
-use rustic_api::models::{ProviderType, ProviderAuthModel};
+use rustic_api::models::{ProviderTypeModel, ProviderAuthModel};
 
 use crate::app::ApiClient;
 
@@ -12,7 +12,7 @@ pub struct NavigateQuery {
 
 #[derive(Deserialize)]
 pub struct ProviderParams {
-    provider: ProviderType,
+    provider: ProviderTypeModel,
 }
 
 #[get("/providers")]

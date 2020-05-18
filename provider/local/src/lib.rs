@@ -33,8 +33,8 @@ impl ProviderInstance for LocalProvider {
         "file"
     }
 
-    fn provider(&self) -> Provider {
-        Provider::LocalMedia
+    fn provider(&self) -> ProviderType {
+        ProviderType::LocalMedia
     }
 
     async fn setup(&mut self) -> Result<(), Error> {
@@ -123,7 +123,7 @@ impl ProviderInstance for LocalProvider {
     }
 
     async fn stream_url(&self, track: &library::Track) -> Result<String, Error> {
-        if track.provider == Provider::LocalMedia {
+        if track.provider == ProviderType::LocalMedia {
             return Ok(track.uri.clone());
         }
 
@@ -161,7 +161,7 @@ impl From<scanner::Track> for library::Track {
                 title: name,
                 artist_id: None,
                 artist: None,
-                provider: Provider::LocalMedia,
+                provider: ProviderType::LocalMedia,
                 image_url: None,
                 tracks: vec![],
                 uri: String::new(),
@@ -180,7 +180,7 @@ impl From<scanner::Track> for library::Track {
                 ),
             }),
             has_coverart: track.has_coverart,
-            provider: Provider::LocalMedia,
+            provider: ProviderType::LocalMedia,
             uri: format!("file://{}", track.path),
             duration: None,
             meta: hashmap!(
@@ -198,7 +198,7 @@ impl From<scanner::Track> for Option<library::Album> {
             title: name,
             artist_id: None,
             artist: None,
-            provider: Provider::LocalMedia,
+            provider: ProviderType::LocalMedia,
             image_url: None,
             tracks: vec![],
             uri: String::new(),

@@ -1,5 +1,4 @@
 use std::sync::Arc;
-use std::thread;
 use std::time::Duration;
 
 use crossbeam_channel::{Receiver, Sender, unbounded};
@@ -7,7 +6,7 @@ use failure::Error;
 use itertools::Itertools;
 use log::{error, info, trace};
 
-use crate::{Provider, Rustic};
+use crate::{ProviderType, Rustic};
 
 #[derive(Debug, Clone)]
 pub enum SyncEvent {
@@ -17,7 +16,7 @@ pub enum SyncEvent {
 
 #[derive(Debug, Clone)]
 pub struct SyncItem {
-    pub provider: Provider,
+    pub provider: ProviderType,
     pub state: SyncItemState,
 }
 
@@ -51,35 +50,23 @@ impl SyncState {
     }
 }
 
-pub fn start(app: Arc<Rustic>) -> Result<thread::JoinHandle<()>, Error> {
-    thread::Builder::new()
-        .name("Background Sync".into())
-        .spawn(move || {
-            info!("Starting Background Sync");
-            let &(ref lock, ref cvar) = &*app.running();
-            let mut rt = tokio::runtime::Runtime::new().unwrap();
-            let mut keep_running = lock.lock().unwrap();
-            while *keep_running {
-                rt.block_on(synchronize(&app));
-                let result = cvar
-                    .wait_timeout(keep_running, Duration::from_secs(5 * 60))
-                    .unwrap();
-                keep_running = result.0;
-            }
-            info!("Background Sync stopped");
-        })
-        .map_err(Error::from)
+pub async fn start(app: Arc<Rustic>) -> Result<(), Error> {
+    info!("Starting Background Sync");
+    let mut interval = tokio::time::interval(Duration::from_secs(5 * 60));
+    loop {
+        interval.tick().await;
+        synchronize(&app).await;
+    }
+    info!("Background Sync stopped");
+    Ok(())
 }
 
 async fn synchronize(app: &Arc<Rustic>) {
     let providers = app.providers.clone();
-    let mut sync_items: Vec<SyncItem> = providers.iter().map(|p| SyncItem {
-        provider: p.read().unwrap().provider(),
-        state: SyncItemState::Idle,
-    }).collect();
+    let mut sync_items: Vec<SyncItem> = providers.iter().map(|p| SyncItem { provider: p.provider_type, state: SyncItemState::Idle }).collect();
     app.sync.next(SyncEvent::Synchronizing(sync_items.clone()));
     for provider in providers {
-        let provider = provider.read().unwrap();
+        let provider = provider.get().await;
         if !provider.auth_state().is_authenticated() {
             continue;
         }

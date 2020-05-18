@@ -1,5 +1,5 @@
 use crate::library::{Artist, MetaValue};
-use crate::provider::Provider;
+use crate::provider::ProviderType;
 use crate::Track;
 use serde_derive::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -11,7 +11,7 @@ pub struct Album {
     pub artist_id: Option<usize>,
     pub artist: Option<Artist>,
     pub tracks: Vec<Track>,
-    pub provider: Provider,
+    pub provider: ProviderType,
     pub image_url: Option<String>,
     pub uri: String,
     pub meta: HashMap<String, MetaValue>,

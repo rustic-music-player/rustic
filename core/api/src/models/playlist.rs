@@ -1,4 +1,4 @@
-use crate::models::{TrackModel, ProviderType};
+use crate::models::{TrackModel, ProviderTypeModel};
 use serde::{Deserialize, Serialize};
 use std::cmp::Ordering;
 
@@ -7,7 +7,7 @@ pub struct PlaylistModel {
     pub cursor: String,
     pub title: String,
     pub tracks: Vec<TrackModel>,
-    pub provider: ProviderType,
+    pub provider: ProviderTypeModel,
 }
 
 impl PartialOrd for PlaylistModel {
