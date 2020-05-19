@@ -25,13 +25,13 @@ impl TestApiClient {
     }
 
     create_expect_method! {
-        expect_search("search") (String, Option<Vec<ProviderType>>) => Result<SearchResults>
+        expect_search("search") (String, Option<Vec<ProviderTypeModel>>) => Result<SearchResults>
     }
 }
 
 #[async_trait]
 impl RusticApiClient for TestApiClient {
-    async fn search(&self, query: &str, providers: Option<&Vec<ProviderTypeModel>>) -> Result<SearchResults> {
+    async fn search(&self, query: &str, providers: Option<&Vec<ProviderTypeModelModel>>) -> Result<SearchResults> {
         self.e.was_called_returning("search", (query.to_owned(), providers.map(|providers| providers.clone())))
     }
 
@@ -160,11 +160,11 @@ impl ProviderApiClient for TestApiClient {
         unimplemented!()
     }
 
-    async fn navigate_provider(&self, provider: ProviderTypeModel, path: &str) -> Result<ProviderFolderModel> {
+    async fn navigate_provider(&self, provider: ProviderTypeModelModel, path: &str) -> Result<ProviderFolderModel> {
         unimplemented!()
     }
 
-    async fn authenticate_provider(&self, provider: ProviderTypeModel, auth: ProviderAuthModel) -> Result<()> {
+    async fn authenticate_provider(&self, provider: ProviderTypeModelModel, auth: ProviderAuthModel) -> Result<()> {
         unimplemented!()
     }
 }
