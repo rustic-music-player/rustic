@@ -31,7 +31,7 @@ impl TestApiClient {
 
 #[async_trait]
 impl RusticApiClient for TestApiClient {
-    async fn search(&self, query: &str, providers: Option<&Vec<ProviderTypeModelModel>>) -> Result<SearchResults> {
+    async fn search(&self, query: &str, providers: Option<&Vec<ProviderTypeModel>>) -> Result<SearchResults> {
         self.e.was_called_returning("search", (query.to_owned(), providers.map(|providers| providers.clone())))
     }
 
@@ -160,11 +160,11 @@ impl ProviderApiClient for TestApiClient {
         unimplemented!()
     }
 
-    async fn navigate_provider(&self, provider: ProviderTypeModelModel, path: &str) -> Result<ProviderFolderModel> {
+    async fn navigate_provider(&self, provider: ProviderTypeModel, path: &str) -> Result<ProviderFolderModel> {
         unimplemented!()
     }
 
-    async fn authenticate_provider(&self, provider: ProviderTypeModelModel, auth: ProviderAuthModel) -> Result<()> {
+    async fn authenticate_provider(&self, provider: ProviderTypeModel, auth: ProviderAuthModel) -> Result<()> {
         unimplemented!()
     }
 }
