@@ -1,5 +1,5 @@
 use std::convert::TryFrom;
-use std::sync::Mutex;
+use tokio::sync::Mutex;
 
 use failure::{format_err, Error};
 use log::debug;
@@ -62,7 +62,7 @@ impl provider::ProviderInstance for GooglePlayMusicProvider {
             self.client_secret.clone(),
             Some(GMUSIC_REDIRECT_URI),
         )?;
-        api.load_token()?;
+        api.load_token().await?;
         self.client = Some(api);
 
         Ok(())
@@ -74,7 +74,7 @@ impl provider::ProviderInstance for GooglePlayMusicProvider {
             provider::AuthState::Authenticated(None)
         } else {
             let (url, state) = client.get_oauth_url();
-            let mut state_cache = STATE_CACHE.lock().unwrap();
+            let mut state_cache = STATE_CACHE.try_lock().unwrap();
             *state_cache = Some(state);
             provider::AuthState::RequiresOAuth(url)
         }
@@ -86,13 +86,13 @@ impl provider::ProviderInstance for GooglePlayMusicProvider {
 
         match authenticate {
             Token(token) => {
-                let mut state_cache = STATE_CACHE.lock().unwrap();
+                let mut state_cache = STATE_CACHE.lock().await;
                 let state = state_cache
                     .take()
                     .ok_or_else(|| format_err!("Missing state"))?;
                 debug!("State: {}", state);
-                client.request_token(token, state)?;
-                client.store_token()?;
+                client.request_token(token, state).await?;
+                client.store_token().await?;
                 Ok(())
             }
             _ => Err(format_err!("Invalid authentication method")),
@@ -114,13 +114,14 @@ impl provider::ProviderInstance for GooglePlayMusicProvider {
     async fn sync(&self, library: SharedLibrary) -> Result<provider::SyncResult, Error> {
         let client = self.get_client()?;
         let mut playlists: Vec<Playlist> = client
-            .get_all_playlists()?
+            .get_all_playlists()
+            .await?
             .into_iter()
             .map(GmusicPlaylist::from)
             .map(Playlist::from)
             .collect();
 
-        let playlist_entries = client.get_playlist_entries()?;
+        let playlist_entries = client.get_playlist_entries().await?;
 
         for playlist in &mut playlists {
             let playlist_id = &playlist.uri["gmusic:playlist:".len()..];
@@ -157,7 +158,7 @@ impl provider::ProviderInstance for GooglePlayMusicProvider {
 
     async fn search(&self, query: String) -> Result<Vec<provider::ProviderItem>, Error> {
         let client = self.get_client()?;
-        let results = client.search(&query, None)?;
+        let results = client.search(&query, None).await?;
         let items = results
             .into_iter()
             .flat_map(|cluster| cluster.entries.into_iter().map(GoogleSearchResult::from))
@@ -171,7 +172,7 @@ impl provider::ProviderInstance for GooglePlayMusicProvider {
     async fn resolve_track(&self, uri: &str) -> Result<Option<Track>, Error> {
         let client = self.get_client()?;
         let track_id = &uri["gmusic:track:".len()..];
-        let track = client.get_store_track(track_id)?;
+        let track = client.get_store_track(track_id).await?;
         let track = GmusicTrack::from(track);
         let track = Track::from(track);
         Ok(Some(track))
@@ -180,7 +181,7 @@ impl provider::ProviderInstance for GooglePlayMusicProvider {
     async fn resolve_album(&self, uri: &str) -> Result<Option<Album>, Error> {
         let client = self.get_client()?;
         let album_id = &uri["gmusic:album:".len()..];
-        let album = client.get_album(album_id)?;
+        let album = client.get_album(album_id).await?;
         let album = GmusicAlbum::from(album);
         let album = Album::from(album);
         Ok(Some(album))
@@ -197,7 +198,7 @@ impl provider::ProviderInstance for GooglePlayMusicProvider {
             .ok_or_else(|| format_err!("missing track id"))?;
         if let MetaValue::String(ref id) = id {
             let client = self.get_client()?;
-            let url = client.get_stream_url(&id, &self.device_id)?;
+            let url = client.get_stream_url(&id, &self.device_id).await?;
             Ok(url.to_string())
         } else {
             unreachable!()
