@@ -1,4 +1,4 @@
-use actix_web::{error, get, HttpResponse, Responder, Result, web};
+use actix_web::{error, get, web, HttpResponse, Responder, Result};
 use futures::stream::StreamExt;
 use serde::Deserialize;
 use serde_qs::actix::QsQuery;
@@ -31,8 +31,10 @@ pub async fn get_album(
 }
 
 #[get("/library/albums")]
-pub async fn get_albums(client: web::Data<ApiClient>,
-                        params: QsQuery<GetEntitiesQuery>) -> Result<impl Responder> {
+pub async fn get_albums(
+    client: web::Data<ApiClient>,
+    params: QsQuery<GetEntitiesQuery>,
+) -> Result<impl Responder> {
     let params = params.into_inner();
     let albums = client.get_albums(params.providers).await?;
 
@@ -47,8 +49,10 @@ pub async fn get_artists(client: web::Data<ApiClient>) -> Result<impl Responder>
 }
 
 #[get("/library/playlists")]
-pub async fn get_playlists(client: web::Data<ApiClient>,
-                           params: QsQuery<GetEntitiesQuery>) -> Result<impl Responder> {
+pub async fn get_playlists(
+    client: web::Data<ApiClient>,
+    params: QsQuery<GetEntitiesQuery>,
+) -> Result<impl Responder> {
     let params = params.into_inner();
     let playlists = client.get_playlists(params.providers).await?;
 
@@ -69,8 +73,10 @@ pub async fn get_playlist(
 }
 
 #[get("/library/tracks")]
-pub async fn get_tracks(client: web::Data<ApiClient>,
-                        params: QsQuery<GetEntitiesQuery>) -> Result<impl Responder> {
+pub async fn get_tracks(
+    client: web::Data<ApiClient>,
+    params: QsQuery<GetEntitiesQuery>,
+) -> Result<impl Responder> {
     let params = params.into_inner();
     let tracks = client.get_tracks(params.providers).await?;
 
@@ -99,7 +105,9 @@ pub async fn get_track_cover_art(
     match cover_art {
         Some(CoverArtModel::Data { data, mime_type }) => {
             let stream = data.map(|d| Ok(d.into()));
-            let response = HttpResponse::Ok().content_type(mime_type).streaming::<_, failure::Error>(stream);
+            let response = HttpResponse::Ok()
+                .content_type(mime_type)
+                .streaming::<_, failure::Error>(stream);
             Ok(response)
         }
         Some(CoverArtModel::Url(url)) => {

@@ -4,7 +4,7 @@ use std::fmt;
 pub(crate) enum FFIError {
     MissingArgument(&'static str),
     StringError(std::str::Utf8Error),
-    Error(failure::Error)
+    Error(failure::Error),
 }
 
 impl From<failure::Error> for FFIError {

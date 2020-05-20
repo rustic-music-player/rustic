@@ -1,4 +1,4 @@
-use actix::{Recipient};
+use actix::Recipient;
 use serde::Serialize;
 
 use rustic_api::models::TrackModel;

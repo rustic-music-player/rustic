@@ -1,4 +1,4 @@
-use crate::models::{TrackModel, ProviderTypeModel};
+use crate::models::{ProviderTypeModel, TrackModel};
 use serde::{Deserialize, Serialize};
 use std::cmp::Ordering;
 

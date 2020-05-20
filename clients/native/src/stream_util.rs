@@ -22,7 +22,7 @@ impl<T> Stream for StreamingReceiver<T> {
                 cx.waker().wake_by_ref();
                 Poll::Pending
             }
-            Err(TryRecvError::Disconnected) => Poll::Ready(None)
+            Err(TryRecvError::Disconnected) => Poll::Ready(None),
         };
         poll
     }

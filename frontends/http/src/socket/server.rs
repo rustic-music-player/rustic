@@ -1,9 +1,9 @@
+use crate::socket::events::PlayerEvents;
+use crate::socket::messages;
 use actix::prelude::*;
 use failure::Error;
 use log::{debug, trace};
 use rustic_core::Rustic;
-use crate::socket::events::PlayerEvents;
-use crate::socket::messages;
 use std::collections::HashMap;
 use std::sync::Arc;
 use uuid::Uuid;

@@ -1,10 +1,10 @@
 use std::convert::TryFrom;
 use tokio::sync::Mutex;
 
+use async_trait::async_trait;
 use failure::{format_err, Error};
 use log::debug;
 use serde_derive::Deserialize;
-use async_trait::async_trait;
 
 use gmusic::GoogleMusicApi;
 use lazy_static::lazy_static;
@@ -226,7 +226,10 @@ impl provider::ProviderInstance for GooglePlayMusicProvider {
     /// https://play.google.com/music/m/Aubs6vvsgfmxs5v4qnqkyvk37gi?t=Rick_Astley
     /// # Playlist
     /// https://play.google.com/music/playlist/AMaBXymwfjrAK6klYX211rdx5PPNaiqcV1GlfH2OF5DbJMCmnsgFLt5pR6VJ9S8hJiy1vzDdFVFHus05mf0HnZHQI9u8nYyFVw==
-    async fn resolve_share_url(&self, url: url::Url) -> Result<Option<provider::InternalUri>, Error> {
+    async fn resolve_share_url(
+        &self,
+        url: url::Url,
+    ) -> Result<Option<provider::InternalUri>, Error> {
         if url.domain() != Some("play.google.com") {
             return Ok(None);
         }

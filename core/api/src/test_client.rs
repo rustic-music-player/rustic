@@ -12,7 +12,7 @@ use crate::models::*;
 pub struct TestApiClient {
     pub extensions: Vec<ExtensionModel>,
     pub players: HashMap<String, PlayerModel>,
-    e: Expectations
+    e: Expectations,
 }
 
 impl TestApiClient {
@@ -20,7 +20,7 @@ impl TestApiClient {
         TestApiClient {
             extensions: Vec::default(),
             players: HashMap::default(),
-            e: Expectations::new()
+            e: Expectations::new(),
         }
     }
 
@@ -31,8 +31,18 @@ impl TestApiClient {
 
 #[async_trait]
 impl RusticApiClient for TestApiClient {
-    async fn search(&self, query: &str, providers: Option<&Vec<ProviderTypeModel>>) -> Result<SearchResults> {
-        self.e.was_called_returning("search", (query.to_owned(), providers.map(|providers| providers.clone())))
+    async fn search(
+        &self,
+        query: &str,
+        providers: Option<&Vec<ProviderTypeModel>>,
+    ) -> Result<SearchResults> {
+        self.e.was_called_returning(
+            "search",
+            (
+                query.to_owned(),
+                providers.map(|providers| providers.clone()),
+            ),
+        )
     }
 
     async fn get_extensions(&self) -> Result<Vec<ExtensionModel>> {
@@ -67,7 +77,8 @@ impl PlayerApiClient for TestApiClient {
     }
 
     async fn player_control_play(&self, player_id: Option<&str>) -> Result<()> {
-        self.e.was_called::<_, ()>("player_control_play", player_id.map(|id| id.to_owned()));
+        self.e
+            .was_called::<_, ()>("player_control_play", player_id.map(|id| id.to_owned()));
         Ok(())
     }
 
@@ -110,7 +121,12 @@ impl QueueApiClient for TestApiClient {
         unimplemented!()
     }
 
-    async fn reorder_queue_item(&self, player_id: Option<&str>, before: usize, after: usize) -> Result<()> {
+    async fn reorder_queue_item(
+        &self,
+        player_id: Option<&str>,
+        before: usize,
+        after: usize,
+    ) -> Result<()> {
         unimplemented!()
     }
 
@@ -121,7 +137,10 @@ impl QueueApiClient for TestApiClient {
 
 #[async_trait]
 impl LibraryApiClient for TestApiClient {
-    async fn get_albums(&self, providers: Option<Vec<ProviderTypeModel>>) -> Result<Vec<AlbumModel>> {
+    async fn get_albums(
+        &self,
+        providers: Option<Vec<ProviderTypeModel>>,
+    ) -> Result<Vec<AlbumModel>> {
         unimplemented!()
     }
 
@@ -133,7 +152,10 @@ impl LibraryApiClient for TestApiClient {
         unimplemented!()
     }
 
-    async fn get_playlists(&self, providers: Option<Vec<ProviderTypeModel>>) -> Result<Vec<PlaylistModel>> {
+    async fn get_playlists(
+        &self,
+        providers: Option<Vec<ProviderTypeModel>>,
+    ) -> Result<Vec<PlaylistModel>> {
         unimplemented!()
     }
 
@@ -141,7 +163,10 @@ impl LibraryApiClient for TestApiClient {
         unimplemented!()
     }
 
-    async fn get_tracks(&self, providers: Option<Vec<ProviderTypeModel>>) -> Result<Vec<TrackModel>> {
+    async fn get_tracks(
+        &self,
+        providers: Option<Vec<ProviderTypeModel>>,
+    ) -> Result<Vec<TrackModel>> {
         unimplemented!()
     }
 
@@ -164,11 +189,19 @@ impl ProviderApiClient for TestApiClient {
         unimplemented!()
     }
 
-    async fn navigate_provider(&self, provider: ProviderTypeModel, path: &str) -> Result<ProviderFolderModel> {
+    async fn navigate_provider(
+        &self,
+        provider: ProviderTypeModel,
+        path: &str,
+    ) -> Result<ProviderFolderModel> {
         unimplemented!()
     }
 
-    async fn authenticate_provider(&self, provider: ProviderTypeModel, auth: ProviderAuthModel) -> Result<()> {
+    async fn authenticate_provider(
+        &self,
+        provider: ProviderTypeModel,
+        auth: ProviderAuthModel,
+    ) -> Result<()> {
         unimplemented!()
     }
 }

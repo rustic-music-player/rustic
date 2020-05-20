@@ -14,7 +14,7 @@ pub struct RusticWasmHttpClient;
 impl RusticWasmHttpClient {
     pub const fn new() -> RusticHttpClient<RusticWasmHttpClient> {
         RusticHttpClient {
-            client: RusticWasmHttpClient
+            client: RusticWasmHttpClient,
         }
     }
 }
@@ -22,7 +22,9 @@ impl RusticWasmHttpClient {
 #[async_trait]
 impl HttpClient for RusticWasmHttpClient {
     async fn get<T>(&self, url: &str) -> Result<T, failure::Error>
-        where T: DeserializeOwned {
+    where
+        T: DeserializeOwned,
+    {
         let mut opts = RequestInit::new();
         opts.method("GET");
 
@@ -42,16 +44,17 @@ impl HttpClient for RusticWasmHttpClient {
     }
 
     async fn post<TReq, TRes>(&self, url: &str, body: TReq) -> Result<TRes, failure::Error>
-        where TRes: DeserializeOwned,
-        TReq: Serialize {
+    where
+        TRes: DeserializeOwned,
+        TReq: Serialize,
+    {
         let body = JsValue::from_serde(&body).unwrap();
         let mut opts = RequestInit::new();
         opts.method("POST");
         opts.body(Some(&body));
 
         let request = Request::new_with_str_and_init(url, &opts)?;
-        request.headers()
-            .set("Content-Type", "application/json")?;
+        request.headers().set("Content-Type", "application/json")?;
 
         let window = web_sys::window().unwrap();
         let resp_value = JsFuture::from(window.fetch_with_request(&request)).await?;

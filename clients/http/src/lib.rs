@@ -5,42 +5,63 @@ use serde::Serialize;
 use async_trait::async_trait;
 use rustic_api::client::*;
 use rustic_api::cursor::to_cursor;
-use rustic_api::models::*;
 pub use rustic_api::models;
+use rustic_api::models::*;
 
 #[derive(Clone)]
-pub struct RusticHttpClient<T> where T: HttpClient {
-    pub client: T
+pub struct RusticHttpClient<T>
+where
+    T: HttpClient,
+{
+    pub client: T,
 }
 
 #[async_trait]
 pub trait HttpClient: Clone + Sync + Send {
     async fn get<T>(&self, url: &str) -> Result<T>
-        where T: DeserializeOwned;
+    where
+        T: DeserializeOwned;
 
     async fn post<TReq, TRes>(&self, url: &str, req: TReq) -> Result<TRes>
-        where TRes: DeserializeOwned,
-              TReq: Serialize + Send + Sync;
+    where
+        TRes: DeserializeOwned,
+        TReq: Serialize + Send + Sync;
 }
 
 #[async_trait]
-impl<T> HttpClient for RusticHttpClient<T> where T: HttpClient {
+impl<T> HttpClient for RusticHttpClient<T>
+where
+    T: HttpClient,
+{
     async fn get<TReq>(&self, url: &str) -> Result<TReq>
-        where TReq: DeserializeOwned {
+    where
+        TReq: DeserializeOwned,
+    {
         self.client.get(url).await
     }
 
     async fn post<TReq, TRes>(&self, url: &str, req: TReq) -> Result<TRes>
-        where TRes: DeserializeOwned,
-              TReq: Serialize + Send + Sync {
+    where
+        TRes: DeserializeOwned,
+        TReq: Serialize + Send + Sync,
+    {
         self.client.post(url, req).await
     }
 }
 
 #[async_trait]
-impl<T> RusticApiClient for RusticHttpClient<T> where T: HttpClient {
-    async fn search(&self, query: &str, provider: Option<&Vec<ProviderTypeModel>>) -> Result<SearchResults> {
-        let providers: String = provider.map(|p| p.clone()).unwrap_or_default()
+impl<T> RusticApiClient for RusticHttpClient<T>
+where
+    T: HttpClient,
+{
+    async fn search(
+        &self,
+        query: &str,
+        provider: Option<&Vec<ProviderTypeModel>>,
+    ) -> Result<SearchResults> {
+        let providers: String = provider
+            .map(|p| p.clone())
+            .unwrap_or_default()
             .iter()
             .map(|p| format!("&providers[]={}", serde_json::to_string(p).unwrap()))
             .collect();
@@ -69,7 +90,10 @@ impl<T> RusticApiClient for RusticHttpClient<T> where T: HttpClient {
 }
 
 #[async_trait]
-impl<T> ProviderApiClient for RusticHttpClient<T> where T: HttpClient {
+impl<T> ProviderApiClient for RusticHttpClient<T>
+where
+    T: HttpClient,
+{
     async fn get_providers(&self) -> Result<Vec<ProviderModel>> {
         let res = self.get("/api/providers").await?;
 
@@ -82,18 +106,32 @@ impl<T> ProviderApiClient for RusticHttpClient<T> where T: HttpClient {
         Ok(res)
     }
 
-    async fn navigate_provider(&self, provider: ProviderTypeModel, path: &str) -> Result<ProviderFolderModel> {
+    async fn navigate_provider(
+        &self,
+        provider: ProviderTypeModel,
+        path: &str,
+    ) -> Result<ProviderFolderModel> {
         unimplemented!()
     }
 
-    async fn authenticate_provider(&self, provider: ProviderTypeModel, auth: ProviderAuthModel) -> Result<()> {
+    async fn authenticate_provider(
+        &self,
+        provider: ProviderTypeModel,
+        auth: ProviderAuthModel,
+    ) -> Result<()> {
         unimplemented!()
     }
 }
 
 #[async_trait]
-impl<T> LibraryApiClient for RusticHttpClient<T> where T: HttpClient {
-    async fn get_albums(&self, providers: Option<Vec<ProviderTypeModel>>) -> Result<Vec<AlbumModel>> {
+impl<T> LibraryApiClient for RusticHttpClient<T>
+where
+    T: HttpClient,
+{
+    async fn get_albums(
+        &self,
+        providers: Option<Vec<ProviderTypeModel>>,
+    ) -> Result<Vec<AlbumModel>> {
         let res = self.get("/api/library/albums").await?;
 
         Ok(res)
@@ -111,19 +149,27 @@ impl<T> LibraryApiClient for RusticHttpClient<T> where T: HttpClient {
         Ok(res)
     }
 
-    async fn get_playlists(&self, providers: Option<Vec<ProviderTypeModel>>) -> Result<Vec<PlaylistModel>> {
+    async fn get_playlists(
+        &self,
+        providers: Option<Vec<ProviderTypeModel>>,
+    ) -> Result<Vec<PlaylistModel>> {
         let res = self.get("/api/library/playlists").await?;
 
         Ok(res)
     }
 
     async fn get_playlist(&self, cursor: &str) -> Result<Option<PlaylistModel>> {
-        let res = self.get(&format!("/api/library/playlists/{}", cursor)).await?;
+        let res = self
+            .get(&format!("/api/library/playlists/{}", cursor))
+            .await?;
 
         Ok(res)
     }
 
-    async fn get_tracks(&self, providers: Option<Vec<ProviderTypeModel>>) -> Result<Vec<TrackModel>> {
+    async fn get_tracks(
+        &self,
+        providers: Option<Vec<ProviderTypeModel>>,
+    ) -> Result<Vec<TrackModel>> {
         let res = self.get("/api/library/tracks").await?;
 
         Ok(res)
@@ -141,11 +187,14 @@ impl<T> LibraryApiClient for RusticHttpClient<T> where T: HttpClient {
 }
 
 #[async_trait]
-impl<T> QueueApiClient for RusticHttpClient<T> where T: HttpClient {
+impl<T> QueueApiClient for RusticHttpClient<T>
+where
+    T: HttpClient,
+{
     async fn get_queue(&self, player_id: Option<&str>) -> Result<Vec<TrackModel>> {
         let url = match player_id {
             Some(id) => format!("/api/queue/{}", id),
-            None => format!("/api/queue")
+            None => format!("/api/queue"),
         };
         let res = self.get(&url).await?;
 
@@ -155,7 +204,7 @@ impl<T> QueueApiClient for RusticHttpClient<T> where T: HttpClient {
     async fn queue_track(&self, player_id: Option<&str>, cursor: &str) -> Result<Option<()>> {
         let url = match player_id {
             Some(id) => format!("/api/queue/{}/track/{}", id, cursor),
-            None => format!("/api/queue/track/{}", cursor)
+            None => format!("/api/queue/track/{}", cursor),
         };
         // TODO: handle 404
         self.post::<(), ()>(&url, ()).await?;
@@ -166,7 +215,7 @@ impl<T> QueueApiClient for RusticHttpClient<T> where T: HttpClient {
     async fn queue_album(&self, player_id: Option<&str>, cursor: &str) -> Result<Option<()>> {
         let url = match player_id {
             Some(id) => format!("/api/queue/{}/album/{}", id, cursor),
-            None => format!("/api/queue/album/{}", cursor)
+            None => format!("/api/queue/album/{}", cursor),
         };
         // TODO: handle 404
         self.post::<(), ()>(&url, ()).await?;
@@ -177,7 +226,7 @@ impl<T> QueueApiClient for RusticHttpClient<T> where T: HttpClient {
     async fn queue_playlist(&self, player_id: Option<&str>, cursor: &str) -> Result<Option<()>> {
         let url = match player_id {
             Some(id) => format!("/api/queue/{}/playlist/{}", id, cursor),
-            None => format!("/api/queue/playlist/{}", cursor)
+            None => format!("/api/queue/playlist/{}", cursor),
         };
         // TODO: handle 404
         self.post::<(), ()>(&url, ()).await?;
@@ -188,7 +237,7 @@ impl<T> QueueApiClient for RusticHttpClient<T> where T: HttpClient {
     async fn clear_queue(&self, player_id: Option<&str>) -> Result<()> {
         let url = match player_id {
             Some(id) => format!("/api/queue/{}/clear", id),
-            None => format!("/api/queue/clear")
+            None => format!("/api/queue/clear"),
         };
         self.post::<(), ()>(&url, ()).await?;
 
@@ -199,10 +248,15 @@ impl<T> QueueApiClient for RusticHttpClient<T> where T: HttpClient {
         unimplemented!("required delete implementation")
     }
 
-    async fn reorder_queue_item(&self, player_id: Option<&str>, before: usize, after: usize) -> Result<()> {
+    async fn reorder_queue_item(
+        &self,
+        player_id: Option<&str>,
+        before: usize,
+        after: usize,
+    ) -> Result<()> {
         let url = match player_id {
             Some(id) => format!("/api/queue/{}/reorder/{}/{}", id, before, after),
-            None => format!("/api/queue/reorder/{}/{}", before, after)
+            None => format!("/api/queue/reorder/{}/{}", before, after),
         };
         self.post::<(), ()>(&url, ()).await?;
 
@@ -215,7 +269,10 @@ impl<T> QueueApiClient for RusticHttpClient<T> where T: HttpClient {
 }
 
 #[async_trait]
-impl<T> PlayerApiClient for RusticHttpClient<T> where T: HttpClient {
+impl<T> PlayerApiClient for RusticHttpClient<T>
+where
+    T: HttpClient,
+{
     async fn get_players(&self) -> Result<Vec<PlayerModel>> {
         let res = self.get("/api/players").await?;
 
@@ -225,7 +282,7 @@ impl<T> PlayerApiClient for RusticHttpClient<T> where T: HttpClient {
     async fn get_player(&self, player_id: Option<&str>) -> Result<Option<PlayerModel>> {
         let url = match player_id {
             Some(id) => format!("/api/player/{}", id),
-            None => format!("/api/player")
+            None => format!("/api/player"),
         };
         let res = self.get(&url).await?;
 
@@ -235,7 +292,7 @@ impl<T> PlayerApiClient for RusticHttpClient<T> where T: HttpClient {
     async fn player_control_next(&self, player_id: Option<&str>) -> Result<Option<()>> {
         let url = match player_id {
             Some(id) => format!("/api/player/{}/next", id),
-            None => format!("/api/player/next")
+            None => format!("/api/player/next"),
         };
         self.post(&url, ()).await?;
 
@@ -245,7 +302,7 @@ impl<T> PlayerApiClient for RusticHttpClient<T> where T: HttpClient {
     async fn player_control_prev(&self, player_id: Option<&str>) -> Result<Option<()>> {
         let url = match player_id {
             Some(id) => format!("/api/player/{}/prev", id),
-            None => format!("/api/player/prev")
+            None => format!("/api/player/prev"),
         };
         self.post(&url, ()).await?;
 
@@ -255,7 +312,7 @@ impl<T> PlayerApiClient for RusticHttpClient<T> where T: HttpClient {
     async fn player_control_play(&self, player_id: Option<&str>) -> Result<()> {
         let url = match player_id {
             Some(id) => format!("/api/player/{}/play", id),
-            None => format!("/api/player/play")
+            None => format!("/api/player/play"),
         };
         self.post(&url, ()).await?;
 
@@ -265,7 +322,7 @@ impl<T> PlayerApiClient for RusticHttpClient<T> where T: HttpClient {
     async fn player_control_pause(&self, player_id: Option<&str>) -> Result<()> {
         let url = match player_id {
             Some(id) => format!("/api/player/{}/pause", id),
-            None => format!("/api/player/pause")
+            None => format!("/api/player/pause"),
         };
         self.post(&url, ()).await?;
 
@@ -275,7 +332,7 @@ impl<T> PlayerApiClient for RusticHttpClient<T> where T: HttpClient {
     async fn player_set_volume(&self, player_id: Option<&str>, volume: f32) -> Result<()> {
         let url = match player_id {
             Some(id) => format!("/api/player/{}/volume", id),
-            None => format!("/api/player/volume")
+            None => format!("/api/player/volume"),
         };
         self.post(&url, volume).await?;
 

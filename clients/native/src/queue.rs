@@ -10,18 +10,19 @@ use async_trait::async_trait;
 use rustic_api::client::{QueueApiClient, Result};
 use rustic_api::cursor::from_cursor;
 use rustic_api::models::{QueueEventModel, TrackModel};
-use rustic_core::{Album, PlayerEvent, PlayerState, Playlist, SingleQuery, Track};
 use rustic_core::player::Player;
+use rustic_core::{Album, PlayerEvent, PlayerState, Playlist, SingleQuery, Track};
 
-use crate::RusticNativeClient;
 use crate::stream_util::from_channel;
+use crate::RusticNativeClient;
 use rustic_extension_api::ExtensionApi;
 
 #[async_trait]
 impl QueueApiClient for RusticNativeClient {
     async fn get_queue(&self, player_id: Option<&str>) -> Result<Vec<TrackModel>> {
         let player = self.get_player_or_default(player_id)?;
-        let tracks = player.get_queue()
+        let tracks = player
+            .get_queue()
             .into_iter()
             .map(TrackModel::from)
             .collect();
@@ -88,7 +89,12 @@ impl QueueApiClient for RusticNativeClient {
         Ok(())
     }
 
-    async fn reorder_queue_item(&self, player_id: Option<&str>, before: usize, after: usize) -> Result<()> {
+    async fn reorder_queue_item(
+        &self,
+        player_id: Option<&str>,
+        before: usize,
+        after: usize,
+    ) -> Result<()> {
         let player = self.get_player_or_default(player_id)?;
         player.queue.reorder_item(before, after)?;
 
@@ -98,12 +104,13 @@ impl QueueApiClient for RusticNativeClient {
     fn observe_queue(&self, player_id: Option<&str>) -> BoxStream<'static, QueueEventModel> {
         let player = self.get_player_or_default(player_id).unwrap();
 
-        from_channel(player.observe()).filter(|e| {
-            match e {
+        from_channel(player.observe())
+            .filter(|e| match e {
                 &PlayerEvent::QueueUpdated(_) => future::ready(true),
-                _ => future::ready(false)
-            }
-        }).map(QueueEventModel::from).boxed()
+                _ => future::ready(false),
+            })
+            .map(QueueEventModel::from)
+            .boxed()
     }
 }
 
@@ -111,7 +118,7 @@ impl RusticNativeClient {
     pub(crate) fn get_player_or_default(&self, player_id: Option<&str>) -> Result<Arc<Player>> {
         let player = match player_id {
             Some(id) => self.app.get_player(id.into()),
-            None => self.app.get_default_player()
+            None => self.app.get_default_player(),
         };
         player.ok_or_else(|| format_err!("Missing default player"))
     }

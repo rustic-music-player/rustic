@@ -7,9 +7,9 @@ use async_trait::async_trait;
 use rustic_api::client::*;
 use rustic_api::cursor::from_cursor;
 use rustic_api::models::*;
-use rustic_core::{Album, Artist, Rustic, SingleQuery, Track, Provider};
-use rustic_extension_api::ExtensionManager;
 use rustic_core::provider::ProviderItem;
+use rustic_core::{Album, Artist, Provider, Rustic, SingleQuery, Track};
+use rustic_extension_api::ExtensionManager;
 
 mod library;
 mod player;
@@ -25,16 +25,17 @@ pub struct RusticNativeClient {
 
 impl RusticNativeClient {
     pub fn new(app: Arc<Rustic>, extensions: ExtensionManager) -> RusticNativeClient {
-        RusticNativeClient {
-            app,
-            extensions,
-        }
+        RusticNativeClient { app, extensions }
     }
 }
 
 #[async_trait]
 impl RusticApiClient for RusticNativeClient {
-    async fn search(&self, query: &str, provider_filter: Option<&Vec<ProviderTypeModel>>) -> Result<SearchResults> {
+    async fn search(
+        &self,
+        query: &str,
+        provider_filter: Option<&Vec<ProviderTypeModel>>,
+    ) -> Result<SearchResults> {
         let providers = &self.app.providers;
         trace!("search {}", query);
 
@@ -91,7 +92,12 @@ impl RusticApiClient for RusticNativeClient {
     }
 
     async fn get_extensions(&self) -> Result<Vec<ExtensionModel>> {
-        let extensions = self.extensions.get_extensions().into_iter().map(ExtensionModel::from).collect();
+        let extensions = self
+            .extensions
+            .get_extensions()
+            .into_iter()
+            .map(ExtensionModel::from)
+            .collect();
 
         Ok(extensions)
     }
@@ -113,7 +119,7 @@ impl RusticApiClient for RusticNativeClient {
             let cover_art = cover_art.map(CoverArtModel::from);
 
             Ok(cover_art)
-        }else {
+        } else {
             Ok(None)
         }
     }
@@ -121,7 +127,6 @@ impl RusticApiClient for RusticNativeClient {
 
 impl std::fmt::Debug for RusticNativeClient {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        f.debug_struct("RusticNativeClient")
-            .finish()
+        f.debug_struct("RusticNativeClient").finish()
     }
 }

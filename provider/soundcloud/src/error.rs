@@ -1,6 +1,6 @@
+use log::error;
 use rustic_core::provider;
 use soundcloud;
-use log::error;
 
 #[derive(Debug)]
 pub struct SoundcloudError(soundcloud::Error);

@@ -1,4 +1,4 @@
-use actix_web::{delete, error, get, HttpResponse, post, Responder, Result, web};
+use actix_web::{delete, error, get, post, web, HttpResponse, Responder, Result};
 use serde::Deserialize;
 
 use crate::app::ApiClient;
@@ -87,7 +87,9 @@ pub async fn reorder_item(
     client: web::Data<ApiClient>,
     params: web::Path<ReorderQueueItemParams>,
 ) -> Result<impl Responder> {
-    client.reorder_queue_item(None, params.before, params.after).await?;
+    client
+        .reorder_queue_item(None, params.before, params.after)
+        .await?;
 
     Ok(HttpResponse::NoContent().finish())
 }

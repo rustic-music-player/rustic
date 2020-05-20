@@ -46,11 +46,14 @@ pub trait ExtensionApi {
 
 #[derive(Debug, Default)]
 pub struct ExtensionManagerBuilder {
-    extensions: Vec<Box<dyn Extension>>
+    extensions: Vec<Box<dyn Extension>>,
 }
 
 impl ExtensionManagerBuilder {
-    pub fn load<T>(&mut self) where T: ExtensionLibrary {
+    pub fn load<T>(&mut self)
+    where
+        T: ExtensionLibrary,
+    {
         let extension = T::new();
         let metadata = extension.metadata();
         info!("Loaded Extension: {} v{}", metadata.name, metadata.version);
@@ -59,21 +62,19 @@ impl ExtensionManagerBuilder {
 
     pub fn build(self) -> ExtensionManager {
         ExtensionManager {
-            extensions: Arc::new(self.extensions)
+            extensions: Arc::new(self.extensions),
         }
     }
 }
 
 #[derive(Debug, Clone)]
 pub struct ExtensionManager {
-    extensions: Arc<Vec<Box<dyn Extension>>>
+    extensions: Arc<Vec<Box<dyn Extension>>>,
 }
 
 impl ExtensionManager {
     pub fn get_extensions(&self) -> Vec<ExtensionMetadata> {
-        self.extensions.iter()
-            .map(|e| e.metadata())
-            .collect()
+        self.extensions.iter().map(|e| e.metadata()).collect()
     }
 }
 

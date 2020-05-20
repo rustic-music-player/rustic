@@ -1,6 +1,6 @@
 use std::str::FromStr;
 
-use failure::{ensure, Error, format_err};
+use failure::{ensure, format_err, Error};
 use log::{trace, warn};
 use serde::Deserialize;
 
@@ -194,7 +194,7 @@ impl provider::ProviderInstance for SoundcloudProvider {
     async fn stream_url(&self, track: &Track) -> Result<String, Error> {
         if track.provider == provider::ProviderType::Soundcloud {
             if let rustic_core::library::MetaValue::String(stream_url) =
-            track.meta.get(meta::META_SOUNDCLOUD_STREAM_URL).unwrap()
+                track.meta.get(meta::META_SOUNDCLOUD_STREAM_URL).unwrap()
             {
                 return Ok(format!(
                     "{}?client_id={}",
@@ -224,7 +224,10 @@ impl provider::ProviderInstance for SoundcloudProvider {
         Ok(url)
     }
 
-    async fn resolve_share_url(&self, url: url::Url) -> Result<Option<provider::InternalUri>, Error> {
+    async fn resolve_share_url(
+        &self,
+        url: url::Url,
+    ) -> Result<Option<provider::InternalUri>, Error> {
         if url.domain() != Some("soundcloud.com") {
             return Ok(None);
         }

@@ -5,27 +5,33 @@ use log::debug;
 use async_trait::async_trait;
 use rustic_api::client::LibraryApiClient;
 use rustic_api::cursor::from_cursor;
-use rustic_api::models::{AlbumModel, ArtistModel, PlaylistModel, ProviderTypeModel, SyncStateModel, TrackModel};
+use rustic_api::models::{
+    AlbumModel, ArtistModel, PlaylistModel, ProviderTypeModel, SyncStateModel, TrackModel,
+};
 use rustic_core::{MultiQuery, ProviderType, QueryJoins, SingleQuery};
 
-use crate::RusticNativeClient;
 use crate::stream_util::from_channel;
+use crate::RusticNativeClient;
 
 #[async_trait]
 impl LibraryApiClient for RusticNativeClient {
-    async fn get_albums(&self, providers: Option<Vec<ProviderTypeModel>>) -> Result<Vec<AlbumModel>, failure::Error> {
+    async fn get_albums(
+        &self,
+        providers: Option<Vec<ProviderTypeModel>>,
+    ) -> Result<Vec<AlbumModel>, failure::Error> {
         let sw = stopwatch::Stopwatch::start_new();
         let mut query = MultiQuery::new();
         query.join_artists();
-        let providers = providers.unwrap_or_default().into_iter().map(ProviderType::from).collect();
+        let providers = providers
+            .unwrap_or_default()
+            .into_iter()
+            .map(ProviderType::from)
+            .collect();
         query.with_providers(providers);
         let albums = self.app.library.query_albums(query)?;
         debug!("Fetching albums took {}ms", sw.elapsed_ms());
 
-        let albums = albums
-            .into_iter()
-            .map(AlbumModel::from)
-            .collect();
+        let albums = albums.into_iter().map(AlbumModel::from).collect();
 
         Ok(albums)
     }
@@ -36,10 +42,7 @@ impl LibraryApiClient for RusticNativeClient {
         let uri = from_cursor(cursor)?;
         let mut query = SingleQuery::uri(uri);
         query.join_all();
-        let album = self.app
-            .query_album(query)
-            .await?
-            .map(AlbumModel::from);
+        let album = self.app.query_album(query).await?.map(AlbumModel::from);
         debug!("Fetching album took {}ms", sw.elapsed_ms());
 
         Ok(album)
@@ -50,18 +53,22 @@ impl LibraryApiClient for RusticNativeClient {
         let artists = self.app.library.query_artists(MultiQuery::new())?;
         debug!("Fetching artists took {}ms", sw.elapsed_ms());
 
-        let artists = artists
-            .into_iter()
-            .map(ArtistModel::from)
-            .collect();
+        let artists = artists.into_iter().map(ArtistModel::from).collect();
         Ok(artists)
     }
 
-    async fn get_playlists(&self, providers: Option<Vec<ProviderTypeModel>>) -> Result<Vec<PlaylistModel>, failure::Error> {
+    async fn get_playlists(
+        &self,
+        providers: Option<Vec<ProviderTypeModel>>,
+    ) -> Result<Vec<PlaylistModel>, failure::Error> {
         let sw = stopwatch::Stopwatch::start_new();
         let mut query = MultiQuery::new();
         query.join_tracks();
-        let providers = providers.unwrap_or_default().into_iter().map(ProviderType::from).collect();
+        let providers = providers
+            .unwrap_or_default()
+            .into_iter()
+            .map(ProviderType::from)
+            .collect();
         query.with_providers(providers);
         let playlists = self.app.library.query_playlists(query)?;
         debug!("Fetching playlists took {}ms", sw.elapsed_ms());
@@ -80,7 +87,8 @@ impl LibraryApiClient for RusticNativeClient {
         let uri = from_cursor(cursor)?;
         let mut query = SingleQuery::uri(uri);
         query.join_all();
-        let playlist = self.app
+        let playlist = self
+            .app
             .query_playlist(query)
             .await?
             .map(PlaylistModel::from);
@@ -89,18 +97,22 @@ impl LibraryApiClient for RusticNativeClient {
         Ok(playlist)
     }
 
-    async fn get_tracks(&self, providers: Option<Vec<ProviderTypeModel>>) -> Result<Vec<TrackModel>, failure::Error> {
+    async fn get_tracks(
+        &self,
+        providers: Option<Vec<ProviderTypeModel>>,
+    ) -> Result<Vec<TrackModel>, failure::Error> {
         let sw = stopwatch::Stopwatch::start_new();
         let mut query = MultiQuery::new();
         query.join_artists();
-        let providers = providers.unwrap_or_default().into_iter().map(ProviderType::from).collect();
+        let providers = providers
+            .unwrap_or_default()
+            .into_iter()
+            .map(ProviderType::from)
+            .collect();
         query.with_providers(providers);
         let tracks = self.app.library.query_tracks(query)?;
         debug!("Fetching tracks took {}ms", sw.elapsed_ms());
-        let tracks = tracks
-            .into_iter()
-            .map(TrackModel::from)
-            .collect();
+        let tracks = tracks.into_iter().map(TrackModel::from).collect();
         Ok(tracks)
     }
 
@@ -114,6 +126,8 @@ impl LibraryApiClient for RusticNativeClient {
     }
 
     fn sync_state(&self) -> BoxStream<'static, SyncStateModel> {
-        from_channel(self.app.sync.events.clone()).map(SyncStateModel::from).boxed()
+        from_channel(self.app.sync.events.clone())
+            .map(SyncStateModel::from)
+            .boxed()
     }
 }

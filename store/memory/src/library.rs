@@ -88,13 +88,16 @@ impl Library for MemoryLibrary {
     fn query_albums(&self, query: MultiQuery) -> Result<Vec<Album>, Error> {
         trace!("Query Albums {:?}", query);
         let albums = self.albums.read().unwrap().clone();
-        let albums: Vec<_> = albums.into_iter().filter(|album| {
-            if query.providers.is_empty() {
-                true
-            } else {
-                query.providers.contains(&album.provider)
-            }
-        }).collect();
+        let albums: Vec<_> = albums
+            .into_iter()
+            .filter(|album| {
+                if query.providers.is_empty() {
+                    true
+                } else {
+                    query.providers.contains(&album.provider)
+                }
+            })
+            .collect();
         join_albums(self, &albums, query.joins)
     }
 
@@ -133,13 +136,16 @@ impl Library for MemoryLibrary {
     fn query_playlists(&self, query: MultiQuery) -> Result<Vec<Playlist>, Error> {
         trace!("Query Playlists {:?}", query);
         let playlists = self.playlists.read().unwrap().clone();
-        let playlists = playlists.into_iter().filter(|playlist| {
-            if query.providers.is_empty() {
-                true
-            } else {
-                query.providers.contains(&playlist.provider)
-            }
-        }).collect();
+        let playlists = playlists
+            .into_iter()
+            .filter(|playlist| {
+                if query.providers.is_empty() {
+                    true
+                } else {
+                    query.providers.contains(&playlist.provider)
+                }
+            })
+            .collect();
         Ok(playlists)
     }
 
@@ -257,9 +263,7 @@ impl Library for MemoryLibrary {
     fn sync_playlist(&self, playlist: &mut Playlist) -> Result<(), Error> {
         let (index, id) = {
             let playlists = { self.playlists.read().unwrap() };
-            let index = playlists
-                .iter()
-                .position(|a| a.uri == playlist.uri);
+            let index = playlists.iter().position(|a| a.uri == playlist.uri);
             let id: usize = index
                 .and_then(|index| playlists[index].id)
                 .unwrap_or_else(|| self.playlist_id.fetch_add(1, Ordering::Relaxed));
@@ -328,7 +332,7 @@ impl Library for MemoryLibrary {
         for playlist in playlists {
             if stored_playlists.contains(&playlist) {
                 self.sync_playlist(playlist)?;
-            }else {
+            } else {
                 self.add_playlist(playlist)?;
             }
         }

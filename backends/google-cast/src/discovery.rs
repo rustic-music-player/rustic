@@ -16,9 +16,7 @@ pub(crate) struct Target {
 
 const SERVICE_NAME: &str = "_googlecast._tcp.local";
 
-pub(crate) fn discover(
-    sender: crossbeam_channel::Sender<DiscoverMessage>
-) {
+pub(crate) fn discover(sender: crossbeam_channel::Sender<DiscoverMessage>) {
     debug!("discovering...");
     for response in mdns::discover::all(SERVICE_NAME).unwrap() {
         trace!("done");

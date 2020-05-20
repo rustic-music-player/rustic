@@ -86,7 +86,9 @@ impl Explorer {
                 let path = &self.path[1..];
                 provider
                     .ok_or_else(|| Error::from(NavigationError::PathNotFound))
-                    .and_then(|provider| rt.block_on(async { provider.get().await.navigate(path.to_vec()).await }))
+                    .and_then(|provider| {
+                        rt.block_on(async { provider.get().await.navigate(path.to_vec()).await })
+                    })
             }
         }
     }

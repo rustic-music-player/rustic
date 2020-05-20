@@ -12,7 +12,7 @@ pub use crate::library::{
 use crate::player::Player;
 pub use crate::player::{PlayerBackend, PlayerEvent, PlayerState};
 use crate::provider::{CoverArt, InternalUri};
-pub use crate::provider::{Explorer, ProviderType, Provider};
+pub use crate::provider::{Explorer, Provider, ProviderType};
 
 pub mod cache;
 pub mod library;
@@ -32,7 +32,7 @@ pub struct Rustic {
 impl Rustic {
     pub fn new(
         library: Box<dyn Library>,
-        providers: Vec<Provider>
+        providers: Vec<Provider>,
     ) -> Result<Arc<Rustic>, failure::Error> {
         let library = Arc::new(library);
         Ok(Arc::new(Rustic {
@@ -41,7 +41,7 @@ impl Rustic {
             providers,
             cache: Arc::new(cache::Cache::new()),
             default_player: Arc::new(Mutex::new(None)),
-            sync: sync::SyncState::new()
+            sync: sync::SyncState::new(),
         }))
     }
 
@@ -124,7 +124,10 @@ impl Rustic {
         }
     }
 
-    pub async fn query_playlist(&self, query: SingleQuery) -> Result<Option<Playlist>, failure::Error> {
+    pub async fn query_playlist(
+        &self,
+        query: SingleQuery,
+    ) -> Result<Option<Playlist>, failure::Error> {
         debug!("Executing playlist query: {:?}", query);
         let playlist = self.library.query_playlist(query.clone())?;
         if let Some(playlist) = playlist {
@@ -134,9 +137,7 @@ impl Rustic {
                 trace!("Playlist is not in library, asking provider");
                 let provider = self.get_provider_for_url(uri)?;
                 let playlist = match provider {
-                    Some(provider) => {
-                            provider.get().await.resolve_playlist(uri).await?
-                    },
+                    Some(provider) => provider.get().await.resolve_playlist(uri).await?,
                     _ => None,
                 };
                 Ok(playlist)
@@ -161,10 +162,11 @@ impl Rustic {
         let provider = self.get_provider(track)?;
         // TODO: we should await instead of blocking
         let mut rt = tokio::runtime::Runtime::new()?;
-        let stream_url = rt.block_on(async {
-            provider.get().await.stream_url(track).await
-        })?;
-        debug!("getting stream url for track {} => {}", track.uri, &stream_url);
+        let stream_url = rt.block_on(async { provider.get().await.stream_url(track).await })?;
+        debug!(
+            "getting stream url for track {} => {}",
+            track.uri, &stream_url
+        );
 
         Ok(stream_url)
     }
@@ -186,7 +188,10 @@ impl Rustic {
         Ok(provider)
     }
 
-    pub async fn resolve_share_url(&self, url: String) -> Result<Option<InternalUri>, failure::Error> {
+    pub async fn resolve_share_url(
+        &self,
+        url: String,
+    ) -> Result<Option<InternalUri>, failure::Error> {
         trace!("resolving share url {}", url);
         let url = Url::parse(&url)?;
         for provider in self.providers.iter() {

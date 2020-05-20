@@ -1,4 +1,4 @@
-use actix_web::{error, get, Responder, web};
+use actix_web::{error, get, web, Responder};
 use log::trace;
 use serde::Deserialize;
 use serde_qs::actix::QsQuery;
@@ -25,7 +25,9 @@ pub async fn search(
     params: QsQuery<SearchQuery>,
 ) -> Result<impl Responder, error::Error> {
     trace!("search {}", &params.query);
-    let result = client.search(&params.query, params.providers.as_ref()).await?;
+    let result = client
+        .search(&params.query, params.providers.as_ref())
+        .await?;
     Ok(web::Json(result))
 }
 
@@ -44,8 +46,8 @@ pub async fn open(
 
 #[cfg(test)]
 mod test {
-    use actix_web::{App, http, test};
     use actix_web::dev::*;
+    use actix_web::{http, test, App};
 
     use rustic_api::models::{ProviderTypeModel, SearchResults};
     use rustic_api::TestApiClient;
@@ -55,11 +57,14 @@ mod test {
     #[actix_rt::test]
     async fn search_should_return_success() {
         let mut client = TestApiClient::new();
-        client.expect_search()
+        client
+            .expect_search()
             .called_once()
             .returning(|_| Ok(SearchResults::default()));
         let mut app = test::init_service(build_app(App::new(), client)).await;
-        let req = test::TestRequest::get().uri("/search?query=test").to_request();
+        let req = test::TestRequest::get()
+            .uri("/search?query=test")
+            .to_request();
 
         let res = app.call(req).await.unwrap();
         let res = res.response();
@@ -70,12 +75,15 @@ mod test {
     #[actix_rt::test]
     async fn search_should_perform_search() {
         let mut client = TestApiClient::new();
-        client.expect_search()
+        client
+            .expect_search()
             .called_once()
             .with((String::from("test"), None))
-            .returning(move|_| Ok(SearchResults::default()));
+            .returning(move |_| Ok(SearchResults::default()));
         let mut app = test::init_service(build_app(App::new(), client)).await;
-        let req = test::TestRequest::get().uri("/search?query=test").to_request();
+        let req = test::TestRequest::get()
+            .uri("/search?query=test")
+            .to_request();
 
         let res: SearchResults = test::read_response_json(&mut app, req).await;
 
@@ -86,12 +94,15 @@ mod test {
     async fn search_should_perform_search_with_providers() {
         let mut client = TestApiClient::new();
         let providers = vec![ProviderTypeModel::Soundcloud, ProviderTypeModel::Spotify];
-        client.expect_search()
+        client
+            .expect_search()
             .called_once()
             .with((String::from("test"), Some(providers)))
-            .returning(move|_| Ok(SearchResults::default()));
+            .returning(move |_| Ok(SearchResults::default()));
         let mut app = test::init_service(build_app(App::new(), client)).await;
-        let req = test::TestRequest::get().uri("/search?query=test&providers[]=soundcloud&providers[]=spotify").to_request();
+        let req = test::TestRequest::get()
+            .uri("/search?query=test&providers[]=soundcloud&providers[]=spotify")
+            .to_request();
 
         let res: SearchResults = test::read_response_json(&mut app, req).await;
 

@@ -7,13 +7,19 @@ use crate::models::*;
 pub type Result<T> = std::result::Result<T, failure::Error>;
 
 #[async_trait]
-pub trait RusticApiClient: Sync + Send + QueueApiClient + LibraryApiClient + PlayerApiClient + ProviderApiClient {
-    async fn search(&self, query: &str, providers: Option<&Vec<ProviderTypeModel>>) -> Result<SearchResults>;
+pub trait RusticApiClient:
+    Sync + Send + QueueApiClient + LibraryApiClient + PlayerApiClient + ProviderApiClient
+{
+    async fn search(
+        &self,
+        query: &str,
+        providers: Option<&Vec<ProviderTypeModel>>,
+    ) -> Result<SearchResults>;
 
     async fn get_extensions(&self) -> Result<Vec<ExtensionModel>>;
 
     async fn open_share_url(&self, url: &str) -> Result<Option<OpenResultModel>>;
-    
+
     async fn get_track_cover_art(&self, cursor: &str) -> Result<Option<CoverArtModel>>;
 }
 
@@ -23,24 +29,41 @@ pub trait ProviderApiClient: Sync + Send {
 
     async fn get_available_providers(&self) -> Result<Vec<AvailableProviderModel>>;
 
-    async fn navigate_provider(&self, provider: ProviderTypeModel, path: &str) -> Result<ProviderFolderModel>;
+    async fn navigate_provider(
+        &self,
+        provider: ProviderTypeModel,
+        path: &str,
+    ) -> Result<ProviderFolderModel>;
 
-    async fn authenticate_provider(&self, provider: ProviderTypeModel, auth: ProviderAuthModel) -> Result<()>;
+    async fn authenticate_provider(
+        &self,
+        provider: ProviderTypeModel,
+        auth: ProviderAuthModel,
+    ) -> Result<()>;
 }
 
 #[async_trait]
 pub trait LibraryApiClient: Sync + Send {
-    async fn get_albums(&self, providers: Option<Vec<ProviderTypeModel>>) -> Result<Vec<AlbumModel>>;
+    async fn get_albums(
+        &self,
+        providers: Option<Vec<ProviderTypeModel>>,
+    ) -> Result<Vec<AlbumModel>>;
 
     async fn get_album(&self, cursor: &str) -> Result<Option<AlbumModel>>;
 
     async fn get_artists(&self) -> Result<Vec<ArtistModel>>;
 
-    async fn get_playlists(&self, providers: Option<Vec<ProviderTypeModel>>) -> Result<Vec<PlaylistModel>>;
+    async fn get_playlists(
+        &self,
+        providers: Option<Vec<ProviderTypeModel>>,
+    ) -> Result<Vec<PlaylistModel>>;
 
     async fn get_playlist(&self, cursor: &str) -> Result<Option<PlaylistModel>>;
 
-    async fn get_tracks(&self, providers: Option<Vec<ProviderTypeModel>>) -> Result<Vec<TrackModel>>;
+    async fn get_tracks(
+        &self,
+        providers: Option<Vec<ProviderTypeModel>>,
+    ) -> Result<Vec<TrackModel>>;
 
     async fn get_track(&self, cursor: &str) -> Result<Option<TrackModel>>;
 
@@ -61,7 +84,12 @@ pub trait QueueApiClient: Sync + Send {
 
     async fn remove_queue_item(&self, player_id: Option<&str>, item: usize) -> Result<()>;
 
-    async fn reorder_queue_item(&self, player_id: Option<&str>, before: usize, after: usize) -> Result<()>;
+    async fn reorder_queue_item(
+        &self,
+        player_id: Option<&str>,
+        before: usize,
+        after: usize,
+    ) -> Result<()>;
 
     fn observe_queue(&self, player_id: Option<&str>) -> BoxStream<'static, QueueEventModel>;
 }

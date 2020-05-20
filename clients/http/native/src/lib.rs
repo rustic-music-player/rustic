@@ -4,8 +4,8 @@ use serde::Serialize;
 use url::Url;
 
 use async_trait::async_trait;
-use rustic_http_client::*;
 pub use rustic_http_client::RusticHttpClient;
+use rustic_http_client::*;
 
 #[derive(Debug, Clone)]
 pub struct RusticNativeHttpClient {
@@ -20,7 +20,7 @@ impl RusticNativeHttpClient {
             client: RusticNativeHttpClient {
                 base_url: url.into(),
                 client,
-            }
+            },
         }
     }
 }
@@ -28,24 +28,26 @@ impl RusticNativeHttpClient {
 #[async_trait]
 impl HttpClient for RusticNativeHttpClient {
     async fn get<T>(&self, api_url: &str) -> Result<T, failure::Error>
-        where T: DeserializeOwned {
+    where
+        T: DeserializeOwned,
+    {
         let mut url = Url::parse(&self.base_url)?;
         url.set_path(api_url);
         debug!("GET {}", url);
-        let body = self.client.get(url)
-            .send()
-            .await?
-            .json::<T>()
-            .await?;
+        let body = self.client.get(url).send().await?.json::<T>().await?;
 
         Ok(body)
     }
     async fn post<TReq, TRes>(&self, url: &str, body: TReq) -> Result<TRes, failure::Error>
-        where TRes: DeserializeOwned,
-              TReq: Serialize + Send + Sync {
+    where
+        TRes: DeserializeOwned,
+        TReq: Serialize + Send + Sync,
+    {
         let url = format!("{}/{}", &self.base_url, url);
         debug!("POST {}", url);
-        let body = self.client.post(&url)
+        let body = self
+            .client
+            .post(&url)
             .json(&body)
             .send()
             .await?
@@ -67,10 +69,17 @@ mod test {
 
     #[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq)]
     struct TestResponse {
-        pub cursor: String
+        pub cursor: String,
     }
 
-    fn create_json_mock<T>(method: &str, url: &str, response: &T) -> Result<mockito::Mock, failure::Error> where T: Serialize {
+    fn create_json_mock<T>(
+        method: &str,
+        url: &str,
+        response: &T,
+    ) -> Result<mockito::Mock, failure::Error>
+    where
+        T: Serialize,
+    {
         let m = mock(method, url)
             .with_status(200)
             .with_header("content-type", "application/json")
@@ -83,7 +92,7 @@ mod test {
     #[tokio::test]
     async fn get_should_do_a_get_request_to_the_api_root() -> Result<(), failure::Error> {
         let expected = TestResponse {
-            cursor: String::from("abc")
+            cursor: String::from("abc"),
         };
         let _m = create_json_mock("GET", "/", &expected)?;
         let client = RusticNativeHttpClient::new(mockito::server_url());
@@ -97,7 +106,7 @@ mod test {
     #[tokio::test]
     async fn get_should_do_a_get_request_1() -> Result<(), failure::Error> {
         let expected = TestResponse {
-            cursor: String::from("abc")
+            cursor: String::from("abc"),
         };
         let _m = create_json_mock("GET", "/api/test", &expected)?;
         let client = RusticNativeHttpClient::new(mockito::server_url());

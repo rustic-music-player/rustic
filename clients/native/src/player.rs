@@ -8,13 +8,15 @@ use rustic_api::cursor::to_cursor;
 use rustic_api::models::*;
 use rustic_core::{PlayerEvent, PlayerState};
 
-use crate::RusticNativeClient;
 use crate::stream_util::from_channel;
+use crate::RusticNativeClient;
 
 #[async_trait]
 impl PlayerApiClient for RusticNativeClient {
     async fn get_players(&self) -> Result<Vec<PlayerModel>> {
-        let players = self.app.get_players()
+        let players = self
+            .app
+            .get_players()
             .into_iter()
             .map(|(id, player)| {
                 let track = player.queue.current().map(TrackModel::from);
@@ -35,7 +37,8 @@ impl PlayerApiClient for RusticNativeClient {
 
     async fn get_player(&self, player_id: Option<&str>) -> Result<Option<PlayerModel>> {
         let player = self.get_player_or_default(player_id)?;
-        let player_id = player_id.map(|id| id.to_owned())
+        let player_id = player_id
+            .map(|id| id.to_owned())
             .or_else(|| self.app.get_default_player_id())
             .unwrap();
         let current = player.queue.current().map(TrackModel::from);
@@ -86,11 +89,12 @@ impl PlayerApiClient for RusticNativeClient {
     fn observe_player(&self, player_id: Option<&str>) -> BoxStream<'static, PlayerEventModel> {
         let player = self.get_player_or_default(player_id).unwrap();
 
-        from_channel(player.observe()).filter(|e| {
-            match e {
+        from_channel(player.observe())
+            .filter(|e| match e {
                 &PlayerEvent::QueueUpdated(_) => future::ready(false),
-                _ => future::ready(true)
-            }
-        }).map(PlayerEventModel::from).boxed()
+                _ => future::ready(true),
+            })
+            .map(PlayerEventModel::from)
+            .boxed()
     }
 }

@@ -3,28 +3,27 @@ use actix_web::{App, Error, FromRequest};
 
 use rustic_api::TestApiClient;
 
-use crate::controller;
-use actix_service::ServiceFactory;
 use crate::app::ApiClient;
-use std::sync::Arc;
+use crate::controller;
+use crate::controller::search::SearchQuery;
+use actix_service::ServiceFactory;
 use serde_qs::actix::QsQuery;
 use serde_qs::Config;
-use crate::controller::search::SearchQuery;
+use std::sync::Arc;
 
 pub fn build_app<T, B>(app: App<T, B>, client: TestApiClient) -> App<T, B>
-    where
-        B: MessageBody,
-        T: ServiceFactory<
-            Config = (),
-            Request = ServiceRequest,
-            Response = ServiceResponse<B>,
-            Error = Error,
-            InitError = (),
-        >,
+where
+    B: MessageBody,
+    T: ServiceFactory<
+        Config = (),
+        Request = ServiceRequest,
+        Response = ServiceResponse<B>,
+        Error = Error,
+        InitError = (),
+    >,
 {
     let client: ApiClient = Arc::new(Box::new(client));
-    app
-        .data(client)
+    app.data(client)
         .data(QsQuery::<SearchQuery>::configure(|cfg| {
             cfg.qs_config(Config::new(2, false))
         }))

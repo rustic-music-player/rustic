@@ -5,8 +5,8 @@ use serde::{Deserialize, Serialize};
 pub struct ProviderModel {
     pub title: String,
     pub provider: ProviderTypeModel,
-    pub explore: ProviderFolderModel
- }
+    pub explore: ProviderFolderModel,
+}
 
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Eq)]
 pub struct ProviderFolderModel {
@@ -44,8 +44,5 @@ pub enum ProviderTypeModel {
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub enum ProviderAuthModel {
-    OAuthToken {
-        code: String,
-        state: Option<String>
-    }
+    OAuthToken { code: String, state: Option<String> },
 }

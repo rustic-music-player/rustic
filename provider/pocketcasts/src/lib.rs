@@ -1,10 +1,10 @@
-use failure::{Error, format_err};
+use failure::{format_err, Error};
 use pocketcasts::{Episode, PocketcastClient, Podcast};
 use serde::Deserialize;
 
 use async_trait::async_trait;
-use rustic_core::{Playlist, provider};
 use rustic_core::library::{Album, Artist, MetaValue, SharedLibrary, Track};
+use rustic_core::{provider, Playlist};
 
 use crate::episode::PocketcastTrack;
 use crate::meta::META_POCKETCASTS_COVER_ART_URL;
@@ -51,7 +51,10 @@ impl provider::ProviderInstance for PocketcastsProvider {
         }))
     }
 
-    async fn authenticate(&mut self, authentication: provider::Authentication) -> Result<(), Error> {
+    async fn authenticate(
+        &mut self,
+        authentication: provider::Authentication,
+    ) -> Result<(), Error> {
         use provider::Authentication::*;
 
         match authentication {
@@ -72,8 +75,12 @@ impl provider::ProviderInstance for PocketcastsProvider {
             .ok_or_else(|| format_err!("Pocketcasts not setup"))?;
         let podcasts = client.get_subscriptions().await?;
         let albums = podcasts.len();
-        let futures: Vec<future::BoxFuture<_>> = podcasts.into_iter().map(|p| get_episodes(&client, p)).collect();
-        let podcast_episodes: Vec<(Podcast, Vec<Episode>)> = futures::future::try_join_all(futures).await?;
+        let futures: Vec<future::BoxFuture<_>> = podcasts
+            .into_iter()
+            .map(|p| get_episodes(&client, p))
+            .collect();
+        let podcast_episodes: Vec<(Podcast, Vec<Episode>)> =
+            futures::future::try_join_all(futures).await?;
         let mut episodes: Vec<Track> = podcast_episodes
             .into_iter()
             .map(|(podcast, episodes)| {
@@ -102,13 +109,10 @@ impl provider::ProviderInstance for PocketcastsProvider {
                     .collect();
                 tracks
             })
-            .fold(
-                vec![],
-                |mut a, b| {
-                    a.extend(b);
-                    a
-                },
-            );
+            .fold(vec![], |mut a, b| {
+                a.extend(b);
+                a
+            });
         let tracks = episodes.len();
         library.sync_tracks(&mut episodes);
         Ok(provider::SyncResult {
@@ -141,9 +145,14 @@ impl provider::ProviderInstance for PocketcastsProvider {
             _ => Err(Error::from(provider::NavigationError::PathNotFound)),
         }?;
         match path.len() {
-            1 => Ok(provider::ProviderFolder::from(PocketcastAlbums::from(podcasts))),
+            1 => Ok(provider::ProviderFolder::from(PocketcastAlbums::from(
+                podcasts,
+            ))),
             2 => {
-                let podcast = podcasts.iter().find(|podcast| podcast.title == path[1]).ok_or(provider::NavigationError::PathNotFound)?;
+                let podcast = podcasts
+                    .iter()
+                    .find(|podcast| podcast.title == path[1])
+                    .ok_or(provider::NavigationError::PathNotFound)?;
                 let episodes = client
                     .get_episodes(podcast.uuid)
                     .await
@@ -158,9 +167,9 @@ impl provider::ProviderInstance for PocketcastsProvider {
 
                 Ok(provider::ProviderFolder {
                     folders: vec![],
-                    items
+                    items,
                 })
-            },
+            }
             _ => Err(Error::from(provider::NavigationError::PathNotFound)),
         }
     }
@@ -223,6 +232,12 @@ impl provider::ProviderInstance for PocketcastsProvider {
     }
 }
 
-fn get_episodes(client: &PocketcastClient, podcast: Podcast) -> future::BoxFuture<Result<(Podcast, Vec<Episode>), Error>> {
-    client.get_episodes(podcast.uuid).map(|result| result.map(|episodes| (podcast, episodes))).boxed()
+fn get_episodes(
+    client: &PocketcastClient,
+    podcast: Podcast,
+) -> future::BoxFuture<Result<(Podcast, Vec<Episode>), Error>> {
+    client
+        .get_episodes(podcast.uuid)
+        .map(|result| result.map(|episodes| (podcast, episodes)))
+        .boxed()
 }

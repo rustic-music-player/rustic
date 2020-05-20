@@ -10,7 +10,7 @@ use failure::Error;
 use pinboard::NonEmptyPinboard;
 
 use rustic_core::player::{PlayerBackend, PlayerBuilder, PlayerEvent, PlayerState, QueueCommand};
-use rustic_core::{Track, Rustic};
+use rustic_core::{Rustic, Track};
 
 pub struct GstBackend {
     core: Arc<Rustic>,
@@ -49,7 +49,7 @@ impl GstBackend {
         };
 
         let player_queue = queue_tx.clone();
-        backend.player.connect_end_of_stream(move|_| {
+        backend.player.connect_end_of_stream(move |_| {
             if let Err(e) = player_queue.send(QueueCommand::Next) {
                 error!("Failed loading next track: {:?}", e)
             }

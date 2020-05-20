@@ -1,6 +1,6 @@
 use std::path::PathBuf;
 
-use failure::{Error, format_err};
+use failure::{format_err, Error};
 use maplit::hashmap;
 use serde_derive::Deserialize;
 

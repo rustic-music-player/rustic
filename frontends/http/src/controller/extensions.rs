@@ -1,4 +1,4 @@
-use actix_web::{get, Responder, Result, web};
+use actix_web::{get, web, Responder, Result};
 
 use crate::app::ApiClient;
 
@@ -11,11 +11,11 @@ pub async fn get_extensions(client: web::Data<ApiClient>) -> Result<impl Respond
 
 #[cfg(test)]
 mod test {
-    use actix_web::{App, http, test};
     use actix_web::dev::*;
+    use actix_web::{http, test, App};
 
-    use rustic_api::TestApiClient;
     use rustic_api::models::ExtensionModel;
+    use rustic_api::TestApiClient;
 
     use crate::test::build_app;
 

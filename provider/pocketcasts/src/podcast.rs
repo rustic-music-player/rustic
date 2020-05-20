@@ -5,7 +5,7 @@ use pocketcasts::{Podcast, SearchPodcast};
 use serde::{Deserialize, Serialize};
 
 use rustic_core::library::{Album, Artist};
-use rustic_core::provider::{ProviderType, ProviderFolder};
+use rustic_core::provider::{ProviderFolder, ProviderType};
 
 use crate::meta::*;
 

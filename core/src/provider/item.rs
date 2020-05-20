@@ -1,5 +1,5 @@
 use crate::library::{Album, Artist, Playlist, Track};
-use serde_derive::{Serialize, Deserialize};
+use serde_derive::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Serialize, PartialEq, Deserialize)]
 pub struct ProviderItem {

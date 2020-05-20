@@ -29,7 +29,7 @@ pub struct Provider {
     title: String,
     pub uri_scheme: String,
     pub provider_type: ProviderType,
-    pub provider: SharedProvider
+    pub provider: SharedProvider,
 }
 
 impl Provider {
@@ -56,7 +56,7 @@ impl From<Box<dyn ProviderInstance + Send + Sync>> for Provider {
             title,
             uri_scheme,
             provider_type,
-            provider: Arc::new(RwLock::new(instance))
+            provider: Arc::new(RwLock::new(instance)),
         }
     }
 }
@@ -74,7 +74,7 @@ impl SyncResult {
             tracks: 0,
             albums: 0,
             artists: 0,
-            playlists: 0
+            playlists: 0,
         }
     }
 }
@@ -89,7 +89,7 @@ pub enum ProviderType {
     Spotify,
     #[serde(rename = "local")]
     LocalMedia,
-    Youtube
+    Youtube,
 }
 
 #[async_trait]

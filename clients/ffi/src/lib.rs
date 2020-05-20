@@ -7,7 +7,7 @@ use rustic_native_http_client::RusticNativeHttpClient;
 
 pub use rustic_api::models::*;
 
-use crate::client::{to_str, RusticClientHandle, Client};
+use crate::client::{to_str, Client, RusticClientHandle};
 use rustic_api::RusticApiClient;
 
 #[cfg(feature = "async_extern_executor")]
@@ -27,7 +27,7 @@ pub unsafe extern "C" fn connect_http_client(url: *const c_char) -> *mut RusticC
 
     let url = match url {
         Ok(s) => s,
-        Err(_) => return ptr::null_mut()
+        Err(_) => return ptr::null_mut(),
     };
 
     if let Some(url) = url {
@@ -36,7 +36,7 @@ pub unsafe extern "C" fn connect_http_client(url: *const c_char) -> *mut RusticC
         let client = Client::new(client);
 
         client.to_ptr()
-    }else {
+    } else {
         ptr::null_mut()
     }
 }

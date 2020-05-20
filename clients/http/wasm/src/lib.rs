@@ -1,9 +1,9 @@
-use wasm_bindgen::prelude::*;
-use rustic_http_client::*;
 use rustic_api::RusticApiClient;
+use rustic_http_client::*;
+use wasm_bindgen::prelude::*;
 
-mod utils;
 mod client;
+mod utils;
 
 // When the `wee_alloc` feature is enabled, use `wee_alloc` as the global
 // allocator.
@@ -26,7 +26,7 @@ pub async fn search(query: JsValue) -> Result<JsValue, JsValue> {
         let result = CLIENT.search(query).await?;
 
         Ok(JsValue::from_serde(&result).unwrap())
-    }else {
+    } else {
         Err(JsValue::from_str(""))
     }
 }

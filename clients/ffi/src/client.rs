@@ -1,12 +1,14 @@
-use std::ptr::NonNull;
-use rustic_api::client::RusticApiClient;
-use std::ffi::CStr;
-use libc::*;
 use crate::error::FFIError;
 use crate::models::player::Player;
+use libc::*;
+use rustic_api::client::RusticApiClient;
+use std::ffi::CStr;
+use std::ptr::NonNull;
 
 #[repr(C)]
-pub struct RusticClientHandle { _private: [u8; 0] }
+pub struct RusticClientHandle {
+    _private: [u8; 0],
+}
 
 pub(crate) struct Client(NonNull<Box<dyn RusticApiClient>>);
 

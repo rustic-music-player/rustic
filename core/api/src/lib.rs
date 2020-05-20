@@ -1,8 +1,8 @@
+pub mod client;
 #[cfg(feature = "conversion")]
 mod conversion;
 #[cfg(feature = "conversion")]
 pub mod cursor;
-pub mod client;
 pub mod models;
 #[cfg(feature = "testing")]
 pub mod test_client;

@@ -1,7 +1,7 @@
-use actix_web::{get, post, web, HttpResponse, Responder, Result};
-use serde::{Deserialize};
 use crate::app::ApiClient;
 use crate::cursor::from_cursor;
+use actix_web::{get, post, web, HttpResponse, Responder, Result};
+use serde::Deserialize;
 
 #[derive(Deserialize)]
 pub struct PlayerQuery {
@@ -21,7 +21,7 @@ pub async fn default_player_state(client: web::Data<ApiClient>) -> Result<impl R
 
     match player {
         Some(player) => Ok(HttpResponse::Ok().json(player)),
-        None => Ok(HttpResponse::NotFound().finish())
+        None => Ok(HttpResponse::NotFound().finish()),
     }
 }
 
@@ -98,7 +98,10 @@ pub async fn control_play(
 }
 
 #[post("/player/volume")]
-pub async fn default_set_volume(client: web::Data<ApiClient>, volume: web::Json<f32>) -> Result<impl Responder> {
+pub async fn default_set_volume(
+    client: web::Data<ApiClient>,
+    volume: web::Json<f32>,
+) -> Result<impl Responder> {
     client.player_set_volume(None, volume.into_inner()).await?;
 
     Ok(HttpResponse::NoContent().finish())
@@ -108,10 +111,12 @@ pub async fn default_set_volume(client: web::Data<ApiClient>, volume: web::Json<
 pub async fn set_volume(
     client: web::Data<ApiClient>,
     params: web::Path<PlayerQuery>,
-    volume: web::Json<f32>
+    volume: web::Json<f32>,
 ) -> Result<impl Responder> {
     let player_id = from_cursor(&params.player)?;
-    client.player_set_volume(Some(&player_id), volume.into_inner()).await?;
+    client
+        .player_set_volume(Some(&player_id), volume.into_inner())
+        .await?;
 
     Ok(HttpResponse::NoContent().finish())
 }

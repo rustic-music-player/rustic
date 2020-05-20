@@ -1,7 +1,7 @@
-use actix_web::{get, Responder, Result, web};
+use actix_web::{get, web, Responder, Result};
 use serde::Deserialize;
 
-use rustic_api::models::{ProviderTypeModel, ProviderAuthModel};
+use rustic_api::models::{ProviderAuthModel, ProviderTypeModel};
 
 use crate::app::ApiClient;
 
@@ -28,7 +28,9 @@ pub async fn navigate(
     params: web::Path<ProviderParams>,
     query: web::Query<NavigateQuery>,
 ) -> Result<impl Responder> {
-    let folder = client.navigate_provider(params.provider, &query.path).await?;
+    let folder = client
+        .navigate_provider(params.provider, &query.path)
+        .await?;
 
     Ok(web::Json(folder))
 }
@@ -46,7 +48,9 @@ pub async fn provider_token_auth(
     params: web::Path<ProviderParams>,
     client: web::Data<ApiClient>,
 ) -> Result<impl Responder> {
-    client.authenticate_provider(params.provider, query.into_inner()).await?;
+    client
+        .authenticate_provider(params.provider, query.into_inner())
+        .await?;
 
     Ok(web::HttpResponse::Ok().body(
         "<html><body>You can close this window now<script>window.close()</script></body></html>",

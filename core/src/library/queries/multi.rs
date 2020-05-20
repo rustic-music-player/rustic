@@ -6,7 +6,7 @@ use super::{LibraryQueryJoins, QueryJoins};
 pub struct MultiQuery {
     pub joins: LibraryQueryJoins,
     pub limit: Option<usize>,
-    pub providers: Vec<ProviderType>
+    pub providers: Vec<ProviderType>,
 }
 
 impl MultiQuery {

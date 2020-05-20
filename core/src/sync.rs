@@ -1,7 +1,7 @@
 use std::sync::Arc;
 use std::time::Duration;
 
-use crossbeam_channel::{Receiver, Sender, unbounded};
+use crossbeam_channel::{unbounded, Receiver, Sender};
 use failure::Error;
 use itertools::Itertools;
 use log::{error, info, trace};
@@ -31,17 +31,14 @@ pub enum SyncItemState {
 #[derive(Debug, Clone)]
 pub struct SyncState {
     pub events: Receiver<SyncEvent>,
-    tx: Sender<SyncEvent>
+    tx: Sender<SyncEvent>,
 }
 
 impl SyncState {
     pub(crate) fn new() -> SyncState {
         let (tx, rx) = unbounded();
 
-        SyncState {
-            events: rx,
-            tx
-        }
+        SyncState { events: rx, tx }
     }
 
     fn next(&self, event: SyncEvent) {
@@ -65,7 +62,13 @@ pub async fn start(app: Arc<Rustic>) -> Result<(), Error> {
 
 async fn synchronize(app: &Arc<Rustic>) {
     let providers = app.providers.clone();
-    let mut sync_items: Vec<SyncItem> = providers.iter().map(|p| SyncItem { provider: p.provider_type, state: SyncItemState::Idle }).collect();
+    let mut sync_items: Vec<SyncItem> = providers
+        .iter()
+        .map(|p| SyncItem {
+            provider: p.provider_type,
+            state: SyncItemState::Idle,
+        })
+        .collect();
     app.sync.next(SyncEvent::Synchronizing(sync_items.clone()));
     for provider in providers {
         let provider = provider.get().await;
@@ -73,7 +76,10 @@ async fn synchronize(app: &Arc<Rustic>) {
             continue;
         }
         info!("Syncing {} library", provider.title());
-        let (position, _) = sync_items.iter().find_position(|i| i.provider == provider.provider()).unwrap();
+        let (position, _) = sync_items
+            .iter()
+            .find_position(|i| i.provider == provider.provider())
+            .unwrap();
         sync_items.get_mut(position).unwrap().state = SyncItemState::Syncing;
         app.sync.next(SyncEvent::Synchronizing(sync_items.clone()));
         match provider.sync(Arc::clone(&app.library)).await {

@@ -1,14 +1,17 @@
-use serde::Deserialize;
-use failure::{ensure, Error};
-use rustic_core::provider::{ProviderInstance, InternalUri, ProviderFolder, CoverArt, ProviderItem, AuthState, Authentication, SyncResult};
-use async_trait::async_trait;
-use rustic_core::{Album, SharedLibrary, Playlist, ProviderType, Track};
-use url::Url;
-use log::{warn};
-use lazy_static::lazy_static;
-use crate::video_metadata::YoutubeVideoMetadata;
 use crate::meta::META_YOUTUBE_DEFAULT_THUMBNAIL_URL;
+use crate::video_metadata::YoutubeVideoMetadata;
+use async_trait::async_trait;
+use failure::{ensure, Error};
+use lazy_static::lazy_static;
+use log::warn;
 use rustic_core::library::MetaValue;
+use rustic_core::provider::{
+    AuthState, Authentication, CoverArt, InternalUri, ProviderFolder, ProviderInstance,
+    ProviderItem, SyncResult,
+};
+use rustic_core::{Album, Playlist, ProviderType, SharedLibrary, Track};
+use serde::Deserialize;
+use url::Url;
 use youtube::YoutubeApi;
 
 mod meta;
@@ -71,7 +74,7 @@ impl ProviderInstance for YoutubeProvider {
     fn root(&self) -> ProviderFolder {
         ProviderFolder {
             folders: vec!["Subscriptions".to_owned(), "Trending".to_owned()],
-            items: vec![]
+            items: vec![],
         }
     }
 
@@ -112,7 +115,7 @@ impl ProviderInstance for YoutubeProvider {
     async fn cover_art(&self, track: &Track) -> Result<Option<CoverArt>, Error> {
         if let Some(MetaValue::String(url)) = track.meta.get(META_YOUTUBE_DEFAULT_THUMBNAIL_URL) {
             Ok(Some(CoverArt::Url(url.clone())))
-        }else {
+        } else {
             Ok(None)
         }
     }
@@ -123,7 +126,7 @@ impl ProviderInstance for YoutubeProvider {
             let internal_uri = format!("youtube://video/{}", id);
 
             Ok(Some(InternalUri::Track(internal_uri)))
-        }else {
+        } else {
             Ok(None)
         }
     }

@@ -53,7 +53,11 @@ impl ProviderApiClient for RusticNativeClient {
         Ok(provider_models)
     }
 
-    async fn navigate_provider(&self, provider_type: ProviderTypeModel, path: &str) -> Result<ProviderFolderModel> {
+    async fn navigate_provider(
+        &self,
+        provider_type: ProviderTypeModel,
+        path: &str,
+    ) -> Result<ProviderFolderModel> {
         let provider = self
             .get_provider(provider_type)
             .ok_or_else(|| err_msg("Invalid provider"))?;
@@ -66,7 +70,11 @@ impl ProviderApiClient for RusticNativeClient {
         Ok(folder)
     }
 
-    async fn authenticate_provider(&self, provider_type: ProviderTypeModel, auth: ProviderAuthModel) -> Result<()> {
+    async fn authenticate_provider(
+        &self,
+        provider_type: ProviderTypeModel,
+        auth: ProviderAuthModel,
+    ) -> Result<()> {
         let provider = self.get_provider(provider_type);
 
         if let Some(provider) = provider {

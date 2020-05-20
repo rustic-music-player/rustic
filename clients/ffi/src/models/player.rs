@@ -7,7 +7,7 @@ use std::ffi::CString;
 pub struct Player {
     cursor: *const c_char,
     name: *const c_char,
-    playing: bool
+    playing: bool,
 }
 
 impl From<PlayerModel> for Player {
@@ -18,7 +18,7 @@ impl From<PlayerModel> for Player {
         Player {
             cursor: cursor.as_ptr(),
             name: name.as_ptr(),
-            playing: player.playing
+            playing: player.playing,
         }
     }
 }

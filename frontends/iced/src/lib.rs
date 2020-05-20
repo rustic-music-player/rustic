@@ -1,12 +1,12 @@
 use iced::{
-    Align, Application, Background, button, Color, Column, Command, Element, Length,
-    Row, scrollable, Scrollable, Settings, Subscription, Text, text_input, TextInput, Vector,
+    button, scrollable, text_input, Align, Application, Background, Color, Column, Command,
+    Element, Length, Row, Scrollable, Settings, Subscription, Text, TextInput, Vector,
 };
 
-use rustic_api::ApiClient;
 use rustic_api::models::{
     AlbumModel, ArtistModel, PlayerModel, PlaylistModel, SyncStateModel, TrackModel,
 };
+use rustic_api::ApiClient;
 
 use crate::component::Component;
 use crate::messages::Message;

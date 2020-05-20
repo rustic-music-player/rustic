@@ -1,4 +1,4 @@
-use failure::{Error, format_err};
+use failure::{format_err, Error};
 use log::trace;
 use rspotify::client::Spotify;
 use rspotify::oauth2::{SpotifyClientCredentials, SpotifyOAuth, TokenInfo};
@@ -81,7 +81,9 @@ impl SpotifyProvider {
         let mut playlists = Vec::with_capacity(user_playlists.items.len());
         for playlist in user_playlists.items {
             // TODO: this should await all playlists at once
-            let p = spotify.playlist(&playlist.id, None, None).await
+            let p = spotify
+                .playlist(&playlist.id, None, None)
+                .await
                 .map(SpotifyPlaylist::from)
                 .map(Playlist::from)?;
             playlists.push(p);
@@ -290,7 +292,10 @@ impl rustic_core::provider::ProviderInstance for SpotifyProvider {
         Ok(url)
     }
 
-    async fn resolve_share_url(&self, _url: url::Url) -> Result<Option<provider::InternalUri>, Error> {
+    async fn resolve_share_url(
+        &self,
+        _url: url::Url,
+    ) -> Result<Option<provider::InternalUri>, Error> {
         Ok(None)
     }
 }
