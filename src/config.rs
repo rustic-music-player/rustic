@@ -160,11 +160,11 @@ impl Default for ClientConfig {
 }
 
 fn default_backend() -> Vec<PlayerBackendConfig> {
-    #[cfg(feature = "gstreamer-backend")]
-    #[allow(unused_variables)]
-    let backend_type = PlayerBackend::GStreamer;
     #[cfg(feature = "rodio-backend")]
+    #[allow(unused_variables)]
     let backend_type = PlayerBackend::Rodio;
+    #[cfg(feature = "gstreamer-backend")]
+    let backend_type = PlayerBackend::GStreamer;
     let config = PlayerBackendConfig {
         name: "default".to_string(),
         default: true,
