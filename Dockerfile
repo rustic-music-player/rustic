@@ -1,6 +1,6 @@
-FROM rust:stretch
+FROM rust:buster
 
-RUN apt update && apt upgrade -y && apt install -y libasound2-dev gstreamer1.0 cmake
+RUN apt update && apt upgrade -y && apt install -y libasound2-dev libgstreamer1.0-dev cmake
 
 WORKDIR /src
 
