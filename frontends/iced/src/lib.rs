@@ -1,16 +1,18 @@
+use iced::{
+    Align, Application, Background, button, Color, Column, Command, Element, Length,
+    Row, scrollable, Scrollable, Settings, Subscription, Text, text_input, TextInput, Vector,
+};
+
+use rustic_api::ApiClient;
+use rustic_api::models::{
+    AlbumModel, ArtistModel, PlayerModel, PlaylistModel, SyncStateModel, TrackModel,
+};
+
 use crate::component::Component;
 use crate::messages::Message;
 use crate::overlay::{Overlay, OverlayState};
 use crate::recipes::SyncRecipe;
 use crate::views::MainView;
-use iced::{
-    button, scrollable, text_input, Align, Application, Background, Color, Column, Command,
-    Element, Length, Row, Scrollable, Settings, Subscription, Text, TextInput, Vector,
-};
-use rustic_api::models::{
-    AlbumModel, ArtistModel, PlayerModel, PlaylistModel, SyncStateModel, TrackModel,
-};
-use rustic_api::ApiClient;
 
 mod component;
 mod messages;
@@ -255,7 +257,7 @@ impl SavedState {
     }
 
     async fn load_albums(self, api: ApiClient) -> SavedState {
-        let albums = api.get_albums().await.unwrap();
+        let albums = api.get_albums(None).await.unwrap();
         SavedState { albums, ..self }
     }
 
@@ -265,12 +267,12 @@ impl SavedState {
     }
 
     async fn load_playlists(self, api: ApiClient) -> SavedState {
-        let playlists = api.get_playlists().await.unwrap();
+        let playlists = api.get_playlists(None).await.unwrap();
         SavedState { playlists, ..self }
     }
 
     async fn load_tracks(self, api: ApiClient) -> SavedState {
-        let tracks = api.get_tracks().await.unwrap();
+        let tracks = api.get_tracks(None).await.unwrap();
         SavedState { tracks, ..self }
     }
 }

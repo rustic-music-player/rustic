@@ -5,18 +5,20 @@ use log::debug;
 use async_trait::async_trait;
 use rustic_api::client::LibraryApiClient;
 use rustic_api::cursor::from_cursor;
-use rustic_api::models::{AlbumModel, ArtistModel, PlaylistModel, SyncStateModel, TrackModel};
-use rustic_core::{MultiQuery, QueryJoins, SingleQuery};
+use rustic_api::models::{AlbumModel, ArtistModel, PlaylistModel, ProviderTypeModel, SyncStateModel, TrackModel};
+use rustic_core::{MultiQuery, ProviderType, QueryJoins, SingleQuery};
 
 use crate::RusticNativeClient;
 use crate::stream_util::from_channel;
 
 #[async_trait]
 impl LibraryApiClient for RusticNativeClient {
-    async fn get_albums(&self) -> Result<Vec<AlbumModel>, failure::Error> {
+    async fn get_albums(&self, providers: Option<Vec<ProviderTypeModel>>) -> Result<Vec<AlbumModel>, failure::Error> {
         let sw = stopwatch::Stopwatch::start_new();
         let mut query = MultiQuery::new();
         query.join_artists();
+        let providers = providers.unwrap_or_default().into_iter().map(ProviderType::from).collect();
+        query.with_providers(providers);
         let albums = self.app.library.query_albums(query)?;
         debug!("Fetching albums took {}ms", sw.elapsed_ms());
 
@@ -55,10 +57,12 @@ impl LibraryApiClient for RusticNativeClient {
         Ok(artists)
     }
 
-    async fn get_playlists(&self) -> Result<Vec<PlaylistModel>, failure::Error> {
+    async fn get_playlists(&self, providers: Option<Vec<ProviderTypeModel>>) -> Result<Vec<PlaylistModel>, failure::Error> {
         let sw = stopwatch::Stopwatch::start_new();
         let mut query = MultiQuery::new();
         query.join_tracks();
+        let providers = providers.unwrap_or_default().into_iter().map(ProviderType::from).collect();
+        query.with_providers(providers);
         let playlists = self.app.library.query_playlists(query)?;
         debug!("Fetching playlists took {}ms", sw.elapsed_ms());
         let playlists = playlists
@@ -85,10 +89,12 @@ impl LibraryApiClient for RusticNativeClient {
         Ok(playlist)
     }
 
-    async fn get_tracks(&self) -> Result<Vec<TrackModel>, failure::Error> {
+    async fn get_tracks(&self, providers: Option<Vec<ProviderTypeModel>>) -> Result<Vec<TrackModel>, failure::Error> {
         let sw = stopwatch::Stopwatch::start_new();
         let mut query = MultiQuery::new();
         query.join_artists();
+        let providers = providers.unwrap_or_default().into_iter().map(ProviderType::from).collect();
+        query.with_providers(providers);
         let tracks = self.app.library.query_tracks(query)?;
         debug!("Fetching tracks took {}ms", sw.elapsed_ms());
         let tracks = tracks

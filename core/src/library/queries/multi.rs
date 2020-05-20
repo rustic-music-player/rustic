@@ -1,9 +1,12 @@
+use crate::ProviderType;
+
 use super::{LibraryQueryJoins, QueryJoins};
 
-#[derive(Default, Debug, Clone, Copy)]
+#[derive(Default, Debug, Clone)]
 pub struct MultiQuery {
     pub joins: LibraryQueryJoins,
     pub limit: Option<usize>,
+    pub providers: Vec<ProviderType>
 }
 
 impl MultiQuery {
@@ -13,6 +16,11 @@ impl MultiQuery {
 
     pub fn limit(&mut self, limit: usize) -> &mut MultiQuery {
         self.limit = Some(limit);
+        self
+    }
+
+    pub fn with_providers(&mut self, providers: Vec<ProviderType>) -> &mut MultiQuery {
+        self.providers = providers;
         self
     }
 }

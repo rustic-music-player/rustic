@@ -59,6 +59,13 @@ impl Library for MemoryLibrary {
             .unwrap()
             .clone()
             .into_iter()
+            .filter(|track| {
+                if query.providers.is_empty() {
+                    true
+                } else {
+                    query.providers.contains(&track.provider)
+                }
+            })
             .map(|track| join_track(self, track, query.joins))
             .collect()
     }
@@ -81,6 +88,13 @@ impl Library for MemoryLibrary {
     fn query_albums(&self, query: MultiQuery) -> Result<Vec<Album>, Error> {
         trace!("Query Albums {:?}", query);
         let albums = self.albums.read().unwrap().clone();
+        let albums: Vec<_> = albums.into_iter().filter(|album| {
+            if query.providers.is_empty() {
+                true
+            } else {
+                query.providers.contains(&album.provider)
+            }
+        }).collect();
         join_albums(self, &albums, query.joins)
     }
 
@@ -119,6 +133,13 @@ impl Library for MemoryLibrary {
     fn query_playlists(&self, query: MultiQuery) -> Result<Vec<Playlist>, Error> {
         trace!("Query Playlists {:?}", query);
         let playlists = self.playlists.read().unwrap().clone();
+        let playlists = playlists.into_iter().filter(|playlist| {
+            if query.providers.is_empty() {
+                true
+            } else {
+                query.providers.contains(&playlist.provider)
+            }
+        }).collect();
         Ok(playlists)
     }
 

@@ -4,9 +4,9 @@ use serde::Serialize;
 
 use async_trait::async_trait;
 use rustic_api::client::*;
+use rustic_api::cursor::to_cursor;
 use rustic_api::models::*;
 pub use rustic_api::models;
-use rustic_api::cursor::to_cursor;
 
 #[derive(Clone)]
 pub struct RusticHttpClient<T> where T: HttpClient {
@@ -93,7 +93,7 @@ impl<T> ProviderApiClient for RusticHttpClient<T> where T: HttpClient {
 
 #[async_trait]
 impl<T> LibraryApiClient for RusticHttpClient<T> where T: HttpClient {
-    async fn get_albums(&self) -> Result<Vec<AlbumModel>> {
+    async fn get_albums(&self, providers: Option<Vec<ProviderTypeModel>>) -> Result<Vec<AlbumModel>> {
         let res = self.get("/api/library/albums").await?;
 
         Ok(res)
@@ -111,7 +111,7 @@ impl<T> LibraryApiClient for RusticHttpClient<T> where T: HttpClient {
         Ok(res)
     }
 
-    async fn get_playlists(&self) -> Result<Vec<PlaylistModel>> {
+    async fn get_playlists(&self, providers: Option<Vec<ProviderTypeModel>>) -> Result<Vec<PlaylistModel>> {
         let res = self.get("/api/library/playlists").await?;
 
         Ok(res)
@@ -123,7 +123,7 @@ impl<T> LibraryApiClient for RusticHttpClient<T> where T: HttpClient {
         Ok(res)
     }
 
-    async fn get_tracks(&self) -> Result<Vec<TrackModel>> {
+    async fn get_tracks(&self, providers: Option<Vec<ProviderTypeModel>>) -> Result<Vec<TrackModel>> {
         let res = self.get("/api/library/tracks").await?;
 
         Ok(res)

@@ -1,14 +1,20 @@
 use actix_web::{error, get, HttpResponse, Responder, Result, web};
 use futures::stream::StreamExt;
 use serde::Deserialize;
+use serde_qs::actix::QsQuery;
 
-use rustic_api::models::CoverArtModel;
+use rustic_api::models::{CoverArtModel, ProviderTypeModel};
 
 use crate::app::ApiClient;
 
 #[derive(Deserialize)]
 pub struct GetEntityQuery {
     cursor: String,
+}
+
+#[derive(Deserialize)]
+pub struct GetEntitiesQuery {
+    providers: Option<Vec<ProviderTypeModel>>,
 }
 
 #[get("/library/albums/{cursor}")]
@@ -25,8 +31,10 @@ pub async fn get_album(
 }
 
 #[get("/library/albums")]
-pub async fn get_albums(client: web::Data<ApiClient>) -> Result<impl Responder> {
-    let albums = client.get_albums().await?;
+pub async fn get_albums(client: web::Data<ApiClient>,
+                        params: QsQuery<GetEntitiesQuery>) -> Result<impl Responder> {
+    let params = params.into_inner();
+    let albums = client.get_albums(params.providers).await?;
 
     Ok(web::Json(albums))
 }
@@ -39,8 +47,10 @@ pub async fn get_artists(client: web::Data<ApiClient>) -> Result<impl Responder>
 }
 
 #[get("/library/playlists")]
-pub async fn get_playlists(client: web::Data<ApiClient>) -> Result<impl Responder> {
-    let playlists = client.get_playlists().await?;
+pub async fn get_playlists(client: web::Data<ApiClient>,
+                           params: QsQuery<GetEntitiesQuery>) -> Result<impl Responder> {
+    let params = params.into_inner();
+    let playlists = client.get_playlists(params.providers).await?;
 
     Ok(web::Json(playlists))
 }
@@ -59,8 +69,10 @@ pub async fn get_playlist(
 }
 
 #[get("/library/tracks")]
-pub async fn get_tracks(client: web::Data<ApiClient>) -> Result<impl Responder> {
-    let tracks = client.get_tracks().await?;
+pub async fn get_tracks(client: web::Data<ApiClient>,
+                        params: QsQuery<GetEntitiesQuery>) -> Result<impl Responder> {
+    let params = params.into_inner();
+    let tracks = client.get_tracks(params.providers).await?;
 
     Ok(web::Json(tracks))
 }

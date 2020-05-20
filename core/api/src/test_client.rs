@@ -121,7 +121,7 @@ impl QueueApiClient for TestApiClient {
 
 #[async_trait]
 impl LibraryApiClient for TestApiClient {
-    async fn get_albums(&self) -> Result<Vec<AlbumModel>> {
+    async fn get_albums(&self, providers: Option<Vec<ProviderTypeModel>>) -> Result<Vec<AlbumModel>> {
         unimplemented!()
     }
 
@@ -133,7 +133,7 @@ impl LibraryApiClient for TestApiClient {
         unimplemented!()
     }
 
-    async fn get_playlists(&self) -> Result<Vec<PlaylistModel>> {
+    async fn get_playlists(&self, providers: Option<Vec<ProviderTypeModel>>) -> Result<Vec<PlaylistModel>> {
         unimplemented!()
     }
 
@@ -141,7 +141,7 @@ impl LibraryApiClient for TestApiClient {
         unimplemented!()
     }
 
-    async fn get_tracks(&self) -> Result<Vec<TrackModel>> {
+    async fn get_tracks(&self, providers: Option<Vec<ProviderTypeModel>>) -> Result<Vec<TrackModel>> {
         unimplemented!()
     }
 
