@@ -6,12 +6,14 @@ license = "GPL-3.0"
 readme = "README.md"
 repository = "https://github.com/rustic-music-player/rustic"
 homepage = "https://github.com/rustic-music-player/rustic"
+edition = "2018"
 
 [dependencies]
 crossbeam-channel = "0.4"
 log = "0.4"
 failure = "0.1"
 gstreamer = "0.15"
+gstreamer-player = "0.15"
 glib = "0.9.0"
 pinboard = "2.0.0"
 

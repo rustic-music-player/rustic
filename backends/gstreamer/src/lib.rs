@@ -1,34 +1,23 @@
 extern crate crossbeam_channel as channel;
-#[macro_use]
-extern crate failure;
-extern crate gstreamer as gst;
-#[macro_use]
-extern crate log;
-extern crate pinboard;
-extern crate rustic_core as core;
+use log::{debug, error, info};
 
 use std::any::Any;
 use std::sync::Arc;
-use std::thread;
 use std::time::Duration;
 
 use channel::Sender;
-use failure::{err_msg, Error};
-use gst::{prelude::*, MessageView};
+use failure::Error;
 use pinboard::NonEmptyPinboard;
 
-use core::player::{PlayerBackend, PlayerBuilder, PlayerEvent, PlayerState, QueueCommand};
-use core::Track;
+use rustic_core::player::{PlayerBackend, PlayerBuilder, PlayerEvent, PlayerState, QueueCommand};
+use rustic_core::{Track, Rustic};
 
 pub struct GstBackend {
-    core: Arc<core::Rustic>,
+    core: Arc<Rustic>,
     current_volume: f32,
     state: NonEmptyPinboard<PlayerState>,
     blend_time: Duration,
-    pipeline: gst::Pipeline,
-    decoder: gst::Element,
-    volume: gst::Element,
-    sink: gst::Element,
+    player: gstreamer_player::Player,
     player_events: Sender<PlayerEvent>,
 }
 
@@ -44,84 +33,32 @@ impl std::fmt::Debug for GstBackend {
 
 impl GstBackend {
     pub fn new(
-        core: Arc<core::Rustic>,
+        core: Arc<Rustic>,
         queue_tx: Sender<QueueCommand>,
         player_events: Sender<PlayerEvent>,
     ) -> Result<Box<dyn PlayerBackend>, Error> {
-        gst::init()?;
-        let pipeline = gst::Pipeline::new(None);
-        let decoder = gst::ElementFactory::make("uridecodebin", None)?;
-        let volume = gst::ElementFactory::make("volume", None)?;
-        let sink = gst::ElementFactory::make("autoaudiosink", None)?;
+        gstreamer::init()?;
+        let player = gstreamer_player::Player::new(None, None);
         let backend = GstBackend {
             core,
             blend_time: Duration::default(),
             current_volume: 1.0,
             state: NonEmptyPinboard::new(PlayerState::Stop),
-            pipeline,
-            decoder,
-            volume,
-            sink,
+            player,
             player_events,
         };
 
-        backend.pipeline.add(&backend.decoder)?;
-        backend.pipeline.add(&backend.volume)?;
-        backend.pipeline.add(&backend.sink)?;
-
-        backend.volume.link(&backend.sink)?;
-
-        let sink_pad = backend
-            .volume
-            .get_static_pad("sink")
-            .ok_or_else(|| err_msg("missing sink pad on volume element"))?;
-        backend
-            .decoder
-            .connect_pad_added(move |_el: &gst::Element, pad: &gst::Pad| {
-                pad.link(&sink_pad);
-            });
-
-        let bus = backend
-            .pipeline
-            .get_bus()
-            .ok_or_else(|| format_err!("can't get gst bus"))?;
-        thread::spawn(move || loop {
-            let _res: Result<(), Error> = match bus.pop() {
-                None => Ok(()),
-                Some(msg) => match msg.view() {
-                    MessageView::Eos(..) => {
-                        println!("eos");
-                        queue_tx.send(QueueCommand::Next).map_err(|err| err.into())
-                    }
-                    MessageView::Error(err) => {
-                        error!(
-                            "Error from {}: {} ({:?})",
-                            msg.get_src().unwrap().get_path_string(),
-                            err.get_error(),
-                            err.get_debug()
-                        );
-                        Err(format_err!(
-                            "Error from {}: {} ({:?})",
-                            msg.get_src().unwrap().get_path_string(),
-                            err.get_error(),
-                            err.get_debug()
-                        ))
-                    }
-                    MessageView::Buffering(buffering) => {
-                        debug!("buffering {}", buffering.get_percent());
-                        Ok(())
-                    }
-                    MessageView::Warning(warning) => {
-                        warn!("gst warning {:?}", warning.get_debug());
-                        Ok(())
-                    }
-                    MessageView::Info(info) => {
-                        info!("gst info {:?}", info.get_debug());
-                        Ok(())
-                    }
-                    _ => Ok(()),
-                },
-            };
+        let player_queue = queue_tx.clone();
+        backend.player.connect_end_of_stream(move|_| {
+            if let Err(e) = player_queue.send(QueueCommand::Next) {
+                error!("Failed loading next track: {:?}", e)
+            }
+        });
+        backend.player.connect_error(|_, err| {
+            error!("{:?}", err);
+        });
+        backend.player.connect_buffering(|_, p| {
+            debug!("buffering {}", p);
         });
 
         Ok(Box::new(backend))
@@ -136,20 +73,16 @@ impl GstBackend {
 impl PlayerBackend for GstBackend {
     fn set_track(&self, track: &Track) -> Result<(), Error> {
         debug!("Selecting {:?}", track);
-        self.pipeline.set_state(gst::State::Null)?;
 
         let stream_url = self.core.stream_url(track)?;
 
-        self.decoder
-            .set_property_from_str("uri", stream_url.as_str());
+        self.player.set_uri(stream_url.as_str());
 
-        let state = match self.state.read() {
-            PlayerState::Play => gst::State::Playing,
-            PlayerState::Pause => gst::State::Paused,
-            PlayerState::Stop => gst::State::Null,
-        };
-
-        self.pipeline.set_state(state)?;
+        match self.state.read() {
+            PlayerState::Play => self.player.play(),
+            PlayerState::Pause => self.player.pause(),
+            PlayerState::Stop => self.player.stop(),
+        }
 
         self.player_events
             .send(PlayerEvent::TrackChanged(track.clone()))?;
@@ -161,17 +94,17 @@ impl PlayerBackend for GstBackend {
         debug!("set_state, {:?}", &new_state);
         match new_state {
             PlayerState::Play => {
-                self.pipeline.set_state(gst::State::Playing)?;
+                self.player.play();
                 self.write_state(new_state);
                 Ok(())
             }
             PlayerState::Pause => {
-                self.pipeline.set_state(gst::State::Paused)?;
+                self.player.pause();
                 self.write_state(new_state);
                 Ok(())
             }
             PlayerState::Stop => {
-                self.pipeline.set_state(gst::State::Null)?;
+                self.player.stop();
                 self.write_state(new_state);
                 Ok(())
             }
@@ -182,12 +115,13 @@ impl PlayerBackend for GstBackend {
         self.state.read()
     }
 
-    fn set_volume(&self, _volume: f32) -> Result<(), Error> {
-        unimplemented!()
+    fn set_volume(&self, volume: f32) -> Result<(), Error> {
+        self.player.set_volume(volume as f64);
+        Ok(())
     }
 
     fn volume(&self) -> f32 {
-        self.current_volume
+        self.player.get_volume() as f32
     }
 
     fn set_blend_time(&self, _duration: Duration) -> Result<(), Error> {
