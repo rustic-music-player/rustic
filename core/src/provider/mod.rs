@@ -68,6 +68,17 @@ pub struct SyncResult {
     pub playlists: usize,
 }
 
+impl SyncResult {
+    pub fn empty() -> Self {
+        SyncResult {
+            tracks: 0,
+            albums: 0,
+            artists: 0,
+            playlists: 0
+        }
+    }
+}
+
 #[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
 #[serde(rename_all = "lowercase")]
 pub enum ProviderType {
@@ -78,6 +89,7 @@ pub enum ProviderType {
     Spotify,
     #[serde(rename = "local")]
     LocalMedia,
+    Youtube
 }
 
 #[async_trait]

@@ -39,6 +39,7 @@ pub enum ProviderTypeModel {
     Spotify,
     #[serde(rename = "local")]
     LocalMedia,
+    Youtube,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]

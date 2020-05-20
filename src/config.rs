@@ -79,6 +79,8 @@ pub struct ProviderConfig {
     pub gmusic: Option<rustic_gmusic_provider::GooglePlayMusicProvider>,
     #[cfg(feature = "local-files-provider")]
     pub local: Option<rustic_local_provider::LocalProvider>,
+    #[cfg(feature = "youtube-provider")]
+    pub youtube: Option<rustic_youtube_provider::YoutubeProvider>
 }
 
 #[derive(Deserialize, Clone, Debug)]

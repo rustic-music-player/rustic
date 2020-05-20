@@ -164,6 +164,7 @@ impl Rustic {
         let stream_url = rt.block_on(async {
             provider.get().await.stream_url(track).await
         })?;
+        debug!("getting stream url for track {} => {}", track.uri, &stream_url);
 
         Ok(stream_url)
     }

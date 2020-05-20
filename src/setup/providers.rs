@@ -38,6 +38,12 @@ pub(crate) async fn setup_providers(config: &Config) -> Result<Vec<Provider>, fa
                 providers.push(Box::new(gmusic));
             }
         }
+    #[cfg(feature = "youtube-provider")]
+        {
+            if let Some(youtube) = config.provider.youtube.clone() {
+                providers.push(Box::new(youtube));
+            }
+        }
     for provider in &mut providers {
         provider
             .setup()

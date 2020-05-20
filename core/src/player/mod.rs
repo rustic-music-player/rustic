@@ -4,6 +4,7 @@ use std::thread;
 
 use crossbeam_channel::{select, Receiver};
 use failure::Error;
+use log::error;
 
 use crate::library::Track;
 pub use crate::player::backend::PlayerBackend;
@@ -48,13 +49,16 @@ impl Player {
         thread::spawn(move || {
             let player = player_2;
             loop {
-                select! {
+                let result = select! {
                     recv(player_rx) -> msg => {
-                        msg.map_err(|err| err.into()).and_then(|msg| player.handle_player_msg(msg));
+                        msg.map_err(|err| err.into()).and_then(|msg| player.handle_player_msg(msg))
                     },
                     recv(queue_rx) -> msg => {
-                        msg.map_err(|err| err.into()).and_then(|msg| player.handle_queue_msg(msg));
+                        msg.map_err(|err| err.into()).and_then(|msg| player.handle_queue_msg(msg))
                     }
+                };
+                if let Err(e) = result {
+                    error!("{:?}", e);
                 }
             }
         });
