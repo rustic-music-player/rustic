@@ -75,6 +75,10 @@ impl PlayerApiClient for TestApiClient {
         unimplemented!()
     }
 
+    async fn player_set_volume(&self, player_id: Option<&str>, volume: f32) -> Result<()> {
+        unimplemented!()
+    }
+
     fn observe_player(&self, player_id: Option<&str>) -> BoxStream<'static, PlayerEventModel> {
         unimplemented!()
     }

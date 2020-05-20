@@ -80,5 +80,7 @@ pub trait PlayerApiClient: Sync + Send {
 
     async fn player_control_pause(&self, player_id: Option<&str>) -> Result<()>;
 
+    async fn player_set_volume(&self, player_id: Option<&str>, volume: f32) -> Result<()>;
+
     fn observe_player(&self, player_id: Option<&str>) -> BoxStream<'static, PlayerEventModel>;
 }

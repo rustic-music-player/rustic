@@ -18,11 +18,13 @@ impl PlayerApiClient for RusticNativeClient {
             .into_iter()
             .map(|(id, player)| {
                 let track = player.queue.current().map(TrackModel::from);
+                let volume = player.backend.volume();
 
                 PlayerModel {
                     cursor: to_cursor(&id),
                     name: player.display_name.clone(),
                     playing: (player.backend.state() == PlayerState::Play),
+                    volume,
                     current: track,
                 }
             })
@@ -37,11 +39,13 @@ impl PlayerApiClient for RusticNativeClient {
             .or_else(|| self.app.get_default_player_id())
             .unwrap();
         let current = player.queue.current().map(TrackModel::from);
+        let volume = player.backend.volume();
 
         let state = PlayerModel {
             cursor: to_cursor(&player_id),
             name: player.display_name.clone(),
             playing: (player.backend.state() == PlayerState::Play),
+            volume,
             current,
         };
 
@@ -70,6 +74,13 @@ impl PlayerApiClient for RusticNativeClient {
         let player = self.get_player_or_default(player_id)?;
 
         player.backend.set_state(PlayerState::Pause)
+    }
+
+    async fn player_set_volume(&self, player_id: Option<&str>, volume: f32) -> Result<()> {
+        let player = self.get_player_or_default(player_id)?;
+        player.backend.set_volume(volume)?;
+
+        Ok(())
     }
 
     fn observe_player(&self, player_id: Option<&str>) -> BoxStream<'static, PlayerEventModel> {

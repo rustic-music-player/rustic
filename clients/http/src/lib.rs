@@ -272,6 +272,16 @@ impl<T> PlayerApiClient for RusticHttpClient<T> where T: HttpClient {
         Ok(())
     }
 
+    async fn player_set_volume(&self, player_id: Option<&str>, volume: f32) -> Result<()> {
+        let url = match player_id {
+            Some(id) => format!("/api/player/{}/volume", id),
+            None => format!("/api/player/volume")
+        };
+        self.post(&url, volume).await?;
+
+        Ok(())
+    }
+
     fn observe_player(&self, player_id: Option<&str>) -> BoxStream<'static, PlayerEventModel> {
         unimplemented!()
     }

@@ -96,3 +96,22 @@ pub async fn control_play(
 
     Ok(HttpResponse::NoContent().finish())
 }
+
+#[post("/player/volume")]
+pub async fn default_set_volume(client: web::Data<ApiClient>, volume: web::Json<f32>) -> Result<impl Responder> {
+    client.player_set_volume(None, volume.into_inner()).await?;
+
+    Ok(HttpResponse::NoContent().finish())
+}
+
+#[post("/players/{player}/volume")]
+pub async fn set_volume(
+    client: web::Data<ApiClient>,
+    params: web::Path<PlayerQuery>,
+    volume: web::Json<f32>
+) -> Result<impl Responder> {
+    let player_id = from_cursor(&params.player)?;
+    client.player_set_volume(Some(&player_id), volume.into_inner()).await?;
+
+    Ok(HttpResponse::NoContent().finish())
+}
