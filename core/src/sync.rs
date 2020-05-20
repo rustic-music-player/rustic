@@ -50,9 +50,11 @@ impl SyncState {
     }
 }
 
+const SYNC_INTERVAL: u64 = 5 * 60;
+
 pub async fn start(app: Arc<Rustic>) -> Result<(), Error> {
     info!("Starting Background Sync");
-    let mut interval = tokio::time::interval(Duration::from_secs(5 * 60));
+    let mut interval = tokio::time::interval(Duration::from_secs(SYNC_INTERVAL));
     loop {
         interval.tick().await;
         synchronize(&app).await;

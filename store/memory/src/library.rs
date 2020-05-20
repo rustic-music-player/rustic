@@ -234,21 +234,25 @@ impl Library for MemoryLibrary {
     }
 
     fn sync_playlist(&self, playlist: &mut Playlist) -> Result<(), Error> {
-        let has_playlist = {
-            let playlists = self.playlists.read().unwrap();
-            playlists
+        let (index, id) = {
+            let playlists = { self.playlists.read().unwrap() };
+            let index = playlists
                 .iter()
-                .find(|a| a.uri == playlist.uri)
-                .map(|a| a.id)
-        };
+                .position(|a| a.uri == playlist.uri);
+            let id: usize = index
+                .and_then(|index| playlists[index].id)
+                .unwrap_or_else(|| self.playlist_id.fetch_add(1, Ordering::Relaxed));
 
-        let id: usize = has_playlist
-            .and_then(|id| id)
-            .unwrap_or_else(|| self.playlist_id.fetch_add(1, Ordering::Relaxed));
+            (index, id)
+        };
         playlist.id = Some(id);
 
-        if has_playlist.is_none() {
-            self.playlists.write().unwrap().push(playlist.clone());
+        let mut playlists = self.playlists.write().unwrap();
+        if let Some(index) = index {
+            let target_playlist = playlists.get_mut(index).unwrap();
+            *target_playlist = playlist.clone();
+        } else {
+            playlists.push(playlist.clone());
         }
         Ok(())
     }
@@ -299,18 +303,15 @@ impl Library for MemoryLibrary {
     }
 
     fn sync_playlists(&self, playlists: &mut Vec<Playlist>) -> Result<(), Error> {
-        playlists
-            .iter_mut()
-            .filter(|playlist| {
-                let playlists = self.playlists.read().unwrap();
-                playlists
-                    .iter()
-                    .find(|p| p.uri == playlist.uri)
-                    .map(|_p| false)
-                    .unwrap_or(true)
-            })
-            .map(|mut p| self.add_playlist(&mut p))
-            .collect()
+        let stored_playlists = { self.playlists.read().unwrap().clone() };
+        for playlist in playlists {
+            if stored_playlists.contains(&playlist) {
+                self.sync_playlist(playlist)?;
+            }else {
+                self.add_playlist(playlist)?;
+            }
+        }
+        Ok(())
     }
 
     fn search(&self, query: String) -> Result<SearchResults, Error> {
