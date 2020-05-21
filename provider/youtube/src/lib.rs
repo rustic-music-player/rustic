@@ -12,7 +12,7 @@ use rustic_core::provider::{
 use rustic_core::{Album, Playlist, ProviderType, SharedLibrary, Track};
 use serde::Deserialize;
 use url::Url;
-use youtube::YoutubeApi;
+use youtube::{YoutubeApi, YoutubeDl};
 
 mod meta;
 mod video_metadata;
@@ -107,7 +107,8 @@ impl ProviderInstance for YoutubeProvider {
 
     async fn stream_url(&self, track: &Track) -> Result<String, Error> {
         let id = self.get_youtube_id(&track.uri)?;
-        let url = YoutubeApi::get_audio_stream_url(id).await?;
+        let youtube_dl = YoutubeDl::default();
+        let url = youtube_dl.get_audio_stream_url(id).await?;
 
         Ok(url)
     }
