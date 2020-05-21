@@ -34,7 +34,8 @@ pipeline {
                     post {
                         always {
                             recordIssues enabledForFailure: true, tool: cargo(pattern: 'cargo-build.json')
-                            archiveArtifacts artifacts: 'target/release/rustic', fingerprint: true
+                            sh 'mv target/release/rustic rustic-linux-x86_64'
+                            archiveArtifacts artifacts: 'rustic-linux-x86_64', fingerprint: true
                             //archiveArtifacts artifacts: 'target/release/rustic-*-extension', fingerprint: true
                             //archiveArtifacts artifacts: 'clients/http/wasm/pkg/*.tgz', fingerprint: true
                         }
@@ -50,7 +51,23 @@ pipeline {
                     }
                     post {
                         always {
-                            archiveArtifacts artifacts: 'target/release/*.exe', fingerprint: true
+                            bat 'mv target/release/rustic.exe rustic-win32-x86_64.exe'
+                            archiveArtifacts artifacts: 'rustic-win32-x86_64.exe', fingerprint: true
+                        }
+                    }
+                }
+
+                stage('macOS x64') {
+                    agent {
+                        label "osx"
+                    }
+                    steps {
+                        sh 'cargo build --bins --workspace --release'
+                    }
+                    post {
+                        always {
+                            sh 'mv target/release/rustic rustic-osx-x86_64'
+                            archiveArtifacts artifacts: 'rustic-osx-x86_64', fingerprint: true
                         }
                     }
                 }
