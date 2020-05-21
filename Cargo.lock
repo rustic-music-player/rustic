@@ -4000,7 +4000,7 @@ name = "protoc"
 version = "2.10.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 dependencies = [
- "log 0.4.8 (registry+https://github.com/rust-lang/crates.io-index)",
+ "log 0.3.9 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
 [[package]]
@@ -6173,7 +6173,7 @@ name = "twox-hash"
 version = "1.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 dependencies = [
- "rand 0.7.3 (registry+https://github.com/rust-lang/crates.io-index)",
+ "rand 0.3.23 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
 [[package]]
@@ -6821,7 +6821,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 [[package]]
 name = "youtube"
 version = "0.1.0"
-source = "git+https://github.com/maxjoehnk/youtube-rs.git#0f639749491b1f5201145b737f13f176a72b0216"
+source = "git+https://github.com/maxjoehnk/youtube-rs.git#05fb6c5d4e24d81d91bb0c64400a1056ae8e8188"
 dependencies = [
  "failure 0.1.6 (registry+https://github.com/rust-lang/crates.io-index)",
  "lazy_static 1.4.0 (registry+https://github.com/rust-lang/crates.io-index)",

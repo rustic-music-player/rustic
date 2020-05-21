@@ -13,8 +13,11 @@ use rustic_core::{Album, Playlist, ProviderType, SharedLibrary, Track};
 use serde::Deserialize;
 use url::Url;
 use youtube::{YoutubeApi, YoutubeDl};
+use youtube::models::SearchRequestBuilder;
+use crate::search_result::YoutubeSearchResult;
 
 mod meta;
+mod search_result;
 mod video_metadata;
 
 lazy_static! {
@@ -29,7 +32,11 @@ lazy_static! {
 const VIDEO_URI_PREFIX: &str = "youtube://video/";
 
 #[derive(Debug, Clone, Deserialize)]
-pub struct YoutubeProvider {}
+pub struct YoutubeProvider {
+    api_key: String,
+    #[serde(skip)]
+    client: Option<YoutubeApi>
+}
 
 impl YoutubeProvider {
     fn get_youtube_id<'a>(&self, uri: &'a str) -> Result<&'a str, failure::Error> {
@@ -43,6 +50,7 @@ impl YoutubeProvider {
 #[async_trait]
 impl ProviderInstance for YoutubeProvider {
     async fn setup(&mut self) -> Result<(), Error> {
+        self.client = Some(YoutubeApi::new(&self.api_key));
         Ok(())
     }
 
@@ -83,14 +91,22 @@ impl ProviderInstance for YoutubeProvider {
     }
 
     async fn search(&self, query: String) -> Result<Vec<ProviderItem>, Error> {
-        warn!("search is not implemented");
-        Ok(vec![])
+        let request = SearchRequestBuilder {
+            query: Some(query),
+            ..SearchRequestBuilder::default()
+        };
+        let response = self.client.as_ref().unwrap().search(request).await?;
+        let result = response.items.into_iter()
+            .map(YoutubeSearchResult::from)
+            .map(ProviderItem::from)
+            .collect();
+        Ok(result)
     }
 
     async fn resolve_track(&self, uri: &str) -> Result<Option<Track>, Error> {
         ensure!(uri.starts_with(VIDEO_URI_PREFIX), "Invalid Uri: {}", uri);
         let id = &uri[VIDEO_URI_PREFIX.len()..];
-        let content = youtube::YoutubeApi::get_video_info(id).await?;
+        let content = YoutubeApi::get_video_info(id).await?;
         let video = YoutubeVideoMetadata::from(content);
         let track = video.into();
 
