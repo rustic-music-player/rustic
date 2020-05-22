@@ -32,7 +32,7 @@ impl From<YoutubeVideoMetadata> for Track {
         Track {
             title: video.video_details.title,
             artist: Some(Artist {
-                uri: format!("youtube://author/{}", &video.video_details.channel_id),
+                uri: format!("youtube://channel/{}", &video.video_details.channel_id),
                 name: video.video_details.author,
                 id: None,
                 image_url: None,

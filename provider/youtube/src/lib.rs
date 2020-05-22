@@ -13,13 +13,17 @@ use rustic_core::provider::{
 };
 use tokio::sync::Mutex;
 use youtube::{YoutubeApi, YoutubeDl};
-use youtube::models::SearchRequestBuilder;
+use youtube::models::{SearchRequestBuilder, ListPlaylistsRequestBuilder, ListPlaylistItemsRequestBuilder};
 
 use crate::meta::META_YOUTUBE_DEFAULT_THUMBNAIL_URL;
 use crate::search_result::YoutubeSearchResult;
 use crate::video_metadata::YoutubeVideoMetadata;
+use crate::playlist::{YoutubePlaylist, PlaylistWithItems};
+use crate::playlist_item::YoutubePlaylistItem;
 
 mod meta;
+mod playlist;
+mod playlist_item;
 mod search_result;
 mod video_metadata;
 
@@ -65,7 +69,11 @@ impl ProviderInstance for YoutubeProvider {
         self.client = match (self.api_key.as_ref(), self.client_id.as_ref(), self.client_secret.as_ref()) {
             (Some(api_key), None, None) => Some(YoutubeApi::new(api_key)),
             (Some(api_key), Some(client_id), Some(client_secret)) => {
-                Some(YoutubeApi::new_with_oauth(api_key, client_id.clone(), client_secret.clone(), Some(YOUTUBE_REDIRECT_URI))?)
+                let api = YoutubeApi::new_with_oauth(api_key, client_id.clone(), client_secret.clone(), Some(YOUTUBE_REDIRECT_URI))?;
+                if let Err(err) = api.load_token().await {
+                    warn!("Could not load previous token {}", err);
+                }
+                Some(api)
             },
             (None, None, None) => None,
             _ => return Err(format_err!("Invalid provider configuration "))
@@ -120,8 +128,38 @@ impl ProviderInstance for YoutubeProvider {
     }
 
     async fn sync(&self, library: SharedLibrary) -> Result<SyncResult, Error> {
-        warn!("sync is not implemented");
-        Ok(SyncResult::empty())
+        if let Some(client) = self.client.as_ref() {
+            let request = ListPlaylistsRequestBuilder {
+                mine: Some(true),
+                max_results: Some(100),
+                ..ListPlaylistsRequestBuilder::default()
+            };
+            let response = client.list_playlists(request).await?;
+            let mut playlists = Vec::new();
+            for item in response.items.into_iter() {
+                let req = ListPlaylistItemsRequestBuilder {
+                    playlist_id: Some(item.id.clone()),
+                    ..ListPlaylistItemsRequestBuilder::default()
+                };
+                let items = client.list_playlist_items(req).await?;
+                let playlist = YoutubePlaylist::from(item);
+                let items = items.items.into_iter().map(YoutubePlaylistItem::from).collect();
+                playlists.push(PlaylistWithItems(playlist, items))
+            }
+            let mut playlists: Vec<Playlist> = playlists.into_iter().map(Playlist::from).collect();
+
+            let playlist_count = playlists.len();
+            library.sync_playlists(&mut playlists)?;
+
+            Ok(SyncResult {
+                playlists: playlist_count,
+                tracks: 0,
+                albums: 0,
+                artists: 0
+            })
+        }else {
+            Ok(SyncResult::empty())
+        }
     }
 
     fn root(&self) -> ProviderFolder {
