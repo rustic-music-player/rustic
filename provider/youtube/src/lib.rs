@@ -1,20 +1,23 @@
-use crate::meta::META_YOUTUBE_DEFAULT_THUMBNAIL_URL;
-use crate::video_metadata::YoutubeVideoMetadata;
-use async_trait::async_trait;
-use failure::{ensure, Error};
-use lazy_static::lazy_static;
-use log::warn;
-use rustic_core::library::MetaValue;
-use rustic_core::provider::{
-    AuthState, Authentication, CoverArt, InternalUri, ProviderFolder, ProviderInstance,
-    ProviderItem, SyncResult,
-};
-use rustic_core::{Album, Playlist, ProviderType, SharedLibrary, Track};
+use failure::{ensure, format_err, Error};
+use log::{debug, warn};
 use serde::Deserialize;
 use url::Url;
+
+use async_trait::async_trait;
+use lazy_static::lazy_static;
+use rustic_core::{Album, Playlist, ProviderType, SharedLibrary, Track};
+use rustic_core::library::MetaValue;
+use rustic_core::provider::{
+    Authentication, AuthState, CoverArt, InternalUri, ProviderFolder, ProviderInstance,
+    ProviderItem, SyncResult,
+};
+use tokio::sync::Mutex;
 use youtube::{YoutubeApi, YoutubeDl};
 use youtube::models::SearchRequestBuilder;
+
+use crate::meta::META_YOUTUBE_DEFAULT_THUMBNAIL_URL;
 use crate::search_result::YoutubeSearchResult;
+use crate::video_metadata::YoutubeVideoMetadata;
 
 mod meta;
 mod search_result;
@@ -27,15 +30,24 @@ lazy_static! {
             .case_insensitive(true)
             .build()
             .unwrap();
+    static ref STATE_CACHE: Mutex<Option<String>> = Mutex::new(None);
 }
+
+// TODO: configurable host
+const YOUTUBE_REDIRECT_URI: &str = "http://localhost:8080/api/providers/youtube/auth/redirect";
 
 const VIDEO_URI_PREFIX: &str = "youtube://video/";
 
 #[derive(Debug, Clone, Deserialize)]
 pub struct YoutubeProvider {
-    api_key: String,
+    #[serde(default)]
+    api_key: Option<String>,
+    #[serde(default)]
+    client_id: Option<String>,
+    #[serde(default)]
+    client_secret: Option<String>,
     #[serde(skip)]
-    client: Option<YoutubeApi>
+    client: Option<YoutubeApi>,
 }
 
 impl YoutubeProvider {
@@ -50,7 +62,14 @@ impl YoutubeProvider {
 #[async_trait]
 impl ProviderInstance for YoutubeProvider {
     async fn setup(&mut self) -> Result<(), Error> {
-        self.client = Some(YoutubeApi::new(&self.api_key));
+        self.client = match (self.api_key.as_ref(), self.client_id.as_ref(), self.client_secret.as_ref()) {
+            (Some(api_key), None, None) => Some(YoutubeApi::new(api_key)),
+            (Some(api_key), Some(client_id), Some(client_secret)) => {
+                Some(YoutubeApi::new_with_oauth(api_key, client_id.clone(), client_secret.clone(), Some(YOUTUBE_REDIRECT_URI))?)
+            },
+            (None, None, None) => None,
+            _ => return Err(format_err!("Invalid provider configuration "))
+        };
         Ok(())
     }
 
@@ -67,11 +86,37 @@ impl ProviderInstance for YoutubeProvider {
     }
 
     fn auth_state(&self) -> AuthState {
-        AuthState::Authenticated(None)
+        if let Some(client) = self.client.as_ref() {
+            if client.has_token() {
+                AuthState::Authenticated(None)
+            } else {
+                let (url, state) = client.get_oauth_url().unwrap();
+                let mut state_cache = STATE_CACHE.try_lock().unwrap();
+                *state_cache = Some(state);
+                AuthState::RequiresOAuth(url)
+            }
+        }else {
+            AuthState::NoAuthentication
+        }
     }
 
     async fn authenticate(&mut self, auth: Authentication) -> Result<(), Error> {
-        unimplemented!()
+        let client = self.client.as_mut().expect("client isn't setup yet");
+        use rustic_core::provider::Authentication::*;
+
+        match auth {
+            Token(token) | TokenWithState(token, _) => {
+                let mut state_cache = STATE_CACHE.lock().await;
+                let state = state_cache
+                    .take()
+                    .ok_or_else(|| format_err!("Missing state"))?;
+                debug!("State: {}", state);
+                client.request_token(token, state).await?;
+                client.store_token().await?;
+                Ok(())
+            }
+            _ => Err(format_err!("Invalid authentication method")),
+        }
     }
 
     async fn sync(&self, library: SharedLibrary) -> Result<SyncResult, Error> {

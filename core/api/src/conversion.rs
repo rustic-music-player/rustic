@@ -172,8 +172,9 @@ impl From<ProviderAuthModel> for Authentication {
             ProviderAuthModel::OAuthToken {
                 state: Some(state),
                 code,
+                scope: _
             } => Authentication::TokenWithState(code, state),
-            ProviderAuthModel::OAuthToken { state: None, code } => Authentication::Token(code),
+            ProviderAuthModel::OAuthToken { state: None, code, scope: _ } => Authentication::Token(code),
         }
     }
 }

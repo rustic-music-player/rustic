@@ -18,3 +18,4 @@ regex = "1.3"
 lazy_static = "1.4"
 maplit = "1"
 youtube = { git = "https://github.com/maxjoehnk/youtube-rs.git"}
+tokio = { version = "0.2", features = ["sync"] }

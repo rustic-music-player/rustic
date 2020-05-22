@@ -32,7 +32,7 @@ config.toml
 .cache
 
 # Auth caches
-.google-auth.json
+.google-auth.json.bck
 .spotify_token_cache.json
 
 # Static Http Files

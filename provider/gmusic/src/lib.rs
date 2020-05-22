@@ -3,7 +3,7 @@ use tokio::sync::Mutex;
 
 use async_trait::async_trait;
 use failure::{format_err, Error};
-use log::debug;
+use log::{debug, warn};
 use serde_derive::Deserialize;
 
 use gmusic::GoogleMusicApi;
@@ -62,7 +62,9 @@ impl provider::ProviderInstance for GooglePlayMusicProvider {
             self.client_secret.clone(),
             Some(GMUSIC_REDIRECT_URI),
         )?;
-        api.load_token().await?;
+        if let Err(err) = api.load_token().await {
+            warn!("Could not load previous token {}", err);
+        }
         self.client = Some(api);
 
         Ok(())
@@ -85,7 +87,7 @@ impl provider::ProviderInstance for GooglePlayMusicProvider {
         use provider::Authentication::*;
 
         match authenticate {
-            Token(token) => {
+            Token(token) | TokenWithState(token, _) => {
                 let mut state_cache = STATE_CACHE.lock().await;
                 let state = state_cache
                     .take()

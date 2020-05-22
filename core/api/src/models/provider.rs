@@ -43,6 +43,7 @@ pub enum ProviderTypeModel {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(untagged)]
 pub enum ProviderAuthModel {
-    OAuthToken { code: String, state: Option<String> },
+    OAuthToken { code: String, state: Option<String>, scope: Option<String> },
 }

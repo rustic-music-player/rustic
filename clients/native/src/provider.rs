@@ -35,9 +35,6 @@ impl ProviderApiClient for RusticNativeClient {
         let mut provider_models = Vec::new();
         for provider in self.app.providers.iter() {
             let provider = provider.get().await;
-            if !provider.auth_state().is_authenticated() {
-                continue;
-            }
             let provider_type = provider.provider();
             let auth_state = provider.auth_state();
 
