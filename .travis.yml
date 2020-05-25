@@ -1,4 +1,4 @@
-dist: xenial
+dist: bionic
 language: rust
 rust:
     - stable
@@ -10,8 +10,10 @@ matrix:
 addons:
     apt:
         packages:
-            - gstreamer1.0
             - libasound2-dev
+            - libgstreamer1.0-dev
+            - libgstreamer-plugins-base1.0-dev
+            - libgstreamer-plugins-bad1.0-dev
 install: []
 #    - curl https://rustwasm.github.io/wasm-pack/installer/init.sh -sSf | sh
 
