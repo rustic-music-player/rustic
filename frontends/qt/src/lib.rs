@@ -34,6 +34,5 @@ pub fn start(app: Arc<rustic::Rustic>) {
     let mut engine = QmlEngine::new();
     engine.load_file("qrc:/rustic/qml/main.qml".into());
     engine.exec();
-    app.exit();
     println!("exec done");
 }
