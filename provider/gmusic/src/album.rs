@@ -28,6 +28,7 @@ impl From<GmusicAlbum> for Album {
                 uri: String::new(),
                 image_url: None,
                 meta: HashMap::new(),
+                provider: ProviderType::GooglePlayMusic,
             }),
             artist_id: None,
             uri: format!("gmusic:album:{}", &album.id),

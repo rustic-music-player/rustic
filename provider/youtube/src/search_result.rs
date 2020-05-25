@@ -56,7 +56,8 @@ impl From<YoutubeSearchResult> for Track {
                 id: None,
                 uri: format!("youtube://author/{}", &result.snippet.channel_id),
                 name: result.snippet.channel_title,
-                image_url: None
+                image_url: None,
+                provider: ProviderType::Youtube,
             }),
             album: None,
             album_id: None,

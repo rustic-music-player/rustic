@@ -26,6 +26,7 @@ table! {
         name -> Text,
         image_url -> Nullable<Text>,
         uri -> Text,
+        provider -> Integer,
     }
 }
 

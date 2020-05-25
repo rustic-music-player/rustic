@@ -37,6 +37,7 @@ impl From<YoutubeVideoMetadata> for Track {
                 id: None,
                 image_url: None,
                 meta: HashMap::new(),
+                provider: ProviderType::Youtube,
             }),
             album: None,
             album_id: None,

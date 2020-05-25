@@ -35,6 +35,7 @@ impl From<PocketcastAlbum> for Album {
                 meta: hashmap!(
                     META_POCKETCASTS_PODCAST_UUID.into() => podcast.uuid.into()
                 ),
+                provider: ProviderType::Pocketcasts,
             }),
             tracks: vec![],
             provider: ProviderType::Pocketcasts,
@@ -57,6 +58,7 @@ impl From<PocketcastAlbum> for Artist {
             name: podcast.author,
             image_url: None,
             meta: HashMap::new(),
+            provider: ProviderType::Pocketcasts,
         }
     }
 }
@@ -89,6 +91,7 @@ impl From<PocketcastSearchResult> for Album {
                 name: podcast.author,
                 image_url: None,
                 meta: HashMap::new(),
+                provider: ProviderType::Pocketcasts,
             }),
             tracks: vec![],
             provider: ProviderType::Pocketcasts,

@@ -6,6 +6,7 @@ use serde_derive::{Deserialize, Serialize};
 use rustic_core::library::Artist;
 
 use crate::util::*;
+use rustic_core::ProviderType;
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct SpotifyFullArtist(FullArtist);
@@ -22,6 +23,7 @@ impl From<SpotifyFullArtist> for Artist {
             image_url: convert_images(&artist.images),
             uri: format!("spotify://artist/{}", artist.id),
             meta: HashMap::new(),
+            provider: ProviderType::Spotify,
         }
     }
 }
@@ -38,6 +40,7 @@ impl From<SpotifySimplifiedArtist> for Artist {
                 .map(|id| format!("spotify://artist/{}", id))
                 .unwrap(),
             meta: HashMap::new(),
+            provider: ProviderType::Spotify,
         }
     }
 }

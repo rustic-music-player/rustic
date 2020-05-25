@@ -1,6 +1,7 @@
 use core::Artist;
 use failure::Error;
 use schema::{artists, artists_meta};
+use entities::provider::{int_to_provider, provider_to_int};
 
 #[derive(Identifiable, Queryable, Associations, PartialEq, Debug)]
 #[table_name = "artists"]
@@ -9,6 +10,7 @@ pub struct ArtistEntity {
     pub name: String,
     pub image_url: Option<String>,
     pub uri: String,
+    pub provider: i32,
 }
 
 #[derive(Identifiable, Queryable, Associations, PartialEq, Debug)]
@@ -30,6 +32,7 @@ pub struct ArtistInsert {
     pub name: String,
     pub image_url: Option<String>,
     pub uri: String,
+    pub provider: i32,
 }
 
 impl ArtistEntity {
@@ -40,6 +43,7 @@ impl ArtistEntity {
             uri: self.uri,
             image_url: self.image_url,
             meta: unimplemented!(),
+            provider: int_to_provider(self.provider)?,
         })
     }
 }
@@ -50,6 +54,7 @@ impl From<Artist> for ArtistInsert {
             name: artist.name,
             image_url: artist.image_url,
             uri: artist.uri,
+            provider: provider_to_int(artist.provider),
         }
     }
 }

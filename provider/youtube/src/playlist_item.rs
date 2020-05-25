@@ -45,7 +45,8 @@ impl From<YoutubePlaylistItem> for Track {
                 uri: format!("youtube://channel/{}", resource.snippet.inner.channel_id),
                 name: resource.snippet.inner.channel_title,
                 image_url: None,
-                meta: HashMap::new()
+                meta: HashMap::new(),
+                provider: ProviderType::Youtube,
             }),
             has_coverart: true,
             duration: None,

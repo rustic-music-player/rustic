@@ -37,6 +37,7 @@ impl From<GmusicTrack> for Track {
                 uri: artist_uri,
                 image_url: None,
                 meta: HashMap::new(),
+                provider: ProviderType::GooglePlayMusic
             }),
             artist_id: None,
             album: None,

@@ -3,7 +3,8 @@ CREATE TABLE artists
   id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
   name VARCHAR(255) NOT NULL,
   image_url TEXT,
-  uri TEXT NOT NULL
+  uri TEXT NOT NULL,
+  provider INTEGER NOT NULL
 );
 CREATE TABLE artists_meta
 (

@@ -36,6 +36,7 @@ impl From<SoundcloudTrack> for Track {
                 meta: hashmap!(
                     META_SOUNDCLOUD_USER_ID.into() => track.user.id.into()
                 ),
+                provider: provider::ProviderType::Soundcloud,
             }),
             artist_id: None,
             album: None,

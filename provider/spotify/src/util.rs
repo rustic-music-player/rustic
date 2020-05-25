@@ -4,6 +4,7 @@ use rspotify::model::artist::SimplifiedArtist;
 use rspotify::model::image::Image;
 
 use rustic_core::library::Artist;
+use rustic_core::ProviderType;
 
 pub fn convert_images(images: &[Image]) -> Option<String> {
     images.first().map(|image| image.url.clone())
@@ -24,5 +25,6 @@ pub fn artists_to_artist(artists: Vec<SimplifiedArtist>) -> Option<Artist> {
         uri: String::new(),
         image_url: None,
         meta: HashMap::new(),
+        provider: ProviderType::Spotify,
     })
 }

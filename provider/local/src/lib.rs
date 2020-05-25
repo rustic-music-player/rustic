@@ -178,6 +178,7 @@ impl From<scanner::Track> for library::Track {
                 meta: hashmap!(
                     META_LOCAL_FILE_URL.into() => path.clone().into()
                 ),
+                provider: ProviderType::LocalMedia,
             }),
             has_coverart: track.has_coverart,
             provider: ProviderType::LocalMedia,
@@ -220,6 +221,7 @@ impl From<scanner::Track> for Option<library::Artist> {
             meta: hashmap!(
                 META_LOCAL_FILE_URL.into() => path.into()
             ),
+            provider: ProviderType::LocalMedia,
         })
     }
 }
