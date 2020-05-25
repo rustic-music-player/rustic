@@ -1,7 +1,10 @@
-use failure::{ensure, format_err, Error};
+use failure::{ensure, Error, format_err};
 use log::{debug, warn};
 use serde::Deserialize;
+use tokio::sync::Mutex;
 use url::Url;
+use youtube::{YoutubeApi, YoutubeDl};
+use youtube::models::{ListPlaylistItemsRequestBuilder, ListPlaylistsRequestBuilder, SearchRequestBuilder};
 
 use async_trait::async_trait;
 use lazy_static::lazy_static;
@@ -11,15 +14,12 @@ use rustic_core::provider::{
     Authentication, AuthState, CoverArt, InternalUri, ProviderFolder, ProviderInstance,
     ProviderItem, SyncResult,
 };
-use tokio::sync::Mutex;
-use youtube::{YoutubeApi, YoutubeDl};
-use youtube::models::{SearchRequestBuilder, ListPlaylistsRequestBuilder, ListPlaylistItemsRequestBuilder};
 
 use crate::meta::META_YOUTUBE_DEFAULT_THUMBNAIL_URL;
+use crate::playlist::{PlaylistWithItems, YoutubePlaylist};
+use crate::playlist_item::YoutubePlaylistItem;
 use crate::search_result::YoutubeSearchResult;
 use crate::video_metadata::YoutubeVideoMetadata;
-use crate::playlist::{YoutubePlaylist, PlaylistWithItems};
-use crate::playlist_item::YoutubePlaylistItem;
 
 mod meta;
 mod playlist;
@@ -34,6 +34,11 @@ lazy_static! {
             .case_insensitive(true)
             .build()
             .unwrap();
+    static ref YOUTUBE_PLAYLIST_REGEX: regex::Regex =
+        regex::RegexBuilder::new("youtube\\.com/playlist\\?list=([^&]+)")
+            .case_insensitive(true)
+            .build()
+            .unwrap();
     static ref STATE_CACHE: Mutex<Option<String>> = Mutex::new(None);
 }
 
@@ -41,6 +46,8 @@ lazy_static! {
 const YOUTUBE_REDIRECT_URI: &str = "http://localhost:8080/api/providers/youtube/auth/redirect";
 
 const VIDEO_URI_PREFIX: &str = "youtube://video/";
+const PLAYLIST_URI_PREFIX: &str = "youtube://playlist/";
+const CHANNEL_URI_PREFIX: &str = "youtube://channel/";
 
 #[derive(Debug, Clone, Deserialize)]
 pub struct YoutubeProvider {
@@ -134,19 +141,7 @@ impl ProviderInstance for YoutubeProvider {
                 max_results: Some(100),
                 ..ListPlaylistsRequestBuilder::default()
             };
-            let response = client.list_playlists(request).await?;
-            let mut playlists = Vec::new();
-            for item in response.items.into_iter() {
-                let req = ListPlaylistItemsRequestBuilder {
-                    playlist_id: Some(item.id.clone()),
-                    ..ListPlaylistItemsRequestBuilder::default()
-                };
-                let items = client.list_playlist_items(req).await?;
-                let playlist = YoutubePlaylist::from(item);
-                let items = items.items.into_iter().map(YoutubePlaylistItem::from).collect();
-                playlists.push(PlaylistWithItems(playlist, items))
-            }
-            let mut playlists: Vec<Playlist> = playlists.into_iter().map(Playlist::from).collect();
+            let mut playlists = YoutubeProvider::get_playlists(client, request).await?;
 
             let playlist_count = playlists.len();
             library.sync_playlists(&mut playlists)?;
@@ -201,7 +196,19 @@ impl ProviderInstance for YoutubeProvider {
     }
 
     async fn resolve_playlist(&self, uri: &str) -> Result<Option<Playlist>, Error> {
-        unimplemented!()
+        if let Some(client) = self.client.as_ref() {
+            ensure!(uri.starts_with(PLAYLIST_URI_PREFIX), "Invalid Uri: {}", uri);
+            let id = &uri[PLAYLIST_URI_PREFIX.len()..];
+            let request = ListPlaylistsRequestBuilder {
+                playlist_id: Some(id.into()),
+                ..ListPlaylistsRequestBuilder::default()
+            };
+            let playlists = YoutubeProvider::get_playlists(client, request).await?;
+
+            Ok(playlists.first().cloned())
+        }else {
+            Err(format_err!("client is not configured"))
+        }
     }
 
     async fn stream_url(&self, track: &Track) -> Result<String, Error> {
@@ -221,13 +228,39 @@ impl ProviderInstance for YoutubeProvider {
     }
 
     async fn resolve_share_url(&self, url: Url) -> Result<Option<InternalUri>, Error> {
-        if let Some(captures) = YOUTUBE_VIDEO_REGEX.captures(url.as_str()) {
+        let url = url.as_str();
+        if let Some(captures) = YOUTUBE_VIDEO_REGEX.captures(url) {
             let id = &captures[1];
             let internal_uri = format!("youtube://video/{}", id);
 
             Ok(Some(InternalUri::Track(internal_uri)))
+        } else if let Some(captures) = YOUTUBE_PLAYLIST_REGEX.captures(url) {
+            let id = &captures[1];
+            let internal_uri = format!("{}{}", PLAYLIST_URI_PREFIX, id);
+
+            Ok(Some(InternalUri::Playlist(internal_uri)))
         } else {
             Ok(None)
         }
+    }
+}
+
+impl YoutubeProvider {
+    async fn get_playlists(client: &YoutubeApi, request: ListPlaylistsRequestBuilder) -> Result<Vec<Playlist>, Error> {
+        let response = client.list_playlists(request).await?;
+        let mut playlists = Vec::new();
+        for item in response.items.into_iter() {
+            let req = ListPlaylistItemsRequestBuilder {
+                playlist_id: Some(item.id.clone()),
+                max_results: Some(100),
+                ..ListPlaylistItemsRequestBuilder::default()
+            };
+            let items = client.list_playlist_items(req).await?;
+            let playlist = YoutubePlaylist::from(item);
+            let items = items.items.into_iter().map(YoutubePlaylistItem::from).collect();
+            playlists.push(PlaylistWithItems(playlist, items))
+        }
+        let playlists: Vec<Playlist> = playlists.into_iter().map(Playlist::from).collect();
+        Ok(playlists)
     }
 }
