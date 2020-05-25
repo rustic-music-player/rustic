@@ -6822,7 +6822,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 [[package]]
 name = "youtube"
 version = "0.1.0"
-source = "git+https://github.com/maxjoehnk/youtube-rs.git#03ca1687e9544eee6f7f0f687a997fea631a8bf9"
+source = "git+https://github.com/maxjoehnk/youtube-rs.git#f75f707871984079354d3fd6d52cf212d78cd06f"
 dependencies = [
  "failure 0.1.6 (registry+https://github.com/rust-lang/crates.io-index)",
  "lazy_static 1.4.0 (registry+https://github.com/rust-lang/crates.io-index)",
