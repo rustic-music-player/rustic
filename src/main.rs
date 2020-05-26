@@ -13,7 +13,6 @@ use rustic_memory_store::MemoryLibrary;
 
 use crate::config::*;
 use crate::setup::*;
-use std::thread;
 
 mod config;
 mod options;
@@ -98,13 +97,12 @@ fn run_instance(options: options::CliOptions, config: config::Config) -> Result<
     let (app, client) = rt.block_on(setup_instance(&options, &config))?;
 
     let sync_app = Arc::clone(&app);
-    let mut threads = vec![
-        thread::spawn(move|| {
-            rt.block_on(rustic_core::sync::start(sync_app));
-        })
-    ];
 
-    setup_frontends(&config, &app, &client, &mut threads);
+    rt.spawn(rustic_core::sync::start(sync_app));
+
+    let mut threads = vec![];
+
+    rt.block_on(setup_frontends(&config, &app, &client, &mut threads))?;
 
     for handle in threads {
         let _ = handle.join();
@@ -123,7 +121,7 @@ fn connect_to_instance(options: options::CliOptions, config: config::Config) -> 
     Ok(())
 }
 
-fn setup_frontends(config: &config::Config, app: &Arc<Rustic>, client: &ApiClient, threads: &mut Vec<JoinHandle<()>>) {
+async fn setup_frontends(config: &config::Config, app: &Arc<Rustic>, client: &ApiClient, threads: &mut Vec<JoinHandle<()>>) -> Result<(), failure::Error> {
     #[cfg(feature = "mpd-frontend")]
         {
             if config.frontend.mpd.is_some() {
@@ -143,8 +141,7 @@ fn setup_frontends(config: &config::Config, app: &Arc<Rustic>, client: &ApiClien
 
     #[cfg(feature = "dbus-frontend")]
         {
-            let dbus_thread = dbus_frontend::start(Arc::clone(&app));
-            threads.push(dbus_thread);
+            rustic_dbus_frontend::start(Arc::clone(&client)).await?;
         }
 
     #[cfg(feature = "qt-frontend")]
@@ -156,4 +153,6 @@ fn setup_frontends(config: &config::Config, app: &Arc<Rustic>, client: &ApiClien
     if config.frontend.iced.is_some() {
         rustic_iced_frontend::start(Arc::clone(&client));
     }
+
+    Ok(())
 }
