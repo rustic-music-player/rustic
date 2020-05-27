@@ -1,14 +1,16 @@
 use std::fs::File;
 use std::io::prelude::*;
-use std::path::Path;
 #[cfg(feature = "google-cast-backend")]
 use std::net::IpAddr;
+use std::path::Path;
 
 use failure::Error;
 use serde::{Deserialize, Serialize};
 
 #[derive(Deserialize, Debug, Clone)]
 pub struct Config {
+    #[serde(default, rename = "credentials")]
+    pub credential_store: CredentialStoreConfig,
     #[serde(default)]
     pub frontend: FrontendConfig,
     #[serde(default)]
@@ -28,14 +30,28 @@ pub struct Config {
 impl Default for Config {
     fn default() -> Self {
         Config {
+            credential_store: CredentialStoreConfig::default(),
             frontend: FrontendConfig::default(),
             provider: ProviderConfig::default(),
             library: LibraryConfig::default(),
             players: default_backend(),
             extensions: ExtensionConfig::default(),
             discovery: DiscoveryConfig::default(),
-            client: ClientConfig::default()
+            client: ClientConfig::default(),
         }
+    }
+}
+
+#[derive(Deserialize, Debug, Clone)]
+#[serde(rename_all = "lowercase", tag = "type")]
+pub enum CredentialStoreConfig {
+    Keychain,
+    File { path: String },
+}
+
+impl Default for CredentialStoreConfig {
+    fn default() -> Self {
+        CredentialStoreConfig::Keychain
     }
 }
 
@@ -67,7 +83,7 @@ impl Default for FrontendConfig {
     }
 }
 
-#[derive(Deserialize, Clone, Debug, Default)]
+#[derive(Deserialize, Clone, Debug)]
 pub struct ProviderConfig {
     #[cfg(feature = "pocketcasts-provider")]
     pub pocketcasts: Option<rustic_pocketcasts_provider::PocketcastsProvider>,
@@ -81,6 +97,25 @@ pub struct ProviderConfig {
     pub local: Option<rustic_local_provider::LocalProvider>,
     #[cfg(feature = "youtube-provider")]
     pub youtube: Option<rustic_youtube_provider::YoutubeProvider>
+}
+
+impl Default for ProviderConfig {
+    fn default() -> Self {
+        ProviderConfig {
+            #[cfg(feature = "pocketcasts-provider")]
+            pocketcasts: Some(rustic_pocketcasts_provider::PocketcastsProvider::default()),
+            #[cfg(feature = "soundcloud-provider")]
+            soundcloud: None,
+            #[cfg(feature = "spotify-provider")]
+            spotify: None,
+            #[cfg(feature = "gmusic-provider")]
+            gmusic: None,
+            #[cfg(feature = "local-files-provider")]
+            local: rustic_local_provider::LocalProvider::new(),
+            #[cfg(feature = "youtube-provider")]
+            youtube: Some(rustic_youtube_provider::YoutubeProvider::default()),
+        }
+    }
 }
 
 #[derive(Deserialize, Clone, Debug)]

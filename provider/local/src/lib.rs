@@ -7,6 +7,7 @@ use serde_derive::Deserialize;
 use async_trait::async_trait;
 use rustic_core::library::{self, MetaValue, SharedLibrary};
 use rustic_core::provider::*;
+use rustic_core::CredentialStore;
 
 pub mod scanner;
 
@@ -18,7 +19,7 @@ pub struct LocalProvider {
 }
 
 impl LocalProvider {
-    pub fn default() -> Option<Self> {
+    pub fn new() -> Option<Self> {
         dirs::audio_dir().map(|path| LocalProvider { path })
     }
 }
@@ -37,7 +38,7 @@ impl ProviderInstance for LocalProvider {
         ProviderType::LocalMedia
     }
 
-    async fn setup(&mut self) -> Result<(), Error> {
+    async fn setup(&mut self, _cred_store: &dyn CredentialStore) -> Result<(), Error> {
         Ok(())
     }
 
@@ -45,7 +46,7 @@ impl ProviderInstance for LocalProvider {
         AuthState::NoAuthentication
     }
 
-    async fn authenticate(&mut self, _: Authentication) -> Result<(), Error> {
+    async fn authenticate(&mut self, _: Authentication, _cred_store: &dyn CredentialStore) -> Result<(), Error> {
         Ok(())
     }
 

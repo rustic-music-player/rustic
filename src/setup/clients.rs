@@ -1,15 +1,15 @@
 use std::sync::Arc;
 
 use rustic_api::{ApiClient, RusticApiClient};
-use rustic_core::Rustic;
+use rustic_core::{Rustic, CredentialStore};
 use rustic_extension_api::ExtensionManager;
 
 use crate::config::ClientConfig;
 use crate::options;
 
-pub(crate) fn setup_client(app: &Arc<Rustic>, extensions: ExtensionManager) -> ApiClient {
+pub(crate) fn setup_client(app: &Arc<Rustic>, extensions: ExtensionManager, cred_store: Box<dyn CredentialStore>) -> ApiClient {
     let client: Box<dyn RusticApiClient> = {
-        let client = rustic_native_client::RusticNativeClient::new(Arc::clone(app), extensions);
+        let client = rustic_native_client::RusticNativeClient::new(Arc::clone(app), extensions, cred_store);
         Box::new(client)
     };
     Arc::new(client)

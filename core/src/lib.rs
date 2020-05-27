@@ -13,8 +13,10 @@ use crate::player::Player;
 pub use crate::player::{PlayerBackend, PlayerEvent, PlayerState};
 use crate::provider::{CoverArt, InternalUri};
 pub use crate::provider::{Explorer, Provider, ProviderType};
+pub use crate::cred_store::{CredentialStore, Credentials};
 
 pub mod cache;
+mod cred_store;
 pub mod library;
 pub mod player;
 pub mod provider;

@@ -8,7 +8,7 @@ use youtube::models::{ListPlaylistItemsRequestBuilder, ListPlaylistsRequestBuild
 
 use async_trait::async_trait;
 use lazy_static::lazy_static;
-use rustic_core::{Album, Playlist, ProviderType, SharedLibrary, Track};
+use rustic_core::{Album, Playlist, ProviderType, SharedLibrary, Track, CredentialStore};
 use rustic_core::library::MetaValue;
 use rustic_core::provider::{
     Authentication, AuthState, CoverArt, InternalUri, ProviderFolder, ProviderInstance,
@@ -49,7 +49,7 @@ const VIDEO_URI_PREFIX: &str = "youtube://video/";
 const PLAYLIST_URI_PREFIX: &str = "youtube://playlist/";
 const CHANNEL_URI_PREFIX: &str = "youtube://channel/";
 
-#[derive(Debug, Clone, Deserialize)]
+#[derive(Debug, Clone, Deserialize, Default)]
 pub struct YoutubeProvider {
     #[serde(default)]
     api_key: Option<String>,
@@ -72,7 +72,7 @@ impl YoutubeProvider {
 
 #[async_trait]
 impl ProviderInstance for YoutubeProvider {
-    async fn setup(&mut self) -> Result<(), Error> {
+    async fn setup(&mut self, cred_store: &dyn CredentialStore) -> Result<(), Error> {
         self.client = match (self.api_key.as_ref(), self.client_id.as_ref(), self.client_secret.as_ref()) {
             (Some(api_key), None, None) => Some(YoutubeApi::new(api_key)),
             (Some(api_key), Some(client_id), Some(client_secret)) => {
@@ -115,7 +115,7 @@ impl ProviderInstance for YoutubeProvider {
         }
     }
 
-    async fn authenticate(&mut self, auth: Authentication) -> Result<(), Error> {
+    async fn authenticate(&mut self, auth: Authentication, cred_store: &dyn CredentialStore) -> Result<(), Error> {
         let client = self.client.as_mut().expect("client isn't setup yet");
         use rustic_core::provider::Authentication::*;
 

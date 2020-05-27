@@ -9,7 +9,7 @@ use serde_derive::Deserialize;
 use gmusic::GoogleMusicApi;
 use lazy_static::lazy_static;
 use rustic_core::library::MetaValue;
-use rustic_core::{provider, Album, Playlist, SharedLibrary, Track};
+use rustic_core::{provider, Album, Playlist, SharedLibrary, Track, CredentialStore};
 
 use crate::album::GmusicAlbum;
 use crate::meta::{META_GMUSIC_COVER_ART_URL, META_GMUSIC_STORE_ID};
@@ -56,7 +56,7 @@ impl GooglePlayMusicProvider {
 
 #[async_trait]
 impl provider::ProviderInstance for GooglePlayMusicProvider {
-    async fn setup(&mut self) -> Result<(), Error> {
+    async fn setup(&mut self, _cred_store: &dyn CredentialStore) -> Result<(), Error> {
         let api = GoogleMusicApi::new(
             self.client_id.clone(),
             self.client_secret.clone(),
@@ -82,7 +82,7 @@ impl provider::ProviderInstance for GooglePlayMusicProvider {
         }
     }
 
-    async fn authenticate(&mut self, authenticate: provider::Authentication) -> Result<(), Error> {
+    async fn authenticate(&mut self, authenticate: provider::Authentication, _cred_store: &dyn CredentialStore) -> Result<(), Error> {
         let client = self.client.as_mut().expect("client isn't setup yet");
         use provider::Authentication::*;
 

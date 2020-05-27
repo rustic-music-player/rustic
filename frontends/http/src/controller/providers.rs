@@ -1,4 +1,4 @@
-use actix_web::{get, web, Responder, Result};
+use actix_web::{get, post, web, Responder, Result};
 use serde::Deserialize;
 
 use rustic_api::models::{ProviderAuthModel, ProviderTypeModel};
@@ -40,6 +40,19 @@ pub async fn get_available_providers(client: web::Data<ApiClient>) -> Result<imp
     let providers = client.get_available_providers().await?;
 
     Ok(web::Json(providers))
+}
+
+#[post("/providers/{provider}/auth")]
+pub async fn provider_basic_auth(
+    params: web::Path<ProviderParams>,
+    body: web::Json<ProviderAuthModel>,
+    client: web::Data<ApiClient>,
+) -> Result<impl Responder> {
+    client
+        .authenticate_provider(params.provider, body.into_inner())
+        .await?;
+
+    Ok(web::HttpResponse::NoContent().finish())
 }
 
 #[get("/providers/{provider}/auth/redirect")]

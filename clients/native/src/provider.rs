@@ -78,7 +78,8 @@ impl ProviderApiClient for RusticNativeClient {
             // TODO: we should await instead of blocking
             let mut provider = provider.get_mut().await;
             let auth = Authentication::from(auth);
-            provider.authenticate(auth).await?;
+            let cred_store = self.credential_store.as_ref().as_ref();
+            provider.authenticate(auth, cred_store).await?;
         }
 
         Ok(())

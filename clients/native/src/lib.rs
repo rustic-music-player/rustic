@@ -8,7 +8,7 @@ use rustic_api::client::*;
 use rustic_api::cursor::from_cursor;
 use rustic_api::models::*;
 use rustic_core::provider::ProviderItem;
-use rustic_core::{Album, Artist, Provider, Rustic, SingleQuery, Track};
+use rustic_core::{Album, Artist, Provider, Rustic, SingleQuery, Track, CredentialStore};
 use rustic_extension_api::ExtensionManager;
 
 mod library;
@@ -21,11 +21,12 @@ mod stream_util;
 pub struct RusticNativeClient {
     pub(crate) app: Arc<Rustic>,
     pub(crate) extensions: ExtensionManager,
+    pub(crate) credential_store: Arc<Box<dyn CredentialStore>>,
 }
 
 impl RusticNativeClient {
-    pub fn new(app: Arc<Rustic>, extensions: ExtensionManager) -> RusticNativeClient {
-        RusticNativeClient { app, extensions }
+    pub fn new(app: Arc<Rustic>, extensions: ExtensionManager, cred_store: Box<dyn CredentialStore>) -> RusticNativeClient {
+        RusticNativeClient { app, extensions, credential_store: Arc::new(cred_store) }
     }
 }
 

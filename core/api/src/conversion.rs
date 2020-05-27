@@ -1,11 +1,11 @@
 use futures::StreamExt;
 
+use rustic_core::{Album, Artist, PlayerEvent, PlayerState, Playlist, ProviderType, Track};
 use rustic_core::provider::{
-    AuthState, Authentication, CoverArt, InternalUri, ProviderFolder, ProviderItem,
+    Authentication, AuthState, CoverArt, InternalUri, ProviderFolder, ProviderItem,
     ProviderItemType,
 };
 use rustic_core::sync::{SyncEvent, SyncItem, SyncItemState};
-use rustic_core::{Album, Artist, PlayerEvent, PlayerState, Playlist, ProviderType, Track};
 use rustic_extension_api::ExtensionMetadata;
 
 use crate::cursor::to_cursor;
@@ -175,6 +175,7 @@ impl From<ProviderAuthModel> for Authentication {
                 scope: _
             } => Authentication::TokenWithState(code, state),
             ProviderAuthModel::OAuthToken { state: None, code, scope: _ } => Authentication::Token(code),
+            ProviderAuthModel::UserPass { username, password } => Authentication::Password(username, password)
         }
     }
 }

@@ -9,7 +9,7 @@ use url::Url;
 use async_trait::async_trait;
 
 use crate::library::{Album, SharedLibrary, Track};
-use crate::Playlist;
+use crate::{Playlist, CredentialStore};
 
 pub use self::explorer::Explorer;
 pub use self::folder::ProviderFolder;
@@ -79,7 +79,7 @@ impl SyncResult {
     }
 }
 
-#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq, Hash)]
 #[serde(rename_all = "lowercase")]
 pub enum ProviderType {
     Pocketcasts,
@@ -94,12 +94,12 @@ pub enum ProviderType {
 
 #[async_trait]
 pub trait ProviderInstance: Debug {
-    async fn setup(&mut self) -> Result<(), Error>;
+    async fn setup(&mut self, cred_store: &dyn CredentialStore) -> Result<(), Error>;
     fn title(&self) -> &'static str;
     fn uri_scheme(&self) -> &'static str;
     fn provider(&self) -> ProviderType;
     fn auth_state(&self) -> AuthState;
-    async fn authenticate(&mut self, auth: Authentication) -> Result<(), Error>;
+    async fn authenticate(&mut self, auth: Authentication, cred_store: &dyn CredentialStore) -> Result<(), Error>;
     async fn sync(&self, library: SharedLibrary) -> Result<SyncResult, Error>;
     fn root(&self) -> ProviderFolder;
     async fn navigate(&self, path: Vec<String>) -> Result<ProviderFolder, Error>;

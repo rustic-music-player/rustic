@@ -7,7 +7,7 @@ use serde::Deserialize;
 use async_trait::async_trait;
 use lazy_static::lazy_static;
 use rustic_core::library::{Album, MetaValue, Playlist, SharedLibrary, Track};
-use rustic_core::provider;
+use rustic_core::{provider, CredentialStore, Credentials};
 
 use crate::playlist::SoundcloudPlaylist;
 use crate::track::SoundcloudTrack;
@@ -49,7 +49,10 @@ impl SoundcloudProvider {
 
 #[async_trait]
 impl provider::ProviderInstance for SoundcloudProvider {
-    async fn setup(&mut self) -> Result<(), Error> {
+    async fn setup(&mut self, cred_store: &dyn CredentialStore) -> Result<(), Error> {
+        if let Some(Credentials::Token(token)) = cred_store.get_credentials(provider::ProviderType::Soundcloud).await? {
+            self.auth_token = Some(token);
+        }
         Ok(())
     }
 
@@ -70,16 +73,17 @@ impl provider::ProviderInstance for SoundcloudProvider {
             provider::AuthState::Authenticated(None)
         } else {
             provider::AuthState::RequiresOAuth(
-                format!("https://soundcloud.com/connect?client_id={}&response_type=token&redirect_uri={}/api/auth/soundcloud", self.client_id, SOUNDCLOUD_REDIRECT_URI)
+                format!("https://soundcloud.com/connect?client_id={}&response_type=token&redirect_uri={}/api/auth/soundcloud", &self.client_id, SOUNDCLOUD_REDIRECT_URI)
             )
         }
     }
 
-    async fn authenticate(&mut self, auth: provider::Authentication) -> Result<(), Error> {
+    async fn authenticate(&mut self, auth: provider::Authentication, cred_store: &dyn CredentialStore) -> Result<(), Error> {
         use provider::Authentication::*;
         match auth {
             Token(token) => {
-                self.auth_token = Some(token);
+                self.auth_token = Some(token.clone());
+                cred_store.store_credentials(provider::ProviderType::Soundcloud, Credentials::Token(token)).await?;
                 Ok(())
             }
             _ => Err(format_err!("Invalid authentication method")),

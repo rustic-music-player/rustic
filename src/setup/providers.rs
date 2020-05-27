@@ -1,11 +1,11 @@
 use log::error;
 
-use rustic_core::Provider;
+use rustic_core::{Provider, CredentialStore};
 
 use crate::config::Config;
 use rustic_core::provider::ProviderInstance;
 
-pub(crate) async fn setup_providers(config: &Config) -> Result<Vec<Provider>, failure::Error> {
+pub(crate) async fn setup_providers(config: &Config, cred_store: &dyn CredentialStore) -> Result<Vec<Provider>, failure::Error> {
     let mut providers: Vec<Box<dyn ProviderInstance + Send + Sync>> = vec![];
 
     #[cfg(feature = "pocketcasts-provider")]
@@ -46,7 +46,7 @@ pub(crate) async fn setup_providers(config: &Config) -> Result<Vec<Provider>, fa
         }
     for provider in &mut providers {
         provider
-            .setup()
+            .setup(cred_store)
             .await
             .unwrap_or_else(|err| error!("Can't setup {} provider: {:?}", provider.title(), err));
     }

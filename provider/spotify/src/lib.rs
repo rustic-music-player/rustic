@@ -7,7 +7,7 @@ use serde_derive::Deserialize;
 
 use async_trait::async_trait;
 use rustic_core::library::{Album, Artist, MetaValue, Playlist, SharedLibrary, Track};
-use rustic_core::provider;
+use rustic_core::{provider, CredentialStore};
 
 use crate::album::*;
 use crate::artist::*;
@@ -127,7 +127,7 @@ impl SpotifyProvider {
 
 #[async_trait]
 impl rustic_core::provider::ProviderInstance for SpotifyProvider {
-    async fn setup(&mut self) -> Result<(), Error> {
+    async fn setup(&mut self, cred_store: &dyn CredentialStore) -> Result<(), Error> {
         let mut oauth = self.get_oauth_client();
 
         if let Some(token) = oauth.get_cached_token().await {
@@ -148,7 +148,7 @@ impl rustic_core::provider::ProviderInstance for SpotifyProvider {
         }
     }
 
-    async fn authenticate(&mut self, auth: provider::Authentication) -> Result<(), Error> {
+    async fn authenticate(&mut self, auth: provider::Authentication, cred_store: &dyn CredentialStore) -> Result<(), Error> {
         use provider::Authentication::*;
         match auth {
             Token(token) => {

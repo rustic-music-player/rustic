@@ -6,15 +6,17 @@ use log::{error, LevelFilter, trace};
 use structopt::StructOpt;
 
 use rustic_api::ApiClient;
-use rustic_core::Rustic;
+use rustic_core::{Rustic, CredentialStore};
 #[cfg(feature = "google-cast-backend")]
 use rustic_google_cast_backend::GoogleCastBackend;
 use rustic_memory_store::MemoryLibrary;
 
 use crate::config::*;
+use crate::credential_stores::*;
 use crate::setup::*;
 
 mod config;
+mod credential_stores;
 mod options;
 mod setup;
 
@@ -55,7 +57,11 @@ fn is_remote(options: &options::CliOptions, config: &config::Config) -> bool {
 
 async fn setup_instance(options: &options::CliOptions, config: &config::Config) -> Result<(Arc<Rustic>, ApiClient), failure::Error> {
     let extensions = load_extensions(&options, &config)?;
-    let providers = setup_providers(&config).await?;
+    let credential_store: Box<dyn CredentialStore> = match config.credential_store {
+        CredentialStoreConfig::Keychain => Box::new(KeychainCredentialStore),
+        CredentialStoreConfig::File { ref path } => Box::new(FileCredentialStore::load(path).await?)
+    };
+    let providers = setup_providers(&config, credential_store.as_ref()).await?;
 
     let store: Box<dyn rustic_core::Library> = match config.library {
         LibraryConfig::Memory => Box::new(MemoryLibrary::new()),
@@ -71,8 +77,9 @@ async fn setup_instance(options: &options::CliOptions, config: &config::Config) 
         }
     };
 
+
     let app = Rustic::new(store, providers)?;
-    let client = setup_client(&app, extensions);
+    let client = setup_client(&app, extensions, credential_store);
 
     for player_config in config.players.iter() {
         if let Err(e) = setup_player(&app, player_config) {

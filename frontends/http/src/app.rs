@@ -61,6 +61,7 @@ fn build_api(app: Arc<Rustic>, client: ApiClient, ws_server: Addr<SocketServer>)
         .service(controller::providers::navigate)
         .service(controller::providers::get_available_providers)
         .service(controller::providers::provider_token_auth)
+        .service(controller::providers::provider_basic_auth)
         .service(socket_service(ws_server))
 }
 

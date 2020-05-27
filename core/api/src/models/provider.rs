@@ -46,4 +46,5 @@ pub enum ProviderTypeModel {
 #[serde(untagged)]
 pub enum ProviderAuthModel {
     OAuthToken { code: String, state: Option<String>, scope: Option<String> },
+    UserPass { username: String, password: String }
 }
