@@ -136,7 +136,7 @@ async fn setup_apis(config: &config::Config, app: &Arc<Rustic>, client: &ApiClie
     #[cfg(feature = "mpd-frontend")]
         {
             if config.frontend.mpd.is_some() {
-                let mpd_thread = mpd_frontend::start(config.frontend.mpd.clone(), Arc::clone(&app));
+                let mpd_thread = rustic_mpd_frontend::start(config.frontend.mpd.clone(), Arc::clone(&app));
                 threads.push(mpd_thread);
             }
         }
@@ -162,7 +162,7 @@ async fn setup_apis(config: &config::Config, app: &Arc<Rustic>, client: &ApiClie
 fn run_frontend(config: &config::Config, app: &Arc<Rustic>, client: &ApiClient) {
     #[cfg(feature = "qt-frontend")]
         {
-            qt_frontend::start(Arc::clone(&app));
+            rustic_qt_frontend::start(Arc::clone(&app));
         }
 
     #[cfg(feature = "iced-frontend")]
