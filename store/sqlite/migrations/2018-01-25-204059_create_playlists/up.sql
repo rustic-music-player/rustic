@@ -1,7 +1,9 @@
 CREATE TABLE playlists
 (
     id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
-    title VARCHAR(255) NOT NULL
+    title VARCHAR(255) NOT NULL,
+    uri TEXT NOT NULL,
+    provider INTEGER NOT NULL
 );
 CREATE TABLE playlist_tracks
 (

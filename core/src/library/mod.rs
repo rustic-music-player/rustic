@@ -13,3 +13,7 @@ pub use self::meta::MetaValue;
 pub use self::playlist::Playlist;
 pub use self::queries::*;
 pub use self::track::Track;
+
+pub trait Identifiable {
+    fn get_identifier(&self) -> SingleQueryIdentifier;
+}

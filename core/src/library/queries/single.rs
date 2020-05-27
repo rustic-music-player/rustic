@@ -12,6 +12,15 @@ pub enum SingleQueryIdentifier {
     Uri(String),
 }
 
+impl From<SingleQueryIdentifier> for SingleQuery {
+    fn from(identifier: SingleQueryIdentifier) -> Self {
+        SingleQuery {
+            identifier,
+            ..SingleQuery::default()
+        }
+    }
+}
+
 impl Default for SingleQueryIdentifier {
     fn default() -> SingleQueryIdentifier {
         SingleQueryIdentifier::Id(0)

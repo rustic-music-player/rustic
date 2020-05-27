@@ -1,8 +1,10 @@
-use crate::library::{Artist, MetaValue};
-use crate::provider::ProviderType;
-use crate::Track;
-use serde_derive::{Deserialize, Serialize};
 use std::collections::HashMap;
+
+use serde_derive::{Deserialize, Serialize};
+
+use crate::{SingleQueryIdentifier, Track};
+use crate::library::{Artist, MetaValue, Identifiable};
+use crate::provider::ProviderType;
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct Album {
@@ -24,3 +26,13 @@ impl PartialEq for Album {
 }
 
 impl Eq for Album {}
+
+impl Identifiable for Album {
+    fn get_identifier(&self) -> SingleQueryIdentifier {
+        if let Some(id) = self.id {
+            SingleQueryIdentifier::Id(id)
+        } else {
+            SingleQueryIdentifier::Uri(self.uri.clone())
+        }
+    }
+}

@@ -12,7 +12,7 @@ CREATE TABLE albums_meta
 (
     album_id INTEGER NOT NULL,
     key VARCHAR(255) NOT NULL,
-    bool_variant INTEGER(1),
+    bool_variant BOOLEAN,
     float_variant REAL,
     string_variant TEXT,
     int_variant INTEGER(64),

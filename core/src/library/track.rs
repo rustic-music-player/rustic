@@ -3,8 +3,9 @@ use std::collections::HashMap;
 
 use serde_derive::{Deserialize, Serialize};
 
-use crate::library::{Album, Artist, MetaValue};
+use crate::library::{Album, Artist, MetaValue, Identifiable};
 use crate::provider::ProviderType;
+use crate::SingleQueryIdentifier;
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct Track {
@@ -47,5 +48,15 @@ impl std::fmt::Display for Track {
             write!(f, "{} - ", album.title)?;
         }
         write!(f, "{}", &self.title)
+    }
+}
+
+impl Identifiable for Track {
+    fn get_identifier(&self) -> SingleQueryIdentifier {
+        if let Some(id) = self.id {
+            SingleQueryIdentifier::Id(id)
+        } else {
+            SingleQueryIdentifier::Uri(self.uri.clone())
+        }
     }
 }

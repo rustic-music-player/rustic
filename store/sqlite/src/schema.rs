@@ -13,7 +13,7 @@ table! {
     albums_meta (album_id, key) {
         album_id -> Integer,
         key -> Text,
-        bool_variant -> Nullable<Integer>,
+        bool_variant -> Nullable<Bool>,
         float_variant -> Nullable<Float>,
         string_variant -> Nullable<Text>,
         int_variant -> Nullable<Integer>,
@@ -34,7 +34,7 @@ table! {
     artists_meta (artist_id, key) {
         artist_id -> Integer,
         key -> Text,
-        bool_variant -> Nullable<Integer>,
+        bool_variant -> Nullable<Bool>,
         float_variant -> Nullable<Float>,
         string_variant -> Nullable<Text>,
         int_variant -> Nullable<Integer>,
@@ -52,6 +52,8 @@ table! {
     playlists (id) {
         id -> Integer,
         title -> Text,
+        uri -> Text,
+        provider -> Integer,
     }
 }
 
@@ -62,7 +64,7 @@ table! {
         artist_id -> Nullable<Integer>,
         album_id -> Nullable<Integer>,
         uri -> Text,
-        image_url -> Nullable<Text>,
+        has_coverart -> Bool,
         duration -> Nullable<Integer>,
         provider -> Integer,
     }
@@ -72,7 +74,7 @@ table! {
     tracks_meta (track_id, key) {
         track_id -> Integer,
         key -> Text,
-        bool_variant -> Nullable<Integer>,
+        bool_variant -> Nullable<Bool>,
         float_variant -> Nullable<Float>,
         string_variant -> Nullable<Text>,
         int_variant -> Nullable<Integer>,

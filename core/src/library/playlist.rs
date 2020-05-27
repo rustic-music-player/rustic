@@ -1,7 +1,10 @@
-use crate::library::Track;
-use crate::provider::ProviderType;
-use serde_derive::{Deserialize, Serialize};
 use std::cmp::Ordering;
+
+use serde_derive::{Deserialize, Serialize};
+
+use crate::library::{Identifiable, Track};
+use crate::provider::ProviderType;
+use crate::SingleQueryIdentifier;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Playlist {
@@ -29,5 +32,15 @@ impl PartialOrd for Playlist {
 impl Ord for Playlist {
     fn cmp(&self, other: &Playlist) -> Ordering {
         self.title.cmp(&other.title)
+    }
+}
+
+impl Identifiable for Playlist {
+    fn get_identifier(&self) -> SingleQueryIdentifier {
+        if let Some(id) = self.id {
+            SingleQueryIdentifier::Id(id)
+        } else {
+            SingleQueryIdentifier::Uri(self.uri.clone())
+        }
     }
 }

@@ -3,30 +3,34 @@ extern crate diesel;
 #[macro_use]
 extern crate diesel_migrations;
 #[macro_use]
-extern crate log;
-#[macro_use]
 extern crate failure;
+#[macro_use]
+extern crate log;
 extern crate rustic_core;
-extern crate rustic_core as core;
+
+use std::sync::{Arc, Mutex};
+
+use diesel::prelude::*;
+use diesel::sqlite::SqliteConnection;
+use failure::Error;
+
+use rustic_core::{Album, Artist, MultiQuery, Playlist, SearchResults, SingleQuery, Track};
+
+use crate::repositories::*;
 
 embed_migrations!();
 
 mod entities;
+mod repositories;
 mod schema;
-
-use diesel::insert_into;
-use diesel::prelude::*;
-use diesel::sqlite::SqliteConnection;
-
-use core::{Album, Artist, MultiQuery, Playlist, SearchResults, SingleQuery, Track};
-use std::sync::{Arc, Mutex};
-
-use failure::Error;
-use rustic_core::SingleQueryIdentifier;
 
 #[derive(Clone)]
 pub struct SqliteLibrary {
     connection: Arc<Mutex<SqliteConnection>>,
+    albums: AlbumRepository,
+    artists: ArtistRepository,
+    tracks: TrackRepository,
+    playlists: PlaylistRepository,
 }
 
 impl SqliteLibrary {
@@ -37,199 +41,117 @@ impl SqliteLibrary {
         debug!("Migrating Database");
         embedded_migrations::run(&connection)?;
 
+        let connection = Arc::new(Mutex::new(connection));
+        let album_repository = AlbumRepository::new(Arc::clone(&connection));
+        let artist_repository = ArtistRepository::new(Arc::clone(&connection));
+        let track_repository = TrackRepository::new(Arc::clone(&connection));
+        let playlist_repository = PlaylistRepository::new(Arc::clone(&connection));
+
         Ok(SqliteLibrary {
-            connection: Arc::new(Mutex::new(connection)),
+            connection,
+            albums: album_repository,
+            artists: artist_repository,
+            tracks: track_repository,
+            playlists: playlist_repository,
         })
     }
 }
 
-impl core::Library for SqliteLibrary {
+impl rustic_core::Library for SqliteLibrary {
     fn query_track(&self, query: SingleQuery) -> Result<Option<Track>, Error> {
-        use schema::tracks::dsl::*;
-
-        let connection = self.connection.lock().unwrap();
-
-        let query = match query.identifier {
-            SingleQueryIdentifier::Id(track_id) => tracks
-                .find(track_id as i32)
-                .first::<entities::TrackEntity>(&*connection),
-            SingleQueryIdentifier::Uri(query_uri) => tracks
-                .filter(uri.eq(query_uri))
-                .first::<entities::TrackEntity>(&*connection),
-        };
-
-        query
-            .optional()
-            .map_err(Error::from)
-            .and_then(|track| match track {
-                Some(entity) => Ok(Some(entity.into_track()?)),
-                None => Ok(None),
-            })
+        self.tracks.query(query)
     }
 
     fn query_tracks(&self, query: MultiQuery) -> Result<Vec<Track>, Error> {
-        use schema::tracks::dsl::*;
-
-        let connection = self.connection.lock().unwrap();
-
-        let track_list = tracks.load::<entities::TrackEntity>(&*connection)?;
-
-        track_list
-            .into_iter()
-            .map(|entity| entity.into_track())
-            .collect()
+        self.tracks.query_all(query)
     }
 
     fn query_album(&self, query: SingleQuery) -> Result<Option<Album>, Error> {
-        use schema::albums::dsl::*;
-
-        let connection = self.connection.lock().unwrap();
-
-        let query = match query.identifier {
-            SingleQueryIdentifier::Id(album_id) => albums
-                .find(album_id as i32)
-                .first::<entities::AlbumEntity>(&*connection),
-            SingleQueryIdentifier::Uri(query_uri) => albums
-                .filter(uri.eq(query_uri))
-                .first::<entities::AlbumEntity>(&*connection),
-        };
-
-        query
-            .optional()
-            .map_err(Error::from)
-            .and_then(|album| match album {
-                Some(entity) => Ok(Some(entity.into_album()?)),
-                None => Ok(None),
-            })
+        self.albums.query(query)
     }
 
     fn query_albums(&self, query: MultiQuery) -> Result<Vec<Album>, Error> {
-        use schema::albums::dsl::*;
-
-        let connection = self.connection.lock().unwrap();
-
-        let album_list = albums.load::<entities::AlbumEntity>(&*connection)?;
-
-        album_list
-            .into_iter()
-            .map(|entity| entity.into_album())
-            .collect()
+        self.albums.query_all(query)
     }
 
     fn query_artist(&self, query: SingleQuery) -> Result<Option<Artist>, Error> {
-        use schema::artists::dsl::*;
-
-        let connection = self.connection.lock().unwrap();
-
-        let query = match query.identifier {
-            SingleQueryIdentifier::Id(artist_id) => artists
-                .find(artist_id as i32)
-                .first::<entities::ArtistEntity>(&*connection),
-            SingleQueryIdentifier::Uri(query_uri) => artists
-                .filter(uri.eq(query_uri))
-                .first::<entities::ArtistEntity>(&*connection),
-        };
-
-        query
-            .optional()
-            .map_err(Error::from)
-            .and_then(|artist| match artist {
-                Some(entity) => Ok(Some(entity.into_artist()?)),
-                None => Ok(None),
-            })
+        self.artists.query(query)
     }
 
     fn query_artists(&self, query: MultiQuery) -> Result<Vec<Artist>, Error> {
-        use schema::artists::dsl::*;
-
-        let connection = self.connection.lock().unwrap();
-
-        let artist_list = artists.load::<entities::ArtistEntity>(&*connection)?;
-
-        artist_list
-            .into_iter()
-            .map(|entity| entity.into_artist())
-            .collect()
+        self.artists.query_all(query)
     }
 
-    fn query_playlist(&self, _query: SingleQuery) -> Result<Option<Playlist>, Error> {
-        unimplemented!()
+    fn query_playlist(&self, query: SingleQuery) -> Result<Option<Playlist>, Error> {
+        self.playlists.query(query)
     }
 
-    fn query_playlists(&self, _query: MultiQuery) -> Result<Vec<Playlist>, Error> {
-        unimplemented!()
+    fn query_playlists(&self, query: MultiQuery) -> Result<Vec<Playlist>, Error> {
+        self.playlists.query_all(query)
     }
 
-    fn add_track(&self, _track: &mut Track) -> Result<(), Error> {
-        unimplemented!()
+    fn add_track(&self, track: &mut Track) -> Result<(), Error> {
+        self.tracks.insert(track)
     }
 
-    fn add_album(&self, _album: &mut Album) -> Result<(), Error> {
-        unimplemented!()
+    fn add_album(&self, album: &mut Album) -> Result<(), Error> {
+        self.albums.insert(album)
     }
 
     fn add_artist(&self, artist: &mut Artist) -> Result<(), Error> {
-        use schema::artists::dsl::*;
-
-        let connection = self.connection.lock().unwrap();
-
-        let entity: entities::ArtistInsert = artist.clone().into();
-
-        insert_into(artists).values(&entity).execute(&*connection)?;
-
-        Ok(())
+        self.artists.insert(artist)
     }
 
-    fn add_playlist(&self, _playlist: &mut Playlist) -> Result<(), Error> {
-        unimplemented!()
+    fn add_playlist(&self, playlist: &mut Playlist) -> Result<(), Error> {
+        self.playlists.insert(playlist)
     }
 
-    fn add_tracks(&self, _tracks: &mut Vec<Track>) -> Result<(), Error> {
-        unimplemented!()
+    fn add_tracks(&self, tracks: &mut Vec<Track>) -> Result<(), Error> {
+        self.tracks.insert_all(tracks)
     }
 
-    fn add_albums(&self, _albums: &mut Vec<Album>) -> Result<(), Error> {
-        unimplemented!()
+    fn add_albums(&self, albums: &mut Vec<Album>) -> Result<(), Error> {
+        self.albums.insert_all(albums)
     }
 
-    fn add_artists(&self, _artists: &mut Vec<Artist>) -> Result<(), Error> {
-        unimplemented!()
+    fn add_artists(&self, artists: &mut Vec<Artist>) -> Result<(), Error> {
+        self.artists.insert_all(artists)
     }
 
-    fn add_playlists(&self, _playlists: &mut Vec<Playlist>) -> Result<(), Error> {
-        unimplemented!()
+    fn add_playlists(&self, playlists: &mut Vec<Playlist>) -> Result<(), Error> {
+        self.playlists.insert_all(playlists)
     }
 
-    fn sync_track(&self, _track: &mut Track) -> Result<(), Error> {
-        unimplemented!()
+    fn sync_track(&self, track: &mut Track) -> Result<(), Error> {
+        self.tracks.sync(track)
     }
 
-    fn sync_album(&self, _album: &mut Album) -> Result<(), Error> {
-        unimplemented!()
+    fn sync_album(&self, album: &mut Album) -> Result<(), Error> {
+        self.albums.sync(album)
     }
 
-    fn sync_artist(&self, _artist: &mut Artist) -> Result<(), Error> {
-        unimplemented!()
+    fn sync_artist(&self, artist: &mut Artist) -> Result<(), Error> {
+        self.artists.sync(artist)
     }
 
-    fn sync_playlist(&self, _playlist: &mut Playlist) -> Result<(), Error> {
-        unimplemented!()
+    fn sync_playlist(&self, playlist: &mut Playlist) -> Result<(), Error> {
+        self.playlists.sync(playlist)
     }
 
-    fn sync_tracks(&self, _tracks: &mut Vec<Track>) -> Result<(), Error> {
-        unimplemented!()
+    fn sync_tracks(&self, tracks: &mut Vec<Track>) -> Result<(), Error> {
+        self.tracks.sync_all(tracks)
     }
 
-    fn sync_albums(&self, _albums: &mut Vec<Album>) -> Result<(), Error> {
-        unimplemented!()
+    fn sync_albums(&self, albums: &mut Vec<Album>) -> Result<(), Error> {
+        self.albums.sync_all(albums)
     }
 
-    fn sync_artists(&self, _artists: &mut Vec<Artist>) -> Result<(), Error> {
-        unimplemented!()
+    fn sync_artists(&self, artists: &mut Vec<Artist>) -> Result<(), Error> {
+        self.artists.sync_all(artists)
     }
 
-    fn sync_playlists(&self, _playlists: &mut Vec<Playlist>) -> Result<(), Error> {
-        unimplemented!()
+    fn sync_playlists(&self, playlists: &mut Vec<Playlist>) -> Result<(), Error> {
+        self.playlists.sync_all(playlists)
     }
 
     fn search(&self, _query: String) -> Result<SearchResults, Error> {
