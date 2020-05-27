@@ -25,8 +25,9 @@ pub async fn search(
     params: QsQuery<SearchQuery>,
 ) -> Result<impl Responder, error::Error> {
     trace!("search {}", &params.query);
+    let search = params.into_inner();
     let result = client
-        .search(&params.query, params.providers.as_ref())
+        .search(&search.query, search.providers)
         .await?;
     Ok(web::Json(result))
 }

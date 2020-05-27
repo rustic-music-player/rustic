@@ -35,7 +35,7 @@ impl RusticApiClient for RusticNativeClient {
     async fn search(
         &self,
         query: &str,
-        provider_filter: Option<&Vec<ProviderTypeModel>>,
+        provider_filter: Option<Vec<ProviderTypeModel>>,
     ) -> Result<SearchResults> {
         let providers = &self.app.providers;
         trace!("search {}", query);
@@ -44,7 +44,7 @@ impl RusticApiClient for RusticNativeClient {
         let providers: Vec<&Provider> = providers
             .iter()
             .filter(|provider| {
-                if let Some(provider_filter) = provider_filter {
+                if let Some(ref provider_filter) = provider_filter {
                     let p = provider.provider_type.into();
                     provider_filter.contains(&p)
                 } else {

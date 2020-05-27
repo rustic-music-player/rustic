@@ -34,7 +34,7 @@ impl RusticApiClient for TestApiClient {
     async fn search(
         &self,
         query: &str,
-        providers: Option<&Vec<ProviderTypeModel>>,
+        providers: Option<Vec<ProviderTypeModel>>,
     ) -> Result<SearchResults> {
         self.e.was_called_returning(
             "search",

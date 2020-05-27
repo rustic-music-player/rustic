@@ -13,7 +13,7 @@ pub trait RusticApiClient:
     async fn search(
         &self,
         query: &str,
-        providers: Option<&Vec<ProviderTypeModel>>,
+        providers: Option<Vec<ProviderTypeModel>>,
     ) -> Result<SearchResults>;
 
     async fn get_extensions(&self) -> Result<Vec<ExtensionModel>>;

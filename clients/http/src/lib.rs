@@ -1,6 +1,7 @@
+use failure::format_err;
 use futures::stream::BoxStream;
+use serde::{Deserialize, Serialize};
 use serde::de::DeserializeOwned;
-use serde::Serialize;
 
 use async_trait::async_trait;
 use rustic_api::client::*;
@@ -41,31 +42,36 @@ where
     }
 
     async fn post<TReq, TRes>(&self, url: &str, req: TReq) -> Result<TRes>
-    where
-        TRes: DeserializeOwned,
-        TReq: Serialize + Send + Sync,
+        where
+            TRes: DeserializeOwned,
+            TReq: Serialize + Send + Sync,
     {
         self.client.post(url, req).await
     }
 }
 
+#[derive(Debug, Clone, Serialize, Deserialize)]
+struct SearchQuery<'a> {
+    query: &'a str,
+    providers: Option<Vec<ProviderTypeModel>>,
+}
+
 #[async_trait]
 impl<T> RusticApiClient for RusticHttpClient<T>
-where
-    T: HttpClient,
+    where
+        T: HttpClient,
 {
     async fn search(
         &self,
         query: &str,
-        provider: Option<&Vec<ProviderTypeModel>>,
+        provider: Option<Vec<ProviderTypeModel>>,
     ) -> Result<SearchResults> {
-        let providers: String = provider
-            .map(|p| p.clone())
-            .unwrap_or_default()
-            .iter()
-            .map(|p| format!("&providers[]={}", serde_json::to_string(p).unwrap()))
-            .collect();
-        let url = format!("/api/search?query={}{}", query, providers);
+        let query = SearchQuery {
+            query,
+            providers: provider,
+        };
+        let query = serde_qs::to_string(&query).map_err(|e| format_err!("Query String serialization failed: {:?}", e))?;
+        let url = format!("/api/search?{}", query);
         let res = self.get(&url).await?;
 
         Ok(res)
@@ -88,6 +94,7 @@ where
         unimplemented!("")
     }
 }
+
 
 #[async_trait]
 impl<T> ProviderApiClient for RusticHttpClient<T>
@@ -119,20 +126,39 @@ where
         provider: ProviderTypeModel,
         auth: ProviderAuthModel,
     ) -> Result<()> {
-        unimplemented!()
+        match auth {
+            ProviderAuthModel::UserPass { username, password } => self.provider_basic_auth(provider, username, password).await,
+            ProviderAuthModel::OAuthToken { code, state, scope } => self.provider_oauth_token(provider, ProviderAuthModel::OAuthToken { code, state, scope }).await,
+        }
+    }
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+struct ProviderFilterQuery {
+    providers: Option<Vec<ProviderTypeModel>>
+}
+
+impl From<Option<Vec<ProviderTypeModel>>> for ProviderFilterQuery {
+    fn from(providers: Option<Vec<ProviderTypeModel>>) -> Self {
+        ProviderFilterQuery {
+            providers
+        }
     }
 }
 
 #[async_trait]
 impl<T> LibraryApiClient for RusticHttpClient<T>
-where
-    T: HttpClient,
+    where
+        T: HttpClient,
 {
     async fn get_albums(
         &self,
         providers: Option<Vec<ProviderTypeModel>>,
     ) -> Result<Vec<AlbumModel>> {
-        let res = self.get("/api/library/albums").await?;
+        let query = ProviderFilterQuery::from(providers);
+        let query = serde_qs::to_string(&query).map_err(|e| format_err!("Query String serialization failed: {:?}", e))?;
+        let url = format!("/api/library/albums?{}", &query);
+        let res = self.get(&url).await?;
 
         Ok(res)
     }
@@ -153,7 +179,10 @@ where
         &self,
         providers: Option<Vec<ProviderTypeModel>>,
     ) -> Result<Vec<PlaylistModel>> {
-        let res = self.get("/api/library/playlists").await?;
+        let query = ProviderFilterQuery::from(providers);
+        let query = serde_qs::to_string(&query).map_err(|e| format_err!("Query String serialization failed: {:?}", e))?;
+        let url = format!("/api/library/playlists?{}", &query);
+        let res = self.get(&url).await?;
 
         Ok(res)
     }
@@ -170,7 +199,10 @@ where
         &self,
         providers: Option<Vec<ProviderTypeModel>>,
     ) -> Result<Vec<TrackModel>> {
-        let res = self.get("/api/library/tracks").await?;
+        let query = ProviderFilterQuery::from(providers);
+        let query = serde_qs::to_string(&query).map_err(|e| format_err!("Query String serialization failed: {:?}", e))?;
+        let url = format!("/api/library/tracks?{}", &query);
+        let res = self.get(&url).await?;
 
         Ok(res)
     }
@@ -182,7 +214,7 @@ where
     }
 
     fn sync_state(&self) -> BoxStream<'static, SyncStateModel> {
-        unimplemented!()
+        unimplemented!("requires socket api")
     }
 }
 
@@ -194,7 +226,7 @@ where
     async fn get_queue(&self, player_id: Option<&str>) -> Result<Vec<TrackModel>> {
         let url = match player_id {
             Some(id) => format!("/api/queue/{}", id),
-            None => format!("/api/queue"),
+            None => "/api/queue".to_string(),
         };
         let res = self.get(&url).await?;
 
@@ -237,7 +269,7 @@ where
     async fn clear_queue(&self, player_id: Option<&str>) -> Result<()> {
         let url = match player_id {
             Some(id) => format!("/api/queue/{}/clear", id),
-            None => format!("/api/queue/clear"),
+            None => "/api/queue/clear".to_string(),
         };
         self.post::<(), ()>(&url, ()).await?;
 
@@ -263,8 +295,8 @@ where
         Ok(())
     }
 
-    fn observe_queue(&self, player_id: Option<&str>) -> BoxStream<'static, QueueEventModel> {
-        unimplemented!()
+    fn observe_queue(&self, _player_id: Option<&str>) -> BoxStream<'static, QueueEventModel> {
+        unimplemented!("requires socket api")
     }
 }
 
@@ -282,7 +314,7 @@ where
     async fn get_player(&self, player_id: Option<&str>) -> Result<Option<PlayerModel>> {
         let url = match player_id {
             Some(id) => format!("/api/player/{}", id),
-            None => format!("/api/player"),
+            None => "/api/player".to_string(),
         };
         let res = self.get(&url).await?;
 
@@ -292,7 +324,7 @@ where
     async fn player_control_next(&self, player_id: Option<&str>) -> Result<Option<()>> {
         let url = match player_id {
             Some(id) => format!("/api/player/{}/next", id),
-            None => format!("/api/player/next"),
+            None => "/api/player/next".to_string(),
         };
         self.post(&url, ()).await?;
 
@@ -302,7 +334,7 @@ where
     async fn player_control_prev(&self, player_id: Option<&str>) -> Result<Option<()>> {
         let url = match player_id {
             Some(id) => format!("/api/player/{}/prev", id),
-            None => format!("/api/player/prev"),
+            None => "/api/player/prev".to_string(),
         };
         self.post(&url, ()).await?;
 
@@ -312,7 +344,7 @@ where
     async fn player_control_play(&self, player_id: Option<&str>) -> Result<()> {
         let url = match player_id {
             Some(id) => format!("/api/player/{}/play", id),
-            None => format!("/api/player/play"),
+            None => "/api/player/play".to_string(),
         };
         self.post(&url, ()).await?;
 
@@ -322,7 +354,7 @@ where
     async fn player_control_pause(&self, player_id: Option<&str>) -> Result<()> {
         let url = match player_id {
             Some(id) => format!("/api/player/{}/pause", id),
-            None => format!("/api/player/pause"),
+            None => "/api/player/pause".to_string(),
         };
         self.post(&url, ()).await?;
 
@@ -332,14 +364,43 @@ where
     async fn player_set_volume(&self, player_id: Option<&str>, volume: f32) -> Result<()> {
         let url = match player_id {
             Some(id) => format!("/api/player/{}/volume", id),
-            None => format!("/api/player/volume"),
+            None => "/api/player/volume".to_string(),
         };
         self.post(&url, volume).await?;
 
         Ok(())
     }
 
-    fn observe_player(&self, player_id: Option<&str>) -> BoxStream<'static, PlayerEventModel> {
-        unimplemented!()
+    fn observe_player(&self, _player_id: Option<&str>) -> BoxStream<'static, PlayerEventModel> {
+        unimplemented!("requires socket api")
+    }
+}
+
+impl<T> RusticHttpClient<T>
+    where
+        T: HttpClient, {
+    async fn provider_basic_auth(
+        &self,
+        provider: ProviderTypeModel,
+        username: String,
+        password: String) -> Result<()> {
+        let url = format!("/api/providers/{}/auth", serde_json::to_string(&provider)?);
+        let model = ProviderAuthModel::UserPass { username, password };
+
+        self.post(&url, model).await?;
+
+        Ok(())
+    }
+
+    async fn provider_oauth_token(
+        &self,
+        provider: ProviderTypeModel,
+        auth: ProviderAuthModel) -> Result<()> {
+        let query = serde_qs::to_string(&auth).map_err(|e| format_err!("Query String serialization failed: {:?}", e))?;
+        let url = format!("/api/providers/{}/auth/redirect?{}", serde_json::to_string(&provider)?, query);
+
+        self.get(&url).await?;
+
+        Ok(())
     }
 }
