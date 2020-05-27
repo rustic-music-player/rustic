@@ -76,7 +76,7 @@ impl Application for IcedApplication {
     }
 
     fn title(&self) -> String {
-        format!("Rustic")
+        "Rustic".to_string()
     }
 
     fn update(&mut self, message: Self::Message) -> Command<Self::Message> {
@@ -140,7 +140,7 @@ impl Application for IcedApplication {
                             Message::Loaded,
                         ),
                         Command::perform(
-                            state.clone().load_tracks(self.api.clone()),
+                            state.load_tracks(self.api.clone()),
                             Message::Loaded,
                         ),
                     ]);
@@ -148,7 +148,7 @@ impl Application for IcedApplication {
             }
             Message::QueueTrack(track) => {
                 let api = self.api.clone();
-                return Command::perform(SavedState::queue_track(api, track.clone()), |_| {
+                return Command::perform(SavedState::queue_track(api, track), |_| {
                     Message::QueueUpdated
                 });
             }
@@ -199,7 +199,7 @@ impl Application for IcedApplication {
                 &mut self.search_state,
                 "Search...",
                 &self.search_query,
-                |q| Message::Search(q),
+                Message::Search,
             );
             nav = nav.push(search);
 

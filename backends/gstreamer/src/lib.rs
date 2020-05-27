@@ -1,5 +1,5 @@
 extern crate crossbeam_channel as channel;
-use log::{debug, error, info};
+use log::{debug, error};
 
 use std::any::Any;
 use std::sync::Arc;

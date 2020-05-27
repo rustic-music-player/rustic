@@ -72,7 +72,7 @@ impl YoutubeProvider {
 
 #[async_trait]
 impl ProviderInstance for YoutubeProvider {
-    async fn setup(&mut self, cred_store: &dyn CredentialStore) -> Result<(), Error> {
+    async fn setup(&mut self, _cred_store: &dyn CredentialStore) -> Result<(), Error> {
         self.client = match (self.api_key.as_ref(), self.client_id.as_ref(), self.client_secret.as_ref()) {
             (Some(api_key), None, None) => Some(YoutubeApi::new(api_key)),
             (Some(api_key), Some(client_id), Some(client_secret)) => {
@@ -115,7 +115,7 @@ impl ProviderInstance for YoutubeProvider {
         }
     }
 
-    async fn authenticate(&mut self, auth: Authentication, cred_store: &dyn CredentialStore) -> Result<(), Error> {
+    async fn authenticate(&mut self, auth: Authentication, _cred_store: &dyn CredentialStore) -> Result<(), Error> {
         let client = self.client.as_mut().expect("client isn't setup yet");
         use rustic_core::provider::Authentication::*;
 

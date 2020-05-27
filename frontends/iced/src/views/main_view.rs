@@ -38,7 +38,7 @@ impl Component for MainView {
                     .find(|p| &p.cursor == cursor)
                     .cloned()
                     .unwrap();
-                (playlist.title.clone(), MainView::playlist_view(tracks))
+                (playlist.title, MainView::playlist_view(tracks))
             }
             MainView::Explore => ("Explore".into(), self.default_view()),
         };

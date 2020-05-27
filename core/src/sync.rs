@@ -56,8 +56,6 @@ pub async fn start(app: Arc<Rustic>) -> Result<(), Error> {
         interval.tick().await;
         synchronize(&app).await;
     }
-    info!("Background Sync stopped");
-    Ok(())
 }
 
 async fn synchronize(app: &Arc<Rustic>) {

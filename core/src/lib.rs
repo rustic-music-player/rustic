@@ -89,19 +89,17 @@ impl Rustic {
         let track = self.library.query_track(query.clone())?;
         if let Some(track) = track {
             Ok(Some(track))
+        } else if let SingleQueryIdentifier::Uri(ref uri) = query.identifier {
+            trace!("Track is not in library, asking provider");
+            let provider = self.get_provider_for_url(uri)?;
+            let track = match provider {
+                Some(provider) => provider.get().await.resolve_track(uri).await?,
+                _ => None,
+            };
+            Ok(track)
         } else {
-            if let SingleQueryIdentifier::Uri(ref uri) = query.identifier {
-                trace!("Track is not in library, asking provider");
-                let provider = self.get_provider_for_url(uri)?;
-                let track = match provider {
-                    Some(provider) => provider.get().await.resolve_track(uri).await?,
-                    _ => None,
-                };
-                Ok(track)
-            } else {
-                // Only library tracks have an id
-                Ok(None)
-            }
+            // Only library tracks have an id
+            Ok(None)
         }
     }
 
@@ -110,19 +108,17 @@ impl Rustic {
         let album = self.library.query_album(query.clone())?;
         if let Some(album) = album {
             Ok(Some(album))
+        } else if let SingleQueryIdentifier::Uri(ref uri) = query.identifier {
+            trace!("Album is not in library, asking provider");
+            let provider = self.get_provider_for_url(uri)?;
+            let album = match provider {
+                Some(provider) => provider.get().await.resolve_album(uri).await?,
+                _ => None,
+            };
+            Ok(album)
         } else {
-            if let SingleQueryIdentifier::Uri(ref uri) = query.identifier {
-                trace!("Album is not in library, asking provider");
-                let provider = self.get_provider_for_url(uri)?;
-                let album = match provider {
-                    Some(provider) => provider.get().await.resolve_album(uri).await?,
-                    _ => None,
-                };
-                Ok(album)
-            } else {
-                // Only library albums have an id
-                Ok(None)
-            }
+            // Only library albums have an id
+            Ok(None)
         }
     }
 
@@ -134,19 +130,17 @@ impl Rustic {
         let playlist = self.library.query_playlist(query.clone())?;
         if let Some(playlist) = playlist {
             Ok(Some(playlist))
+        } else if let SingleQueryIdentifier::Uri(ref uri) = query.identifier {
+            trace!("Playlist is not in library, asking provider");
+            let provider = self.get_provider_for_url(uri)?;
+            let playlist = match provider {
+                Some(provider) => provider.get().await.resolve_playlist(uri).await?,
+                _ => None,
+            };
+            Ok(playlist)
         } else {
-            if let SingleQueryIdentifier::Uri(ref uri) = query.identifier {
-                trace!("Playlist is not in library, asking provider");
-                let provider = self.get_provider_for_url(uri)?;
-                let playlist = match provider {
-                    Some(provider) => provider.get().await.resolve_playlist(uri).await?,
-                    _ => None,
-                };
-                Ok(playlist)
-            } else {
-                // Only library playlists have an id
-                Ok(None)
-            }
+            // Only library playlists have an id
+            Ok(None)
         }
     }
 

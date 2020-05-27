@@ -5,7 +5,6 @@ use std::sync::Arc;
 
 use failure::Error;
 use log::{debug, trace};
-use md5;
 use pinboard::NonEmptyPinboard;
 use reqwest::get;
 
