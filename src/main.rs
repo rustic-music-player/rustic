@@ -109,7 +109,11 @@ fn run_instance(options: options::CliOptions, config: config::Config) -> Result<
 
     let mut threads = vec![];
 
-    rt.block_on(setup_frontends(&config, &app, &client, &mut threads))?;
+    if let Err(e) = rt.block_on(setup_apis(&config, &app, &client, &mut threads)) {
+        error!("frontend setup failed {:?}", e)
+    }
+
+    run_frontend(&config, &app, &client);
 
     for handle in threads {
         let _ = handle.join();
@@ -128,7 +132,7 @@ fn connect_to_instance(options: options::CliOptions, config: config::Config) -> 
     Ok(())
 }
 
-async fn setup_frontends(config: &config::Config, app: &Arc<Rustic>, client: &ApiClient, threads: &mut Vec<JoinHandle<()>>) -> Result<(), failure::Error> {
+async fn setup_apis(config: &config::Config, app: &Arc<Rustic>, client: &ApiClient, threads: &mut Vec<JoinHandle<()>>) -> Result<(), failure::Error> {
     #[cfg(feature = "mpd-frontend")]
         {
             if config.frontend.mpd.is_some() {
@@ -151,6 +155,11 @@ async fn setup_frontends(config: &config::Config, app: &Arc<Rustic>, client: &Ap
             rustic_dbus_frontend::start(Arc::clone(&client)).await?;
         }
 
+    Ok(())
+}
+
+#[allow(unused_variables)]
+fn run_frontend(config: &config::Config, app: &Arc<Rustic>, client: &ApiClient) {
     #[cfg(feature = "qt-frontend")]
         {
             qt_frontend::start(Arc::clone(&app));
@@ -160,6 +169,4 @@ async fn setup_frontends(config: &config::Config, app: &Arc<Rustic>, client: &Ap
     if config.frontend.iced.is_some() {
         rustic_iced_frontend::start(Arc::clone(&client));
     }
-
-    Ok(())
 }
