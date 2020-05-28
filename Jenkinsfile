@@ -77,29 +77,27 @@ pipeline {
         }
 
         stage('Docs') {
+            agent {
+                dockerfile {
+                    filename '.jenkins/Dockerfile'
+                    additionalBuildArgs '--pull'
+                    args '-v /usr/share/jenkins/cache:/build_cache'
+                }
+            }
             when {
                 branch 'master'
             }
             steps {
-                agent {
-                    dockerfile {
-                        filename '.jenkins/Dockerfile'
-                        additionalBuildArgs '--pull'
-                        args '-v /usr/share/jenkins/cache:/build_cache'
-                    }
-                }
-                steps {
-                    sh 'cargo doc --workspace --no-deps --quiet'
-                    sshagent(['rustic-github-docs']) {
-                        sh 'git clone git@github.com:rustic-music-player/rustic-music-player.github.io.git web'
-                        dir('web') {
-                            sh 'git rm -rf docs'
-                            sh 'mkdir docs'
-                            sh 'cp -r ../target/doc/* docs/'
-                            sh 'git add docs'
-                            sh 'git commit -m "docs: update generated documentation"'
-                            sh 'git push'
-                        }
+                sh 'cargo doc --workspace --no-deps --quiet'
+                sshagent(['rustic-github-docs']) {
+                    sh 'git clone git@github.com:rustic-music-player/rustic-music-player.github.io.git web'
+                    dir('web') {
+                        sh 'git rm -rf docs'
+                        sh 'mkdir docs'
+                        sh 'cp -r ../target/doc/* docs/'
+                        sh 'git add docs'
+                        sh 'git commit -m "docs: update generated documentation"'
+                        sh 'git push'
                     }
                 }
             }
