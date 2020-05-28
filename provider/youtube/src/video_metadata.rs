@@ -2,7 +2,7 @@ use crate::meta::META_YOUTUBE_DEFAULT_THUMBNAIL_URL;
 use rustic_core::{Artist, ProviderType, Track};
 use std::collections::HashMap;
 use std::str::FromStr;
-use youtube::models;
+use youtube_api::models;
 
 pub(crate) struct YoutubeVideoMetadata(models::VideoMetadata);
 

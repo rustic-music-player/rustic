@@ -3,8 +3,8 @@ use log::{debug, warn};
 use serde::Deserialize;
 use tokio::sync::Mutex;
 use url::Url;
-use youtube::{YoutubeApi, YoutubeDl};
-use youtube::models::{ListPlaylistItemsRequestBuilder, ListPlaylistsRequestBuilder, SearchRequestBuilder};
+use youtube_api::{YoutubeApi, YoutubeDl};
+use youtube_api::models::{ListPlaylistItemsRequestBuilder, ListPlaylistsRequestBuilder, SearchRequestBuilder};
 
 use async_trait::async_trait;
 use lazy_static::lazy_static;

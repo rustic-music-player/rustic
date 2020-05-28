@@ -1,4 +1,4 @@
-use youtube::models::SearchResult;
+use youtube_api::models::SearchResult;
 use rustic_core::provider::{ProviderItem, ProviderItemType};
 use rustic_core::{Track, ProviderType, Artist};
 use std::collections::HashMap;

@@ -1,4 +1,4 @@
-use youtube::models::PlaylistItemResource;
+use youtube_api::models::PlaylistItemResource;
 
 use rustic_core::{Artist, ProviderType, Track};
 use std::collections::HashMap;
