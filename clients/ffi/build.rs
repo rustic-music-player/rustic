@@ -5,7 +5,7 @@ use std::process::Command;
 fn main() {
     let crate_dir = env::var("CARGO_MANIFEST_DIR").unwrap();
     generate_header(&crate_dir);
-    build_integration_tests();
+    // build_integration_tests();
 }
 
 fn generate_header(crate_dir: &str) {
