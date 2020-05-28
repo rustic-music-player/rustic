@@ -88,7 +88,7 @@ pipeline {
                 branch 'master'
             }
             steps {
-                sh 'cargo doc --workspace --no-deps --quiet'
+                sh 'cargo doc --workspace --no-deps'
                 sshagent(['rustic-github-docs']) {
                     sh 'git clone git@github.com:rustic-music-player/rustic-music-player.github.io.git web'
                     dir('web') {
