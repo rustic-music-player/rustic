@@ -17,7 +17,8 @@ where
     pub client: T,
 }
 
-#[async_trait]
+#[cfg_attr(target_arch = "wasm32", async_trait(?Send))]
+#[cfg_attr(not(target_arch = "wasm32"), async_trait)]
 pub trait HttpClient: Clone + Sync + Send {
     async fn get<T>(&self, url: &str) -> Result<T>
     where
@@ -29,7 +30,8 @@ pub trait HttpClient: Clone + Sync + Send {
         TReq: Serialize + Send + Sync;
 }
 
-#[async_trait]
+#[cfg_attr(target_arch = "wasm32", async_trait(?Send))]
+#[cfg_attr(not(target_arch = "wasm32"), async_trait)]
 impl<T> HttpClient for RusticHttpClient<T>
 where
     T: HttpClient,
@@ -56,7 +58,8 @@ struct SearchQuery<'a> {
     providers: Option<Vec<ProviderTypeModel>>,
 }
 
-#[async_trait]
+#[cfg_attr(target_arch = "wasm32", async_trait(?Send))]
+#[cfg_attr(not(target_arch = "wasm32"), async_trait)]
 impl<T> RusticApiClient for RusticHttpClient<T>
     where
         T: HttpClient,
@@ -96,7 +99,8 @@ impl<T> RusticApiClient for RusticHttpClient<T>
 }
 
 
-#[async_trait]
+#[cfg_attr(target_arch = "wasm32", async_trait(?Send))]
+#[cfg_attr(not(target_arch = "wasm32"), async_trait)]
 impl<T> ProviderApiClient for RusticHttpClient<T>
 where
     T: HttpClient,
@@ -146,7 +150,8 @@ impl From<Option<Vec<ProviderTypeModel>>> for ProviderFilterQuery {
     }
 }
 
-#[async_trait]
+#[cfg_attr(target_arch = "wasm32", async_trait(?Send))]
+#[cfg_attr(not(target_arch = "wasm32"), async_trait)]
 impl<T> LibraryApiClient for RusticHttpClient<T>
     where
         T: HttpClient,
@@ -218,7 +223,8 @@ impl<T> LibraryApiClient for RusticHttpClient<T>
     }
 }
 
-#[async_trait]
+#[cfg_attr(target_arch = "wasm32", async_trait(?Send))]
+#[cfg_attr(not(target_arch = "wasm32"), async_trait)]
 impl<T> QueueApiClient for RusticHttpClient<T>
 where
     T: HttpClient,
@@ -300,7 +306,8 @@ where
     }
 }
 
-#[async_trait]
+#[cfg_attr(target_arch = "wasm32", async_trait(?Send))]
+#[cfg_attr(not(target_arch = "wasm32"), async_trait)]
 impl<T> PlayerApiClient for RusticHttpClient<T>
 where
     T: HttpClient,

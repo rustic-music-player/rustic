@@ -1,8 +1,11 @@
 use crate::models::{ArtistModel, ProviderTypeModel, TrackModel};
 use serde::{Deserialize, Serialize};
 use std::cmp::Ordering;
+#[cfg(target_arch = "wasm32")]
+use wasm_bindgen::prelude::*;
 
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Eq)]
+#[cfg_attr(target_arch = "wasm32", derive(typescript_definitions::TypescriptDefinition))]
 pub struct AlbumModel {
     pub cursor: String,
     pub title: String,

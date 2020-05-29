@@ -29,7 +29,8 @@ impl TestApiClient {
     }
 }
 
-#[async_trait]
+#[cfg_attr(target_arch = "wasm32", async_trait(?Send))]
+#[cfg_attr(not(target_arch = "wasm32"), async_trait)]
 impl RusticApiClient for TestApiClient {
     async fn search(
         &self,
@@ -58,7 +59,8 @@ impl RusticApiClient for TestApiClient {
     }
 }
 
-#[async_trait]
+#[cfg_attr(target_arch = "wasm32", async_trait(?Send))]
+#[cfg_attr(not(target_arch = "wasm32"), async_trait)]
 impl PlayerApiClient for TestApiClient {
     async fn get_players(&self) -> Result<Vec<PlayerModel>> {
         unimplemented!()
@@ -95,7 +97,8 @@ impl PlayerApiClient for TestApiClient {
     }
 }
 
-#[async_trait]
+#[cfg_attr(target_arch = "wasm32", async_trait(?Send))]
+#[cfg_attr(not(target_arch = "wasm32"), async_trait)]
 impl QueueApiClient for TestApiClient {
     async fn get_queue(&self, player_id: Option<&str>) -> Result<Vec<TrackModel>> {
         unimplemented!()
@@ -135,7 +138,8 @@ impl QueueApiClient for TestApiClient {
     }
 }
 
-#[async_trait]
+#[cfg_attr(target_arch = "wasm32", async_trait(?Send))]
+#[cfg_attr(not(target_arch = "wasm32"), async_trait)]
 impl LibraryApiClient for TestApiClient {
     async fn get_albums(
         &self,
@@ -179,7 +183,8 @@ impl LibraryApiClient for TestApiClient {
     }
 }
 
-#[async_trait]
+#[cfg_attr(target_arch = "wasm32", async_trait(?Send))]
+#[cfg_attr(not(target_arch = "wasm32"), async_trait)]
 impl ProviderApiClient for TestApiClient {
     async fn get_providers(&self) -> Result<Vec<ProviderModel>> {
         unimplemented!()

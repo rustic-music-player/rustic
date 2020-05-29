@@ -26,10 +26,7 @@ pipeline {
                         }
                     }
                     steps {
-                        //sh 'curl https://rustwasm.github.io/wasm-pack/installer/init.sh -sSf | sh'
                         sh 'cargo build --bins --workspace --release --message-format json > cargo-build.json'
-                        //sh 'wasm-pack build clients/http/wasm'
-                        //sh 'wasm-pack pack clients/http/wasm'
                     }
                     post {
                         always {
@@ -39,7 +36,25 @@ pipeline {
                             sh 'mv target/release/rustic rustic-linux-x86_64'
                             archiveArtifacts artifacts: 'rustic-linux-x86_64', fingerprint: true
                             //archiveArtifacts artifacts: 'target/release/rustic-*-extension', fingerprint: true
-                            //archiveArtifacts artifacts: 'clients/http/wasm/pkg/*.tgz', fingerprint: true
+                        }
+                    }
+                }
+
+                stage('WebAssembly') {
+                    agent {
+                        dockerfile {
+                            filename '.jenkins/Dockerfile'
+                            additionalBuildArgs '--pull'
+                            args '-v /usr/share/jenkins/cache:/build_cache'
+                        }
+                    }
+                    steps {
+                        sh 'curl https://rustwasm.github.io/wasm-pack/installer/init.sh -sSf | sh'
+                        sh 'clients/http/wasm/package.sh'
+                    }
+                    post {
+                        success {
+                            archiveArtifacts artifacts: 'clients/http/wasm/pkg/*.tgz', fingerprint: true
                         }
                     }
                 }
@@ -88,7 +103,7 @@ pipeline {
                 branch 'master'
             }
             steps {
-                sh 'cargo doc --workspace --no-deps'
+                sh 'cargo doc --workspace --no-deps --exclude rustic-wasm-http-client'
                 sshagent(['rustic-github-docs']) {
                     dir('web') {
                         git credentialsId: 'rustic-github-docs', url: 'git@github.com:rustic-music-player/rustic-music-player.github.io.git', changelog: false

@@ -8,15 +8,19 @@ edition = "2018"
 
 [features]
 default = ["conversion"]
-conversion = ["rustic-core", "rustic-extension-api", "base64"]
+conversion = ["rustic-core", "rustic-extension-api"]
 testing = ["simulacrum"]
 
 [dependencies]
 serde = { version = "1", features = ["derive"] }
 rustic-core = { path = "../", optional = true }
 rustic-extension-api = { path = "../extensions", optional = true }
-base64 = { version = "0.12", optional = true }
+base64 = { version = "0.12" }
 async-trait = "0.1"
 failure = "0.1"
 futures = "0.3"
 simulacrum = { git = "https://github.com/pcsm/simulacrum.git", branch = "integration/v0.4", optional = true }
+
+[target.'cfg(target_arch = "wasm32")'.dependencies]
+typescript-definitions = { package = "typescript-definitions-ufo-patch", features = ["export-typescript"] }
+wasm-bindgen = "0.2"

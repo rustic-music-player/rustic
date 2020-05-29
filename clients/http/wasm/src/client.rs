@@ -3,6 +3,7 @@ use wasm_bindgen::JsCast;
 use wasm_bindgen_futures::JsFuture;
 use web_sys::{Request, RequestInit, Response};
 
+use crate::utils::map_value;
 use async_trait::async_trait;
 use rustic_http_client::{HttpClient, RusticHttpClient};
 use serde::de::DeserializeOwned;
@@ -19,7 +20,7 @@ impl RusticWasmHttpClient {
     }
 }
 
-#[async_trait]
+#[async_trait(?Send)]
 impl HttpClient for RusticWasmHttpClient {
     async fn get<T>(&self, url: &str) -> Result<T, failure::Error>
     where
@@ -28,17 +29,21 @@ impl HttpClient for RusticWasmHttpClient {
         let mut opts = RequestInit::new();
         opts.method("GET");
 
-        let request = Request::new_with_str_and_init(url, &opts)?;
+        let request = Request::new_with_str_and_init(url, &opts).map_err(map_value)?;
 
         let window = web_sys::window().unwrap();
-        let resp_value = JsFuture::from(window.fetch_with_request(&request)).await?;
+        let resp_value = JsFuture::from(window.fetch_with_request(&request))
+            .await
+            .map_err(map_value)?;
 
         assert!(resp_value.is_instance_of::<Response>());
-        let resp: Response = resp_value.dyn_into().unwrap();
+        let resp: Response = resp_value.dyn_into().map_err(map_value)?;
 
-        let json = JsFuture::from(resp.json()?).await?;
+        let json = JsFuture::from(resp.json().unwrap())
+            .await
+            .map_err(map_value)?;
 
-        let model: T = json.into_serde().unwrap();
+        let model: T = json.into_serde()?;
 
         Ok(model)
     }
@@ -48,23 +53,30 @@ impl HttpClient for RusticWasmHttpClient {
         TRes: DeserializeOwned,
         TReq: Serialize,
     {
-        let body = JsValue::from_serde(&body).unwrap();
+        let body = JsValue::from_serde(&body)?;
         let mut opts = RequestInit::new();
         opts.method("POST");
         opts.body(Some(&body));
 
-        let request = Request::new_with_str_and_init(url, &opts)?;
-        request.headers().set("Content-Type", "application/json")?;
+        let request = Request::new_with_str_and_init(url, &opts).map_err(map_value)?;
+        request
+            .headers()
+            .set("Content-Type", "application/json")
+            .unwrap();
 
         let window = web_sys::window().unwrap();
-        let resp_value = JsFuture::from(window.fetch_with_request(&request)).await?;
+        let resp_value = JsFuture::from(window.fetch_with_request(&request))
+            .await
+            .map_err(map_value)?;
 
         assert!(resp_value.is_instance_of::<Response>());
-        let resp: Response = resp_value.dyn_into().unwrap();
+        let resp: Response = resp_value.dyn_into().map_err(map_value)?;
 
-        let json = JsFuture::from(resp.json()?).await?;
+        let json = JsFuture::from(resp.json().unwrap())
+            .await
+            .map_err(map_value)?;
 
-        let model: TRes = json.into_serde().unwrap();
+        let model: TRes = json.into_serde()?;
 
         Ok(model)
     }

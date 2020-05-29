@@ -6,7 +6,8 @@ use crate::models::*;
 
 pub type Result<T> = std::result::Result<T, failure::Error>;
 
-#[async_trait]
+#[cfg_attr(target_arch = "wasm32", async_trait(?Send))]
+#[cfg_attr(not(target_arch = "wasm32"), async_trait)]
 pub trait RusticApiClient:
     Sync + Send + QueueApiClient + LibraryApiClient + PlayerApiClient + ProviderApiClient
 {
@@ -23,7 +24,8 @@ pub trait RusticApiClient:
     async fn get_track_cover_art(&self, cursor: &str) -> Result<Option<CoverArtModel>>;
 }
 
-#[async_trait]
+#[cfg_attr(target_arch = "wasm32", async_trait(?Send))]
+#[cfg_attr(not(target_arch = "wasm32"), async_trait)]
 pub trait ProviderApiClient: Sync + Send {
     async fn get_providers(&self) -> Result<Vec<ProviderModel>>;
 
@@ -42,7 +44,8 @@ pub trait ProviderApiClient: Sync + Send {
     ) -> Result<()>;
 }
 
-#[async_trait]
+#[cfg_attr(target_arch = "wasm32", async_trait(?Send))]
+#[cfg_attr(not(target_arch = "wasm32"), async_trait)]
 pub trait LibraryApiClient: Sync + Send {
     async fn get_albums(
         &self,
@@ -70,7 +73,8 @@ pub trait LibraryApiClient: Sync + Send {
     fn sync_state(&self) -> BoxStream<'static, SyncStateModel>;
 }
 
-#[async_trait]
+#[cfg_attr(target_arch = "wasm32", async_trait(?Send))]
+#[cfg_attr(not(target_arch = "wasm32"), async_trait)]
 pub trait QueueApiClient: Sync + Send {
     async fn get_queue(&self, player_id: Option<&str>) -> Result<Vec<TrackModel>>;
 
@@ -94,7 +98,8 @@ pub trait QueueApiClient: Sync + Send {
     fn observe_queue(&self, player_id: Option<&str>) -> BoxStream<'static, QueueEventModel>;
 }
 
-#[async_trait]
+#[cfg_attr(target_arch = "wasm32", async_trait(?Send))]
+#[cfg_attr(not(target_arch = "wasm32"), async_trait)]
 pub trait PlayerApiClient: Sync + Send {
     async fn get_players(&self) -> Result<Vec<PlayerModel>>;
 

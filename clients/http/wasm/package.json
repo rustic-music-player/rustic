@@ -1,0 +1,17 @@
+{
+    "name": "@rustic/http-client",
+    "collaborators": [
+        "Max Jöhnk <maxjoehnk@gmail.com>"
+    ],
+    "repository": "git://github.com/rustic-music-player/rustic",
+    "version": "0.1.0",
+    "files": [
+        "rustic-http-client_bg.wasm",
+        "rustic-http-client_bg.js",
+        "rustic-http-client.js",
+        "rustic-http-client.d.ts"
+    ],
+    "module": "rustic-http-client.js",
+    "types": "rustic-http-client.d.ts",
+    "sideEffects": false
+}
