@@ -90,8 +90,8 @@ pipeline {
             steps {
                 sh 'cargo doc --workspace --no-deps'
                 sshagent(['rustic-github-docs']) {
-                    sh 'git clone git@github.com:rustic-music-player/rustic-music-player.github.io.git web'
                     dir('web') {
+                        git credentialsId: 'rustic-github-docs', url: 'git@github.com:rustic-music-player/rustic-music-player.github.io.git', changelog: false
                         sh 'git rm -rf docs'
                         sh 'mkdir docs'
                         sh 'cp -r ../target/doc/* docs/'
