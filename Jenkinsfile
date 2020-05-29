@@ -48,6 +48,9 @@ pipeline {
                             args '-v /usr/share/jenkins/cache:/build_cache'
                         }
                     }
+                    environment {
+                        TMPDIR='./tmp'
+                    }
                     steps {
                         sh 'curl https://rustwasm.github.io/wasm-pack/installer/init.sh -sSf | sh'
                         sh 'clients/http/wasm/package.sh'
