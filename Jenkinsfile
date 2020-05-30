@@ -43,7 +43,7 @@ pipeline {
                 stage('WebAssembly') {
                     agent {
                         dockerfile {
-                            filename '.jenkins/Dockerfile'
+                            filename '.jenkins/Dockerfile.wasm'
                             additionalBuildArgs '--pull'
                             args '-v /usr/share/jenkins/cache:/build_cache'
                         }
