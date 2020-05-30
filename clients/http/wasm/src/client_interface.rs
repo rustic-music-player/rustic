@@ -7,7 +7,7 @@ export interface RusticClient {
     getExtensions(): Promise<ExtensionModel[]>;
     openShareUrl(url: string): Promise<OpenResultModel>;
     getProviders(): Promise<ProviderModel[]>;
-    getAvailableProviders(): Promise<AvailableProviderModel>;
+    getAvailableProviders(): Promise<AvailableProviderModel[]>;
     getAlbums(providers: any): Promise<AlbumModel[]>;
     getAlbum(cursor: string): Promise<AlbumModel>;
     getArtists(): Promise<ArtistModel[]>;
