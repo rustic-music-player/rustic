@@ -107,6 +107,8 @@ pipeline {
                 sshagent(['rustic-github-docs']) {
                     dir('web') {
                         git credentialsId: 'rustic-github-docs', url: 'git@github.com:rustic-music-player/rustic-music-player.github.io.git', changelog: false
+                        sh 'git config user.email "jenkins@maxjoehnk.me"'
+                        sh 'git config user.name "Jenkins CI"'
                         sh 'git rm -rf docs || exit 0'
                         sh 'mkdir docs'
                         sh 'cp -r ../target/doc/* docs/'
