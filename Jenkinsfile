@@ -114,7 +114,7 @@ pipeline {
                         sh 'cp -r ../target/doc/* docs/'
                         sh 'git add docs'
                         sh 'git commit -m "docs: update generated documentation"'
-                        sh 'git push'
+                        sh 'git push --set-upstream origin master'
                     }
                 }
             }
