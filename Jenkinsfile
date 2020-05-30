@@ -12,13 +12,10 @@ pipeline {
             }
             environment {
                 RUST_LOG='debug'
-                HOME='.'
+//                HOME='.'
             }
             steps {
-                sh 'echo $RUST_LOG'
-                sh 'echo $RUSTC_WRAPPER'
-                sh 'echo $SCCACHE_DIR'
-                sh 'echo $UID'
+                sh 'printenv'
                 sh 'ls -l /build_cache'
                 sh 'sccache --version'
                 sh 'sccache -s'
