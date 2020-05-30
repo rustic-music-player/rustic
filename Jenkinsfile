@@ -12,6 +12,7 @@ pipeline {
             }
             environment {
                 RUST_LOG='debug'
+                HOME='.'
             }
             steps {
                 sh 'echo $RUST_LOG'
@@ -114,19 +115,25 @@ pipeline {
             }
             steps {
                 sh 'cargo doc --workspace --no-deps --exclude rustic-wasm-http-client'
-                sshagent(['rustic-github-docs']) {
-                    dir('web') {
-                        git credentialsId: 'rustic-github-docs', url: 'git@github.com:rustic-music-player/rustic-music-player.github.io.git', changelog: false
-                        sh 'git config user.email "jenkins@maxjoehnk.me"'
-                        sh 'git config user.name "Jenkins CI"'
-                        sh 'git rm -rf docs || exit 0'
-                        sh 'mkdir docs'
-                        sh 'cp -r ../target/doc/* docs/'
-                        sh 'git add docs'
-                        sh 'git commit -m "docs: update generated documentation"'
-                        sh 'git push --set-upstream origin master'
-                    }
-                }
+                publishHTML target: [
+                    reportDir: 'target/doc',
+                    reportFiles: 'rustic/index.html',
+                    reportName: 'Documentation',
+                    keepAll: false
+                ]
+//                sshagent(['rustic-github-docs']) {
+//                    dir('web') {
+//                        git credentialsId: 'rustic-github-docs', url: 'git@github.com:rustic-music-player/rustic-music-player.github.io.git', changelog: false
+//                        sh 'git config user.email "jenkins@maxjoehnk.me"'
+//                        sh 'git config user.name "Jenkins CI"'
+//                        sh 'git rm -rf docs || exit 0'
+//                        sh 'mkdir docs'
+//                        sh 'cp -r ../target/doc/* docs/'
+//                        sh 'git add docs'
+//                        sh 'git commit -m "docs: update generated documentation"'
+//                        sh 'git push --set-upstream origin master'
+//                    }
+//                }
             }
         }
     }
