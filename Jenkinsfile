@@ -14,6 +14,13 @@ pipeline {
                 RUST_LOG='debug'
             }
             steps {
+                sh 'echo $RUST_LOG'
+                sh 'echo $RUSTC_WRAPPER'
+                sh 'echo $SCCACHE_DIR'
+                sh 'whoami'
+                sh 'ls -l /build_cache'
+                sh 'sccache --version'
+                sh 'sccache -s'
                 sh 'cargo test --bins --workspace'
             }
         }
