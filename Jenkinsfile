@@ -10,6 +10,9 @@ pipeline {
                     args '-v /usr/share/jenkins/cache:/build_cache'
                 }
             }
+            environment {
+                RUST_LOG='debug'
+            }
             steps {
                 sh 'cargo test --bins --workspace'
             }
