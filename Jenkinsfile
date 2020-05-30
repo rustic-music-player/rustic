@@ -12,7 +12,7 @@ pipeline {
             }
             environment {
                 RUST_LOG='debug'
-//                HOME='.'
+                HOME="""${env.PWD}"""
             }
             steps {
                 sh 'printenv'
