@@ -17,7 +17,7 @@ pipeline {
                 sh 'echo $RUST_LOG'
                 sh 'echo $RUSTC_WRAPPER'
                 sh 'echo $SCCACHE_DIR'
-                sh 'whoami'
+                sh 'echo $UID'
                 sh 'ls -l /build_cache'
                 sh 'sccache --version'
                 sh 'sccache -s'
