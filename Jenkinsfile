@@ -11,14 +11,9 @@ pipeline {
                 }
             }
             environment {
-                RUST_LOG='debug'
-                HOME="""${env.WORKSPACE}"""
+                CARGO_HOME='/build_cache/cargo'
             }
             steps {
-                sh 'printenv'
-                sh 'ls -l /build_cache'
-                sh 'sccache --version'
-                sh 'sccache -s'
                 sh 'cargo test --bins --workspace'
             }
         }
@@ -32,6 +27,9 @@ pipeline {
                             additionalBuildArgs '--pull'
                             args '-v /usr/share/jenkins/cache:/build_cache'
                         }
+                    }
+                    environment {
+                        CARGO_HOME='/build_cache/cargo'
                     }
                     steps {
                         sh 'cargo build --bins --workspace --release --message-format json > cargo-build.json'
@@ -106,6 +104,9 @@ pipeline {
                     additionalBuildArgs '--pull'
                     args '-v /usr/share/jenkins/cache:/build_cache'
                 }
+            }
+            environment {
+                CARGO_HOME='/build_cache/cargo'
             }
             when {
                 branch 'master'
