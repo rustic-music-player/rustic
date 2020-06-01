@@ -3,6 +3,7 @@ use wasm_bindgen::prelude::*;
 use rustic_api::client::*;
 use rustic_http_client::*;
 
+use crate::client::RusticWasmHttpClient;
 use crate::utils::{execute, map_providers, ApiResult};
 
 // When the `wee_alloc` feature is enabled, use `wee_alloc` as the global
@@ -11,7 +12,7 @@ use crate::utils::{execute, map_providers, ApiResult};
 #[global_allocator]
 static ALLOC: wee_alloc::WeeAlloc = wee_alloc::WeeAlloc::INIT;
 
-static CLIENT: RusticHttpClient<client::RusticWasmHttpClient> = client::RusticWasmHttpClient::new();
+static CLIENT: RusticHttpClient<RusticWasmHttpClient> = RusticWasmHttpClient::new();
 
 // RusticApiClient
 
