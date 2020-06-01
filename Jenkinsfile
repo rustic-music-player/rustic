@@ -47,6 +47,28 @@ pipeline {
                     }
                 }
 
+                stage('C Bindings') {
+                    agent {
+                        dockerfile {
+                            filename '.jenkins/Dockerfile.nightly'
+                            additionalBuildArgs '--pull'
+                            args '-v /usr/share/jenkins/cache:/build_cache'
+                        }
+                    }
+                    environment {
+                        CARGO_HOME='/build_cache/cargo'
+                    }
+                    steps {
+                        sh 'cargo expand -p rustic-ffi-client > ffi-client.rs'
+                        sh 'cbindgen -o bindings.h -c clients/ffi/cbindgen.toml ffi-client.rs'
+                    }
+                    post {
+                        success {
+                            archiveArtifacts artifacts: 'bindings.h', fingerprint: true
+                        }
+                    }
+                }
+
                 stage('WebAssembly') {
                     agent {
                         dockerfile {
@@ -62,25 +84,6 @@ pipeline {
                     post {
                         success {
                             archiveArtifacts artifacts: 'clients/http/wasm/pkg/*.tgz', fingerprint: true
-                        }
-                    }
-                }
-
-                stage('C Bindings') {
-                    agent {
-                        dockerfile {
-                            filename '.jenkins/Dockerfile.nightly'
-                            additionalBuildArgs '--pull'
-                            args '-v /usr/share/jenkins/cache:/build_cache'
-                        }
-                    }
-                    steps {
-                        sh 'cargo expand -p rustic-ffi-client > ffi-client.rs'
-                        sh 'cbindgen -o bindings.h -c clients/ffi/cbindgen.toml ffi-client.rs'
-                    }
-                    post {
-                        success {
-                            archiveArtifacts artifacts: 'bindings.h', fingerprint: true
                         }
                     }
                 }
