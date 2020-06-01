@@ -27,9 +27,5 @@ tokio = { version = "0.2", features = ["rt-core"], optional = true }
 rustic-api = { path = "../../core/api", default-features = false }
 rustic-native-client = { path = "../native", optional = true }
 rustic-native-http-client = { path = "../http/native", optional = true }
+rustic-ffi-client-macros = { path = "./macros" }
 
-[build-dependencies]
-cbindgen = "0.14"
-cc = "1"
-
-[dev-dependencies]

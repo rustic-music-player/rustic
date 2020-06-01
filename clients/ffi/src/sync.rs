@@ -17,3 +17,4 @@ pub unsafe extern "C" fn client_get_default_player_sync(
 
     Box::into_raw(Box::new(response))
 }
+

@@ -6,6 +6,7 @@ use libc::*;
 use rustic_native_http_client::RusticNativeHttpClient;
 
 pub use rustic_api::models::*;
+use crate::models::*;
 
 use crate::client::{to_str, Client, RusticClientHandle};
 use rustic_api::RusticApiClient;
@@ -19,6 +20,8 @@ pub mod models;
 
 pub(crate) mod client;
 pub(crate) mod error;
+
+rustic_ffi_client_macros::ffi_client!(RusticApiClient, crate::client::Client);
 
 #[no_mangle]
 #[cfg(feature = "http")]

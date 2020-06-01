@@ -32,7 +32,7 @@ pipeline {
                         CARGO_HOME='/build_cache/cargo'
                     }
                     steps {
-                        sh 'cargo build --bins --workspace --release --message-format json > cargo-build.json'
+                        sh 'cargo build --workspace --release --message-format json > cargo-build.json'
                     }
                     post {
                         always {
@@ -61,6 +61,25 @@ pipeline {
                     post {
                         success {
                             archiveArtifacts artifacts: 'clients/http/wasm/pkg/*.tgz', fingerprint: true
+                        }
+                    }
+                }
+
+                stage('C Bindings') {
+                    agent {
+                        dockerfile {
+                            filename '.jenkins/Dockerfile'
+                            additionalBuildArgs '--pull'
+                            args '-v /usr/share/jenkins/cache:/build_cache'
+                        }
+                    }
+                    steps {
+                        sh 'cargo expand -p rustic-ffi-client > ffi-client.rs'
+                        sh 'cbindgen -o bindings.h -c clients/ffi/cbindgen.toml ffi-client.rs'
+                    }
+                    post {
+                        success {
+                            archiveArtifacts artifacts: 'bindings.h', fingerprint: true
                         }
                     }
                 }

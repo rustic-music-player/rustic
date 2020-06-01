@@ -43,6 +43,10 @@ impl Client {
         Client(NonNull::new_unchecked(client))
     }
 
+    pub(crate) fn get_client(&self) -> &Box<dyn RusticApiClient> {
+        unsafe { self.0.as_ref() }
+    }
+
     pub async fn get_player(&self) -> Result<Player, FFIError> {
         let client = unsafe { self.0.as_ref() };
 
@@ -51,3 +55,4 @@ impl Client {
         Ok(res.unwrap().into())
     }
 }
+

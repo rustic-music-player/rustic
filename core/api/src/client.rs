@@ -1,11 +1,14 @@
 use futures::stream::BoxStream;
 
+use rustic_reflect_macros::reflect;
+
 use async_trait::async_trait;
 
 use crate::models::*;
 
 pub type Result<T> = std::result::Result<T, failure::Error>;
 
+#[reflect]
 #[cfg_attr(target_arch = "wasm32", async_trait(?Send))]
 #[cfg_attr(not(target_arch = "wasm32"), async_trait)]
 pub trait RusticApiClient:

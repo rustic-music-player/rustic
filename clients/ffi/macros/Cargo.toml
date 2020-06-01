@@ -1,0 +1,17 @@
+[package]
+name = "rustic-ffi-client-macros"
+version = "0.1.0"
+authors = ["Max Jöhnk <maxjoehnk@gmail.com>"]
+edition = "2018"
+
+[lib]
+proc-macro = true
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+syn = "1"
+quote = "1"
+proc-macro2 = "1"
+rustic-reflect = { path = "../../../core/reflect" }
+rustic-api = { path = "../../../core/api" }

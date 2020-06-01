@@ -3,6 +3,8 @@ members = [
     "core",
     "core/api",
     "core/extensions",
+    "core/reflect",
+    "core/reflect/macros",
     "backends/google-cast",
     "backends/gstreamer",
     "backends/rodio",
@@ -25,7 +27,8 @@ members = [
     "clients/http/native",
     "clients/http/wasm",
     "clients/native",
-    "clients/ffi"
+    "clients/ffi",
+    "clients/ffi/macros"
 ]
 
 [package]
