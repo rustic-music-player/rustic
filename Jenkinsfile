@@ -69,7 +69,7 @@ pipeline {
                 stage('C Bindings') {
                     agent {
                         dockerfile {
-                            filename '.jenkins/Dockerfile'
+                            filename '.jenkins/Dockerfile.nightly'
                             additionalBuildArgs '--pull'
                             args '-v /usr/share/jenkins/cache:/build_cache'
                         }
