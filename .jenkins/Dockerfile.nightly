@@ -1,3 +1,4 @@
 FROM rustlang/rust:nightly
 
 RUN cargo install cargo-expand
+RUN cargo install cbindgen
