@@ -41,6 +41,7 @@ pipeline {
                         success {
                             sh 'mv target/release/rustic rustic-linux-x86_64'
                             archiveArtifacts artifacts: 'rustic-linux-x86_64', fingerprint: true
+                            archiveArtifacts artifacts: 'target/release/librustic_ffi_client.so', fingerprint: true
                             //archiveArtifacts artifacts: 'target/release/rustic-*-extension', fingerprint: true
                         }
                     }
