@@ -14,7 +14,12 @@ pipeline {
                 CARGO_HOME='/build_cache/cargo'
             }
             steps {
-                sh 'cargo test --bins --workspace'
+                sh 'cargo tarpaulin -o Xml -v --workspace'
+            }
+            post {
+                success {
+                    cobertura coberturaReportFile: 'cobertura.xml'
+                }
             }
         }
         
