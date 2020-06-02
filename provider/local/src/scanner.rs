@@ -29,7 +29,7 @@ fn is_mp3(entry: &walkdir::DirEntry) -> bool {
 }
 
 impl Scanner {
-    pub fn new(path: &Path) -> Scanner {
+    pub fn new<P: Into<PathBuf>>(path: P) -> Scanner {
         Scanner { path: path.into() }
     }
 

@@ -9,7 +9,8 @@ fn test_scan() {
             path: "assets/bensound-ukulele.mp3".into(),
             title: "Ukulele".into(),
             artist: Some("Bensound".into()),
-            album: None
+            album: None,
+            has_coverart: false
         }]
     );
 }
