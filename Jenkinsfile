@@ -14,13 +14,14 @@ pipeline {
                 CARGO_HOME='/build_cache/cargo'
             }
             steps {
-                sh 'cargo tarpaulin -o Xml -v --workspace'
+                sh 'cargo test --workspace'
+//                sh 'cargo tarpaulin -o Xml -v --workspace'
             }
-            post {
-                success {
-                    cobertura coberturaReportFile: 'cobertura.xml'
-                }
-            }
+//            post {
+//                success {
+//                    cobertura coberturaReportFile: 'cobertura.xml'
+//                }
+//            }
         }
         
         stage('Build') {
