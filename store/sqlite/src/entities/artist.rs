@@ -74,6 +74,10 @@ impl ArtistEntity {
             image_url: self.image_url,
             meta: ArtistMeta::to_meta_map(meta),
             provider: int_to_provider(self.provider),
+            // TODO: get via mappings
+            albums: Vec::new(),
+            // TODO: add mappings
+            playlists: Vec::new()
         }
     }
 }
