@@ -47,6 +47,8 @@ impl From<YoutubePlaylistItem> for Track {
                 image_url: None,
                 meta: HashMap::new(),
                 provider: ProviderType::Youtube,
+                albums: vec![],
+                playlists: vec![]
             }),
             has_coverart: true,
             duration: None,

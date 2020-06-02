@@ -48,6 +48,19 @@ pub async fn get_artists(client: web::Data<ApiClient>) -> Result<impl Responder>
     Ok(web::Json(artists))
 }
 
+#[get("/library/artists/{cursor}")]
+pub async fn get_artist(
+    client: web::Data<ApiClient>,
+    params: web::Path<GetEntityQuery>,
+) -> Result<impl Responder> {
+    let artist = client.get_artist(&params.cursor).await?;
+
+    match artist {
+        Some(artist) => Ok(web::Json(artist)),
+        None => Err(error::ErrorNotFound("Not Found")),
+    }
+}
+
 #[get("/library/playlists")]
 pub async fn get_playlists(
     client: web::Data<ApiClient>,

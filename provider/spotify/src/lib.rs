@@ -242,12 +242,34 @@ impl rustic_core::provider::ProviderInstance for SpotifyProvider {
         Ok(albums.chain(artists).chain(tracks).collect())
     }
 
-    async fn resolve_track(&self, _uri: &str) -> Result<Option<Track>, Error> {
-        Ok(None)
+    async fn resolve_track(&self, uri: &str) -> Result<Option<Track>, Error> {
+        let spotify = self.client.as_ref().unwrap();
+        let id = &uri["spotify://track/".len()..];
+        let track = spotify.track(id).await?;
+        let track = SpotifyFullTrack::from(track);
+        let track = track.into();
+
+        Ok(Some(track))
     }
 
-    async fn resolve_album(&self, _uri: &str) -> Result<Option<Album>, Error> {
-        Ok(None)
+    async fn resolve_album(&self, uri: &str) -> Result<Option<Album>, Error> {
+        let spotify = self.client.as_ref().unwrap();
+        let id = &uri["spotify://album/".len()..];
+        let album = spotify.album(id).await?;
+        let album = SpotifyFullAlbum::from(album);
+        let album = album.into();
+
+        Ok(Some(album))
+    }
+
+    async fn resolve_artist(&self, uri: &str) -> Result<Option<Artist>, Error> {
+        let spotify = self.client.as_ref().unwrap();
+        let id = &uri["spotify://artist/".len()..];
+        let artist = spotify.artist(id).await?;
+        let artist = SpotifyFullArtist::from(artist);
+        let artist = artist.into();
+
+        Ok(Some(artist))
     }
 
     async fn resolve_playlist(&self, uri: &str) -> Result<Option<Playlist>, Error> {

@@ -60,6 +60,11 @@ pub async fn get_artists() -> ApiResult {
     execute(CLIENT.get_artists()).await
 }
 
+#[wasm_bindgen(js_name = "getArtist")]
+pub async fn get_artist(cursor: String) -> ApiResult {
+    execute(CLIENT.get_artist(&cursor)).await
+}
+
 #[wasm_bindgen(js_name = "getPlaylists")]
 pub async fn get_playlists(providers: JsValue) -> ApiResult {
     execute(CLIENT.get_playlists(map_providers(providers))).await

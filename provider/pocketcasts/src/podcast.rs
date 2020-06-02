@@ -36,6 +36,8 @@ impl From<PocketcastAlbum> for Album {
                     META_POCKETCASTS_PODCAST_UUID.into() => podcast.uuid.into()
                 ),
                 provider: ProviderType::Pocketcasts,
+                albums: Vec::new(),
+                playlists: Vec::new()
             }),
             tracks: vec![],
             provider: ProviderType::Pocketcasts,
@@ -52,6 +54,7 @@ impl From<PocketcastAlbum> for Album {
 impl From<PocketcastAlbum> for Artist {
     fn from(podcast: PocketcastAlbum) -> Artist {
         let podcast = podcast.0;
+        let album = PocketcastAlbum::from(podcast.clone());
         Artist {
             id: None,
             uri: format!("pocketcasts://interpret/{}", podcast.author),
@@ -59,6 +62,8 @@ impl From<PocketcastAlbum> for Artist {
             image_url: None,
             meta: HashMap::new(),
             provider: ProviderType::Pocketcasts,
+            albums: vec![album.into()],
+            playlists: Vec::new()
         }
     }
 }
@@ -92,6 +97,8 @@ impl From<PocketcastSearchResult> for Album {
                 image_url: None,
                 meta: HashMap::new(),
                 provider: ProviderType::Pocketcasts,
+                albums: vec![],
+                playlists: vec![]
             }),
             tracks: vec![],
             provider: ProviderType::Pocketcasts,

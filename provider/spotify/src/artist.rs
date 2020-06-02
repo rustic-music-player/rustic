@@ -24,6 +24,8 @@ impl From<SpotifyFullArtist> for Artist {
             uri: format!("spotify://artist/{}", artist.id),
             meta: HashMap::new(),
             provider: ProviderType::Spotify,
+            albums: Vec::new(),
+            playlists: Vec::new()
         }
     }
 }
@@ -41,6 +43,8 @@ impl From<SpotifySimplifiedArtist> for Artist {
                 .unwrap(),
             meta: HashMap::new(),
             provider: ProviderType::Spotify,
+            albums: Vec::new(),
+            playlists: Vec::new()
         }
     }
 }

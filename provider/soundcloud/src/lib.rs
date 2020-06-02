@@ -6,11 +6,12 @@ use serde::Deserialize;
 
 use async_trait::async_trait;
 use lazy_static::lazy_static;
-use rustic_core::library::{Album, MetaValue, Playlist, SharedLibrary, Track};
-use rustic_core::{provider, CredentialStore, Credentials};
+use rustic_core::library::{Album, MetaValue, Playlist, SharedLibrary, Track, Artist};
+use rustic_core::{provider, CredentialStore, Credentials, ProviderType};
 
 use crate::playlist::SoundcloudPlaylist;
 use crate::track::SoundcloudTrack;
+use std::collections::HashMap;
 
 mod error;
 mod meta;
@@ -30,6 +31,7 @@ lazy_static! {
 }
 
 const TRACK_URI_PREFIX: &str = "soundcloud://track/";
+const USER_URI_PREFIX: &str = "soundcloud://user/";
 
 #[derive(Debug, Clone, Deserialize)]
 pub struct SoundcloudProvider {
@@ -93,7 +95,7 @@ impl provider::ProviderInstance for SoundcloudProvider {
     async fn sync(&self, library: SharedLibrary) -> Result<provider::SyncResult, Error> {
         let client = self.client();
         let mut playlists: Vec<Playlist> = client
-            .user_playlists()
+            .my_playlists()
             .await?
             .iter()
             .cloned()
@@ -177,6 +179,26 @@ impl provider::ProviderInstance for SoundcloudProvider {
 
     async fn resolve_album(&self, _uri: &str) -> Result<Option<Album>, Error> {
         Ok(None)
+    }
+
+    async fn resolve_artist(&self, uri: &str) -> Result<Option<Artist>, Error> {
+        ensure!(uri.starts_with(USER_URI_PREFIX), "Invalid Uri: {}", uri);
+        let id = &uri[USER_URI_PREFIX.len()..];
+        let id = usize::from_str(id)?;
+        let client = self.client();
+        let user = client.user(id).await?;
+        let playlists = client.user_playlists(id).await?.into_iter().map(SoundcloudPlaylist::from).map(Playlist::from).collect();
+
+        Ok(Some(Artist {
+            id: None,
+            name: user.username,
+            playlists,
+            albums: Vec::new(),
+            provider: ProviderType::Soundcloud,
+            meta: HashMap::new(),
+            image_url: Some(user.avatar_url),
+            uri: format!("soundcloud://user/{}", user.id)
+        }))
     }
 
     async fn resolve_playlist(&self, uri: &str) -> Result<Option<Playlist>, Error> {

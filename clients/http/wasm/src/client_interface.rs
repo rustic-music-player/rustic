@@ -2,7 +2,7 @@ use wasm_bindgen::prelude::*;
 
 #[wasm_bindgen(typescript_custom_section)]
 const TS_APPEND_CONTENT: &'static str = r#"
-export interface RusticClient {
+export interface RusticApiClient {
     search(query: string, providers: any): Promise<SearchResults>;
     getExtensions(): Promise<ExtensionModel[]>;
     openShareUrl(url: string): Promise<OpenResultModel>;
@@ -11,6 +11,7 @@ export interface RusticClient {
     getAlbums(providers: any): Promise<AlbumModel[]>;
     getAlbum(cursor: string): Promise<AlbumModel>;
     getArtists(): Promise<ArtistModel[]>;
+    getArtist(cursor: string): Promise<ArtistModel>;
     getPlaylists(providers: any): Promise<PlaylistModel[]>;
     getPlaylist(cursor: string): Promise<PlaylistModel>;
     getTracks(providers: any): Promise<TrackModel[]>;

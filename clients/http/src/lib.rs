@@ -180,6 +180,12 @@ impl<T> LibraryApiClient for RusticHttpClient<T>
         Ok(res)
     }
 
+    async fn get_artist(&self, cursor: &str) -> Result<Option<ArtistModel>> {
+        let res = self.get(&format!("/api/library/artists/{}", cursor)).await?;
+
+        Ok(res)
+    }
+
     async fn get_playlists(
         &self,
         providers: Option<Vec<ProviderTypeModel>>,

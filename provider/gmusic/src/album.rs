@@ -25,10 +25,12 @@ impl From<GmusicAlbum> for Album {
             artist: Some(Artist {
                 id: None,
                 name: album.artist,
-                uri: String::new(),
+                uri: format!("gmusic:artist:{}", album.artist_id.first().cloned().unwrap_or_else(|| String::from("unknown"))),
                 image_url: None,
                 meta: HashMap::new(),
                 provider: ProviderType::GooglePlayMusic,
+                playlists: Vec::new(),
+                albums: Vec::new(),
             }),
             artist_id: None,
             uri: format!("gmusic:album:{}", &album.id),

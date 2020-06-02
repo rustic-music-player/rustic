@@ -37,6 +37,8 @@ impl From<SoundcloudTrack> for Track {
                     META_SOUNDCLOUD_USER_ID.into() => track.user.id.into()
                 ),
                 provider: provider::ProviderType::Soundcloud,
+                albums: Vec::new(),
+                playlists: Vec::new()
             }),
             artist_id: None,
             album: None,

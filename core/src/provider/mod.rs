@@ -8,7 +8,7 @@ use url::Url;
 
 use async_trait::async_trait;
 
-use crate::library::{Album, SharedLibrary, Track};
+use crate::library::{Album, SharedLibrary, Track, Artist};
 use crate::{Playlist, CredentialStore};
 
 pub use self::explorer::Explorer;
@@ -106,6 +106,7 @@ pub trait ProviderInstance: Debug {
     async fn search(&self, query: String) -> Result<Vec<ProviderItem>, Error>;
     async fn resolve_track(&self, uri: &str) -> Result<Option<Track>, Error>;
     async fn resolve_album(&self, uri: &str) -> Result<Option<Album>, Error>;
+    async fn resolve_artist(&self, uri: &str) -> Result<Option<Artist>, Error>;
     async fn resolve_playlist(&self, uri: &str) -> Result<Option<Playlist>, Error>;
     async fn stream_url(&self, track: &Track) -> Result<String, Error>;
     async fn cover_art(&self, track: &Track) -> Result<Option<CoverArt>, Error>;

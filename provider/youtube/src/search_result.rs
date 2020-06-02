@@ -1,6 +1,6 @@
-use youtube_api::models::SearchResult;
+use youtube_api::models::{SearchResult, Id};
 use rustic_core::provider::{ProviderItem, ProviderItemType};
-use rustic_core::{Track, ProviderType, Artist};
+use rustic_core::{Track, ProviderType, Artist, Playlist};
 use std::collections::HashMap;
 use crate::meta::META_YOUTUBE_DEFAULT_THUMBNAIL_URL;
 
@@ -21,12 +21,18 @@ impl From<SearchResult> for YoutubeSearchResult {
 
 impl From<YoutubeSearchResult> for ProviderItem {
     fn from(result: YoutubeSearchResult) -> Self {
-        let track = result.clone().into();
+        let search_result = result.clone();
         let result = result.into_inner();
+
+        let data = match result.id {
+            Id::PlaylistId { playlist_id: _ } => ProviderItemType::Playlist(search_result.into()),
+            Id::ChannelId { channel_id: _ } => ProviderItemType::Artist(search_result.into()),
+            Id::VideoId { video_id: _ } => ProviderItemType::Track(search_result.into())
+        };
 
         ProviderItem {
             label: result.snippet.title.clone(),
-            data: ProviderItemType::Track(track)
+            data
         }
     }
 }
@@ -58,10 +64,44 @@ impl From<YoutubeSearchResult> for Track {
                 name: result.snippet.channel_title,
                 image_url: None,
                 provider: ProviderType::Youtube,
+                albums: vec![],
+                playlists: vec![]
             }),
             album: None,
             album_id: None,
             meta
+        }
+    }
+}
+
+impl From<YoutubeSearchResult> for Artist {
+    fn from(result: YoutubeSearchResult) -> Self {
+        let result = result.into_inner();
+        let thumbnail = result.snippet.thumbnails.get("high");
+
+        Artist {
+            id: None,
+            name: result.snippet.title,
+            uri: format!("youtube://author/{}", result.id.into_inner()),
+            provider: ProviderType::Youtube,
+            playlists: Vec::new(),
+            albums: Vec::new(),
+            image_url: thumbnail.map(|thumbnail| thumbnail.url.clone()),
+            meta: HashMap::new()
+        }
+    }
+}
+
+impl From<YoutubeSearchResult> for Playlist {
+    fn from(result: YoutubeSearchResult) -> Self {
+        let result = result.into_inner();
+
+        Playlist {
+            id: None,
+            title: result.snippet.title,
+            uri: format!("youtube://playlist/{}", result.id.into_inner()),
+            provider: ProviderType::Youtube,
+            tracks: Vec::new()
         }
     }
 }

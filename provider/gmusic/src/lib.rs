@@ -9,14 +9,16 @@ use serde_derive::Deserialize;
 use gmusic::GoogleMusicApi;
 use lazy_static::lazy_static;
 use rustic_core::library::MetaValue;
-use rustic_core::{provider, Album, Playlist, SharedLibrary, Track, CredentialStore};
+use rustic_core::{provider, Album, Playlist, SharedLibrary, Track, CredentialStore, Artist};
 
 use crate::album::GmusicAlbum;
+use crate::artist::GmusicArtist;
 use crate::meta::{META_GMUSIC_COVER_ART_URL, META_GMUSIC_STORE_ID};
 use crate::playlist::GmusicPlaylist;
 use crate::track::GmusicTrack;
 
 mod album;
+mod artist;
 mod meta;
 mod playlist;
 mod track;
@@ -189,6 +191,15 @@ impl provider::ProviderInstance for GooglePlayMusicProvider {
         Ok(Some(album))
     }
 
+    async fn resolve_artist(&self, uri: &str) -> Result<Option<Artist>, Error> {
+        let client = self.get_client()?;
+        let artist_id = &uri["gmusic:artist:".len()..];
+        let artist = client.get_artist(artist_id).await?;
+        let artist = GmusicArtist::from(artist);
+        let artist = Artist::from(artist);
+        Ok(Some(artist))
+    }
+
     async fn resolve_playlist(&self, _uri: &str) -> Result<Option<Playlist>, Error> {
         unimplemented!()
     }
@@ -293,7 +304,11 @@ impl TryFrom<GoogleSearchResult> for provider::ProviderItem {
             let album = GmusicAlbum::from(album);
             let album = Album::from(album);
             Ok(provider::ProviderItem::from(album))
-        } else {
+        } else if let Some(artist) = result.artist {
+            let artist = GmusicArtist::from(artist);
+            let artist = Artist::from(artist);
+            Ok(provider::ProviderItem::from(artist))
+        }else {
             Err(())
         }
     }

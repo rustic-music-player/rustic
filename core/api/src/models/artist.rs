@@ -1,4 +1,4 @@
-use crate::models::{AlbumModel, TrackModel};
+use crate::models::{AlbumModel, TrackModel, PlaylistModel, ProviderTypeModel};
 use serde::{Deserialize, Serialize};
 use std::cmp::Ordering;
 #[cfg(target_arch = "wasm32")]
@@ -11,7 +11,9 @@ pub struct ArtistModel {
     pub name: String,
     pub albums: Option<Vec<AlbumModel>>,
     pub tracks: Option<Vec<TrackModel>>,
+    pub playlists: Option<Vec<PlaylistModel>>,
     pub image: Option<String>,
+    pub provider: ProviderTypeModel,
 }
 
 impl PartialOrd for ArtistModel {

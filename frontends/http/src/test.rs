@@ -30,6 +30,7 @@ where
         .service(controller::library::get_albums)
         .service(controller::library::get_album)
         .service(controller::library::get_artists)
+        .service(controller::library::get_artist)
         .service(controller::library::get_playlists)
         .service(controller::library::get_playlist)
         .service(controller::library::get_tracks)

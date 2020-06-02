@@ -213,6 +213,10 @@ impl provider::ProviderInstance for PocketcastsProvider {
         unimplemented!()
     }
 
+    async fn resolve_artist(&self, _uri: &str) -> Result<Option<Artist>, Error> {
+        unimplemented!()
+    }
+
     async fn resolve_playlist(&self, _uri: &str) -> Result<Option<Playlist>, Error> {
         unimplemented!()
     }

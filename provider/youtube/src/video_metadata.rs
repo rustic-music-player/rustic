@@ -38,6 +38,8 @@ impl From<YoutubeVideoMetadata> for Track {
                 image_url: None,
                 meta: HashMap::new(),
                 provider: ProviderType::Youtube,
+                albums: vec![],
+                playlists: vec![]
             }),
             album: None,
             album_id: None,

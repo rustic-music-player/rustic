@@ -8,7 +8,7 @@ use youtube_api::models::{ListPlaylistItemsRequestBuilder, ListPlaylistsRequestB
 
 use async_trait::async_trait;
 use lazy_static::lazy_static;
-use rustic_core::{Album, Playlist, ProviderType, SharedLibrary, Track, CredentialStore};
+use rustic_core::{Album, Playlist, ProviderType, SharedLibrary, Track, CredentialStore, Artist};
 use rustic_core::library::MetaValue;
 use rustic_core::provider::{
     Authentication, AuthState, CoverArt, InternalUri, ProviderFolder, ProviderInstance,
@@ -192,6 +192,10 @@ impl ProviderInstance for YoutubeProvider {
     }
 
     async fn resolve_album(&self, uri: &str) -> Result<Option<Album>, Error> {
+        unimplemented!()
+    }
+
+    async fn resolve_artist(&self, _uri: &str) -> Result<Option<Artist>, Error> {
         unimplemented!()
     }
 

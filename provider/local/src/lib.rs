@@ -119,6 +119,10 @@ impl ProviderInstance for LocalProvider {
         unimplemented!()
     }
 
+    async fn resolve_artist(&self, _uri: &str) -> Result<Option<library::Artist>, Error> {
+        unimplemented!()
+    }
+
     async fn resolve_playlist(&self, _uri: &str) -> Result<Option<library::Playlist>, Error> {
         unimplemented!()
     }
@@ -180,6 +184,8 @@ impl From<scanner::Track> for library::Track {
                     META_LOCAL_FILE_URL.into() => path.clone().into()
                 ),
                 provider: ProviderType::LocalMedia,
+                albums: vec![],
+                playlists: vec![]
             }),
             has_coverart: track.has_coverart,
             provider: ProviderType::LocalMedia,
@@ -223,6 +229,8 @@ impl From<scanner::Track> for Option<library::Artist> {
                 META_LOCAL_FILE_URL.into() => path.into()
             ),
             provider: ProviderType::LocalMedia,
+            albums: vec![],
+            playlists: vec![]
         })
     }
 }

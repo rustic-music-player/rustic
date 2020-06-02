@@ -156,6 +156,10 @@ impl LibraryApiClient for TestApiClient {
         unimplemented!()
     }
 
+    async fn get_artist(&self, cursor: &str) -> Result<Option<ArtistModel>> {
+        unimplemented!()
+    }
+
     async fn get_playlists(
         &self,
         providers: Option<Vec<ProviderTypeModel>>,

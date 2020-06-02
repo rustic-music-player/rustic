@@ -122,6 +122,25 @@ impl Rustic {
         }
     }
 
+    pub async fn query_artist(&self, query: SingleQuery) -> Result<Option<Artist>, failure::Error> {
+        debug!("Executing artist query: {:?}", query);
+        let artist = self.library.query_artist(query.clone())?;
+        if let Some(artist) = artist {
+            Ok(Some(artist))
+        } else if let SingleQueryIdentifier::Uri(ref uri) = query.identifier {
+            trace!("Artist is not in library, asking provider");
+            let provider = self.get_provider_for_url(uri)?;
+            let artist = match provider {
+                Some(provider) => provider.get().await.resolve_artist(uri).await?,
+                _ => None,
+            };
+            Ok(artist)
+        } else {
+            // Only library artists have an id
+            Ok(None)
+        }
+    }
+    
     pub async fn query_playlist(
         &self,
         query: SingleQuery,

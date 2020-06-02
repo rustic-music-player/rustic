@@ -56,6 +56,18 @@ impl LibraryApiClient for RusticNativeClient {
         let artists = artists.into_iter().map(ArtistModel::from).collect();
         Ok(artists)
     }
+    
+    async fn get_artist(&self, cursor: &str) -> Result<Option<ArtistModel>, failure::Error> {
+        let sw = stopwatch::Stopwatch::start_new();
+
+        let uri = from_cursor(cursor)?;
+        let mut query = SingleQuery::uri(uri);
+        query.join_all();
+        let artist = self.app.query_artist(query).await?.map(ArtistModel::from);
+        debug!("Fetching artist took {}ms", sw.elapsed_ms());
+
+        Ok(artist)
+    }
 
     async fn get_playlists(
         &self,

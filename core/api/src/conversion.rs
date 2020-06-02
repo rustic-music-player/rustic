@@ -29,9 +29,11 @@ impl From<Artist> for ArtistModel {
         ArtistModel {
             cursor: to_cursor(&artist.uri),
             name: artist.name,
-            albums: None,
+            albums: Some(artist.albums.into_iter().map(AlbumModel::from).collect()),
             tracks: None,
+            playlists: Some(artist.playlists.into_iter().map(PlaylistModel::from).collect()),
             image: artist.image_url.clone(),
+            provider: artist.provider.into(),
         }
     }
 }
