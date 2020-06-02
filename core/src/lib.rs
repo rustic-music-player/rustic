@@ -189,6 +189,18 @@ impl Rustic {
     pub async fn cover_art(&self, track: &Track) -> Result<Option<CoverArt>, failure::Error> {
         let provider = self.get_provider(track)?;
         let cover = provider.get().await.cover_art(track).await?;
+        let cover = if let Some(cover) = cover {
+            let cached_cover = self.cache.fetch_coverart(&cover).await?;
+
+            if cached_cover.is_some() {
+                cached_cover
+            }else {
+                let cover = self.cache.cache_coverart(&cover).await?;
+                Some(cover)
+            }
+        }else {
+            None
+        };
 
         Ok(cover)
     }
