@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use log::{debug, trace};
+use log::{debug, trace, error};
 use rayon::prelude::*;
 
 use async_trait::async_trait;
@@ -54,10 +54,15 @@ impl RusticApiClient for RusticNativeClient {
             })
             .collect();
         let mut results: Vec<ProviderItem> = Vec::new();
+        // TODO: run in parallel
         for provider in providers {
             let provider = provider.get().await;
-            let mut result = provider.search(query.to_string()).await?;
-            results.append(&mut result);
+            match provider.search(query.to_string()).await {
+                Ok(mut result) => {
+                    results.append(&mut result);
+                }
+                Err(e) => error!("Searching failed for provider {:?}: {:?}", provider.provider(), e)
+            }
         }
         debug!("Searching took {}ms", sw.elapsed_ms());
 
