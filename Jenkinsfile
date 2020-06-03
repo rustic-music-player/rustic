@@ -84,7 +84,6 @@ pipeline {
                         }
                     }
                     steps {
-                        sh 'curl https://rustwasm.github.io/wasm-pack/installer/init.sh -sSf | sh'
                         sh 'clients/http/wasm/package.sh'
                     }
                     post {
