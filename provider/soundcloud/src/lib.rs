@@ -146,7 +146,6 @@ impl provider::ProviderInstance for SoundcloudProvider {
             .query(Some(query))
             .get()
             .await?
-            .unwrap_or_else(|| vec![])
             .into_iter()
             .filter(|track| {
                 let has_url = track.stream_url.is_some();
@@ -186,8 +185,8 @@ impl provider::ProviderInstance for SoundcloudProvider {
         let id = &uri[USER_URI_PREFIX.len()..];
         let id = usize::from_str(id)?;
         let client = self.client();
-        let user = client.user(id).await?;
-        let playlists = client.user_playlists(id).await?.into_iter().map(SoundcloudPlaylist::from).map(Playlist::from).collect();
+        let user = client.user(id).get().await?;
+        let playlists = client.user(id).playlists().await?.into_iter().map(SoundcloudPlaylist::from).map(Playlist::from).collect();
 
         Ok(Some(Artist {
             id: None,
