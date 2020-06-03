@@ -5,6 +5,7 @@ use rustic_reflect_macros::reflect;
 use async_trait::async_trait;
 
 use crate::models::*;
+use crate::cursor::Cursor;
 
 pub type Result<T> = std::result::Result<T, failure::Error>;
 
@@ -24,7 +25,7 @@ pub trait RusticApiClient:
 
     async fn open_share_url(&self, url: &str) -> Result<Option<OpenResultModel>>;
 
-    async fn get_track_cover_art(&self, cursor: &str) -> Result<Option<CoverArtModel>>;
+    async fn get_thumbnail(&self, cursor: Cursor) -> Result<Option<CoverArtModel>>;
 }
 
 #[cfg_attr(target_arch = "wasm32", async_trait(?Send))]

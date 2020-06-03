@@ -1,3 +1,5 @@
+use std::convert::TryFrom;
+
 use futures::StreamExt;
 
 use rustic_core::{Album, Artist, PlayerEvent, PlayerState, Playlist, ProviderType, Track};
@@ -8,31 +10,33 @@ use rustic_core::provider::{
 use rustic_core::sync::{SyncEvent, SyncItem, SyncItemState};
 use rustic_extension_api::ExtensionMetadata;
 
-use crate::cursor::to_cursor;
+use crate::cursor::{Cursor, from_cursor, to_cursor};
 use crate::models::*;
 
 impl From<Album> for AlbumModel {
     fn from(album: Album) -> Self {
+        let cursor = to_cursor(&album.uri);
         AlbumModel {
-            cursor: to_cursor(&album.uri),
+            cursor: cursor.clone(),
             title: album.title,
             artist: album.artist.map(ArtistModel::from),
             tracks: album.tracks.into_iter().map(TrackModel::from).collect(),
             provider: album.provider.into(),
-            coverart: album.image_url.clone(),
+            coverart: album.image_url.map(|_| format!("/api/albums/{}/coverart", &cursor)),
         }
     }
 }
 
 impl From<Artist> for ArtistModel {
     fn from(artist: Artist) -> Self {
+        let cursor = to_cursor(&artist.uri);
         ArtistModel {
-            cursor: to_cursor(&artist.uri),
+            cursor: cursor.clone(),
             name: artist.name,
             albums: Some(artist.albums.into_iter().map(AlbumModel::from).collect()),
             tracks: None,
             playlists: Some(artist.playlists.into_iter().map(PlaylistModel::from).collect()),
-            image: artist.image_url.clone(),
+            image: artist.image_url.map(|_| format!("/api/artists/{}/coverart", &cursor)),
             provider: artist.provider.into(),
         }
     }
@@ -252,6 +256,35 @@ impl From<CoverArt> for CoverArtModel {
                     mime_type,
                 }
             }
+        }
+    }
+}
+
+impl TryFrom<Cursor> for InternalUri {
+    type Error = failure::Error;
+
+    fn try_from(cursor: Cursor) -> Result<Self, Self::Error> {
+        use Cursor::*;
+
+        let cursor = match cursor {
+            Track(cursor) => InternalUri::Track(from_cursor(&cursor)?),
+            Album(cursor) => InternalUri::Album(from_cursor(&cursor)?),
+            Artist(cursor) => InternalUri::Artist(from_cursor(&cursor)?),
+            Playlist(cursor) => InternalUri::Playlist(from_cursor(&cursor)?),
+        };
+        Ok(cursor)
+    }
+}
+
+impl From<InternalUri> for Cursor {
+    fn from(uri: InternalUri) -> Self {
+        use InternalUri::*;
+
+        match uri {
+            Track(uri) => Cursor::Track(to_cursor(&uri)),
+            Album(uri) => Cursor::Album(to_cursor(&uri)),
+            Artist(uri) => Cursor::Artist(to_cursor(&uri)),
+            Playlist(uri) => Cursor::Playlist(to_cursor(&uri)),
         }
     }
 }

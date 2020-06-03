@@ -11,7 +11,6 @@ use rustic_core::Rustic;
 
 mod app;
 mod controller;
-mod cursor;
 mod socket;
 #[cfg(test)]
 pub(crate) mod test;

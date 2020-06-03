@@ -61,7 +61,7 @@ impl Cache {
         Ok(())
     }
 
-    pub async fn fetch_coverart(&self, cover: &CoverArt) -> Result<Option<CoverArt>, Error> {
+    pub async fn fetch_thumbnail(&self, cover: &CoverArt) -> Result<Option<CoverArt>, Error> {
         match cover {
             CoverArt::Url(ref url) => {
                 let path = self.get_coverart_path(url);
@@ -76,7 +76,7 @@ impl Cache {
         }
     }
 
-    pub async fn cache_coverart(&self, cover: &CoverArt) -> Result<CoverArt, Error> {
+    pub async fn cache_thumbnail(&self, cover: &CoverArt) -> Result<CoverArt, Error> {
         match cover {
             CoverArt::Url(ref url) => self.download_coverart(url).await,
             _ => Err(format_err!(""))

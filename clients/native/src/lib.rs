@@ -5,11 +5,12 @@ use rayon::prelude::*;
 
 use async_trait::async_trait;
 use rustic_api::client::*;
-use rustic_api::cursor::from_cursor;
+use rustic_api::cursor::Cursor;
 use rustic_api::models::*;
-use rustic_core::provider::ProviderItem;
+use rustic_core::provider::{ProviderItem, InternalUri, ProviderItemType};
 use rustic_core::{Album, Artist, Provider, Rustic, SingleQuery, Track, CredentialStore};
 use rustic_extension_api::ExtensionManager;
+use std::convert::TryInto;
 
 mod library;
 mod player;
@@ -110,13 +111,29 @@ impl RusticApiClient for RusticNativeClient {
         Ok(result)
     }
 
-    async fn get_track_cover_art(&self, cursor: &str) -> Result<Option<CoverArtModel>> {
-        let uri = from_cursor(cursor)?;
-        let query = SingleQuery::uri(uri);
-        let track = self.app.query_track(query).await?;
+    async fn get_thumbnail(&self, cursor: Cursor) -> Result<Option<CoverArtModel>> {
+        let uri = cursor.try_into()?;
+        let provider_item = match uri {
+            InternalUri::Track(uri) => {
+                let query = SingleQuery::uri(uri);
+                let track = self.app.query_track(query).await?;
+                track.map(ProviderItemType::Track)
+            },
+            InternalUri::Album(uri) => {
+                let query = SingleQuery::uri(uri);
+                let album = self.app.query_album(query).await?;
+                album.map(ProviderItemType::Album)
+            },
+            InternalUri::Artist(uri) => {
+                let query = SingleQuery::uri(uri);
+                let artist = self.app.query_artist(query).await?;
+                artist.map(ProviderItemType::Artist)
+            },
+            _ => None
+        };
 
-        if let Some(track) = track {
-            let cover_art = self.app.cover_art(&track).await?;
+        if let Some(item) = provider_item {
+            let cover_art = self.app.thumbnail(&item).await?;
             let cover_art = cover_art.map(CoverArtModel::from);
 
             Ok(cover_art)

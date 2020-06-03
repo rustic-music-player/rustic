@@ -1,5 +1,5 @@
 use crate::app::ApiClient;
-use crate::cursor::from_cursor;
+use rustic_api::cursor::from_cursor;
 use actix_web::{get, post, web, HttpResponse, Responder, Result};
 use serde::Deserialize;
 

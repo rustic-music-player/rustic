@@ -5,7 +5,7 @@ use serde::de::DeserializeOwned;
 
 use async_trait::async_trait;
 use rustic_api::client::*;
-use rustic_api::cursor::to_cursor;
+use rustic_api::cursor::{to_cursor, Cursor};
 pub use rustic_api::models;
 use rustic_api::models::*;
 
@@ -93,8 +93,8 @@ impl<T> RusticApiClient for RusticHttpClient<T>
         Ok(res)
     }
 
-    async fn get_track_cover_art(&self, cursor: &str) -> Result<Option<CoverArtModel>> {
-        unimplemented!("")
+    async fn get_thumbnail(&self, cursor: Cursor) -> Result<Option<CoverArtModel>> {
+        unimplemented!()
     }
 }
 

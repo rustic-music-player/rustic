@@ -1,12 +1,12 @@
-use actix_web::{error, get, web, Responder};
+use actix_web::{error, get, Responder, web};
 use log::trace;
 use serde::Deserialize;
 use serde_qs::actix::QsQuery;
 
+use rustic_api::cursor::from_cursor;
 use rustic_api::models::ProviderTypeModel;
 
 use crate::app::ApiClient;
-use crate::cursor::from_cursor;
 
 #[derive(Deserialize)]
 pub struct SearchQuery {
@@ -47,8 +47,8 @@ pub async fn open(
 
 #[cfg(test)]
 mod test {
+    use actix_web::{App, http, test};
     use actix_web::dev::*;
-    use actix_web::{http, test, App};
 
     use rustic_api::models::{ProviderTypeModel, SearchResults};
     use rustic_api::TestApiClient;

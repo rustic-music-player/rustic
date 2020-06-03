@@ -5,15 +5,15 @@ use failure::format_err;
 use log::{debug, trace};
 use url::Url;
 
+pub use crate::cred_store::{Credentials, CredentialStore};
 pub use crate::library::{
     Album, Artist, Library, LibraryQueryJoins, MultiQuery, Playlist, QueryJoins, SearchResults,
     SharedLibrary, SingleQuery, SingleQueryIdentifier, Track,
 };
-use crate::player::Player;
 pub use crate::player::{PlayerBackend, PlayerEvent, PlayerState};
-use crate::provider::{CoverArt, InternalUri};
+use crate::player::Player;
+use crate::provider::{CoverArt, InternalUri, ProviderItemType};
 pub use crate::provider::{Explorer, Provider, ProviderType};
-pub use crate::cred_store::{CredentialStore, Credentials};
 
 pub mod cache;
 mod cred_store;
@@ -186,16 +186,27 @@ impl Rustic {
         Ok(stream_url)
     }
 
-    pub async fn cover_art(&self, track: &Track) -> Result<Option<CoverArt>, failure::Error> {
-        let provider = self.get_provider(track)?;
-        let cover = provider.get().await.cover_art(track).await?;
+    pub async fn thumbnail(&self, provider_item: &ProviderItemType) -> Result<Option<CoverArt>, failure::Error> {
+        let cover = match provider_item {
+            ProviderItemType::Track(track) => {
+                let provider = self.get_provider(track)?;
+                provider.get().await.cover_art(track).await?
+            },
+            ProviderItemType::Album(album) => {
+                album.image_url.as_ref().map(|url| CoverArt::Url(url.clone()))
+            },
+            ProviderItemType::Artist(artist) => {
+                artist.image_url.as_ref().map(|url| CoverArt::Url(url.clone()))
+            },
+            _ => None
+        };
         let cover = if let Some(cover) = cover {
-            let cached_cover = self.cache.fetch_coverart(&cover).await?;
+            let cached_cover = self.cache.fetch_thumbnail(&cover).await?;
 
             if cached_cover.is_some() {
                 cached_cover
-            }else {
-                let cover = self.cache.cache_coverart(&cover).await?;
+            } else {
+                let cover = self.cache.cache_thumbnail(&cover).await?;
                 Some(cover)
             }
         }else {
@@ -213,6 +224,18 @@ impl Rustic {
             .ok_or_else(|| format_err!("provider for track {:?} not found", track))?;
 
         Ok(provider)
+    }
+
+    fn get_provider_for_item(&self, item: &ProviderItemType) -> Result<&Provider, failure::Error> {
+        let provider_type = match item {
+            ProviderItemType::Track(track) => track.provider,
+            ProviderItemType::Artist(artist) => artist.provider,
+            ProviderItemType::Album(album) => album.provider,
+            ProviderItemType::Playlist(playlist) => playlist.provider
+        };
+
+        self.providers.iter().find(|p| p.provider_type == provider_type)
+            .ok_or_else(|| format_err!("provider for item type {:?}", item))
     }
 
     pub async fn resolve_share_url(

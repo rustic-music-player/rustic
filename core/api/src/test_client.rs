@@ -8,6 +8,7 @@ use async_trait::async_trait;
 
 use crate::client::*;
 use crate::models::*;
+use crate::cursor::Cursor;
 
 pub struct TestApiClient {
     pub extensions: Vec<ExtensionModel>,
@@ -54,7 +55,7 @@ impl RusticApiClient for TestApiClient {
         unimplemented!()
     }
 
-    async fn get_track_cover_art(&self, cursor: &str) -> Result<Option<CoverArtModel>> {
+    async fn get_thumbnail(&self, cursor: Cursor) -> Result<Option<CoverArtModel>> {
         unimplemented!()
     }
 }

@@ -6,6 +6,7 @@ use serde_qs::actix::QsQuery;
 use rustic_api::models::{CoverArtModel, ProviderTypeModel};
 
 use crate::app::ApiClient;
+use rustic_api::cursor::Cursor;
 
 #[derive(Deserialize)]
 pub struct GetEntityQuery {
@@ -109,12 +110,7 @@ pub async fn get_track(
     }
 }
 
-#[get("/tracks/{cursor}/coverart")]
-pub async fn get_track_cover_art(
-    client: web::Data<ApiClient>,
-    params: web::Path<GetEntityQuery>,
-) -> Result<impl Responder> {
-    let cover_art = client.get_track_cover_art(&params.cursor).await?;
+fn get_cover_art(cover_art: Option<CoverArtModel>) -> Result<impl Responder> {
     match cover_art {
         Some(CoverArtModel::Data { data, mime_type }) => {
             let stream = data.map(|d| Ok(d.into()));
@@ -129,4 +125,31 @@ pub async fn get_track_cover_art(
         }
         None => Err(error::ErrorNotFound("Not Found")),
     }
+}
+
+#[get("/albums/{cursor}/coverart")]
+pub async fn get_album_cover_art(
+    client: web::Data<ApiClient>,
+    params: web::Path<GetEntityQuery>,
+) -> Result<impl Responder> {
+    let cover_art = client.get_thumbnail(Cursor::Album(params.cursor.clone())).await?;
+    get_cover_art(cover_art)
+}
+
+#[get("/artists/{cursor}/coverart")]
+pub async fn get_artist_cover_art(
+    client: web::Data<ApiClient>,
+    params: web::Path<GetEntityQuery>,
+) -> Result<impl Responder> {
+    let cover_art = client.get_thumbnail(Cursor::Artist(params.cursor.clone())).await?;
+    get_cover_art(cover_art)
+}
+
+#[get("/tracks/{cursor}/coverart")]
+pub async fn get_track_cover_art(
+    client: web::Data<ApiClient>,
+    params: web::Path<GetEntityQuery>,
+) -> Result<impl Responder> {
+    let cover_art = client.get_thumbnail(Cursor::Track(params.cursor.clone())).await?;
+    get_cover_art(cover_art)
 }
