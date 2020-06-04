@@ -37,7 +37,7 @@ impl QueueApiClient for RusticNativeClient {
         let track: Option<Track> = self.app.query_track(SingleQuery::uri(uri)).await?;
         match track {
             Some(track) => {
-                self.queue_multiple(player, &vec![track]).await?;
+                self.queue_multiple(player, &[track]).await?;
 
                 Ok(Some(()))
             }
@@ -105,8 +105,8 @@ impl QueueApiClient for RusticNativeClient {
         let player = self.get_player_or_default(player_id).unwrap();
 
         from_channel(player.observe())
-            .filter(|e| match e {
-                &PlayerEvent::QueueUpdated(_) => future::ready(true),
+            .filter(|e| match *e {
+                PlayerEvent::QueueUpdated(_) => future::ready(true),
                 _ => future::ready(false),
             })
             .map(QueueEventModel::from)

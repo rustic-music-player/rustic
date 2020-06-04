@@ -93,7 +93,7 @@ impl<T> RusticApiClient for RusticHttpClient<T>
         Ok(res)
     }
 
-    async fn get_thumbnail(&self, cursor: Cursor) -> Result<Option<CoverArtModel>> {
+    async fn get_thumbnail(&self, _cursor: Cursor) -> Result<Option<CoverArtModel>> {
         unimplemented!()
     }
 }
@@ -119,8 +119,8 @@ where
 
     async fn navigate_provider(
         &self,
-        provider: ProviderTypeModel,
-        path: &str,
+        _provider: ProviderTypeModel,
+        _path: &str,
     ) -> Result<ProviderFolderModel> {
         unimplemented!()
     }

@@ -67,7 +67,7 @@ impl provider::ProviderInstance for PocketcastsProvider {
     }
 
     fn auth_state(&self) -> provider::AuthState {
-        if let Some(_) = self.client {
+        if self.client.is_some() {
             provider::AuthState::Authenticated(None)
         }else {
             provider::AuthState::RequiresPassword

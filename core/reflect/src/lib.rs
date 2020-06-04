@@ -80,7 +80,7 @@ impl From<PatType> for TraitMethodParameter {
             let t = quote! { #path };
             let t = t.to_string();
             TraitMethodParameterType::Type(t)
-        } else if let Type::Reference(reference) = pat_type.ty.as_ref() {
+        } else if let Type::Reference(_) = pat_type.ty.as_ref() {
             // TODO: we should check whether this is actually a &str or not
             TraitMethodParameterType::String
         } else {

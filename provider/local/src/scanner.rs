@@ -1,6 +1,6 @@
 use failure::Error;
 use log::error;
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
 
 #[derive(Debug, PartialEq, Clone)]
 pub struct Track {

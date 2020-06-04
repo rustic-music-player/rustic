@@ -90,8 +90,8 @@ impl PlayerApiClient for RusticNativeClient {
         let player = self.get_player_or_default(player_id).unwrap();
 
         from_channel(player.observe())
-            .filter(|e| match e {
-                &PlayerEvent::QueueUpdated(_) => future::ready(false),
+            .filter(|e| match *e {
+                PlayerEvent::QueueUpdated(_) => future::ready(false),
                 _ => future::ready(true),
             })
             .map(PlayerEventModel::from)

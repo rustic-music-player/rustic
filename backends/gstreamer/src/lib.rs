@@ -48,9 +48,8 @@ impl GstBackend {
             player_events,
         };
 
-        let player_queue = queue_tx.clone();
         backend.player.connect_end_of_stream(move |_| {
-            if let Err(e) = player_queue.send(QueueCommand::Next) {
+            if let Err(e) = queue_tx.send(QueueCommand::Next) {
                 error!("Failed loading next track: {:?}", e)
             }
         });

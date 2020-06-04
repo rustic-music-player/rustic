@@ -10,6 +10,7 @@ pub fn serialize_id(id: usize) -> Result<Vec<u8>, Error> {
     Ok(id_bytes)
 }
 
+#[allow(unused)]
 pub fn deserialize_id(id: &[u8]) -> Result<usize, Error> {
     let mut bytes = id;
     let id = bytes.read_u64::<LittleEndian>()?;

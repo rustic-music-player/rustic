@@ -22,7 +22,6 @@ impl From<PocketcastAlbum> for Album {
     fn from(podcast: PocketcastAlbum) -> Album {
         let podcast = podcast.0;
         let thumbnail_url = podcast.thumbnail_url();
-        let id = podcast.uuid.clone();
         Album {
             id: None,
             title: podcast.title,
@@ -44,7 +43,7 @@ impl From<PocketcastAlbum> for Album {
             image_url: Some(thumbnail_url.clone()),
             uri: format!("pocketcasts://podcast/{}", podcast.uuid),
             meta: hashmap!(
-                META_POCKETCASTS_PODCAST_UUID.into() => id.into(),
+                META_POCKETCASTS_PODCAST_UUID.into() => podcast.uuid.into(),
                 META_POCKETCASTS_COVER_ART_URL.into() => thumbnail_url.into()
             ),
         }

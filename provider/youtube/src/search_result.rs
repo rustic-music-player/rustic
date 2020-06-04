@@ -31,7 +31,7 @@ impl From<YoutubeSearchResult> for ProviderItem {
         };
 
         ProviderItem {
-            label: result.snippet.title.clone(),
+            label: result.snippet.title,
             data
         }
     }

@@ -15,7 +15,7 @@ impl<T> Stream for StreamingReceiver<T> {
 
     fn poll_next(self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Option<Self::Item>> {
         let result = self.0.try_recv();
-        let poll = match result {
+        match result {
             Ok(item) => Poll::Ready(Some(item)),
             Err(TryRecvError::Empty) => {
                 // TODO: we should keep track of the wakers and only wake when a new event is emitted
@@ -23,7 +23,6 @@ impl<T> Stream for StreamingReceiver<T> {
                 Poll::Pending
             }
             Err(TryRecvError::Disconnected) => Poll::Ready(None),
-        };
-        poll
+        }
     }
 }

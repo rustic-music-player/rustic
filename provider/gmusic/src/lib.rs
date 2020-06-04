@@ -72,6 +72,18 @@ impl provider::ProviderInstance for GooglePlayMusicProvider {
         Ok(())
     }
 
+    fn title(&self) -> &'static str {
+        "Google Play Music"
+    }
+
+    fn uri_scheme(&self) -> &'static str {
+        "gmusic"
+    }
+
+    fn provider(&self) -> provider::ProviderType {
+        provider::ProviderType::GooglePlayMusic
+    }
+
     fn auth_state(&self) -> provider::AuthState {
         let client = self.client.as_ref().expect("client isn't setup yet");
         if client.has_token() {
@@ -101,18 +113,6 @@ impl provider::ProviderInstance for GooglePlayMusicProvider {
             }
             _ => Err(format_err!("Invalid authentication method")),
         }
-    }
-
-    fn title(&self) -> &'static str {
-        "Google Play Music"
-    }
-
-    fn uri_scheme(&self) -> &'static str {
-        "gmusic"
-    }
-
-    fn provider(&self) -> provider::ProviderType {
-        provider::ProviderType::GooglePlayMusic
     }
 
     async fn sync(&self, library: SharedLibrary) -> Result<provider::SyncResult, Error> {
@@ -249,13 +249,13 @@ impl provider::ProviderInstance for GooglePlayMusicProvider {
         if let Some(captures) = dbg!(PLAY_MUSIC_REGEX.captures(dbg!(url.path()))) {
             let id = &captures[1];
 
-            let entity = if id.starts_with("T") {
+            let entity = if id.starts_with('T') {
                 // Track
                 Some(provider::InternalUri::Track(format!("gmusic:track:{}", id)))
-            } else if id.starts_with("B") {
+            } else if id.starts_with('B') {
                 // Album
                 Some(provider::InternalUri::Album(format!("gmusic:album:{}", id)))
-            } else if id.starts_with("A") {
+            } else if id.starts_with('A') {
                 // Artist
                 Some(provider::InternalUri::Artist(format!(
                     "gmusic:artist:{}",
