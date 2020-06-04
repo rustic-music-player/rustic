@@ -76,7 +76,7 @@ sqlite-store = ["rustic-sqlite-store"]
 http-client = ["rustic-native-http-client"]
 extensions = ["rustic-party-mode-extension"]
 
-[target.'cfg(win32)'.features]
+[target.'cfg(windows)'.features]
 default = [
 	"http-frontend",
 	"rodio-backend",
