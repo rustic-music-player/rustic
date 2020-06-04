@@ -29,11 +29,13 @@ impl MemoryQueue {
         }
     }
 
-    fn select_track(&self, queue: &Vec<Track>, index: usize) -> Option<()> {
+    fn select_track(&self, queue: &[Track], index: usize) -> Option<()> {
         if let Some(track) = queue.get(index).cloned() {
-            self.player_tx.send(PlayerCommand::Play(track));
+            self.player_tx.send(PlayerCommand::Play(track.clone()));
+            self.current_track.set(Some(track));
             Some(())
         } else {
+            self.current_track.set(None);
             None
         }
     }
@@ -44,11 +46,12 @@ impl MemoryQueue {
     }
 
     fn emit_current_track(&self) {
-        let current = self.current();
-        if self.current_track.read() == current {
+        let next = self.current();
+        let current = self.current_track.read();
+        if current == next {
             return;
         }
-        if let Some(track) = self.current() {
+        if let Some(track) = next {
             self.current_track.set(Some(track.clone()));
             self.player_tx.send(PlayerCommand::Play(track));
         } else {
