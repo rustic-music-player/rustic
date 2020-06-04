@@ -194,6 +194,7 @@ impl Default for ClientConfig {
     }
 }
 
+#[cfg(any(feature = "rodio-backend", feature = "gstreamer-backend"))]
 fn default_backend() -> Vec<PlayerBackendConfig> {
     #[cfg(feature = "rodio-backend")]
     #[allow(unused_variables)]
@@ -207,6 +208,11 @@ fn default_backend() -> Vec<PlayerBackendConfig> {
     };
 
     vec![config]
+}
+
+#[cfg(not(any(feature = "rodio-backend", feature = "gstreamer-backend")))]
+fn default_backend() -> Vec<PlayerBackendConfig> {
+    Vec::new()
 }
 
 #[cfg(feature = "google-cast-backend")]

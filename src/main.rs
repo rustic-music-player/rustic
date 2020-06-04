@@ -46,13 +46,16 @@ fn main() -> Result<(), Error> {
 }
 
 fn is_remote(options: &options::CliOptions, config: &config::Config) -> bool {
+    #[cfg(any(feature = "http-client"))]
     if options.connect.is_some() {
-        true
-    } else if let ClientConfig::Http { url: _ } = config.client {
-        true
-    } else {
-        false
+        return true;
     }
+    #[cfg(feature = "http-client")]
+    if let ClientConfig::Http { url: _ } = config.client {
+        return true;
+    }
+
+    false
 }
 
 async fn setup_instance(options: &options::CliOptions, config: &config::Config) -> Result<(Arc<Rustic>, ApiClient), failure::Error> {
