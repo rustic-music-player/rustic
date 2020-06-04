@@ -12,6 +12,7 @@ members = [
     "frontends/http",
     "frontends/mpd",
     "frontends/qt",
+    "frontends/systray",
     "provider/local",
     "provider/pocketcasts",
     "provider/soundcloud",
@@ -62,6 +63,7 @@ http-frontend = ["rustic-http-frontend"]
 dbus-frontend = ["rustic-dbus-frontend"]
 qt-frontend = ["rustic-qt-frontend"]
 iced-frontend = ["rustic-iced-frontend"]
+systray-frontend = ["rustic-systray-frontend"]
 gstreamer-backend = ["rustic-gstreamer-backend"]
 rodio-backend = ["rustic-rodio-backend"]
 google-cast-backend = ["rustic-google-cast-backend"]
@@ -137,6 +139,10 @@ optional = true
 
 [dependencies.rustic-iced-frontend]
 path = "frontends/iced"
+optional = true
+
+[dependencies.rustic-systray-frontend]
+path = "frontends/systray"
 optional = true
 
 [dependencies.rustic-gstreamer-backend]

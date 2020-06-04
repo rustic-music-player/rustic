@@ -116,7 +116,7 @@ fn run_instance(options: options::CliOptions, config: config::Config) -> Result<
         error!("frontend setup failed {:?}", e)
     }
 
-    run_frontend(&config, &app, &client);
+    run_frontend(&config, &app, &client)?;
 
     for handle in threads {
         let _ = handle.join();
@@ -162,7 +162,12 @@ async fn setup_apis(config: &config::Config, app: &Arc<Rustic>, client: &ApiClie
 }
 
 #[allow(unused_variables)]
-fn run_frontend(config: &config::Config, app: &Arc<Rustic>, client: &ApiClient) {
+fn run_frontend(config: &config::Config, app: &Arc<Rustic>, client: &ApiClient) -> Result<(), failure::Error> {
+    #[cfg(feature = "systray-frontend")]
+        {
+            rustic_systray_frontend::start()?;
+        }
+
     #[cfg(feature = "qt-frontend")]
         {
             rustic_qt_frontend::start(Arc::clone(&app));
@@ -172,4 +177,6 @@ fn run_frontend(config: &config::Config, app: &Arc<Rustic>, client: &ApiClient) 
     if config.frontend.iced.is_some() {
         rustic_iced_frontend::start(Arc::clone(&client));
     }
+
+    Ok(())
 }
