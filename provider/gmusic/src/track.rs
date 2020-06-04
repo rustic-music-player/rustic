@@ -2,7 +2,7 @@ use std::collections::HashMap;
 
 use maplit::hashmap;
 
-use rustic_core::{Artist, ProviderType, Track, Album};
+use rustic_core::{Album, Artist, ProviderType, Track};
 
 use crate::meta::*;
 
@@ -27,7 +27,14 @@ impl From<GmusicTrack> for Track {
         if let Some(image) = track.album_art_ref.first() {
             meta.insert(META_GMUSIC_COVER_ART_URL.into(), image.url.clone().into());
         }
-        let artist_uri = format!("gmusic:artist:{}", &track.artist_id.first().cloned().unwrap_or_else(|| String::from("unknown")));
+        let artist_uri = format!(
+            "gmusic:artist:{}",
+            &track
+                .artist_id
+                .first()
+                .cloned()
+                .unwrap_or_else(|| String::from("unknown"))
+        );
         let album_uri = format!("gmusic:album:{}", track.album_id);
         Track {
             id: None,
@@ -40,7 +47,7 @@ impl From<GmusicTrack> for Track {
                 meta: HashMap::new(),
                 provider: ProviderType::GooglePlayMusic,
                 albums: vec![],
-                playlists: vec![]
+                playlists: vec![],
             }),
             artist_id: None,
             album: Some(Album {
@@ -49,10 +56,13 @@ impl From<GmusicTrack> for Track {
                 uri: album_uri,
                 provider: ProviderType::GooglePlayMusic,
                 tracks: Vec::new(),
-                image_url: track.album_art_ref.first().map(|art_ref| art_ref.url.clone()),
+                image_url: track
+                    .album_art_ref
+                    .first()
+                    .map(|art_ref| art_ref.url.clone()),
                 artist: None,
                 artist_id: None,
-                meta: HashMap::new()
+                meta: HashMap::new(),
             }),
             album_id: None,
             uri: format!("gmusic:track:{}", track.store_id.unwrap_or(track.id)),

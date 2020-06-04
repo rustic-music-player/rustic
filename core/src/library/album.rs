@@ -2,9 +2,9 @@ use std::collections::HashMap;
 
 use serde_derive::{Deserialize, Serialize};
 
-use crate::{SingleQueryIdentifier, Track};
-use crate::library::{Artist, MetaValue, Identifiable};
+use crate::library::{Artist, Identifiable, MetaValue};
 use crate::provider::ProviderType;
+use crate::{SingleQueryIdentifier, Track};
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct Album {

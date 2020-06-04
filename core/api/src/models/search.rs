@@ -4,7 +4,10 @@ use serde::{Deserialize, Serialize};
 use wasm_bindgen::prelude::*;
 
 #[derive(Serialize, Deserialize, PartialEq, Eq, Default, Debug, Clone)]
-#[cfg_attr(target_arch = "wasm32", derive(typescript_definitions::TypescriptDefinition))]
+#[cfg_attr(
+    target_arch = "wasm32",
+    derive(typescript_definitions::TypescriptDefinition)
+)]
 pub struct SearchResults {
     pub tracks: Vec<TrackModel>,
     pub albums: Vec<AlbumModel>,

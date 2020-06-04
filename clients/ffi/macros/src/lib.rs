@@ -1,8 +1,8 @@
 use proc_macro::*;
 
-use syn::{Ident, Path, Result, Token};
 use syn::parse::{Parse, ParseStream};
 use syn::parse_macro_input;
+use syn::{Ident, Path, Result, Token};
 
 use quote::{format_ident, quote};
 use rustic_api::get_signature_for_trait;
@@ -38,31 +38,43 @@ pub fn ffi_client(args: TokenStream) -> TokenStream {
         for method in methods {
             let method_name = format_ident!("{}", method.name);
             let exposed_name = format_ident!("client_{}_sync", method.name);
-            let parameters: Vec<_> = method.parameters.iter().map(|param| {
-                let name = format_ident!("{}", param.name);
-                match param.type_ident {
-                    TraitMethodParameterType::String => quote! {
-                        #name: *const c_char
-                    },
-                    TraitMethodParameterType::Type(ref p_type) => {
-                        quote! { #name: *const u8 }
+            let parameters: Vec<_> = method
+                .parameters
+                .iter()
+                .map(|param| {
+                    let name = format_ident!("{}", param.name);
+                    match param.type_ident {
+                        TraitMethodParameterType::String => quote! {
+                            #name: *const c_char
+                        },
+                        TraitMethodParameterType::Type(ref p_type) => {
+                            quote! { #name: *const u8 }
+                        }
                     }
-                }
-            }).collect();
-            let call_params: Vec<_> = method.parameters.iter().map(|param| {
-                let name = format_ident!("{}", param.name);
-                match param.type_ident {
-                    TraitMethodParameterType::String => quote! {
-                        to_str(#name).unwrap().unwrap()
-                    },
-                    TraitMethodParameterType::Type(ref p_type) if p_type.starts_with("Option") => quote! {
-                        None
-                    },
-                    TraitMethodParameterType::Type(ref p_type) => quote! {
-                        unimplemented!()
+                })
+                .collect();
+            let call_params: Vec<_> = method
+                .parameters
+                .iter()
+                .map(|param| {
+                    let name = format_ident!("{}", param.name);
+                    match param.type_ident {
+                        TraitMethodParameterType::String => quote! {
+                            to_str(#name).unwrap().unwrap()
+                        },
+                        TraitMethodParameterType::Type(ref p_type)
+                            if p_type.starts_with("Option") =>
+                        {
+                            quote! {
+                                None
+                            }
+                        }
+                        TraitMethodParameterType::Type(ref p_type) => quote! {
+                            unimplemented!()
+                        },
                     }
-                }
-            }).collect();
+                })
+                .collect();
             let return_type = to_return_type(&method.return_type);
             let return_type_conversion = convert_return_type(&method.return_type, true);
             let expanded = quote! {
@@ -95,13 +107,16 @@ fn to_return_type(return_type: &TraitMethodReturnType) -> proc_macro2::TokenStre
         TraitMethodReturnType::Type(t) => {
             let name = format_ident!("FFI{}", t);
             quote! { -> *const #name }
-        },
+        }
         TraitMethodReturnType::Option(t) => to_return_type(t),
         TraitMethodReturnType::Vec(t) => quote! { -> *mut c_void },
     }
 }
 
-fn convert_return_type(return_type: &TraitMethodReturnType, as_ptr: bool) -> proc_macro2::TokenStream {
+fn convert_return_type(
+    return_type: &TraitMethodReturnType,
+    as_ptr: bool,
+) -> proc_macro2::TokenStream {
     match return_type {
         TraitMethodReturnType::Unit => quote! { () },
         TraitMethodReturnType::Type(t) => {
@@ -117,7 +132,7 @@ fn convert_return_type(return_type: &TraitMethodReturnType, as_ptr: bool) -> pro
                     res
                 }
             }
-        },
+        }
         TraitMethodReturnType::Option(t) => {
             let return_type = convert_return_type(t, true);
             quote! {
@@ -128,7 +143,7 @@ fn convert_return_type(return_type: &TraitMethodReturnType, as_ptr: bool) -> pro
                     None => ptr::null()
                 }
             }
-        },
+        }
         TraitMethodReturnType::Vec(t) => {
             let return_type = convert_return_type(t, false);
             quote! {

@@ -1,8 +1,8 @@
 use std::io::Write;
 
 use diesel::backend::Backend;
-use diesel::deserialize::{FromSql, self};
-use diesel::serialize::{Output, ToSql, self};
+use diesel::deserialize::{self, FromSql};
+use diesel::serialize::{self, Output, ToSql};
 use diesel::sql_types::Integer;
 
 use rustic_core::ProviderType;
@@ -23,8 +23,10 @@ impl From<SerializedProvider> for ProviderType {
 }
 
 impl<DB> FromSql<Integer, DB> for SerializedProvider
-    where DB: Backend,
-          i32: FromSql<Integer, DB> {
+where
+    DB: Backend,
+    i32: FromSql<Integer, DB>,
+{
     fn from_sql(bytes: Option<&<DB as Backend>::RawValue>) -> deserialize::Result<Self> {
         match i32::from_sql(bytes)? {
             0 => Ok(ProviderType::Pocketcasts),
@@ -34,13 +36,16 @@ impl<DB> FromSql<Integer, DB> for SerializedProvider
             4 => Ok(ProviderType::LocalMedia),
             5 => Ok(ProviderType::Youtube),
             _ => Err(format!("someone tampered with the data").into()),
-        }.map(SerializedProvider::from)
+        }
+        .map(SerializedProvider::from)
     }
 }
 
 impl<DB> ToSql<Integer, DB> for SerializedProvider
-    where DB: Backend,
-          i32: ToSql<Integer, DB> {
+where
+    DB: Backend,
+    i32: ToSql<Integer, DB>,
+{
     fn to_sql<W: Write>(&self, out: &mut Output<W, DB>) -> serialize::Result {
         let p = match self.0 {
             ProviderType::Pocketcasts => 0,

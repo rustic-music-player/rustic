@@ -39,7 +39,7 @@ impl From<YoutubeVideoMetadata> for Track {
                 meta: HashMap::new(),
                 provider: ProviderType::Youtube,
                 albums: vec![],
-                playlists: vec![]
+                playlists: vec![],
             }),
             album: None,
             album_id: None,

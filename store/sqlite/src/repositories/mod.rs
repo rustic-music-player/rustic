@@ -4,17 +4,20 @@ use rustic_core::{MultiQuery, SingleQuery};
 
 pub use self::album::AlbumRepository;
 pub use self::artist::ArtistRepository;
-pub use self::track::TrackRepository;
 pub use self::playlist::PlaylistRepository;
+pub use self::track::TrackRepository;
 
 use rustic_core::library::Identifiable;
 
 mod album;
 mod artist;
-mod track;
 mod playlist;
+mod track;
 
-pub trait Repository<TModel> where TModel: Identifiable {
+pub trait Repository<TModel>
+where
+    TModel: Identifiable,
+{
     fn query(&self, query: SingleQuery) -> Result<Option<TModel>, Error>;
     fn query_all(&self, query: MultiQuery) -> Result<Vec<TModel>, Error>;
 
@@ -24,7 +27,7 @@ pub trait Repository<TModel> where TModel: Identifiable {
     fn sync(&self, model: &mut TModel) -> Result<(), Error> {
         if let Some(_) = self.query(model.get_identifier().into())? {
             self.update(model)
-        }else {
+        } else {
             self.insert(model)
         }
     }

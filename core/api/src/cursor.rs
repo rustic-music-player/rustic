@@ -1,4 +1,4 @@
-use serde::{Serialize, Deserialize};
+use serde::{Deserialize, Serialize};
 use std::str::from_utf8;
 
 pub fn to_cursor<T: ?Sized + AsRef<[u8]>>(input: &T) -> String {
@@ -17,5 +17,5 @@ pub enum Cursor {
     Track(String),
     Album(String),
     Artist(String),
-    Playlist(String)
+    Playlist(String),
 }

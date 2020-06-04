@@ -4,7 +4,10 @@ use serde::{Deserialize, Serialize};
 use wasm_bindgen::prelude::*;
 
 #[derive(Debug, Serialize, Deserialize, Clone, PartialEq, Eq)]
-#[cfg_attr(target_arch = "wasm32", derive(typescript_definitions::TypescriptDefinition))]
+#[cfg_attr(
+    target_arch = "wasm32",
+    derive(typescript_definitions::TypescriptDefinition)
+)]
 #[serde(rename_all = "camelCase")]
 pub struct AvailableProviderModel {
     pub title: String,
@@ -14,7 +17,10 @@ pub struct AvailableProviderModel {
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone, PartialEq, Eq)]
-#[cfg_attr(target_arch = "wasm32", derive(typescript_definitions::TypescriptDefinition))]
+#[cfg_attr(
+    target_arch = "wasm32",
+    derive(typescript_definitions::TypescriptDefinition)
+)]
 #[serde(rename_all = "kebab-case", tag = "state")]
 pub enum ProviderAuthenticationState {
     NoAuthentication,

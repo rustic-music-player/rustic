@@ -14,8 +14,14 @@ pub fn artists_to_artist(artists: Vec<SimplifiedArtist>) -> Option<Artist> {
     if artists.is_empty() {
         return None;
     }
-    let id: Vec<_> = artists.iter().filter_map(|artist| artist.id.clone()).collect();
-    let id = id.first().cloned().unwrap_or_else(|| String::from("unknown"));
+    let id: Vec<_> = artists
+        .iter()
+        .filter_map(|artist| artist.id.clone())
+        .collect();
+    let id = id
+        .first()
+        .cloned()
+        .unwrap_or_else(|| String::from("unknown"));
     let uri = format!("spotify://artist/{}", id);
     let name = artists
         .into_iter()

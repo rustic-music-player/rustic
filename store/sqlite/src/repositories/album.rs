@@ -11,14 +11,12 @@ use crate::repositories::Repository;
 
 #[derive(Clone)]
 pub struct AlbumRepository {
-    connection: Arc<Mutex<SqliteConnection>>
+    connection: Arc<Mutex<SqliteConnection>>,
 }
 
 impl AlbumRepository {
     pub fn new(connection: Arc<Mutex<SqliteConnection>>) -> Self {
-        AlbumRepository {
-            connection
-        }
+        AlbumRepository { connection }
     }
 }
 
@@ -35,14 +33,15 @@ impl Repository<Album> for AlbumRepository {
             SingleQueryIdentifier::Uri(query_uri) => albums
                 .filter(uri.eq(query_uri))
                 .first::<AlbumEntity>(&*connection),
-        }.optional()?;
+        }
+        .optional()?;
 
         let album = match album {
             Some(album) => {
                 let meta = AlbumMeta::belonging_to(&album).load::<AlbumMeta>(&*connection)?;
                 Some(album.into_album(&meta))
-            },
-            None => None
+            }
+            None => None,
         };
 
         Ok(album)
@@ -55,7 +54,9 @@ impl Repository<Album> for AlbumRepository {
         let connection = self.connection.lock().unwrap();
 
         let album_list = albums.load::<AlbumEntity>(&*connection)?;
-        let meta = AlbumMeta::belonging_to(&album_list).load::<AlbumMeta>(&*connection)?.grouped_by(&album_list);
+        let meta = AlbumMeta::belonging_to(&album_list)
+            .load::<AlbumMeta>(&*connection)?
+            .grouped_by(&album_list);
         let data = album_list.into_iter().zip(meta).collect::<Vec<_>>();
 
         let album_list = data
@@ -91,7 +92,9 @@ impl Repository<Album> for AlbumRepository {
             .map(AlbumInsert::from)
             .collect::<Vec<_>>();
 
-        insert_into(albums).values(&entities).execute(&*connection)?;
+        insert_into(albums)
+            .values(&entities)
+            .execute(&*connection)?;
 
         // TODO: update model ids
 

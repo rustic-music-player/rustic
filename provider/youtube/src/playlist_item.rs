@@ -1,8 +1,8 @@
 use youtube_api::models::PlaylistItemResource;
 
+use crate::meta::META_YOUTUBE_DEFAULT_THUMBNAIL_URL;
 use rustic_core::{Artist, ProviderType, Track};
 use std::collections::HashMap;
-use crate::meta::META_YOUTUBE_DEFAULT_THUMBNAIL_URL;
 
 #[derive(Clone)]
 pub struct YoutubePlaylistItem(PlaylistItemResource);
@@ -35,7 +35,10 @@ impl From<YoutubePlaylistItem> for Track {
             id: None,
             provider: ProviderType::Youtube,
             title: resource.snippet.inner.title,
-            uri: format!("youtube://video/{}", &resource.snippet.resource_id.into_inner()),
+            uri: format!(
+                "youtube://video/{}",
+                &resource.snippet.resource_id.into_inner()
+            ),
             album_id: None,
             album: None,
             artist_id: None,
@@ -48,11 +51,11 @@ impl From<YoutubePlaylistItem> for Track {
                 meta: HashMap::new(),
                 provider: ProviderType::Youtube,
                 albums: vec![],
-                playlists: vec![]
+                playlists: vec![],
             }),
             has_coverart: true,
             duration: None,
-            meta
+            meta,
         }
     }
 }

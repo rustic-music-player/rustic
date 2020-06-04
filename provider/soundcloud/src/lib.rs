@@ -6,7 +6,7 @@ use serde::Deserialize;
 
 use async_trait::async_trait;
 use lazy_static::lazy_static;
-use rustic_core::library::{Album, MetaValue, Playlist, SharedLibrary, Track, Artist};
+use rustic_core::library::{Album, Artist, MetaValue, Playlist, SharedLibrary, Track};
 use rustic_core::{provider, CredentialStore, Credentials, ProviderType};
 
 use crate::playlist::SoundcloudPlaylist;
@@ -45,11 +45,9 @@ impl SoundcloudProvider {
     pub fn new() -> Option<Self> {
         let client_id = option_env!("SOUNDCLOUD_CLIENT_ID");
 
-        client_id.map(|client_id| {
-            SoundcloudProvider {
-                client_id: client_id.into(),
-                auth_token: None
-            }
+        client_id.map(|client_id| SoundcloudProvider {
+            client_id: client_id.into(),
+            auth_token: None,
         })
     }
 }
@@ -78,7 +76,11 @@ impl SoundcloudProvider {
         Ok(Some(playlist))
     }
 
-    async fn search_tracks(&self, client: &soundcloud::Client, query: &str) -> Result<Vec<provider::ProviderItem>, Error> {
+    async fn search_tracks(
+        &self,
+        client: &soundcloud::Client,
+        query: &str,
+    ) -> Result<Vec<provider::ProviderItem>, Error> {
         let tracks = client
             .tracks()
             .query(Some(query))
@@ -99,7 +101,11 @@ impl SoundcloudProvider {
         Ok(tracks)
     }
 
-    async fn search_users(&self, client: &soundcloud::Client, query: &str) -> Result<Vec<provider::ProviderItem>, Error> {
+    async fn search_users(
+        &self,
+        client: &soundcloud::Client,
+        query: &str,
+    ) -> Result<Vec<provider::ProviderItem>, Error> {
         let users = client
             .users()
             .query(Some(query))
@@ -113,7 +119,11 @@ impl SoundcloudProvider {
         Ok(users)
     }
 
-    async fn search_playlists(&self, client: &soundcloud::Client, query: &str) -> Result<Vec<provider::ProviderItem>, Error> {
+    async fn search_playlists(
+        &self,
+        client: &soundcloud::Client,
+        query: &str,
+    ) -> Result<Vec<provider::ProviderItem>, Error> {
         let playlists = client
             .playlists()
             .query(query)
@@ -131,7 +141,10 @@ impl SoundcloudProvider {
 #[async_trait]
 impl provider::ProviderInstance for SoundcloudProvider {
     async fn setup(&mut self, cred_store: &dyn CredentialStore) -> Result<(), Error> {
-        if let Some(Credentials::Token(token)) = cred_store.get_credentials(provider::ProviderType::Soundcloud).await? {
+        if let Some(Credentials::Token(token)) = cred_store
+            .get_credentials(provider::ProviderType::Soundcloud)
+            .await?
+        {
             self.auth_token = Some(token);
         }
         Ok(())
@@ -159,12 +172,21 @@ impl provider::ProviderInstance for SoundcloudProvider {
         }
     }
 
-    async fn authenticate(&mut self, auth: provider::Authentication, cred_store: &dyn CredentialStore) -> Result<(), Error> {
+    async fn authenticate(
+        &mut self,
+        auth: provider::Authentication,
+        cred_store: &dyn CredentialStore,
+    ) -> Result<(), Error> {
         use provider::Authentication::*;
         match auth {
             Token(token) => {
                 self.auth_token = Some(token.clone());
-                cred_store.store_credentials(provider::ProviderType::Soundcloud, Credentials::Token(token)).await?;
+                cred_store
+                    .store_credentials(
+                        provider::ProviderType::Soundcloud,
+                        Credentials::Token(token),
+                    )
+                    .await?;
                 Ok(())
             }
             _ => Err(format_err!("Invalid authentication method")),
@@ -256,7 +278,13 @@ impl provider::ProviderInstance for SoundcloudProvider {
         let id = usize::from_str(id)?;
         let client = self.client();
         let user = client.user(id).get().await?;
-        let (albums, playlists) = client.user(id).playlists().await?.into_iter().map(SoundcloudPlaylist::from).partition::<Vec<_>, _>(|p| p.is_album());
+        let (albums, playlists) = client
+            .user(id)
+            .playlists()
+            .await?
+            .into_iter()
+            .map(SoundcloudPlaylist::from)
+            .partition::<Vec<_>, _>(|p| p.is_album());
 
         let albums = albums.into_iter().map(Album::from).collect();
         let playlists = playlists.into_iter().map(Playlist::from).collect();
@@ -269,7 +297,7 @@ impl provider::ProviderInstance for SoundcloudProvider {
             provider: ProviderType::Soundcloud,
             meta: HashMap::new(),
             image_url: Some(user.avatar_url),
-            uri: format!("soundcloud://user/{}", user.id)
+            uri: format!("soundcloud://user/{}", user.id),
         }))
     }
 

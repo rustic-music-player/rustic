@@ -1,4 +1,4 @@
-use entities::provider::{provider_to_int, int_to_provider};
+use entities::provider::{int_to_provider, provider_to_int};
 use rustic_core::Playlist;
 use schema::{playlist_tracks, playlists};
 
@@ -21,7 +21,10 @@ impl PlaylistEntity {
             title: self.title,
             uri: self.uri,
             provider: int_to_provider(self.provider),
-            tracks: tracks.into_iter().map(|(track, meta)| track.into_track(&meta)).collect()
+            tracks: tracks
+                .into_iter()
+                .map(|(track, meta)| track.into_track(&meta))
+                .collect(),
         }
     }
 }

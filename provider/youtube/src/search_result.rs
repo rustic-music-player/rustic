@@ -1,8 +1,8 @@
-use youtube_api::models::{SearchResult, Id};
-use rustic_core::provider::{ProviderItem, ProviderItemType};
-use rustic_core::{Track, ProviderType, Artist, Playlist};
-use std::collections::HashMap;
 use crate::meta::META_YOUTUBE_DEFAULT_THUMBNAIL_URL;
+use rustic_core::provider::{ProviderItem, ProviderItemType};
+use rustic_core::{Artist, Playlist, ProviderType, Track};
+use std::collections::HashMap;
+use youtube_api::models::{Id, SearchResult};
 
 #[derive(Clone)]
 pub struct YoutubeSearchResult(SearchResult);
@@ -27,12 +27,12 @@ impl From<YoutubeSearchResult> for ProviderItem {
         let data = match result.id {
             Id::PlaylistId { playlist_id: _ } => ProviderItemType::Playlist(search_result.into()),
             Id::ChannelId { channel_id: _ } => ProviderItemType::Artist(search_result.into()),
-            Id::VideoId { video_id: _ } => ProviderItemType::Track(search_result.into())
+            Id::VideoId { video_id: _ } => ProviderItemType::Track(search_result.into()),
         };
 
         ProviderItem {
             label: result.snippet.title,
-            data
+            data,
         }
     }
 }
@@ -65,11 +65,11 @@ impl From<YoutubeSearchResult> for Track {
                 image_url: None,
                 provider: ProviderType::Youtube,
                 albums: vec![],
-                playlists: vec![]
+                playlists: vec![],
             }),
             album: None,
             album_id: None,
-            meta
+            meta,
         }
     }
 }
@@ -87,7 +87,7 @@ impl From<YoutubeSearchResult> for Artist {
             playlists: Vec::new(),
             albums: Vec::new(),
             image_url: thumbnail.map(|thumbnail| thumbnail.url.clone()),
-            meta: HashMap::new()
+            meta: HashMap::new(),
         }
     }
 }
@@ -101,7 +101,7 @@ impl From<YoutubeSearchResult> for Playlist {
             title: result.snippet.title,
             uri: format!("youtube://playlist/{}", result.id.into_inner()),
             provider: ProviderType::Youtube,
-            tracks: Vec::new()
+            tracks: Vec::new(),
         }
     }
 }

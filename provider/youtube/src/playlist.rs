@@ -1,7 +1,7 @@
 use youtube_api::models::PlaylistResource;
 
-use rustic_core::{Playlist, ProviderType, Track};
 use crate::playlist_item::YoutubePlaylistItem;
+use rustic_core::{Playlist, ProviderType, Track};
 
 #[derive(Clone)]
 pub struct YoutubePlaylist(PlaylistResource);

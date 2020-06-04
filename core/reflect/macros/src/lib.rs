@@ -1,5 +1,5 @@
-use syn::{ItemTrait, parse_macro_input};
 use rustic_reflect::*;
+use syn::{parse_macro_input, ItemTrait};
 
 use proc_macro::TokenStream;
 
@@ -19,7 +19,8 @@ pub fn reflect(_: TokenStream, input: TokenStream) -> TokenStream {
 pub fn export_reflections(_: TokenStream) -> TokenStream {
     let traits = get_traits();
 
-    let trait_blocks: proc_macro2::TokenStream = traits.into_iter()
+    let trait_blocks: proc_macro2::TokenStream = traits
+        .into_iter()
         .map(|(ident, signature)| {
             quote! {
                 if ident == #ident {

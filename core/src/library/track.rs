@@ -3,7 +3,7 @@ use std::collections::HashMap;
 
 use serde_derive::{Deserialize, Serialize};
 
-use crate::library::{Album, Artist, MetaValue, Identifiable};
+use crate::library::{Album, Artist, Identifiable, MetaValue};
 use crate::provider::ProviderType;
 use crate::SingleQueryIdentifier;
 

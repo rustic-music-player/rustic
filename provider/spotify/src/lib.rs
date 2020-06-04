@@ -148,7 +148,11 @@ impl rustic_core::provider::ProviderInstance for SpotifyProvider {
         }
     }
 
-    async fn authenticate(&mut self, auth: provider::Authentication, cred_store: &dyn CredentialStore) -> Result<(), Error> {
+    async fn authenticate(
+        &mut self,
+        auth: provider::Authentication,
+        cred_store: &dyn CredentialStore,
+    ) -> Result<(), Error> {
         use provider::Authentication::*;
         match auth {
             Token(token) => {

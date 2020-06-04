@@ -4,7 +4,7 @@ use serde::Deserialize;
 
 use async_trait::async_trait;
 use rustic_core::library::{Album, Artist, MetaValue, SharedLibrary, Track};
-use rustic_core::{provider, Playlist, CredentialStore, Credentials};
+use rustic_core::{provider, CredentialStore, Credentials, Playlist};
 
 use crate::episode::PocketcastTrack;
 use crate::meta::META_POCKETCASTS_COVER_ART_URL;
@@ -18,7 +18,7 @@ mod podcast;
 #[derive(Debug, Clone, Deserialize)]
 pub struct PocketcastsCredentials {
     email: String,
-    password: String
+    password: String,
 }
 
 #[derive(Debug, Default, Clone, Deserialize)]
@@ -44,10 +44,16 @@ impl PocketcastsProvider {
 impl provider::ProviderInstance for PocketcastsProvider {
     async fn setup(&mut self, cred_store: &dyn CredentialStore) -> Result<(), Error> {
         self.client = if let Some(ref credentials) = self.credentials {
-            Some(PocketcastClient::login(credentials.email.clone(), credentials.password.clone()).await?)
-        }else if let Some(Credentials::UserPass { username, password }) = cred_store.get_credentials(provider::ProviderType::Pocketcasts).await? {
+            Some(
+                PocketcastClient::login(credentials.email.clone(), credentials.password.clone())
+                    .await?,
+            )
+        } else if let Some(Credentials::UserPass { username, password }) = cred_store
+            .get_credentials(provider::ProviderType::Pocketcasts)
+            .await?
+        {
             Some(PocketcastClient::login(username, password).await?)
-        }else {
+        } else {
             None
         };
 
@@ -69,7 +75,7 @@ impl provider::ProviderInstance for PocketcastsProvider {
     fn auth_state(&self) -> provider::AuthState {
         if self.client.is_some() {
             provider::AuthState::Authenticated(None)
-        }else {
+        } else {
             provider::AuthState::RequiresPassword
         }
     }
@@ -77,14 +83,19 @@ impl provider::ProviderInstance for PocketcastsProvider {
     async fn authenticate(
         &mut self,
         authentication: provider::Authentication,
-        cred_store: &dyn CredentialStore
+        cred_store: &dyn CredentialStore,
     ) -> Result<(), Error> {
         use provider::Authentication::*;
 
         match authentication {
             Password(email, password) => {
                 self.login(email.clone(), password.clone()).await?;
-                cred_store.store_credentials(provider::ProviderType::Pocketcasts, Credentials::password(email, password)).await?;
+                cred_store
+                    .store_credentials(
+                        provider::ProviderType::Pocketcasts,
+                        Credentials::password(email, password),
+                    )
+                    .await?;
                 Ok(())
             }
             _ => Err(format_err!("Invalid authentication method")),

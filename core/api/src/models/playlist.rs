@@ -5,7 +5,10 @@ use std::cmp::Ordering;
 use wasm_bindgen::prelude::*;
 
 #[derive(Clone, Debug, Serialize, PartialEq, Eq, Deserialize)]
-#[cfg_attr(target_arch = "wasm32", derive(typescript_definitions::TypescriptDefinition))]
+#[cfg_attr(
+    target_arch = "wasm32",
+    derive(typescript_definitions::TypescriptDefinition)
+)]
 pub struct PlaylistModel {
     pub cursor: String,
     pub title: String,

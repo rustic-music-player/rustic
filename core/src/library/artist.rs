@@ -2,8 +2,8 @@ use std::collections::HashMap;
 
 use serde_derive::{Deserialize, Serialize};
 
-use crate::{ProviderType, SingleQueryIdentifier, Album, Playlist};
 use crate::library::{Identifiable, MetaValue};
+use crate::{Album, Playlist, ProviderType, SingleQueryIdentifier};
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct Artist {
@@ -14,7 +14,7 @@ pub struct Artist {
     pub meta: HashMap<String, MetaValue>,
     pub provider: ProviderType,
     pub albums: Vec<Album>,
-    pub playlists: Vec<Playlist>
+    pub playlists: Vec<Playlist>,
 }
 
 impl PartialEq for Artist {

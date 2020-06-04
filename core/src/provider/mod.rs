@@ -8,8 +8,8 @@ use url::Url;
 
 use async_trait::async_trait;
 
-use crate::library::{Album, SharedLibrary, Track, Artist};
-use crate::{Playlist, CredentialStore};
+use crate::library::{Album, Artist, SharedLibrary, Track};
+use crate::{CredentialStore, Playlist};
 
 pub use self::explorer::Explorer;
 pub use self::folder::ProviderFolder;
@@ -99,7 +99,11 @@ pub trait ProviderInstance: Debug {
     fn uri_scheme(&self) -> &'static str;
     fn provider(&self) -> ProviderType;
     fn auth_state(&self) -> AuthState;
-    async fn authenticate(&mut self, auth: Authentication, cred_store: &dyn CredentialStore) -> Result<(), Error>;
+    async fn authenticate(
+        &mut self,
+        auth: Authentication,
+        cred_store: &dyn CredentialStore,
+    ) -> Result<(), Error>;
     async fn sync(&self, library: SharedLibrary) -> Result<SyncResult, Error>;
     fn root(&self) -> ProviderFolder;
     async fn navigate(&self, path: Vec<String>) -> Result<ProviderFolder, Error>;

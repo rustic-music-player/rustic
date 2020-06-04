@@ -2,8 +2,8 @@ use std::collections::HashMap;
 use std::convert::TryInto;
 
 use entities::provider::{int_to_provider, provider_to_int};
-use rustic_core::Artist;
 use rustic_core::library::MetaValue;
+use rustic_core::Artist;
 use schema::{artists, artists_meta};
 
 #[derive(Identifiable, Queryable, Associations, PartialEq, Debug)]
@@ -77,7 +77,7 @@ impl ArtistEntity {
             // TODO: get via mappings
             albums: Vec::new(),
             // TODO: add mappings
-            playlists: Vec::new()
+            playlists: Vec::new(),
         }
     }
 }

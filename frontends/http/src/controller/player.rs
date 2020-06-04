@@ -1,6 +1,6 @@
 use crate::app::ApiClient;
-use rustic_api::cursor::from_cursor;
 use actix_web::{get, post, web, HttpResponse, Responder, Result};
+use rustic_api::cursor::from_cursor;
 use serde::Deserialize;
 
 #[derive(Deserialize)]

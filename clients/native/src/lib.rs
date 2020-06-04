@@ -1,14 +1,14 @@
 use std::sync::Arc;
 
-use log::{debug, trace, error};
+use log::{debug, error, trace};
 use rayon::prelude::*;
 
 use async_trait::async_trait;
 use rustic_api::client::*;
 use rustic_api::cursor::Cursor;
 use rustic_api::models::*;
-use rustic_core::provider::{ProviderItem, InternalUri, ProviderItemType};
-use rustic_core::{Album, Artist, Provider, Playlist, Rustic, SingleQuery, Track, CredentialStore};
+use rustic_core::provider::{InternalUri, ProviderItem, ProviderItemType};
+use rustic_core::{Album, Artist, CredentialStore, Playlist, Provider, Rustic, SingleQuery, Track};
 use rustic_extension_api::ExtensionManager;
 use std::convert::TryInto;
 
@@ -26,8 +26,16 @@ pub struct RusticNativeClient {
 }
 
 impl RusticNativeClient {
-    pub fn new(app: Arc<Rustic>, extensions: ExtensionManager, cred_store: Box<dyn CredentialStore>) -> RusticNativeClient {
-        RusticNativeClient { app, extensions, credential_store: Arc::new(cred_store) }
+    pub fn new(
+        app: Arc<Rustic>,
+        extensions: ExtensionManager,
+        cred_store: Box<dyn CredentialStore>,
+    ) -> RusticNativeClient {
+        RusticNativeClient {
+            app,
+            extensions,
+            credential_store: Arc::new(cred_store),
+        }
     }
 }
 
@@ -61,7 +69,11 @@ impl RusticApiClient for RusticNativeClient {
                 Ok(mut result) => {
                     results.append(&mut result);
                 }
-                Err(e) => error!("Searching failed for provider {:?}: {:?}", provider.provider(), e)
+                Err(e) => error!(
+                    "Searching failed for provider {:?}: {:?}",
+                    provider.provider(),
+                    e
+                ),
             }
         }
         debug!("Searching took {}ms", sw.elapsed_ms());
@@ -131,18 +143,18 @@ impl RusticApiClient for RusticNativeClient {
                 let query = SingleQuery::uri(uri);
                 let track = self.app.query_track(query).await?;
                 track.map(ProviderItemType::Track)
-            },
+            }
             InternalUri::Album(uri) => {
                 let query = SingleQuery::uri(uri);
                 let album = self.app.query_album(query).await?;
                 album.map(ProviderItemType::Album)
-            },
+            }
             InternalUri::Artist(uri) => {
                 let query = SingleQuery::uri(uri);
                 let artist = self.app.query_artist(query).await?;
                 artist.map(ProviderItemType::Artist)
-            },
-            _ => None
+            }
+            _ => None,
         };
 
         if let Some(item) = provider_item {

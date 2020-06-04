@@ -7,8 +7,8 @@ use simulacrum::Expectations;
 use async_trait::async_trait;
 
 use crate::client::*;
-use crate::models::*;
 use crate::cursor::Cursor;
+use crate::models::*;
 
 pub struct TestApiClient {
     pub extensions: Vec<ExtensionModel>,

@@ -46,7 +46,11 @@ impl ProviderInstance for LocalProvider {
         AuthState::NoAuthentication
     }
 
-    async fn authenticate(&mut self, _: Authentication, _cred_store: &dyn CredentialStore) -> Result<(), Error> {
+    async fn authenticate(
+        &mut self,
+        _: Authentication,
+        _cred_store: &dyn CredentialStore,
+    ) -> Result<(), Error> {
         Ok(())
     }
 
@@ -185,7 +189,7 @@ impl From<scanner::Track> for library::Track {
                 ),
                 provider: ProviderType::LocalMedia,
                 albums: vec![],
-                playlists: vec![]
+                playlists: vec![],
             }),
             has_coverart: track.has_coverart,
             provider: ProviderType::LocalMedia,
@@ -230,7 +234,7 @@ impl From<scanner::Track> for Option<library::Artist> {
             ),
             provider: ProviderType::LocalMedia,
             albums: vec![],
-            playlists: vec![]
+            playlists: vec![],
         })
     }
 }

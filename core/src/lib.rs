@@ -5,13 +5,13 @@ use failure::format_err;
 use log::{debug, trace};
 use url::Url;
 
-pub use crate::cred_store::{Credentials, CredentialStore};
+pub use crate::cred_store::{CredentialStore, Credentials};
 pub use crate::library::{
     Album, Artist, Library, LibraryQueryJoins, MultiQuery, Playlist, QueryJoins, SearchResults,
     SharedLibrary, SingleQuery, SingleQueryIdentifier, Track,
 };
-pub use crate::player::{PlayerBackend, PlayerEvent, PlayerState};
 use crate::player::Player;
+pub use crate::player::{PlayerBackend, PlayerEvent, PlayerState};
 use crate::provider::{CoverArt, InternalUri, ProviderItemType};
 pub use crate::provider::{Explorer, Provider, ProviderType};
 
@@ -140,7 +140,7 @@ impl Rustic {
             Ok(None)
         }
     }
-    
+
     pub async fn query_playlist(
         &self,
         query: SingleQuery,
@@ -186,19 +186,24 @@ impl Rustic {
         Ok(stream_url)
     }
 
-    pub async fn thumbnail(&self, provider_item: &ProviderItemType) -> Result<Option<CoverArt>, failure::Error> {
+    pub async fn thumbnail(
+        &self,
+        provider_item: &ProviderItemType,
+    ) -> Result<Option<CoverArt>, failure::Error> {
         let cover = match provider_item {
             ProviderItemType::Track(track) => {
                 let provider = self.get_provider(track)?;
                 provider.get().await.cover_art(track).await?
-            },
-            ProviderItemType::Album(album) => {
-                album.image_url.as_ref().map(|url| CoverArt::Url(url.clone()))
-            },
-            ProviderItemType::Artist(artist) => {
-                artist.image_url.as_ref().map(|url| CoverArt::Url(url.clone()))
-            },
-            _ => None
+            }
+            ProviderItemType::Album(album) => album
+                .image_url
+                .as_ref()
+                .map(|url| CoverArt::Url(url.clone())),
+            ProviderItemType::Artist(artist) => artist
+                .image_url
+                .as_ref()
+                .map(|url| CoverArt::Url(url.clone())),
+            _ => None,
         };
         let cover = if let Some(cover) = cover {
             let cached_cover = self.cache.fetch_thumbnail(&cover).await?;
@@ -209,7 +214,7 @@ impl Rustic {
                 let cover = self.cache.cache_thumbnail(&cover).await?;
                 Some(cover)
             }
-        }else {
+        } else {
             None
         };
 
@@ -231,10 +236,12 @@ impl Rustic {
             ProviderItemType::Track(track) => track.provider,
             ProviderItemType::Artist(artist) => artist.provider,
             ProviderItemType::Album(album) => album.provider,
-            ProviderItemType::Playlist(playlist) => playlist.provider
+            ProviderItemType::Playlist(playlist) => playlist.provider,
         };
 
-        self.providers.iter().find(|p| p.provider_type == provider_type)
+        self.providers
+            .iter()
+            .find(|p| p.provider_type == provider_type)
             .ok_or_else(|| format_err!("provider for item type {:?}", item))
     }
 

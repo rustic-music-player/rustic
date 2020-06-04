@@ -55,4 +55,3 @@ impl Client {
         Ok(res.unwrap().into())
     }
 }
-

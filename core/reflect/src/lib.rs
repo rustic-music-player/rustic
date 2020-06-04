@@ -2,7 +2,10 @@ use std::collections::HashMap;
 use std::sync::RwLock;
 
 use proc_macro2::TokenStream;
-use syn::{FnArg, GenericArgument, ItemTrait, Pat, PathArguments, PatType, ReturnType, TraitItem, Type, TypePath};
+use syn::{
+    FnArg, GenericArgument, ItemTrait, Pat, PatType, PathArguments, ReturnType, TraitItem, Type,
+    TypePath,
+};
 
 use lazy_static::lazy_static;
 use quote::{quote, ToTokens};
@@ -13,7 +16,9 @@ lazy_static! {
 
 pub fn put_trait(item_trait: ItemTrait) {
     let ident = item_trait.ident;
-    let items: Vec<_> = item_trait.items.into_iter()
+    let items: Vec<_> = item_trait
+        .items
+        .into_iter()
         .filter_map(|item| {
             if let TraitItem::Method(method) = item {
                 Some(method)
@@ -21,20 +26,22 @@ pub fn put_trait(item_trait: ItemTrait) {
                 None
             }
         })
-        .map(|item| {
-            TraitMethodSignature {
-                name: item.sig.ident.to_string(),
-                parameters: item.sig.inputs.into_iter().filter_map(|input| {
+        .map(|item| TraitMethodSignature {
+            name: item.sig.ident.to_string(),
+            parameters: item
+                .sig
+                .inputs
+                .into_iter()
+                .filter_map(|input| {
                     if let FnArg::Typed(pat_type) = input {
                         Some(pat_type)
                     } else {
                         None
                     }
                 })
-                    .map(TraitMethodParameter::from)
-                    .collect(),
-                return_type: item.sig.output.into(),
-            }
+                .map(TraitMethodParameter::from)
+                .collect(),
+            return_type: item.sig.output.into(),
         })
         .collect();
 
@@ -44,7 +51,10 @@ pub fn put_trait(item_trait: ItemTrait) {
 
 pub fn get_traits() -> Vec<(String, TraitSignature)> {
     let traits = TRAITS.read().unwrap();
-    traits.iter().map(|(key, value)| (key.clone(), value.clone())).collect()
+    traits
+        .iter()
+        .map(|(key, value)| (key.clone(), value.clone()))
+        .collect()
 }
 
 #[derive(Debug, Clone)]
@@ -86,10 +96,7 @@ impl From<PatType> for TraitMethodParameter {
         } else {
             unimplemented!()
         };
-        TraitMethodParameter {
-            name,
-            type_ident,
-        }
+        TraitMethodParameter { name, type_ident }
     }
 }
 
@@ -111,9 +118,9 @@ impl From<ReturnType> for TraitMethodReturnType {
                     let p = unwrap_result(p);
 
                     TraitMethodReturnType::from(p)
-                },
-                _ => unimplemented!()
-            }
+                }
+                _ => unimplemented!(),
+            },
         }
     }
 }
@@ -134,7 +141,7 @@ impl From<Type> for TraitMethodReturnType {
                     let p = quote! { #path };
                     TraitMethodReturnType::Type(p.to_string())
                 }
-            },
+            }
             _ => {
                 let p = quote! { #path };
                 TraitMethodReturnType::Type(p.to_string())
@@ -146,15 +153,18 @@ impl From<Type> for TraitMethodReturnType {
 fn unwrap_result(p: &TypePath) -> Type {
     if let Some(path) = p.path.segments.first() {
         match path.arguments {
-            PathArguments::AngleBracketed(ref args) => {
-                args.args.iter().filter_map(|arg| {
-                    match arg {
-                        GenericArgument::Type(arg_type) => Some(arg_type.clone()),
-                        _ => None
-                    }
-                }).collect::<Vec<Type>>().first().unwrap().clone()
-            },
-            _ => unreachable!()
+            PathArguments::AngleBracketed(ref args) => args
+                .args
+                .iter()
+                .filter_map(|arg| match arg {
+                    GenericArgument::Type(arg_type) => Some(arg_type.clone()),
+                    _ => None,
+                })
+                .collect::<Vec<Type>>()
+                .first()
+                .unwrap()
+                .clone(),
+            _ => unreachable!(),
         }
     } else {
         unreachable!()
@@ -175,7 +185,9 @@ impl ToTokens for TraitMethodSignature {
     fn to_tokens(&self, tokens: &mut TokenStream) {
         let name = &self.name;
         let return_type = &self.return_type;
-        let params: TokenStream = self.parameters.iter()
+        let params: TokenStream = self
+            .parameters
+            .iter()
             .map(|param| quote! { parameters.push(#param); })
             .collect();
         tokens.extend(quote! {
@@ -207,9 +219,15 @@ impl ToTokens for TraitMethodReturnType {
     fn to_tokens(&self, tokens: &mut TokenStream) {
         let token = match self {
             TraitMethodReturnType::Unit => quote! { rustic_reflect::TraitMethodReturnType::Unit },
-            TraitMethodReturnType::Option(return_type) => quote! { rustic_reflect::TraitMethodReturnType::Option(Box::new(#return_type)) },
-            TraitMethodReturnType::Type(ref p) => quote! { rustic_reflect::TraitMethodReturnType::Type(String::from(#p)) },
-            TraitMethodReturnType::Vec(return_types) => quote! { rustic_reflect::TraitMethodReturnType::Vec(Box::new(#return_types)) }
+            TraitMethodReturnType::Option(return_type) => {
+                quote! { rustic_reflect::TraitMethodReturnType::Option(Box::new(#return_type)) }
+            }
+            TraitMethodReturnType::Type(ref p) => {
+                quote! { rustic_reflect::TraitMethodReturnType::Type(String::from(#p)) }
+            }
+            TraitMethodReturnType::Vec(return_types) => {
+                quote! { rustic_reflect::TraitMethodReturnType::Vec(Box::new(#return_types)) }
+            }
         };
         tokens.extend(token);
     }
@@ -218,8 +236,12 @@ impl ToTokens for TraitMethodReturnType {
 impl ToTokens for TraitMethodParameterType {
     fn to_tokens(&self, tokens: &mut TokenStream) {
         let token = match self {
-            TraitMethodParameterType::String => quote! { rustic_reflect::TraitMethodParameterType::String },
-            TraitMethodParameterType::Type(p_type) => quote! { rustic_reflect::TraitMethodParameterType::Type(String::from(#p_type)) }
+            TraitMethodParameterType::String => {
+                quote! { rustic_reflect::TraitMethodParameterType::String }
+            }
+            TraitMethodParameterType::Type(p_type) => {
+                quote! { rustic_reflect::TraitMethodParameterType::Type(String::from(#p_type)) }
+            }
         };
         tokens.extend(token)
     }

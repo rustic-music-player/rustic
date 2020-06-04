@@ -1,7 +1,7 @@
 use std::sync::{Arc, Mutex};
 
 use diesel::prelude::*;
-use diesel::{SqliteConnection, insert_into};
+use diesel::{insert_into, SqliteConnection};
 use failure::Error;
 
 use rustic_core::{Artist, MultiQuery, SingleQuery, SingleQueryIdentifier};
@@ -11,14 +11,12 @@ use crate::repositories::Repository;
 
 #[derive(Clone)]
 pub struct ArtistRepository {
-    connection: Arc<Mutex<SqliteConnection>>
+    connection: Arc<Mutex<SqliteConnection>>,
 }
 
 impl ArtistRepository {
     pub fn new(connection: Arc<Mutex<SqliteConnection>>) -> Self {
-        ArtistRepository {
-            connection
-        }
+        ArtistRepository { connection }
     }
 }
 
@@ -35,14 +33,15 @@ impl Repository<Artist> for ArtistRepository {
             SingleQueryIdentifier::Uri(query_uri) => artists
                 .filter(uri.eq(query_uri))
                 .first::<ArtistEntity>(&*connection),
-        }.optional()?;
+        }
+        .optional()?;
 
         let artist = match artist {
             Some(artist) => {
                 let meta = ArtistMeta::belonging_to(&artist).load::<ArtistMeta>(&*connection)?;
                 Some(artist.into_artist(&meta))
-            },
-            None => None
+            }
+            None => None,
         };
 
         Ok(artist)
@@ -55,7 +54,9 @@ impl Repository<Artist> for ArtistRepository {
         let connection = self.connection.lock().unwrap();
 
         let artist_list = artists.load::<ArtistEntity>(&*connection)?;
-        let meta = ArtistMeta::belonging_to(&artist_list).load::<ArtistMeta>(&*connection)?.grouped_by(&artist_list);
+        let meta = ArtistMeta::belonging_to(&artist_list)
+            .load::<ArtistMeta>(&*connection)?
+            .grouped_by(&artist_list);
         let data = artist_list.into_iter().zip(meta).collect::<Vec<_>>();
 
         let artist_list = data
@@ -91,7 +92,9 @@ impl Repository<Artist> for ArtistRepository {
             .map(ArtistInsert::from)
             .collect::<Vec<_>>();
 
-        insert_into(artists).values(&entities).execute(&*connection)?;
+        insert_into(artists)
+            .values(&entities)
+            .execute(&*connection)?;
 
         // TODO: update model ids
 

@@ -1,8 +1,8 @@
 use std::collections::HashMap;
 
-use rustic_core::{Artist, ProviderType, Album, Playlist, Track};
 use crate::album::GmusicAlbum;
 use crate::track::GmusicTrack;
+use rustic_core::{Album, Artist, Playlist, ProviderType, Track};
 
 #[derive(Debug, Clone)]
 pub struct GmusicArtist(gmusic::Artist);
@@ -23,20 +23,24 @@ impl From<GmusicArtist> for Artist {
             image_url: artist.artist_art_ref,
             provider: ProviderType::GooglePlayMusic,
             meta: HashMap::new(),
-            albums: artist.albums.into_iter()
+            albums: artist
+                .albums
+                .into_iter()
                 .map(GmusicAlbum::from)
                 .map(Album::from)
                 .collect(),
             playlists: vec![Playlist {
                 title: "Top Tracks".into(),
-                tracks: artist.top_tracks.into_iter()
+                tracks: artist
+                    .top_tracks
+                    .into_iter()
                     .map(GmusicTrack::from)
                     .map(Track::from)
                     .collect(),
                 provider: ProviderType::GooglePlayMusic,
                 id: None,
-                uri: format!("gmusic:artist:top:{}", artist.id)
-            }]
+                uri: format!("gmusic:artist:top:{}", artist.id),
+            }],
         }
     }
 }

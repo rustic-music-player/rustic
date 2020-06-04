@@ -4,7 +4,10 @@ use serde::{Deserialize, Serialize};
 use wasm_bindgen::prelude::*;
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
-#[cfg_attr(target_arch = "wasm32", derive(typescript_definitions::TypescriptDefinition))]
+#[cfg_attr(
+    target_arch = "wasm32",
+    derive(typescript_definitions::TypescriptDefinition)
+)]
 pub struct PlayerModel {
     pub cursor: String,
     pub name: String,

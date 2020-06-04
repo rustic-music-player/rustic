@@ -36,7 +36,7 @@ impl From<PocketcastAlbum> for Album {
                 ),
                 provider: ProviderType::Pocketcasts,
                 albums: Vec::new(),
-                playlists: Vec::new()
+                playlists: Vec::new(),
             }),
             tracks: vec![],
             provider: ProviderType::Pocketcasts,
@@ -62,7 +62,7 @@ impl From<PocketcastAlbum> for Artist {
             meta: HashMap::new(),
             provider: ProviderType::Pocketcasts,
             albums: vec![album.into()],
-            playlists: Vec::new()
+            playlists: Vec::new(),
         }
     }
 }
@@ -97,7 +97,7 @@ impl From<PocketcastSearchResult> for Album {
                 meta: HashMap::new(),
                 provider: ProviderType::Pocketcasts,
                 albums: vec![],
-                playlists: vec![]
+                playlists: vec![],
             }),
             tracks: vec![],
             provider: ProviderType::Pocketcasts,

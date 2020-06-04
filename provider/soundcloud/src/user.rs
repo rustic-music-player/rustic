@@ -1,6 +1,6 @@
 use maplit::hashmap;
 
-use rustic_core::{Artist, ProviderType, provider::ProviderItem};
+use rustic_core::{provider::ProviderItem, Artist, ProviderType};
 
 use crate::meta::META_SOUNDCLOUD_USER_ID;
 

@@ -132,7 +132,9 @@ pub async fn get_album_cover_art(
     client: web::Data<ApiClient>,
     params: web::Path<GetEntityQuery>,
 ) -> Result<impl Responder> {
-    let cover_art = client.get_thumbnail(Cursor::Album(params.cursor.clone())).await?;
+    let cover_art = client
+        .get_thumbnail(Cursor::Album(params.cursor.clone()))
+        .await?;
     get_cover_art(cover_art)
 }
 
@@ -141,7 +143,9 @@ pub async fn get_artist_cover_art(
     client: web::Data<ApiClient>,
     params: web::Path<GetEntityQuery>,
 ) -> Result<impl Responder> {
-    let cover_art = client.get_thumbnail(Cursor::Artist(params.cursor.clone())).await?;
+    let cover_art = client
+        .get_thumbnail(Cursor::Artist(params.cursor.clone()))
+        .await?;
     get_cover_art(cover_art)
 }
 
@@ -150,6 +154,8 @@ pub async fn get_track_cover_art(
     client: web::Data<ApiClient>,
     params: web::Path<GetEntityQuery>,
 ) -> Result<impl Responder> {
-    let cover_art = client.get_thumbnail(Cursor::Track(params.cursor.clone())).await?;
+    let cover_art = client
+        .get_thumbnail(Cursor::Track(params.cursor.clone()))
+        .await?;
     get_cover_art(cover_art)
 }

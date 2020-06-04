@@ -4,8 +4,8 @@ use rustic_reflect_macros::reflect;
 
 use async_trait::async_trait;
 
-use crate::models::*;
 use crate::cursor::Cursor;
+use crate::models::*;
 
 pub type Result<T> = std::result::Result<T, failure::Error>;
 

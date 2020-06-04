@@ -25,7 +25,7 @@ impl From<SpotifyFullArtist> for Artist {
             meta: HashMap::new(),
             provider: ProviderType::Spotify,
             albums: Vec::new(),
-            playlists: Vec::new()
+            playlists: Vec::new(),
         }
     }
 }
@@ -44,7 +44,7 @@ impl From<SpotifySimplifiedArtist> for Artist {
             meta: HashMap::new(),
             provider: ProviderType::Spotify,
             albums: Vec::new(),
-            playlists: Vec::new()
+            playlists: Vec::new(),
         }
     }
 }

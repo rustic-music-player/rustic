@@ -4,21 +4,19 @@ use diesel::prelude::*;
 use diesel::{insert_into, SqliteConnection};
 use failure::Error;
 
-use rustic_core::{Playlist, MultiQuery, SingleQuery, SingleQueryIdentifier};
+use rustic_core::{MultiQuery, Playlist, SingleQuery, SingleQueryIdentifier};
 
 use crate::entities::playlist::*;
 use crate::repositories::Repository;
 
 #[derive(Clone)]
 pub struct PlaylistRepository {
-    connection: Arc<Mutex<SqliteConnection>>
+    connection: Arc<Mutex<SqliteConnection>>,
 }
 
 impl PlaylistRepository {
     pub fn new(connection: Arc<Mutex<SqliteConnection>>) -> Self {
-        PlaylistRepository {
-            connection
-        }
+        PlaylistRepository { connection }
     }
 }
 
@@ -35,14 +33,15 @@ impl Repository<Playlist> for PlaylistRepository {
             SingleQueryIdentifier::Uri(query_uri) => playlists
                 .filter(uri.eq(query_uri))
                 .first::<PlaylistEntity>(&*connection),
-        }.optional()?;
+        }
+        .optional()?;
 
         let playlist = match playlist {
             Some(playlist) => {
                 // let tracks = PlaylistTrack::belonging_to(&playlist).load::<PlaylistTrack>(&*connection)?;
                 Some(playlist.into_playlist(vec![]))
             }
-            None => None
+            None => None,
         };
 
         Ok(playlist)
@@ -63,7 +62,7 @@ impl Repository<Playlist> for PlaylistRepository {
 
         Ok(playlist_list)
     }
-    
+
     fn insert(&self, playlist: &mut Playlist) -> Result<(), Error> {
         use crate::schema::playlists::dsl::*;
 
@@ -71,7 +70,9 @@ impl Repository<Playlist> for PlaylistRepository {
 
         let entity: PlaylistInsert = playlist.clone().into();
 
-        insert_into(playlists).values(&entity).execute(&*connection)?;
+        insert_into(playlists)
+            .values(&entity)
+            .execute(&*connection)?;
 
         // TODO: update model id
 
@@ -89,7 +90,9 @@ impl Repository<Playlist> for PlaylistRepository {
             .map(PlaylistInsert::from)
             .collect::<Vec<_>>();
 
-        insert_into(playlists).values(&entities).execute(&*connection)?;
+        insert_into(playlists)
+            .values(&entities)
+            .execute(&*connection)?;
 
         // TODO: update model ids
 

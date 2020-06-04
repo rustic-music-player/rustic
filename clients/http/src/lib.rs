@@ -1,7 +1,7 @@
 use failure::format_err;
 use futures::stream::BoxStream;
-use serde::{Deserialize, Serialize};
 use serde::de::DeserializeOwned;
+use serde::{Deserialize, Serialize};
 
 use async_trait::async_trait;
 use rustic_api::client::*;
@@ -44,9 +44,9 @@ where
     }
 
     async fn post<TReq, TRes>(&self, url: &str, req: TReq) -> Result<TRes>
-        where
-            TRes: DeserializeOwned,
-            TReq: Serialize + Send + Sync,
+    where
+        TRes: DeserializeOwned,
+        TReq: Serialize + Send + Sync,
     {
         self.client.post(url, req).await
     }
@@ -61,8 +61,8 @@ struct SearchQuery<'a> {
 #[cfg_attr(target_arch = "wasm32", async_trait(?Send))]
 #[cfg_attr(not(target_arch = "wasm32"), async_trait)]
 impl<T> RusticApiClient for RusticHttpClient<T>
-    where
-        T: HttpClient,
+where
+    T: HttpClient,
 {
     async fn search(
         &self,
@@ -73,7 +73,8 @@ impl<T> RusticApiClient for RusticHttpClient<T>
             query,
             providers: provider,
         };
-        let query = serde_qs::to_string(&query).map_err(|e| format_err!("Query String serialization failed: {:?}", e))?;
+        let query = serde_qs::to_string(&query)
+            .map_err(|e| format_err!("Query String serialization failed: {:?}", e))?;
         let url = format!("/api/search?{}", query);
         let res = self.get(&url).await?;
 
@@ -97,7 +98,6 @@ impl<T> RusticApiClient for RusticHttpClient<T>
         unimplemented!()
     }
 }
-
 
 #[cfg_attr(target_arch = "wasm32", async_trait(?Send))]
 #[cfg_attr(not(target_arch = "wasm32"), async_trait)]
@@ -131,37 +131,44 @@ where
         auth: ProviderAuthModel,
     ) -> Result<()> {
         match auth {
-            ProviderAuthModel::UserPass { username, password } => self.provider_basic_auth(provider, username, password).await,
-            ProviderAuthModel::OAuthToken { code, state, scope } => self.provider_oauth_token(provider, ProviderAuthModel::OAuthToken { code, state, scope }).await,
+            ProviderAuthModel::UserPass { username, password } => {
+                self.provider_basic_auth(provider, username, password).await
+            }
+            ProviderAuthModel::OAuthToken { code, state, scope } => {
+                self.provider_oauth_token(
+                    provider,
+                    ProviderAuthModel::OAuthToken { code, state, scope },
+                )
+                .await
+            }
         }
     }
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 struct ProviderFilterQuery {
-    providers: Option<Vec<ProviderTypeModel>>
+    providers: Option<Vec<ProviderTypeModel>>,
 }
 
 impl From<Option<Vec<ProviderTypeModel>>> for ProviderFilterQuery {
     fn from(providers: Option<Vec<ProviderTypeModel>>) -> Self {
-        ProviderFilterQuery {
-            providers
-        }
+        ProviderFilterQuery { providers }
     }
 }
 
 #[cfg_attr(target_arch = "wasm32", async_trait(?Send))]
 #[cfg_attr(not(target_arch = "wasm32"), async_trait)]
 impl<T> LibraryApiClient for RusticHttpClient<T>
-    where
-        T: HttpClient,
+where
+    T: HttpClient,
 {
     async fn get_albums(
         &self,
         providers: Option<Vec<ProviderTypeModel>>,
     ) -> Result<Vec<AlbumModel>> {
         let query = ProviderFilterQuery::from(providers);
-        let query = serde_qs::to_string(&query).map_err(|e| format_err!("Query String serialization failed: {:?}", e))?;
+        let query = serde_qs::to_string(&query)
+            .map_err(|e| format_err!("Query String serialization failed: {:?}", e))?;
         let url = format!("/api/library/albums?{}", &query);
         let res = self.get(&url).await?;
 
@@ -181,7 +188,9 @@ impl<T> LibraryApiClient for RusticHttpClient<T>
     }
 
     async fn get_artist(&self, cursor: &str) -> Result<Option<ArtistModel>> {
-        let res = self.get(&format!("/api/library/artists/{}", cursor)).await?;
+        let res = self
+            .get(&format!("/api/library/artists/{}", cursor))
+            .await?;
 
         Ok(res)
     }
@@ -191,7 +200,8 @@ impl<T> LibraryApiClient for RusticHttpClient<T>
         providers: Option<Vec<ProviderTypeModel>>,
     ) -> Result<Vec<PlaylistModel>> {
         let query = ProviderFilterQuery::from(providers);
-        let query = serde_qs::to_string(&query).map_err(|e| format_err!("Query String serialization failed: {:?}", e))?;
+        let query = serde_qs::to_string(&query)
+            .map_err(|e| format_err!("Query String serialization failed: {:?}", e))?;
         let url = format!("/api/library/playlists?{}", &query);
         let res = self.get(&url).await?;
 
@@ -211,7 +221,8 @@ impl<T> LibraryApiClient for RusticHttpClient<T>
         providers: Option<Vec<ProviderTypeModel>>,
     ) -> Result<Vec<TrackModel>> {
         let query = ProviderFilterQuery::from(providers);
-        let query = serde_qs::to_string(&query).map_err(|e| format_err!("Query String serialization failed: {:?}", e))?;
+        let query = serde_qs::to_string(&query)
+            .map_err(|e| format_err!("Query String serialization failed: {:?}", e))?;
         let url = format!("/api/library/tracks?{}", &query);
         let res = self.get(&url).await?;
 
@@ -390,13 +401,15 @@ where
 }
 
 impl<T> RusticHttpClient<T>
-    where
-        T: HttpClient, {
+where
+    T: HttpClient,
+{
     async fn provider_basic_auth(
         &self,
         provider: ProviderTypeModel,
         username: String,
-        password: String) -> Result<()> {
+        password: String,
+    ) -> Result<()> {
         let url = format!("/api/providers/{}/auth", serde_json::to_string(&provider)?);
         let model = ProviderAuthModel::UserPass { username, password };
 
@@ -408,9 +421,15 @@ impl<T> RusticHttpClient<T>
     async fn provider_oauth_token(
         &self,
         provider: ProviderTypeModel,
-        auth: ProviderAuthModel) -> Result<()> {
-        let query = serde_qs::to_string(&auth).map_err(|e| format_err!("Query String serialization failed: {:?}", e))?;
-        let url = format!("/api/providers/{}/auth/redirect?{}", serde_json::to_string(&provider)?, query);
+        auth: ProviderAuthModel,
+    ) -> Result<()> {
+        let query = serde_qs::to_string(&auth)
+            .map_err(|e| format_err!("Query String serialization failed: {:?}", e))?;
+        let url = format!(
+            "/api/providers/{}/auth/redirect?{}",
+            serde_json::to_string(&provider)?,
+            query
+        );
 
         self.get(&url).await?;
 

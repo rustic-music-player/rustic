@@ -2,15 +2,15 @@ use std::convert::TryFrom;
 
 use futures::StreamExt;
 
-use rustic_core::{Album, Artist, PlayerEvent, PlayerState, Playlist, ProviderType, Track};
 use rustic_core::provider::{
-    Authentication, AuthState, CoverArt, InternalUri, ProviderFolder, ProviderItem,
+    AuthState, Authentication, CoverArt, InternalUri, ProviderFolder, ProviderItem,
     ProviderItemType,
 };
 use rustic_core::sync::{SyncEvent, SyncItem, SyncItemState};
+use rustic_core::{Album, Artist, PlayerEvent, PlayerState, Playlist, ProviderType, Track};
 use rustic_extension_api::ExtensionMetadata;
 
-use crate::cursor::{Cursor, from_cursor, to_cursor};
+use crate::cursor::{from_cursor, to_cursor, Cursor};
 use crate::models::*;
 
 impl From<Album> for AlbumModel {
@@ -22,7 +22,9 @@ impl From<Album> for AlbumModel {
             artist: album.artist.map(ArtistModel::from),
             tracks: album.tracks.into_iter().map(TrackModel::from).collect(),
             provider: album.provider.into(),
-            coverart: album.image_url.map(|_| format!("/api/albums/{}/coverart", &cursor)),
+            coverart: album
+                .image_url
+                .map(|_| format!("/api/albums/{}/coverart", &cursor)),
         }
     }
 }
@@ -35,8 +37,16 @@ impl From<Artist> for ArtistModel {
             name: artist.name,
             albums: Some(artist.albums.into_iter().map(AlbumModel::from).collect()),
             tracks: None,
-            playlists: Some(artist.playlists.into_iter().map(PlaylistModel::from).collect()),
-            image: artist.image_url.map(|_| format!("/api/artists/{}/coverart", &cursor)),
+            playlists: Some(
+                artist
+                    .playlists
+                    .into_iter()
+                    .map(PlaylistModel::from)
+                    .collect(),
+            ),
+            image: artist
+                .image_url
+                .map(|_| format!("/api/artists/{}/coverart", &cursor)),
             provider: artist.provider.into(),
         }
     }
@@ -178,10 +188,16 @@ impl From<ProviderAuthModel> for Authentication {
             ProviderAuthModel::OAuthToken {
                 state: Some(state),
                 code,
-                scope: _
+                scope: _,
             } => Authentication::TokenWithState(code, state),
-            ProviderAuthModel::OAuthToken { state: None, code, scope: _ } => Authentication::Token(code),
-            ProviderAuthModel::UserPass { username, password } => Authentication::Password(username, password)
+            ProviderAuthModel::OAuthToken {
+                state: None,
+                code,
+                scope: _,
+            } => Authentication::Token(code),
+            ProviderAuthModel::UserPass { username, password } => {
+                Authentication::Password(username, password)
+            }
         }
     }
 }

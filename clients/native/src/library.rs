@@ -56,7 +56,7 @@ impl LibraryApiClient for RusticNativeClient {
         let artists = artists.into_iter().map(ArtistModel::from).collect();
         Ok(artists)
     }
-    
+
     async fn get_artist(&self, cursor: &str) -> Result<Option<ArtistModel>, failure::Error> {
         let sw = stopwatch::Stopwatch::start_new();
 

@@ -5,8 +5,8 @@ use libc::*;
 #[cfg(feature = "http")]
 use rustic_native_http_client::RusticNativeHttpClient;
 
-pub use rustic_api::models::*;
 use crate::models::*;
+pub use rustic_api::models::*;
 
 use crate::client::{to_str, Client, RusticClientHandle};
 use rustic_api::RusticApiClient;

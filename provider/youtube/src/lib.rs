@@ -1,19 +1,21 @@
-use failure::{ensure, Error, format_err};
+use failure::{ensure, format_err, Error};
 use log::{debug, warn};
 use serde::Deserialize;
 use tokio::sync::Mutex;
 use url::Url;
+use youtube_api::models::{
+    ListPlaylistItemsRequestBuilder, ListPlaylistsRequestBuilder, SearchRequestBuilder,
+};
 use youtube_api::{YoutubeApi, YoutubeDl};
-use youtube_api::models::{ListPlaylistItemsRequestBuilder, ListPlaylistsRequestBuilder, SearchRequestBuilder};
 
 use async_trait::async_trait;
 use lazy_static::lazy_static;
-use rustic_core::{Album, Playlist, ProviderType, SharedLibrary, Track, CredentialStore, Artist};
 use rustic_core::library::MetaValue;
 use rustic_core::provider::{
-    Authentication, AuthState, CoverArt, InternalUri, ProviderFolder, ProviderInstance,
+    AuthState, Authentication, CoverArt, InternalUri, ProviderFolder, ProviderInstance,
     ProviderItem, SyncResult,
 };
+use rustic_core::{Album, Artist, CredentialStore, Playlist, ProviderType, SharedLibrary, Track};
 
 use crate::meta::META_YOUTUBE_DEFAULT_THUMBNAIL_URL;
 use crate::playlist::{PlaylistWithItems, YoutubePlaylist};
@@ -71,7 +73,7 @@ impl YoutubeProvider {
             api_key: api_key.map(String::from),
             client_id: client_id.map(String::from),
             client_secret: client_secret.map(String::from),
-            client: None
+            client: None,
         })
     }
 
@@ -86,17 +88,26 @@ impl YoutubeProvider {
 #[async_trait]
 impl ProviderInstance for YoutubeProvider {
     async fn setup(&mut self, _cred_store: &dyn CredentialStore) -> Result<(), Error> {
-        self.client = match (self.api_key.as_ref(), self.client_id.as_ref(), self.client_secret.as_ref()) {
+        self.client = match (
+            self.api_key.as_ref(),
+            self.client_id.as_ref(),
+            self.client_secret.as_ref(),
+        ) {
             (Some(api_key), None, None) => Some(YoutubeApi::new(api_key)),
             (Some(api_key), Some(client_id), Some(client_secret)) => {
-                let api = YoutubeApi::new_with_oauth(api_key, client_id.clone(), client_secret.clone(), Some(YOUTUBE_REDIRECT_URI))?;
+                let api = YoutubeApi::new_with_oauth(
+                    api_key,
+                    client_id.clone(),
+                    client_secret.clone(),
+                    Some(YOUTUBE_REDIRECT_URI),
+                )?;
                 if let Err(err) = api.load_token().await {
                     warn!("Could not load previous token {}", err);
                 }
                 Some(api)
-            },
+            }
             (None, None, None) => None,
-            _ => return Err(format_err!("Invalid provider configuration "))
+            _ => return Err(format_err!("Invalid provider configuration ")),
         };
         Ok(())
     }
@@ -123,12 +134,16 @@ impl ProviderInstance for YoutubeProvider {
                 *state_cache = Some(state);
                 AuthState::RequiresOAuth(url)
             }
-        }else {
+        } else {
             AuthState::NoAuthentication
         }
     }
 
-    async fn authenticate(&mut self, auth: Authentication, _cred_store: &dyn CredentialStore) -> Result<(), Error> {
+    async fn authenticate(
+        &mut self,
+        auth: Authentication,
+        _cred_store: &dyn CredentialStore,
+    ) -> Result<(), Error> {
         let client = self.client.as_mut().expect("client isn't setup yet");
         use rustic_core::provider::Authentication::*;
 
@@ -163,9 +178,9 @@ impl ProviderInstance for YoutubeProvider {
                 playlists: playlist_count,
                 tracks: 0,
                 albums: 0,
-                artists: 0
+                artists: 0,
             })
-        }else {
+        } else {
             Ok(SyncResult::empty())
         }
     }
@@ -187,7 +202,9 @@ impl ProviderInstance for YoutubeProvider {
             ..SearchRequestBuilder::default()
         };
         let response = self.client.as_ref().unwrap().search(request).await?;
-        let result = response.items.into_iter()
+        let result = response
+            .items
+            .into_iter()
             .map(YoutubeSearchResult::from)
             .map(ProviderItem::from)
             .collect();
@@ -223,7 +240,7 @@ impl ProviderInstance for YoutubeProvider {
             let playlists = YoutubeProvider::get_playlists(client, request).await?;
 
             Ok(playlists.first().cloned())
-        }else {
+        } else {
             Err(format_err!("client is not configured"))
         }
     }
@@ -263,7 +280,10 @@ impl ProviderInstance for YoutubeProvider {
 }
 
 impl YoutubeProvider {
-    async fn get_playlists(client: &YoutubeApi, request: ListPlaylistsRequestBuilder) -> Result<Vec<Playlist>, Error> {
+    async fn get_playlists(
+        client: &YoutubeApi,
+        request: ListPlaylistsRequestBuilder,
+    ) -> Result<Vec<Playlist>, Error> {
         let response = client.list_playlists(request).await?;
         let mut playlists = Vec::new();
         for item in response.items.into_iter() {
@@ -274,7 +294,11 @@ impl YoutubeProvider {
             };
             let items = client.list_playlist_items(req).await?;
             let playlist = YoutubePlaylist::from(item);
-            let items = items.items.into_iter().map(YoutubePlaylistItem::from).collect();
+            let items = items
+                .items
+                .into_iter()
+                .map(YoutubePlaylistItem::from)
+                .collect();
             playlists.push(PlaylistWithItems(playlist, items))
         }
         let playlists: Vec<Playlist> = playlists.into_iter().map(Playlist::from).collect();

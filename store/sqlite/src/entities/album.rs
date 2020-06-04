@@ -2,8 +2,8 @@ use std::collections::HashMap;
 use std::convert::TryInto;
 
 use entities::provider::{int_to_provider, provider_to_int};
-use rustic_core::Album;
 use rustic_core::library::MetaValue;
+use rustic_core::Album;
 use schema::{albums, albums_meta};
 
 #[derive(Identifiable, Queryable, Associations, PartialEq, Debug)]

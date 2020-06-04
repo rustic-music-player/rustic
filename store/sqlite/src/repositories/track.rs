@@ -1,7 +1,7 @@
 use std::sync::{Arc, Mutex};
 
-use diesel::{insert_into, SqliteConnection};
 use diesel::prelude::*;
+use diesel::{insert_into, SqliteConnection};
 use failure::Error;
 
 use rustic_core::{MultiQuery, SingleQuery, SingleQueryIdentifier, Track};
@@ -11,14 +11,12 @@ use crate::repositories::Repository;
 
 #[derive(Clone)]
 pub struct TrackRepository {
-    connection: Arc<Mutex<SqliteConnection>>
+    connection: Arc<Mutex<SqliteConnection>>,
 }
 
 impl TrackRepository {
     pub fn new(connection: Arc<Mutex<SqliteConnection>>) -> Self {
-        TrackRepository {
-            connection
-        }
+        TrackRepository { connection }
     }
 }
 
@@ -35,14 +33,15 @@ impl Repository<Track> for TrackRepository {
             SingleQueryIdentifier::Uri(query_uri) => tracks
                 .filter(uri.eq(query_uri))
                 .first::<TrackEntity>(&*connection),
-        }.optional()?;
+        }
+        .optional()?;
 
         let track = match track {
             Some(track) => {
                 let meta = TrackMeta::belonging_to(&track).load::<TrackMeta>(&*connection)?;
                 Some(track.into_track(&meta))
             }
-            None => None
+            None => None,
         };
 
         Ok(track)
@@ -55,7 +54,9 @@ impl Repository<Track> for TrackRepository {
         let connection = self.connection.lock().unwrap();
 
         let track_list = tracks.load::<TrackEntity>(&*connection)?;
-        let meta = TrackMeta::belonging_to(&track_list).load::<TrackMeta>(&*connection)?.grouped_by(&track_list);
+        let meta = TrackMeta::belonging_to(&track_list)
+            .load::<TrackMeta>(&*connection)?
+            .grouped_by(&track_list);
         let data = track_list.into_iter().zip(meta).collect::<Vec<_>>();
 
         let track_list = data
@@ -91,7 +92,9 @@ impl Repository<Track> for TrackRepository {
             .map(TrackInsert::from)
             .collect::<Vec<_>>();
 
-        insert_into(tracks).values(&entities).execute(&*connection)?;
+        insert_into(tracks)
+            .values(&entities)
+            .execute(&*connection)?;
 
         // TODO: update model ids
 

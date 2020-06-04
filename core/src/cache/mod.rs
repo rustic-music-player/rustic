@@ -8,8 +8,8 @@ use log::{debug, trace};
 use pinboard::NonEmptyPinboard;
 use reqwest::get;
 
-use crate::Track;
 use crate::provider::CoverArt;
+use crate::Track;
 
 #[derive(Debug)]
 struct CachedEntry {
@@ -68,18 +68,18 @@ impl Cache {
                 if path.exists() {
                     let file = self.read_cache_file(&path).await?;
                     Ok(Some(file))
-                }else {
+                } else {
                     Ok(None)
                 }
-            },
-            _ => Ok(None)
+            }
+            _ => Ok(None),
         }
     }
 
     pub async fn cache_thumbnail(&self, cover: &CoverArt) -> Result<CoverArt, Error> {
         match cover {
             CoverArt::Url(ref url) => self.download_coverart(url).await,
-            _ => Err(format_err!(""))
+            _ => Err(format_err!("")),
         }
     }
 
@@ -94,16 +94,17 @@ impl Cache {
     }
 
     async fn download_coverart(&self, url: &str) -> Result<CoverArt, Error> {
-        use tokio_util::compat::Tokio02AsyncWriteCompatExt;
         use futures::prelude::*;
         use tokio::fs::File;
+        use tokio_util::compat::Tokio02AsyncWriteCompatExt;
 
         let file_path = self.get_coverart_path(url);
         let mut file = File::create(&file_path).await?.compat_write();
         let res = reqwest_10::get(url).await?;
-        let stream = res.bytes_stream().map_err(|e|
-            futures::io::Error::new(futures::io::ErrorKind::Other, e)
-        ).into_async_read();
+        let stream = res
+            .bytes_stream()
+            .map_err(|e| futures::io::Error::new(futures::io::ErrorKind::Other, e))
+            .into_async_read();
 
         futures::io::copy(stream, &mut file).await?;
 
@@ -115,7 +116,7 @@ impl Cache {
 
         Ok(CoverArt::Data {
             mime_type: String::from("image/jpeg"),
-            data
+            data,
         })
     }
 }

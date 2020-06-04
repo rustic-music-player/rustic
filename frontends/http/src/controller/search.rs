@@ -1,4 +1,4 @@
-use actix_web::{error, get, Responder, web};
+use actix_web::{error, get, web, Responder};
 use log::trace;
 use serde::Deserialize;
 use serde_qs::actix::QsQuery;
@@ -26,9 +26,7 @@ pub async fn search(
 ) -> Result<impl Responder, error::Error> {
     trace!("search {}", &params.query);
     let search = params.into_inner();
-    let result = client
-        .search(&search.query, search.providers)
-        .await?;
+    let result = client.search(&search.query, search.providers).await?;
     Ok(web::Json(result))
 }
 
@@ -47,8 +45,8 @@ pub async fn open(
 
 #[cfg(test)]
 mod test {
-    use actix_web::{App, http, test};
     use actix_web::dev::*;
+    use actix_web::{http, test, App};
 
     use rustic_api::models::{ProviderTypeModel, SearchResults};
     use rustic_api::TestApiClient;

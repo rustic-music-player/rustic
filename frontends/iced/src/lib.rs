@@ -139,10 +139,7 @@ impl Application for IcedApplication {
                             state.clone().load_artists(self.api.clone()),
                             Message::Loaded,
                         ),
-                        Command::perform(
-                            state.load_tracks(self.api.clone()),
-                            Message::Loaded,
-                        ),
+                        Command::perform(state.load_tracks(self.api.clone()), Message::Loaded),
                     ]);
                 }
             }
