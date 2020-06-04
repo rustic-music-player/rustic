@@ -98,7 +98,7 @@ pipeline {
                         label "windows"
                     }
                     steps {
-                        bat 'cargo build --bins --workspace --release'
+                        bat 'cargo build --release --no-default-features --features "http-frontend rodio-backend local-files-provider pocketcasts-provider soundcloud-provider gmusic-provider youtube-provider"'
                     }
                     post {
                         success {
