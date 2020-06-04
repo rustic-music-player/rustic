@@ -8,7 +8,7 @@ use rustic_api::client::*;
 use rustic_api::cursor::Cursor;
 use rustic_api::models::*;
 use rustic_core::provider::{ProviderItem, InternalUri, ProviderItemType};
-use rustic_core::{Album, Artist, Provider, Rustic, SingleQuery, Track, CredentialStore};
+use rustic_core::{Album, Artist, Provider, Playlist, Rustic, SingleQuery, Track, CredentialStore};
 use rustic_extension_api::ExtensionManager;
 use std::convert::TryInto;
 
@@ -90,11 +90,19 @@ impl RusticApiClient for RusticNativeClient {
             .map(ArtistModel::from)
             .collect();
 
+        let playlists: Vec<PlaylistModel> = results
+            .par_iter()
+            .cloned()
+            .filter(|result| result.is_playlist())
+            .map(Playlist::from)
+            .map(PlaylistModel::from)
+            .collect();
+
         Ok(SearchResults {
             tracks,
             albums,
             artists,
-            playlists: vec![],
+            playlists,
         })
     }
 

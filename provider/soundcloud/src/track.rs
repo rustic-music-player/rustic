@@ -1,9 +1,10 @@
 use maplit::hashmap;
 
-use rustic_core::library::{Artist, Track};
+use rustic_core::library::Track;
 use rustic_core::provider;
 
 use crate::meta::*;
+use crate::user::SoundcloudUser;
 
 #[derive(Debug, Clone)]
 pub struct SoundcloudTrack(soundcloud::Track);
@@ -28,18 +29,7 @@ impl From<SoundcloudTrack> for Track {
         Track {
             id: None,
             title: track.title,
-            artist: Some(Artist {
-                id: None,
-                name: track.user.username,
-                image_url: Some(track.user.avatar_url),
-                uri: format!("soundcloud://user/{}", track.user.id),
-                meta: hashmap!(
-                    META_SOUNDCLOUD_USER_ID.into() => track.user.id.into()
-                ),
-                provider: provider::ProviderType::Soundcloud,
-                albums: Vec::new(),
-                playlists: Vec::new()
-            }),
+            artist: Some(SoundcloudUser::from(track.user).into()),
             artist_id: None,
             album: None,
             album_id: None,

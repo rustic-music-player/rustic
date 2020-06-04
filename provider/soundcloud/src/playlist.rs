@@ -1,11 +1,9 @@
-use maplit::hashmap;
-
-use rustic_core::{Album, Artist, provider};
+use rustic_core::{Album, provider};
 use rustic_core::library::{Playlist, Track};
 
-use crate::meta::META_SOUNDCLOUD_USER_ID;
 use crate::track::SoundcloudTrack;
 use std::collections::HashMap;
+use crate::user::SoundcloudUser;
 
 #[derive(Debug, Clone)]
 pub struct SoundcloudPlaylist {
@@ -44,18 +42,7 @@ impl From<SoundcloudPlaylist> for Album {
             provider: provider::ProviderType::Soundcloud,
             uri: format!("soundcloud://playlist/{}", playlist.id),
             image_url: playlist.artwork_url,
-            artist: Some(Artist {
-                id: None,
-                name: playlist.user.username,
-                image_url: Some(playlist.user.avatar_url),
-                uri: format!("soundcloud://user/{}", playlist.user.id),
-                meta: hashmap!(
-                    META_SOUNDCLOUD_USER_ID.into() => playlist.user.id.into()
-                ),
-                provider: provider::ProviderType::Soundcloud,
-                albums: Vec::new(),
-                playlists: Vec::new(),
-            }),
+            artist: Some(SoundcloudUser::from(playlist.user).into()),
             meta: HashMap::new(),
             artist_id: None
         }
@@ -79,6 +66,16 @@ impl From<soundcloud::Playlist> for SoundcloudPlaylist {
             playlist_type: playlist.playlist_type.unwrap_or(soundcloud::PlaylistType::Playlist),
             user: playlist.user,
             artwork_url: playlist.artwork_url,
+        }
+    }
+}
+
+impl From<SoundcloudPlaylist> for provider::ProviderItem {
+    fn from(playlist: SoundcloudPlaylist) -> Self {
+        if playlist.is_album() {
+            Album::from(playlist).into()
+        }else {
+            Playlist::from(playlist).into()
         }
     }
 }

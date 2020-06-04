@@ -11,12 +11,14 @@ use rustic_core::{provider, CredentialStore, Credentials, ProviderType};
 
 use crate::playlist::SoundcloudPlaylist;
 use crate::track::SoundcloudTrack;
+use crate::user::SoundcloudUser;
 use std::collections::HashMap;
 
 mod error;
 mod meta;
 mod playlist;
 mod track;
+mod user;
 
 // TODO: configurable host
 const SOUNDCLOUD_REDIRECT_URI: &str =
@@ -61,6 +63,55 @@ impl SoundcloudProvider {
         let playlist = SoundcloudPlaylist::from(playlist);
 
         Ok(Some(playlist))
+    }
+
+    async fn search_tracks(&self, client: &soundcloud::Client, query: &str) -> Result<Vec<provider::ProviderItem>, Error> {
+        let tracks = client
+            .tracks()
+            .query(Some(query))
+            .get()
+            .await?
+            .into_iter()
+            .filter(|track| {
+                let has_url = track.stream_url.is_some();
+                if !has_url {
+                    warn!("Track {:?} has no stream url", &track);
+                }
+                has_url
+            })
+            .map(SoundcloudTrack::from)
+            .map(|track| track.into())
+            .collect();
+
+        Ok(tracks)
+    }
+
+    async fn search_users(&self, client: &soundcloud::Client, query: &str) -> Result<Vec<provider::ProviderItem>, Error> {
+        let users = client
+            .users()
+            .query(Some(query))
+            .get()
+            .await?
+            .into_iter()
+            .map(SoundcloudUser::from)
+            .map(provider::ProviderItem::from)
+            .collect();
+
+        Ok(users)
+    }
+
+    async fn search_playlists(&self, client: &soundcloud::Client, query: &str) -> Result<Vec<provider::ProviderItem>, Error> {
+        let playlists = client
+            .playlists()
+            .query(query)
+            .get()
+            .await?
+            .into_iter()
+            .map(SoundcloudPlaylist::from)
+            .map(provider::ProviderItem::from)
+            .collect();
+
+        Ok(playlists)
     }
 }
 
@@ -156,23 +207,12 @@ impl provider::ProviderInstance for SoundcloudProvider {
     async fn search(&self, query: String) -> Result<Vec<provider::ProviderItem>, Error> {
         trace!("search {}", query);
         let client = self.client();
-        let results = client
-            .tracks()
-            .query(Some(query))
-            .get()
-            .await?
-            .into_iter()
-            .filter(|track| {
-                let has_url = track.stream_url.is_some();
-                if !has_url {
-                    warn!("Track {:?} has no stream url", &track);
-                }
-                has_url
-            })
-            .map(SoundcloudTrack::from)
-            .map(|track| track.into())
-            .collect();
-        Ok(results)
+        let mut result = self.search_tracks(&client, &query).await?;
+        let users = self.search_users(&client, &query).await?;
+        let playlists = self.search_playlists(&client, &query).await?;
+        result.extend(users);
+        result.extend(playlists);
+        Ok(result)
     }
 
     async fn resolve_track(&self, uri: &str) -> Result<Option<Track>, Error> {
