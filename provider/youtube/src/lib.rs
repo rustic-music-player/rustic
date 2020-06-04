@@ -62,6 +62,19 @@ pub struct YoutubeProvider {
 }
 
 impl YoutubeProvider {
+    pub fn new() -> Option<Self> {
+        let api_key = option_env!("YOUTUBE_API_KEY");
+        let client_id = option_env!("YOUTUBE_CLIENT_ID");
+        let client_secret = option_env!("YOUTUBE_CLIENT_SECRET");
+
+        Some(YoutubeProvider {
+            api_key: api_key.map(String::from),
+            client_id: client_id.map(String::from),
+            client_secret: client_secret.map(String::from),
+            client: None
+        })
+    }
+
     fn get_youtube_id<'a>(&self, uri: &'a str) -> Result<&'a str, failure::Error> {
         ensure!(uri.starts_with(VIDEO_URI_PREFIX), "Invalid Uri: {}", uri);
         let id = &uri[VIDEO_URI_PREFIX.len()..];

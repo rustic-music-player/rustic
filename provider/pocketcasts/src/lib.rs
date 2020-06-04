@@ -30,6 +30,10 @@ pub struct PocketcastsProvider {
 }
 
 impl PocketcastsProvider {
+    pub fn new() -> Option<Self> {
+        Some(Self::default())
+    }
+
     async fn login(&mut self, username: String, password: String) -> Result<(), Error> {
         self.client = Some(PocketcastClient::login(username, password).await?);
         Ok(())

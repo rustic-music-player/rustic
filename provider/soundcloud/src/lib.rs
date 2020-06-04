@@ -42,6 +42,19 @@ pub struct SoundcloudProvider {
 }
 
 impl SoundcloudProvider {
+    pub fn new() -> Option<Self> {
+        let client_id = option_env!("SOUNDCLOUD_CLIENT_ID");
+
+        client_id.map(|client_id| {
+            SoundcloudProvider {
+                client_id: client_id.into(),
+                auth_token: None
+            }
+        })
+    }
+}
+
+impl SoundcloudProvider {
     fn client(&self) -> soundcloud::Client {
         let mut client = soundcloud::Client::new(self.client_id.as_str());
         if let Some(token) = self.auth_token.as_ref() {

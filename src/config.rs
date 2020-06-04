@@ -103,9 +103,9 @@ impl Default for ProviderConfig {
     fn default() -> Self {
         ProviderConfig {
             #[cfg(feature = "pocketcasts-provider")]
-            pocketcasts: Some(rustic_pocketcasts_provider::PocketcastsProvider::default()),
+            pocketcasts: rustic_pocketcasts_provider::PocketcastsProvider::new(),
             #[cfg(feature = "soundcloud-provider")]
-            soundcloud: None,
+            soundcloud: rustic_soundcloud_provider::SoundcloudProvider::new(),
             #[cfg(feature = "spotify-provider")]
             spotify: None,
             #[cfg(feature = "gmusic-provider")]
@@ -113,7 +113,7 @@ impl Default for ProviderConfig {
             #[cfg(feature = "local-files-provider")]
             local: rustic_local_provider::LocalProvider::new(),
             #[cfg(feature = "youtube-provider")]
-            youtube: Some(rustic_youtube_provider::YoutubeProvider::default()),
+            youtube: rustic_youtube_provider::YoutubeProvider::new(),
         }
     }
 }
