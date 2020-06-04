@@ -76,6 +76,17 @@ sqlite-store = ["rustic-sqlite-store"]
 http-client = ["rustic-native-http-client"]
 extensions = ["rustic-party-mode-extension"]
 
+[target.'cfg(win32)'.features]
+default = [
+	"http-frontend",
+	"rodio-backend",
+	"local-files-provider",
+	"pocketcasts-provider",
+	"soundcloud-provider",
+	"gmusic-provider",
+	"youtube-provider"
+]
+
 [dependencies]
 env_logger = "0.7"
 log = "0.4"
