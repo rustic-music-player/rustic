@@ -47,6 +47,21 @@ impl SoundcloudProvider {
         }
         client
     }
+
+    async fn get_playlist(&self, uri: &str) -> Result<Option<SoundcloudPlaylist>, Error> {
+        ensure!(
+            uri.starts_with("soundcloud://playlist/"),
+            "Invalid Uri: {}",
+            uri
+        );
+        let id = &uri["soundcloud://playlist/".len()..];
+        let id = usize::from_str(id)?;
+        let client = self.client();
+        let playlist = client.playlist(id).get().await?;
+        let playlist = SoundcloudPlaylist::from(playlist);
+
+        Ok(Some(playlist))
+    }
 }
 
 #[async_trait]
@@ -176,8 +191,10 @@ impl provider::ProviderInstance for SoundcloudProvider {
         Ok(track)
     }
 
-    async fn resolve_album(&self, _uri: &str) -> Result<Option<Album>, Error> {
-        Ok(None)
+    async fn resolve_album(&self, uri: &str) -> Result<Option<Album>, Error> {
+        let album = self.get_playlist(uri).await?.map(Album::from);
+
+        Ok(album)
     }
 
     async fn resolve_artist(&self, uri: &str) -> Result<Option<Artist>, Error> {
@@ -186,13 +203,16 @@ impl provider::ProviderInstance for SoundcloudProvider {
         let id = usize::from_str(id)?;
         let client = self.client();
         let user = client.user(id).get().await?;
-        let playlists = client.user(id).playlists().await?.into_iter().map(SoundcloudPlaylist::from).map(Playlist::from).collect();
+        let (albums, playlists) = client.user(id).playlists().await?.into_iter().map(SoundcloudPlaylist::from).partition::<Vec<_>, _>(|p| p.is_album());
+
+        let albums = albums.into_iter().map(Album::from).collect();
+        let playlists = playlists.into_iter().map(Playlist::from).collect();
 
         Ok(Some(Artist {
             id: None,
             name: user.username,
             playlists,
-            albums: Vec::new(),
+            albums,
             provider: ProviderType::Soundcloud,
             meta: HashMap::new(),
             image_url: Some(user.avatar_url),
@@ -201,19 +221,9 @@ impl provider::ProviderInstance for SoundcloudProvider {
     }
 
     async fn resolve_playlist(&self, uri: &str) -> Result<Option<Playlist>, Error> {
-        ensure!(
-            uri.starts_with("soundcloud://playlist/"),
-            "Invalid Uri: {}",
-            uri
-        );
-        let id = &uri["soundcloud://playlist/".len()..];
-        let id = usize::from_str(id)?;
-        let client = self.client();
-        let playlist = client.playlist(id).get().await?;
-        let playlist = SoundcloudPlaylist::from(playlist);
-        let playlist = Playlist::from(playlist);
+        let playlist = self.get_playlist(uri).await?.map(Playlist::from);
 
-        Ok(Some(playlist))
+        Ok(playlist)
     }
 
     async fn stream_url(&self, track: &Track) -> Result<String, Error> {
