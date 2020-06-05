@@ -75,7 +75,6 @@ impl ProviderApiClient for RusticNativeClient {
         let provider = self.get_provider(provider_type);
 
         if let Some(provider) = provider {
-            // TODO: we should await instead of blocking
             let mut provider = provider.get_mut().await;
             let auth = Authentication::from(auth);
             let cred_store = self.credential_store.as_ref().as_ref();

@@ -7,7 +7,9 @@ use std::time::Duration;
 use failure::Error;
 use pinboard::NonEmptyPinboard;
 
-use rustic_core::player::{PlayerBackend, PlayerBuilder, PlayerEvent, PlayerState, QueueCommand, PlayerBus};
+use rustic_core::player::{
+    PlayerBackend, PlayerBuilder, PlayerBus, PlayerEvent, PlayerState, QueueCommand,
+};
 use rustic_core::{Rustic, Track};
 
 pub struct GstBackend {
@@ -30,10 +32,7 @@ impl std::fmt::Debug for GstBackend {
 }
 
 impl GstBackend {
-    pub fn new(
-        core: Arc<Rustic>,
-        bus: PlayerBus,
-    ) -> Result<Box<dyn PlayerBackend>, Error> {
+    pub fn new(core: Arc<Rustic>, bus: PlayerBus) -> Result<Box<dyn PlayerBackend>, Error> {
         gstreamer::init()?;
         let player = gstreamer_player::Player::new(None, None);
         let backend = GstBackend {
@@ -80,7 +79,8 @@ impl PlayerBackend for GstBackend {
             PlayerState::Stop => self.player.stop(),
         }
 
-        self.bus.emit_event(PlayerEvent::TrackChanged(track.clone()))?;
+        self.bus
+            .emit_event(PlayerEvent::TrackChanged(track.clone()))?;
 
         Ok(())
     }

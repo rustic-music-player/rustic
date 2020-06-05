@@ -63,7 +63,7 @@ pub struct FrontendConfig {
     pub http: Option<rustic_http_frontend::HttpConfig>,
     #[cfg(feature = "iced-frontend")]
     #[serde(default)]
-    pub iced: Option<IcedConfig>
+    pub iced: Option<IcedConfig>,
 }
 
 // TODO: fill with options and move to iced frontend crate
@@ -78,7 +78,7 @@ impl Default for FrontendConfig {
             #[cfg(feature = "http-frontend")]
             http: Some(rustic_http_frontend::HttpConfig::default()),
             #[cfg(feature = "iced-frontend")]
-            iced: None
+            iced: None,
         }
     }
 }
@@ -96,7 +96,7 @@ pub struct ProviderConfig {
     #[cfg(feature = "local-files-provider")]
     pub local: Option<rustic_local_provider::LocalProvider>,
     #[cfg(feature = "youtube-provider")]
-    pub youtube: Option<rustic_youtube_provider::YoutubeProvider>
+    pub youtube: Option<rustic_youtube_provider::YoutubeProvider>,
 }
 
 impl Default for ProviderConfig {
@@ -185,7 +185,9 @@ pub enum ClientConfig {
     Native,
     // TODO: should we disable player setup, provider setup etc when using remote client?
     #[cfg(feature = "http-client")]
-    Http { url: String }
+    Http {
+        url: String,
+    },
 }
 
 impl Default for ClientConfig {

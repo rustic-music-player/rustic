@@ -6,14 +6,14 @@ use std::thread;
 use std::time::Duration;
 
 use crossbeam_channel::Sender;
-use failure::{bail, Error, format_err};
+use failure::{bail, format_err, Error};
 use log::{debug, trace};
 use pinboard::NonEmptyPinboard;
 use rodio::DeviceTrait;
 use url::Url;
 
-use rustic_core::{PlayerEvent, PlayerState, Rustic, Track};
 use rustic_core::player::{PlayerBackend, PlayerBuilder, PlayerBus, QueueCommand};
+use rustic_core::{PlayerEvent, PlayerState, Rustic, Track};
 
 use crate::file::RodioFile;
 
@@ -39,10 +39,7 @@ impl std::fmt::Debug for RodioBackend {
 }
 
 impl RodioBackend {
-    pub fn new(
-        core: Arc<Rustic>,
-        bus: PlayerBus,
-    ) -> Result<Box<dyn PlayerBackend>, Error> {
+    pub fn new(core: Arc<Rustic>, bus: PlayerBus) -> Result<Box<dyn PlayerBackend>, Error> {
         let device = rodio::default_output_device()
             .ok_or_else(|| format_err!("Unable to open output device"))?;
         trace!("Got device {:?}", &device.name()?);
@@ -130,7 +127,8 @@ impl PlayerBackend for RodioBackend {
     fn set_track(&self, track: &Track, stream_url: String) -> Result<(), Error> {
         debug!("Selecting {:?}", track);
         {
-            self.bus.emit_event(PlayerEvent::TrackChanged(track.clone()))?;
+            self.bus
+                .emit_event(PlayerEvent::TrackChanged(track.clone()))?;
             let source = self.decode_stream(track, stream_url)?;
             let sink = rodio::Sink::new(&self.device);
             sink.append(source);

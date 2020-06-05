@@ -1,6 +1,6 @@
-use crate::{options, config::Config};
-use rustic_extension_api::*;
+use crate::{config::Config, options};
 use failure::Error;
+use rustic_extension_api::*;
 
 pub(crate) fn load_extensions(
     _options: &options::CliOptions,

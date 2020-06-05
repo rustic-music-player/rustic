@@ -5,9 +5,9 @@ use crossbeam_channel::Receiver;
 use failure::Error;
 use log::error;
 
+pub use self::bus::PlayerBus;
 use crate::library::Track;
 pub use crate::player::backend::PlayerBackend;
-pub use self::bus::PlayerBus;
 
 pub use self::builder::PlayerBuilder;
 pub use self::event::PlayerEvent;
@@ -56,10 +56,14 @@ impl Player {
             loop {
                 let result = {
                     match stream.try_next().await {
-                        Ok(Some(PlayerBusCommand::Player(cmd))) => player.handle_player_msg(cmd).await,
-                        Ok(Some(PlayerBusCommand::Queue(cmd))) => player.handle_queue_msg(cmd).await,
+                        Ok(Some(PlayerBusCommand::Player(cmd))) => {
+                            player.handle_player_msg(cmd).await
+                        }
+                        Ok(Some(PlayerBusCommand::Queue(cmd))) => {
+                            player.handle_queue_msg(cmd).await
+                        }
                         Ok(None) => Ok(()),
-                        Err(e) => Err(e.into())
+                        Err(e) => Err(e.into()),
                     }
                 };
                 if let Err(e) = result {
@@ -84,7 +88,7 @@ impl Player {
             PlayerCommand::Play(track) => {
                 let stream_url = self.core.stream_url(&track).await?;
                 self.backend.set_track(&track, stream_url)?
-            },
+            }
             PlayerCommand::Stop => self.backend.set_state(PlayerState::Stop)?,
         };
         Ok(())

@@ -1,8 +1,8 @@
-use failure::{Error, format_err};
+use failure::{format_err, Error};
 use keyring::{Keyring, KeyringError};
 
 use async_trait::async_trait;
-use rustic_core::{Credentials, CredentialStore, ProviderType};
+use rustic_core::{CredentialStore, Credentials, ProviderType};
 
 pub struct KeychainCredentialStore;
 
@@ -32,19 +32,23 @@ impl CredentialStore for KeychainCredentialStore {
                 let credentials = serde_json::from_str(&password)?;
 
                 Ok(credentials)
-            },
+            }
             Err(KeyringError::NoPasswordFound) => Ok(None),
-            Err(e) => Err(KeychainCredentialStore::handle_error(e))
+            Err(e) => Err(KeychainCredentialStore::handle_error(e)),
         }
     }
 
-    async fn store_credentials(&self, provider: ProviderType, credentials: Credentials) -> Result<(), Error> {
+    async fn store_credentials(
+        &self,
+        provider: ProviderType,
+        credentials: Credentials,
+    ) -> Result<(), Error> {
         let provider = format!("{:?}", provider);
         let keyring = Keyring::new("rustic", &provider);
         let password = serde_json::to_string(&credentials)?;
         match keyring.set_password(&password) {
             Ok(_) => Ok(()),
-            Err(e) => Err(KeychainCredentialStore::handle_error(e))
+            Err(e) => Err(KeychainCredentialStore::handle_error(e)),
         }
     }
 }

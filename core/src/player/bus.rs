@@ -1,10 +1,10 @@
-use failure::{format_err, Error};
 use crate::player::{PlayerCommand, QueueCommand};
 use crate::PlayerEvent;
-use tokio::sync::broadcast;
-use std::fmt::Debug;
+use failure::{format_err, Error};
 use std::fmt;
+use std::fmt::Debug;
 use tokio::stream::StreamExt;
+use tokio::sync::broadcast;
 
 #[derive(Clone)]
 pub struct PlayerBus {
@@ -17,7 +17,7 @@ pub struct PlayerBus {
 #[derive(Debug, Clone)]
 pub enum PlayerBusCommand {
     Player(PlayerCommand),
-    Queue(QueueCommand)
+    Queue(QueueCommand),
 }
 
 impl PlayerBus {
@@ -35,13 +35,17 @@ impl PlayerBus {
     }
 
     pub fn send_player_msg(&self, cmd: PlayerCommand) -> Result<(), Error> {
-        self.player_tx.send(cmd).map_err(|e| format_err!("Error sending player command {:?}", e))?;
+        self.player_tx
+            .send(cmd)
+            .map_err(|e| format_err!("Error sending player command {:?}", e))?;
 
         Ok(())
     }
 
     pub fn send_queue_msg(&self, cmd: QueueCommand) -> Result<(), Error> {
-        self.queue_tx.send(cmd).map_err(|e| format_err!("Error sending queue command {:?}", e))?;
+        self.queue_tx
+            .send(cmd)
+            .map_err(|e| format_err!("Error sending queue command {:?}", e))?;
 
         Ok(())
     }
@@ -53,8 +57,16 @@ impl PlayerBus {
     }
 
     pub fn commands(&self) -> impl futures::Stream<Item = Result<PlayerBusCommand, Error>> {
-        let player_rx = self.player_tx.subscribe().into_stream().map(|r| Ok(r.map(PlayerBusCommand::Player)?));
-        let queue_rx = self.queue_tx.subscribe().into_stream().map(|r| Ok(r.map(PlayerBusCommand::Queue)?));
+        let player_rx = self
+            .player_tx
+            .subscribe()
+            .into_stream()
+            .map(|r| Ok(r.map(PlayerBusCommand::Player)?));
+        let queue_rx = self
+            .queue_tx
+            .subscribe()
+            .into_stream()
+            .map(|r| Ok(r.map(PlayerBusCommand::Queue)?));
 
         player_rx.merge(queue_rx)
     }

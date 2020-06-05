@@ -7,7 +7,7 @@ use pinboard::NonEmptyPinboard;
 use tokio::fs;
 
 use async_trait::async_trait;
-use rustic_core::{Credentials, CredentialStore, ProviderType};
+use rustic_core::{CredentialStore, Credentials, ProviderType};
 
 pub struct FileCredentialStore {
     credentials: NonEmptyPinboard<HashMap<ProviderType, Credentials>>,
@@ -26,10 +26,7 @@ impl FileCredentialStore {
         let path = path.as_ref().to_path_buf();
         let credentials = NonEmptyPinboard::new(credentials);
 
-        Ok(FileCredentialStore {
-            credentials,
-            path,
-        })
+        Ok(FileCredentialStore { credentials, path })
     }
 
     pub async fn save(&self) -> Result<(), Error> {
@@ -48,7 +45,11 @@ impl CredentialStore for FileCredentialStore {
         Ok(credentials.get(&provider).cloned())
     }
 
-    async fn store_credentials(&self, provider: ProviderType, credentials: Credentials) -> Result<(), Error> {
+    async fn store_credentials(
+        &self,
+        provider: ProviderType,
+        credentials: Credentials,
+    ) -> Result<(), Error> {
         let mut credentials_map = self.credentials.read();
         credentials_map.insert(provider, credentials);
         self.credentials.set(credentials_map);

@@ -19,5 +19,5 @@ pub(crate) struct CliOptions {
     /// Connect to remote instance
     #[structopt(long)]
     #[cfg(any(feature = "http-client"))]
-    pub(crate) connect: Option<String>
+    pub(crate) connect: Option<String>,
 }

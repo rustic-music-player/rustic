@@ -1,12 +1,12 @@
 use std::sync::atomic;
 
-use failure::{Error, format_err};
+use failure::{format_err, Error};
 use pinboard::NonEmptyPinboard;
 
 use async_trait::async_trait;
 
+use crate::player::{PlayerBuilder, PlayerBus, PlayerCommand};
 use crate::{PlayerEvent, Track};
-use crate::player::{PlayerBuilder, PlayerCommand, PlayerBus};
 
 use super::PlayerQueue;
 
@@ -30,7 +30,8 @@ impl MemoryQueue {
 
     fn select_track(&self, queue: &[Track], index: usize) -> Result<Option<()>, Error> {
         let result = if let Some(track) = queue.get(index).cloned() {
-            self.bus.send_player_msg(PlayerCommand::Play(track.clone()))?;
+            self.bus
+                .send_player_msg(PlayerCommand::Play(track.clone()))?;
             self.current_track.set(Some(track));
             Some(())
         } else {
@@ -41,7 +42,8 @@ impl MemoryQueue {
     }
 
     async fn queue_changed(&self) -> Result<(), Error> {
-        self.bus.emit_event(PlayerEvent::QueueUpdated(self.get_queue().await?))?;
+        self.bus
+            .emit_event(PlayerEvent::QueueUpdated(self.get_queue().await?))?;
         Ok(())
     }
 
@@ -181,9 +183,7 @@ pub trait MemoryQueueBuilder {
 
 impl MemoryQueueBuilder for PlayerBuilder {
     fn with_memory_queue(&mut self) -> &mut Self {
-        self.with_queue(|_, bus| {
-            Ok(Box::new(MemoryQueue::new(bus)))
-        })
-        .unwrap()
+        self.with_queue(|_, bus| Ok(Box::new(MemoryQueue::new(bus))))
+            .unwrap()
     }
 }

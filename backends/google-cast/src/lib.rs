@@ -8,11 +8,9 @@ use std::time::Duration;
 use failure::Error;
 use log::error;
 use pinboard::NonEmptyPinboard;
-use rust_cast::{
-    CastDevice,
-};
+use rust_cast::CastDevice;
 
-use rustic_core::player::{queue::MemoryQueueBuilder, PlayerBuilder, PlayerState, PlayerBus};
+use rustic_core::player::{queue::MemoryQueueBuilder, PlayerBuilder, PlayerBus, PlayerState};
 use rustic_core::Track;
 
 use crate::cast_state::CastState;
@@ -55,10 +53,7 @@ impl GoogleCastBackend {
         });
     }
 
-    pub fn new(
-        bus: PlayerBus,
-        ip: IpAddr,
-    ) -> Result<Box<dyn rustic_core::PlayerBackend>, Error> {
+    pub fn new(bus: PlayerBus, ip: IpAddr) -> Result<Box<dyn rustic_core::PlayerBackend>, Error> {
         let (internal_sender, internal_receiver) = crossbeam_channel::unbounded();
         let cast_state = Arc::new(NonEmptyPinboard::new(CastState::default()));
         {

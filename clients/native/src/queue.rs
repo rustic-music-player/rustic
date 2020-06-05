@@ -126,7 +126,8 @@ impl RusticNativeClient {
 
     async fn queue_multiple(&self, player: Arc<Player>, tracks: &[Track]) -> Result<()> {
         let tracks = self.extensions.on_add_to_queue(tracks.to_vec()).await?;
-        let play = player.get_queue().await?.is_empty() && player.backend.state() == PlayerState::Stop;
+        let play =
+            player.get_queue().await?.is_empty() && player.backend.state() == PlayerState::Stop;
         player.queue.queue_multiple(&tracks).await?;
         if play {
             player.backend.set_state(PlayerState::Play)?;

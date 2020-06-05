@@ -2,8 +2,8 @@ use std::sync::Arc;
 
 use failure::Error;
 
-use crate::Rustic;
 use crate::player::{Player, PlayerBackend, PlayerBus, PlayerQueue};
+use crate::Rustic;
 
 pub struct PlayerBuilder {
     core: Arc<Rustic>,
@@ -22,7 +22,7 @@ impl PlayerBuilder {
             name: None,
             backend: None,
             queue: None,
-            bus
+            bus,
         }
     }
 
@@ -33,15 +33,9 @@ impl PlayerBuilder {
 
     pub fn with_player<P>(&mut self, builder: P) -> Result<&mut Self, Error>
     where
-        P: Fn(
-            Arc<Rustic>,
-            PlayerBus
-        ) -> Result<Box<dyn PlayerBackend>, Error>,
+        P: Fn(Arc<Rustic>, PlayerBus) -> Result<Box<dyn PlayerBackend>, Error>,
     {
-        let backend = builder(
-            Arc::clone(&self.core),
-            self.bus.clone()
-        )?;
+        let backend = builder(Arc::clone(&self.core), self.bus.clone())?;
         self.backend = Some(backend);
 
         Ok(self)
@@ -49,15 +43,9 @@ impl PlayerBuilder {
 
     pub fn with_queue<Q>(&mut self, builder: Q) -> Result<&mut Self, Error>
     where
-        Q: Fn(
-            Arc<Rustic>,
-            PlayerBus
-        ) -> Result<Box<dyn PlayerQueue>, Error>,
+        Q: Fn(Arc<Rustic>, PlayerBus) -> Result<Box<dyn PlayerQueue>, Error>,
     {
-        let queue = builder(
-            Arc::clone(&self.core),
-            self.bus.clone()
-        )?;
+        let queue = builder(Arc::clone(&self.core), self.bus.clone())?;
         self.queue = Some(queue);
 
         Ok(self)

@@ -1,13 +1,13 @@
-use rustic_core::player::{queue::MemoryQueueBuilder, PlayerBuilder};
 use crate::config::{PlayerBackend, PlayerBackendConfig};
+use rustic_core::player::{queue::MemoryQueueBuilder, PlayerBuilder};
 use rustic_core::Rustic;
-use std::sync::Arc;
 #[cfg(feature = "google-cast-backend")]
 use rustic_google_cast_backend::GoogleCastBuilder;
 #[cfg(feature = "gstreamer-backend")]
 use rustic_gstreamer_backend::GstreamerPlayerBuilder;
 #[cfg(feature = "rodio-backend")]
 use rustic_rodio_backend::RodioPlayerBuilder;
+use std::sync::Arc;
 
 pub(crate) fn setup_player(
     app: &Arc<Rustic>,
