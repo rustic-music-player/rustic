@@ -23,6 +23,7 @@ impl QueueApiClient for RusticNativeClient {
         let player = self.get_player_or_default(player_id)?;
         let tracks = player
             .get_queue()
+            .await?
             .into_iter()
             .map(TrackModel::from)
             .collect();
@@ -77,14 +78,14 @@ impl QueueApiClient for RusticNativeClient {
 
     async fn clear_queue(&self, player_id: Option<&str>) -> Result<()> {
         let player = self.get_player_or_default(player_id)?;
-        player.queue.clear();
+        player.queue.clear().await?;
 
         Ok(())
     }
 
     async fn remove_queue_item(&self, player_id: Option<&str>, item: usize) -> Result<()> {
         let player = self.get_player_or_default(player_id)?;
-        player.queue.remove_item(item)?;
+        player.queue.remove_item(item).await?;
 
         Ok(())
     }
@@ -96,7 +97,7 @@ impl QueueApiClient for RusticNativeClient {
         after: usize,
     ) -> Result<()> {
         let player = self.get_player_or_default(player_id)?;
-        player.queue.reorder_item(before, after)?;
+        player.queue.reorder_item(before, after).await?;
 
         Ok(())
     }
@@ -125,8 +126,8 @@ impl RusticNativeClient {
 
     async fn queue_multiple(&self, player: Arc<Player>, tracks: &[Track]) -> Result<()> {
         let tracks = self.extensions.on_add_to_queue(tracks.to_vec()).await?;
-        let play = player.get_queue().is_empty() && player.backend.state() == PlayerState::Stop;
-        player.queue.queue_multiple(&tracks);
+        let play = player.get_queue().await?.is_empty() && player.backend.state() == PlayerState::Stop;
+        player.queue.queue_multiple(&tracks).await?;
         if play {
             player.backend.set_state(PlayerState::Play)?;
         }

@@ -7,7 +7,7 @@ use failure::Error;
 use crate::{PlayerState, Track};
 
 pub trait PlayerBackend: Send + Sync + Debug {
-    fn set_track(&self, track: &Track) -> Result<(), Error>;
+    fn set_track(&self, track: &Track, stream_url: String) -> Result<(), Error>;
 
     /// Set the player state
     fn set_state(&self, state: PlayerState) -> Result<(), Error>;

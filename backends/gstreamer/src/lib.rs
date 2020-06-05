@@ -1,15 +1,13 @@
-extern crate crossbeam_channel as channel;
 use log::{debug, error};
 
 use std::any::Any;
 use std::sync::Arc;
 use std::time::Duration;
 
-use channel::Sender;
 use failure::Error;
 use pinboard::NonEmptyPinboard;
 
-use rustic_core::player::{PlayerBackend, PlayerBuilder, PlayerEvent, PlayerState, QueueCommand};
+use rustic_core::player::{PlayerBackend, PlayerBuilder, PlayerEvent, PlayerState, QueueCommand, PlayerBus};
 use rustic_core::{Rustic, Track};
 
 pub struct GstBackend {
@@ -18,7 +16,7 @@ pub struct GstBackend {
     state: NonEmptyPinboard<PlayerState>,
     blend_time: Duration,
     player: gstreamer_player::Player,
-    player_events: Sender<PlayerEvent>,
+    bus: PlayerBus,
 }
 
 impl std::fmt::Debug for GstBackend {
@@ -34,8 +32,7 @@ impl std::fmt::Debug for GstBackend {
 impl GstBackend {
     pub fn new(
         core: Arc<Rustic>,
-        queue_tx: Sender<QueueCommand>,
-        player_events: Sender<PlayerEvent>,
+        bus: PlayerBus,
     ) -> Result<Box<dyn PlayerBackend>, Error> {
         gstreamer::init()?;
         let player = gstreamer_player::Player::new(None, None);
@@ -45,11 +42,11 @@ impl GstBackend {
             current_volume: 1.0,
             state: NonEmptyPinboard::new(PlayerState::Stop),
             player,
-            player_events,
+            bus: bus.clone(),
         };
 
         backend.player.connect_end_of_stream(move |_| {
-            if let Err(e) = queue_tx.send(QueueCommand::Next) {
+            if let Err(e) = bus.send_queue_msg(QueueCommand::Next) {
                 error!("Failed loading next track: {:?}", e)
             }
         });
@@ -63,17 +60,17 @@ impl GstBackend {
         Ok(Box::new(backend))
     }
 
-    fn write_state(&self, state: PlayerState) {
+    fn write_state(&self, state: PlayerState) -> Result<(), Error> {
         self.state.set(state);
-        self.player_events.send(PlayerEvent::StateChanged(state));
+        self.bus.emit_event(PlayerEvent::StateChanged(state))?;
+
+        Ok(())
     }
 }
 
 impl PlayerBackend for GstBackend {
-    fn set_track(&self, track: &Track) -> Result<(), Error> {
+    fn set_track(&self, track: &Track, stream_url: String) -> Result<(), Error> {
         debug!("Selecting {:?}", track);
-
-        let stream_url = self.core.stream_url(track)?;
 
         self.player.set_uri(stream_url.as_str());
 
@@ -83,8 +80,7 @@ impl PlayerBackend for GstBackend {
             PlayerState::Stop => self.player.stop(),
         }
 
-        self.player_events
-            .send(PlayerEvent::TrackChanged(track.clone()))?;
+        self.bus.emit_event(PlayerEvent::TrackChanged(track.clone()))?;
 
         Ok(())
     }
@@ -94,17 +90,17 @@ impl PlayerBackend for GstBackend {
         match new_state {
             PlayerState::Play => {
                 self.player.play();
-                self.write_state(new_state);
+                self.write_state(new_state)?;
                 Ok(())
             }
             PlayerState::Pause => {
                 self.player.pause();
-                self.write_state(new_state);
+                self.write_state(new_state)?;
                 Ok(())
             }
             PlayerState::Stop => {
                 self.player.stop();
-                self.write_state(new_state);
+                self.write_state(new_state)?;
                 Ok(())
             }
         }
@@ -146,6 +142,6 @@ pub trait GstreamerPlayerBuilder {
 
 impl GstreamerPlayerBuilder for PlayerBuilder {
     fn with_gstreamer(&mut self) -> Result<&mut Self, Error> {
-        self.with_player(|core, queue_tx, _, event_tx| GstBackend::new(core, queue_tx, event_tx))
+        self.with_player(GstBackend::new)
     }
 }

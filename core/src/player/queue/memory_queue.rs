@@ -1,11 +1,12 @@
 use std::sync::atomic;
 
-use crossbeam_channel::Sender;
-use failure::{format_err, Error};
+use failure::{Error, format_err};
 use pinboard::NonEmptyPinboard;
 
-use crate::player::{PlayerBuilder, PlayerCommand};
+use async_trait::async_trait;
+
 use crate::{PlayerEvent, Track};
+use crate::player::{PlayerBuilder, PlayerCommand, PlayerBus};
 
 use super::PlayerQueue;
 
@@ -14,123 +15,139 @@ pub struct MemoryQueue {
     queue: NonEmptyPinboard<Vec<Track>>,
     current_index: atomic::AtomicUsize,
     current_track: NonEmptyPinboard<Option<Track>>,
-    player_tx: Sender<PlayerCommand>,
-    event_tx: Sender<PlayerEvent>,
+    bus: PlayerBus,
 }
 
 impl MemoryQueue {
-    pub fn new(player_tx: Sender<PlayerCommand>, event_tx: Sender<PlayerEvent>) -> Self {
+    pub fn new(bus: PlayerBus) -> Self {
         MemoryQueue {
             queue: NonEmptyPinboard::new(vec![]),
             current_index: atomic::AtomicUsize::new(0),
             current_track: NonEmptyPinboard::new(None),
-            player_tx,
-            event_tx,
+            bus,
         }
     }
 
-    fn select_track(&self, queue: &[Track], index: usize) -> Option<()> {
-        if let Some(track) = queue.get(index).cloned() {
-            self.player_tx.send(PlayerCommand::Play(track.clone()));
+    fn select_track(&self, queue: &[Track], index: usize) -> Result<Option<()>, Error> {
+        let result = if let Some(track) = queue.get(index).cloned() {
+            self.bus.send_player_msg(PlayerCommand::Play(track.clone()))?;
             self.current_track.set(Some(track));
             Some(())
         } else {
             self.current_track.set(None);
             None
-        }
+        };
+        Ok(result)
     }
 
-    fn queue_changed(&self) {
-        self.event_tx
-            .send(PlayerEvent::QueueUpdated(self.get_queue()));
+    async fn queue_changed(&self) -> Result<(), Error> {
+        self.bus.emit_event(PlayerEvent::QueueUpdated(self.get_queue().await?))?;
+        Ok(())
     }
 
-    fn emit_current_track(&self) {
-        let next = self.current();
+    async fn emit_current_track(&self) -> Result<(), Error> {
+        let next = self.current().await?;
         let current = self.current_track.read();
         if current == next {
-            return;
+            return Ok(());
         }
         if let Some(track) = next {
             self.current_track.set(Some(track.clone()));
-            self.player_tx.send(PlayerCommand::Play(track));
+            self.bus.send_player_msg(PlayerCommand::Play(track))?;
         } else {
             self.current_track.set(None);
-            self.player_tx.send(PlayerCommand::Stop);
+            self.bus.send_player_msg(PlayerCommand::Stop)?;
         }
+        Ok(())
     }
 }
 
+#[async_trait]
 impl PlayerQueue for MemoryQueue {
-    fn queue_single(&self, track: &Track) {
+    async fn queue_single(&self, track: &Track) -> Result<(), Error> {
         let mut queue = self.queue.read();
         queue.push(track.clone());
         self.queue.set(queue);
-        self.queue_changed();
-        self.emit_current_track();
+        self.queue_changed().await?;
+        self.emit_current_track().await?;
+
+        Ok(())
     }
 
-    fn queue_multiple(&self, tracks: &[Track]) {
+    async fn queue_multiple(&self, tracks: &[Track]) -> Result<(), Error> {
         let mut queue = self.queue.read();
         queue.append(&mut tracks.to_vec());
         self.queue.set(queue);
-        self.queue_changed();
-        self.emit_current_track();
+        self.queue_changed().await?;
+        self.emit_current_track().await?;
+
+        Ok(())
     }
 
-    fn queue_next(&self, track: &Track) {
+    async fn queue_next(&self, track: &Track) -> Result<(), Error> {
         let mut queue = self.queue.read();
         let current_index = self.current_index.load(atomic::Ordering::Relaxed);
         queue.insert(current_index + 1, track.clone());
         self.queue.set(queue);
-        self.queue_changed();
-        self.emit_current_track();
+        self.queue_changed().await?;
+        self.emit_current_track().await?;
+
+        Ok(())
     }
 
-    fn get_queue(&self) -> Vec<Track> {
-        self.queue.read()
+    async fn get_queue(&self) -> Result<Vec<Track>, Error> {
+        Ok(self.queue.read())
     }
 
-    fn remove_item(&self, index: usize) -> Result<(), Error> {
+    async fn remove_item(&self, index: usize) -> Result<(), Error> {
         let current_index = self.current_index.load(atomic::Ordering::Relaxed);
         let mut queue = self.queue.read();
 
         queue.remove(index);
 
         if current_index == index {
-            self.select_track(&queue, current_index);
+            self.select_track(&queue, current_index)?;
         }
         self.queue.set(queue);
-        self.queue_changed();
+        self.queue_changed().await?;
 
         Ok(())
     }
 
-    fn clear(&self) {
+    async fn clear(&self) -> Result<(), Error> {
         self.queue.set(vec![]);
         self.current_index.store(0, atomic::Ordering::Relaxed);
-        self.queue_changed();
-        self.emit_current_track();
+        self.queue_changed().await?;
+        self.emit_current_track().await?;
+
+        Ok(())
     }
 
-    fn prev(&self) -> Result<Option<()>, Error> {
+    async fn current(&self) -> Result<Option<Track>, Error> {
+        let queue = self.get_queue().await?;
+        let current_index = self.current_index.load(atomic::Ordering::Relaxed);
+
+        Ok(queue.get(current_index).cloned())
+    }
+
+    async fn prev(&self) -> Result<Option<()>, Error> {
         let mut current_index = self.current_index.load(atomic::Ordering::Relaxed);
         if current_index == 0 {
             return Ok(None);
         }
 
-        let queue = self.get_queue();
+        let queue = self.get_queue().await?;
 
         current_index -= 1;
         self.current_index
             .store(current_index, atomic::Ordering::Relaxed);
 
-        Ok(self.select_track(&queue, current_index))
+        Ok(self.select_track(&queue, current_index)?)
     }
 
-    fn next(&self) -> Result<Option<()>, Error> {
+    async fn next(&self) -> Result<Option<()>, Error> {
         let mut current_index = self.current_index.load(atomic::Ordering::Relaxed);
-        let queue = self.get_queue();
+        let queue = self.get_queue().await?;
 
         if current_index >= queue.len() {
             return Ok(None);
@@ -139,17 +156,11 @@ impl PlayerQueue for MemoryQueue {
         self.current_index
             .store(current_index, atomic::Ordering::Relaxed);
 
-        Ok(self.select_track(&queue, current_index))
+        Ok(self.select_track(&queue, current_index)?)
     }
 
-    fn current(&self) -> Option<Track> {
-        let queue = self.get_queue();
-        let current_index = self.current_index.load(atomic::Ordering::Relaxed);
-        queue.get(current_index).cloned()
-    }
-
-    fn reorder_item(&self, index_before: usize, index_after: usize) -> Result<(), Error> {
-        let mut queue = self.get_queue();
+    async fn reorder_item(&self, index_before: usize, index_after: usize) -> Result<(), Error> {
+        let mut queue = self.get_queue().await?;
         if index_before >= queue.len() || index_after >= queue.len() {
             return Err(format_err!(
                 "index out of bounds\nreorder_item got index outside of the queue size"
@@ -158,7 +169,7 @@ impl PlayerQueue for MemoryQueue {
         let item = queue.remove(index_before);
         queue.insert(index_after, item);
         self.queue.set(queue);
-        self.queue_changed();
+        self.queue_changed().await?;
 
         Ok(())
     }
@@ -170,8 +181,8 @@ pub trait MemoryQueueBuilder {
 
 impl MemoryQueueBuilder for PlayerBuilder {
     fn with_memory_queue(&mut self) -> &mut Self {
-        self.with_queue(|_, player_tx, _, event_tx| {
-            Ok(Box::new(MemoryQueue::new(player_tx, event_tx)))
+        self.with_queue(|_, bus| {
+            Ok(Box::new(MemoryQueue::new(bus)))
         })
         .unwrap()
     }

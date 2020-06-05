@@ -50,16 +50,17 @@ impl MpdCommand<StatusResponse> for StatusCommand {
         let player = app
             .get_default_player()
             .ok_or(format_err!("Missing default player"))?;
-        Ok(StatusResponse {
-            volume: (player.backend.volume() * 100f32) as u32,
-            repeat: false,
-            random: false,
-            single: false,
-            consume: false,
-            playlist: 0,
-            playlistlength: player.get_queue().len(),
-            state: player.backend.state(),
-            xfade: 0,
-        })
+        unimplemented!()
+        // Ok(StatusResponse {
+        //     volume: (player.backend.volume() * 100f32) as u32,
+        //     repeat: false,
+        //     random: false,
+        //     single: false,
+        //     consume: false,
+        //     playlist: 0,
+        //     playlistlength: player.get_queue().len(),
+        //     state: player.backend.state(),
+        //     xfade: 0,
+        // })
     }
 }

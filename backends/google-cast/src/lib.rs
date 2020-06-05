@@ -5,17 +5,14 @@ use std::thread;
 use std::thread::sleep;
 use std::time::Duration;
 
-use crossbeam_channel::{Receiver, Sender};
 use failure::Error;
 use log::error;
 use pinboard::NonEmptyPinboard;
-use rust_cast::channels::receiver::Application;
 use rust_cast::{
-    channels::{media::*, receiver::CastDeviceApp},
     CastDevice,
 };
 
-use rustic_core::player::{queue::MemoryQueueBuilder, PlayerBuilder, PlayerEvent, PlayerState};
+use rustic_core::player::{queue::MemoryQueueBuilder, PlayerBuilder, PlayerState, PlayerBus};
 use rustic_core::Track;
 
 use crate::cast_state::CastState;
@@ -29,7 +26,7 @@ mod internal_command;
 mod tasks;
 
 pub struct GoogleCastBackend {
-    player_events: Sender<PlayerEvent>,
+    bus: PlayerBus,
     internal_sender: crossbeam_channel::Sender<InternalCommand>,
     cast_state: Arc<NonEmptyPinboard<CastState>>,
 }
@@ -59,17 +56,15 @@ impl GoogleCastBackend {
     }
 
     pub fn new(
-        core: Arc<rustic_core::Rustic>,
-        player_events: Sender<PlayerEvent>,
+        bus: PlayerBus,
         ip: IpAddr,
     ) -> Result<Box<dyn rustic_core::PlayerBackend>, Error> {
         let (internal_sender, internal_receiver) = crossbeam_channel::unbounded();
         let cast_state = Arc::new(NonEmptyPinboard::new(CastState::default()));
         {
-            let core = Arc::clone(&core);
             thread::spawn::<_, Result<(), failure::Error>>(move || {
                 let device = CastDevice::connect_without_host_verification(ip.to_string(), 8009)?;
-                let mut task = CastCommandTask::new(internal_receiver, core);
+                let mut task = CastCommandTask::new(internal_receiver);
 
                 loop {
                     if let Err(e) = task.next(&device) {
@@ -95,7 +90,7 @@ impl GoogleCastBackend {
         }
 
         Ok(Box::new(GoogleCastBackend {
-            player_events,
+            bus,
             internal_sender,
             cast_state,
         }))
@@ -103,9 +98,9 @@ impl GoogleCastBackend {
 }
 
 impl rustic_core::PlayerBackend for GoogleCastBackend {
-    fn set_track(&self, track: &Track) -> Result<(), Error> {
+    fn set_track(&self, track: &Track, stream_url: String) -> Result<(), Error> {
         self.internal_sender
-            .send(InternalCommand::Play(track.clone()))?;
+            .send(InternalCommand::Play(track.clone(), stream_url))?;
         Ok(())
     }
 
@@ -159,6 +154,6 @@ pub trait GoogleCastBuilder {
 
 impl GoogleCastBuilder for PlayerBuilder {
     fn with_google_cast(&mut self, ip: IpAddr) -> Result<&mut Self, Error> {
-        self.with_player(|core, _, _, events_tx| GoogleCastBackend::new(core, events_tx, ip))
+        self.with_player(|_, bus| GoogleCastBackend::new(bus, ip))
     }
 }

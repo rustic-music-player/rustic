@@ -9,7 +9,6 @@ homepage = "https://github.com/rustic-music-player/rustic"
 edition = "2018"
 
 [dependencies]
-crossbeam-channel = "0.4"
 log = "0.4"
 failure = "0.1"
 gstreamer = "0.15"

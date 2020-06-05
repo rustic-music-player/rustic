@@ -1,39 +1,43 @@
-use crate::Track;
-use failure::Error;
 use std::fmt::Debug;
+
+use failure::Error;
+
+use async_trait::async_trait;
+pub use memory_queue::*;
+
+use crate::Track;
 
 mod memory_queue;
 
-pub use memory_queue::*;
-
+#[async_trait]
 pub trait PlayerQueue: Send + Sync + Debug {
     /// Put a single track at the end of the current queue
-    fn queue_single(&self, track: &Track);
+    async fn queue_single(&self, track: &Track) -> Result<(), Error>;
 
     /// Put multiple tracks at the end of the current queue
-    fn queue_multiple(&self, tracks: &[Track]);
+    async fn queue_multiple(&self, tracks: &[Track]) -> Result<(), Error>;
 
     /// Queue single track behind the current
-    fn queue_next(&self, track: &Track);
+    async fn queue_next(&self, track: &Track) -> Result<(), Error>;
 
     /// Returns all tracks which are queued up right now
-    fn get_queue(&self) -> Vec<Track>;
+    async fn get_queue(&self) -> Result<Vec<Track>, Error>;
 
-    fn remove_item(&self, index: usize) -> Result<(), Error>;
+    async fn remove_item(&self, index: usize) -> Result<(), Error>;
 
     /// Clear the current queue
-    fn clear(&self);
+    async fn clear(&self) -> Result<(), Error>;
 
     /// Returns the currently playing track or None when nothing is playing
-    fn current(&self) -> Option<Track>;
+    async fn current(&self) -> Result<Option<Track>, Error>;
 
     /// Play the previous track in the current queue
-    fn prev(&self) -> Result<Option<()>, Error>;
+    async fn prev(&self) -> Result<Option<()>, Error>;
 
     /// Play the next track in the current queue
-    fn next(&self) -> Result<Option<()>, Error>;
+    async fn next(&self) -> Result<Option<()>, Error>;
 
     /// Move item at index_before to index_after
     /// Should fail when index_before or index_after are out of bounds
-    fn reorder_item(&self, index_before: usize, index_after: usize) -> Result<(), Error>;
+    async fn reorder_item(&self, index_before: usize, index_after: usize) -> Result<(), Error>;
 }

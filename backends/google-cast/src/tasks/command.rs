@@ -1,7 +1,5 @@
-use std::sync::Arc;
-
 use crossbeam_channel::Receiver;
-use log::{debug, error, trace, warn};
+use log::{debug, trace, warn};
 use rust_cast::channels::media::{Media, Metadata, MusicTrackMediaMetadata, StreamType};
 use rust_cast::channels::receiver::{Application, CastDeviceApp};
 use rust_cast::CastDevice;
@@ -11,15 +9,13 @@ use rustic_core::PlayerState;
 use crate::internal_command::InternalCommand;
 
 pub struct CastCommandTask {
-    core: Arc<rustic_core::Rustic>,
     app: Option<Application>,
     receiver: Receiver<InternalCommand>,
 }
 
 impl CastCommandTask {
-    pub fn new(receiver: Receiver<InternalCommand>, core: Arc<rustic_core::Rustic>) -> Self {
+    pub fn new(receiver: Receiver<InternalCommand>) -> Self {
         CastCommandTask {
-            core,
             receiver,
             app: None,
         }
@@ -27,7 +23,7 @@ impl CastCommandTask {
 
     pub fn next(&mut self, device: &CastDevice<'_>) -> Result<(), failure::Error> {
         match self.receiver.recv() {
-            Ok(InternalCommand::Play(track)) => {
+            Ok(InternalCommand::Play(track, url)) => {
                 if self.app.is_none() {
                     debug!("Launching app...");
                     let app = device
@@ -42,7 +38,7 @@ impl CastCommandTask {
                     device.connection.connect(app.transport_id.as_str())?;
 
                     let media = Media {
-                        content_id: self.core.stream_url(&track)?,
+                        content_id: url,
                         stream_type: StreamType::None,
                         content_type: "audio/mp3".to_string(),
                         metadata: Some(Metadata::MusicTrack(MusicTrackMediaMetadata {

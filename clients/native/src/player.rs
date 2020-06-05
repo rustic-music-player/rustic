@@ -14,23 +14,19 @@ use crate::RusticNativeClient;
 #[async_trait]
 impl PlayerApiClient for RusticNativeClient {
     async fn get_players(&self) -> Result<Vec<PlayerModel>> {
-        let players = self
-            .app
-            .get_players()
-            .into_iter()
-            .map(|(id, player)| {
-                let track = player.queue.current().map(TrackModel::from);
-                let volume = player.backend.volume();
+        let mut players = Vec::new();
+        for (id, player) in self.app.get_players() {
+            let track = player.queue.current().await?.map(TrackModel::from);
+            let volume = player.backend.volume();
 
-                PlayerModel {
-                    cursor: to_cursor(&id),
-                    name: player.display_name.clone(),
-                    playing: (player.backend.state() == PlayerState::Play),
-                    volume,
-                    current: track,
-                }
-            })
-            .collect();
+            players.push(PlayerModel {
+                cursor: to_cursor(&id),
+                name: player.display_name.clone(),
+                playing: (player.backend.state() == PlayerState::Play),
+                volume,
+                current: track,
+            });
+        }
 
         Ok(players)
     }
@@ -41,7 +37,7 @@ impl PlayerApiClient for RusticNativeClient {
             .map(|id| id.to_owned())
             .or_else(|| self.app.get_default_player_id())
             .unwrap();
-        let current = player.queue.current().map(TrackModel::from);
+        let current = player.queue.current().await?.map(TrackModel::from);
         let volume = player.backend.volume();
 
         let state = PlayerModel {
@@ -58,13 +54,13 @@ impl PlayerApiClient for RusticNativeClient {
     async fn player_control_next(&self, player_id: Option<&str>) -> Result<Option<()>> {
         let player = self.get_player_or_default(player_id)?;
 
-        player.queue.next()
+        player.queue.next().await
     }
 
     async fn player_control_prev(&self, player_id: Option<&str>) -> Result<Option<()>> {
         let player = self.get_player_or_default(player_id)?;
 
-        player.queue.prev()
+        player.queue.prev().await
     }
 
     async fn player_control_play(&self, player_id: Option<&str>) -> Result<()> {

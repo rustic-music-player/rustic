@@ -173,11 +173,9 @@ impl Rustic {
         Ok(provider)
     }
 
-    pub fn stream_url(&self, track: &Track) -> Result<String, failure::Error> {
+    pub async fn stream_url(&self, track: &Track) -> Result<String, failure::Error> {
         let provider = self.get_provider(track)?;
-        // TODO: we should await instead of blocking
-        let mut rt = tokio::runtime::Runtime::new()?;
-        let stream_url = rt.block_on(async { provider.get().await.stream_url(track).await })?;
+        let stream_url = provider.get().await.stream_url(track).await?;
         debug!(
             "getting stream url for track {} => {}",
             track.uri, &stream_url

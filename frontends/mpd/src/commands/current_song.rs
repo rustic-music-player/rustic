@@ -17,7 +17,8 @@ impl MpdCommand<Option<MpdSong>> for CurrentSongCommand {
         let player = app
             .get_default_player()
             .ok_or(format_err!("Missing default player"))?;
-        let track = player.queue.current().map(MpdSong::from);
-        Ok(track)
+        unimplemented!()
+        // let track = player.queue.current().map(MpdSong::from);
+        // Ok(track)
     }
 }

@@ -6,14 +6,14 @@ use std::thread;
 use std::time::Duration;
 
 use crossbeam_channel::Sender;
-use failure::{bail, format_err, Error};
+use failure::{bail, Error, format_err};
 use log::{debug, trace};
 use pinboard::NonEmptyPinboard;
 use rodio::DeviceTrait;
 use url::Url;
 
-use rustic_core::player::{PlayerBackend, PlayerBuilder, QueueCommand};
 use rustic_core::{PlayerEvent, PlayerState, Rustic, Track};
+use rustic_core::player::{PlayerBackend, PlayerBuilder, PlayerBus, QueueCommand};
 
 use crate::file::RodioFile;
 
@@ -25,7 +25,7 @@ pub struct RodioBackend {
     blend_time: Duration,
     current_sink: Arc<Mutex<Option<rodio::Sink>>>,
     device: rodio::Device,
-    player_events: Sender<PlayerEvent>,
+    bus: PlayerBus,
     next_sender: Sender<()>,
 }
 
@@ -41,8 +41,7 @@ impl std::fmt::Debug for RodioBackend {
 impl RodioBackend {
     pub fn new(
         core: Arc<Rustic>,
-        queue_tx: Sender<QueueCommand>,
-        player_events: Sender<PlayerEvent>,
+        bus: PlayerBus,
     ) -> Result<Box<dyn PlayerBackend>, Error> {
         let device = rodio::default_output_device()
             .ok_or_else(|| format_err!("Unable to open output device"))?;
@@ -54,13 +53,13 @@ impl RodioBackend {
             blend_time: Duration::default(),
             current_sink: Arc::new(Mutex::new(None)),
             device,
-            player_events,
+            bus: bus.clone(),
             next_sender,
         };
 
         thread::spawn(move || {
             for _ in next_receiver {
-                queue_tx.send(QueueCommand::Next);
+                bus.send_queue_msg(QueueCommand::Next);
             }
         });
 
@@ -92,43 +91,47 @@ impl RodioBackend {
         Ok(decoder)
     }
 
-    fn write_state(&self, state: PlayerState) {
+    fn write_state(&self, state: PlayerState) -> Result<(), Error> {
         if self.state.read() == state {
-            return;
+            return Ok(());
         }
         self.state.set(state);
-        self.player_events.send(PlayerEvent::StateChanged(state));
+        self.bus.emit_event(PlayerEvent::StateChanged(state))?;
+
+        Ok(())
     }
 
-    fn play(&self) {
-        self.write_state(PlayerState::Play);
+    fn play(&self) -> Result<(), Error> {
+        self.write_state(PlayerState::Play)?;
         if let Some(sink) = self.current_sink.lock().unwrap().deref_mut() {
             sink.play();
         }
+        Ok(())
     }
 
-    fn pause(&self) {
+    fn pause(&self) -> Result<(), Error> {
         if let Some(sink) = self.current_sink.lock().unwrap().deref_mut() {
             sink.pause();
-            self.write_state(PlayerState::Pause);
+            self.write_state(PlayerState::Pause)?;
         }
+        Ok(())
     }
 
-    fn stop(&self) {
-        self.write_state(PlayerState::Stop);
+    fn stop(&self) -> Result<(), Error> {
+        self.write_state(PlayerState::Stop)?;
         if let Some(sink) = self.current_sink.lock().unwrap().deref_mut() {
             sink.stop();
         }
+        Ok(())
     }
 }
 
 impl PlayerBackend for RodioBackend {
-    fn set_track(&self, track: &Track) -> Result<(), Error> {
+    fn set_track(&self, track: &Track, stream_url: String) -> Result<(), Error> {
         debug!("Selecting {:?}", track);
         {
-            self.player_events
-                .send(PlayerEvent::TrackChanged(track.clone()))?;
-            let source = self.decode_stream(track, self.core.stream_url(track)?)?;
+            self.bus.emit_event(PlayerEvent::TrackChanged(track.clone()))?;
+            let source = self.decode_stream(track, stream_url)?;
             let sink = rodio::Sink::new(&self.device);
             sink.append(source);
             if self.state() != PlayerState::Play {
@@ -142,16 +145,16 @@ impl PlayerBackend for RodioBackend {
             *current_sink = Some(sink);
         } // Drop the lock
         if self.state.read() == PlayerState::Play {
-            self.play();
+            self.play()?;
         }
         Ok(())
     }
 
     fn set_state(&self, state: PlayerState) -> Result<(), Error> {
         match state {
-            PlayerState::Play => self.play(),
-            PlayerState::Pause => self.pause(),
-            PlayerState::Stop => self.stop(),
+            PlayerState::Play => self.play()?,
+            PlayerState::Pause => self.pause()?,
+            PlayerState::Stop => self.stop()?,
         }
         Ok(())
     }
@@ -198,6 +201,6 @@ pub trait RodioPlayerBuilder {
 
 impl RodioPlayerBuilder for PlayerBuilder {
     fn with_rodio(&mut self) -> Result<&mut Self, Error> {
-        self.with_player(|core, queue_tx, _, event_tx| RodioBackend::new(core, queue_tx, event_tx))
+        self.with_player(RodioBackend::new)
     }
 }
