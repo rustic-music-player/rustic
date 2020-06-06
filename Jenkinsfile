@@ -50,7 +50,7 @@ pipeline {
                     post {
                         always {
                             recordIssues enabledForFailure: true, tool: cargo(pattern: 'cargo-build.json')
-                            cleanWs()
+//                            cleanWs()
                         }
                     }
                 }
@@ -106,11 +106,11 @@ pipeline {
                         bat 'move target\\release\\rustic.exe rustic-win32-x86_64.exe'
                         archiveArtifacts artifacts: 'rustic-win32-x86_64.exe', fingerprint: true
                     }
-                    post {
-                        always {
-                            cleanWs()
-                        }
-                    }
+//                    post {
+//                        always {
+//                            cleanWs()
+//                        }
+//                    }
                 }
 
                 stage('macOS x64') {
