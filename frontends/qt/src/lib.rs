@@ -1,9 +1,6 @@
-#[macro_use]
-extern crate qmetaobject;
-extern crate rustic_core as rustic;
+use rustic_api::ApiClient;
 
 use std::ffi::CStr;
-use std::sync::Arc;
 
 use qmetaobject::*;
 
@@ -23,7 +20,7 @@ impl Frontend {
     }
 }
 
-pub fn start(app: Arc<rustic::Rustic>) {
+pub fn start(_client: ApiClient) {
     entrypoint();
     qml_register_type::<Frontend>(
         CStr::from_bytes_with_nul(b"Rustic\0").unwrap(),

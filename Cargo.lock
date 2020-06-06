@@ -5338,7 +5338,7 @@ name = "rustic-qt-frontend"
 version = "0.1.0"
 dependencies = [
  "qmetaobject 0.1.4 (git+https://github.com/woboq/qmetaobject-rs)",
- "rustic-core 0.1.0",
+ "rustic-api 0.1.0",
 ]
 
 [[package]]

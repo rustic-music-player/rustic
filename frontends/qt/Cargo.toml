@@ -6,9 +6,10 @@ license = "GPL-3.0"
 readme = "README.md"
 repository = "https://github.com/rustic-music-player/qt-frontend"
 homepage = "https://github.com/rustic-music-player/qt-frontend"
+edition = "2018"
 
 [dependencies]
 qmetaobject = { git = "https://github.com/woboq/qmetaobject-rs" }
 
-[dependencies.rustic-core]
-path = "../../core"
+[dependencies.rustic-api]
+path = "../../core/api"

@@ -193,7 +193,7 @@ fn run_frontend(
 
     #[cfg(feature = "qt-frontend")]
     {
-        rustic_qt_frontend::start(Arc::clone(&app));
+        rustic_qt_frontend::start(Arc::clone(&client));
     }
 
     #[cfg(feature = "iced-frontend")]
