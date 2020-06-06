@@ -11,7 +11,7 @@ pub use crate::player::backend::PlayerBackend;
 
 pub use self::builder::PlayerBuilder;
 pub use self::event::PlayerEvent;
-pub use self::queue::PlayerQueue;
+pub use self::queue::{PlayerQueue, QueuedTrack};
 pub use self::state::PlayerState;
 use crate::player::bus::PlayerBusCommand;
 use crate::Rustic;
@@ -63,7 +63,7 @@ impl Player {
                             player.handle_queue_msg(cmd).await
                         }
                         Ok(None) => Ok(()),
-                        Err(e) => Err(e.into()),
+                        Err(e) => Err(e),
                     }
                 };
                 if let Err(e) = result {
@@ -79,7 +79,7 @@ impl Player {
         self.queue.clear().await
     }
 
-    pub async fn get_queue(&self) -> Result<Vec<Track>, Error> {
+    pub async fn get_queue(&self) -> Result<Vec<QueuedTrack>, Error> {
         self.queue.get_queue().await
     }
 

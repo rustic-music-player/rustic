@@ -1,7 +1,7 @@
 use actix::Recipient;
 use serde::Serialize;
 
-use rustic_api::models::TrackModel;
+use rustic_api::models::{TrackModel, QueuedTrackModel};
 
 #[derive(Message, Clone, Debug, Serialize)]
 #[rtype(result = "()")]
@@ -22,7 +22,7 @@ pub struct PlayerMessage {
 pub enum PlayerMessageData {
     PlayerStateChanged(bool),
     CurrentlyPlayingChanged(Option<TrackModel>),
-    QueueUpdated(Vec<TrackModel>),
+    QueueUpdated(Vec<QueuedTrackModel>),
 }
 
 #[derive(Message)]

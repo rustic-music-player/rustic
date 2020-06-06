@@ -19,6 +19,17 @@ pub struct TrackModel {
     pub duration: Option<u64>,
 }
 
+#[derive(Clone, Debug, Serialize, PartialEq, Eq, Deserialize)]
+#[cfg_attr(
+    target_arch = "wasm32",
+    derive(typescript_definitions::TypescriptDefinition)
+)]
+pub struct QueuedTrackModel {
+    #[serde(flatten)]
+    pub track: TrackModel,
+    pub playing: bool
+}
+
 impl PartialOrd for TrackModel {
     fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
         Some(self.cmp(other))

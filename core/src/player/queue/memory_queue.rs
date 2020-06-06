@@ -8,7 +8,7 @@ use async_trait::async_trait;
 use crate::player::{PlayerBuilder, PlayerBus, PlayerCommand};
 use crate::{PlayerEvent, Track};
 
-use super::PlayerQueue;
+use super::{PlayerQueue, QueuedTrack};
 
 #[derive(Debug)]
 pub struct MemoryQueue {
@@ -97,8 +97,16 @@ impl PlayerQueue for MemoryQueue {
         Ok(())
     }
 
-    async fn get_queue(&self) -> Result<Vec<Track>, Error> {
-        Ok(self.queue.read())
+    async fn get_queue(&self) -> Result<Vec<QueuedTrack>, Error> {
+        let queue = self.queue.read();
+        let current_index = self.current_index.load(atomic::Ordering::Relaxed);
+        let queue = queue.into_iter().enumerate()
+            .map(|(i, track)| QueuedTrack {
+                track,
+                playing: i == current_index
+            })
+            .collect();
+        Ok(queue)
     }
 
     async fn remove_item(&self, index: usize) -> Result<(), Error> {
@@ -126,7 +134,7 @@ impl PlayerQueue for MemoryQueue {
     }
 
     async fn current(&self) -> Result<Option<Track>, Error> {
-        let queue = self.get_queue().await?;
+        let queue = self.queue.read();
         let current_index = self.current_index.load(atomic::Ordering::Relaxed);
 
         Ok(queue.get(current_index).cloned())
@@ -138,7 +146,7 @@ impl PlayerQueue for MemoryQueue {
             return Ok(None);
         }
 
-        let queue = self.get_queue().await?;
+        let queue = self.queue.read();
 
         current_index -= 1;
         self.current_index
@@ -149,7 +157,7 @@ impl PlayerQueue for MemoryQueue {
 
     async fn next(&self) -> Result<Option<()>, Error> {
         let mut current_index = self.current_index.load(atomic::Ordering::Relaxed);
-        let queue = self.get_queue().await?;
+        let queue = self.queue.read();
 
         if current_index >= queue.len() {
             return Ok(None);
@@ -162,7 +170,7 @@ impl PlayerQueue for MemoryQueue {
     }
 
     async fn reorder_item(&self, index_before: usize, index_after: usize) -> Result<(), Error> {
-        let mut queue = self.get_queue().await?;
+        let mut queue = self.queue.read();
         if index_before >= queue.len() || index_after >= queue.len() {
             return Err(format_err!(
                 "index out of bounds\nreorder_item got index outside of the queue size"

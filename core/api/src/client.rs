@@ -82,7 +82,7 @@ pub trait LibraryApiClient: Sync + Send {
 #[cfg_attr(target_arch = "wasm32", async_trait(?Send))]
 #[cfg_attr(not(target_arch = "wasm32"), async_trait)]
 pub trait QueueApiClient: Sync + Send {
-    async fn get_queue(&self, player_id: Option<&str>) -> Result<Vec<TrackModel>>;
+    async fn get_queue(&self, player_id: Option<&str>) -> Result<Vec<QueuedTrackModel>>;
 
     async fn queue_track(&self, player_id: Option<&str>, cursor: &str) -> Result<Option<()>>;
 

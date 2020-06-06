@@ -8,7 +8,7 @@ use log::{debug, warn};
 
 use crate::socket::{messages, SocketServer};
 use rustic_api::cursor::to_cursor;
-use rustic_api::models::TrackModel;
+use rustic_api::models::{QueuedTrackModel, TrackModel};
 use rustic_core::player::Player;
 use rustic_core::{PlayerEvent, PlayerState};
 use std::pin::Pin;
@@ -77,7 +77,7 @@ impl Stream for PlayerEvents {
             }
             Ok(PlayerEvent::QueueUpdated(queue)) => {
                 debug!("received new queue");
-                let models = queue.into_iter().map(TrackModel::from).collect();
+                let models = queue.into_iter().map(QueuedTrackModel::from).collect();
                 let msg = messages::PlayerMessageData::QueueUpdated(models);
                 let msg = messages::Message::PlayerMessage(messages::PlayerMessage {
                     message: msg,

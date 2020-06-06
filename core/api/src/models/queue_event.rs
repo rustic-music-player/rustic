@@ -2,7 +2,7 @@ use serde::{Deserialize, Serialize};
 #[cfg(target_arch = "wasm32")]
 use wasm_bindgen::prelude::*;
 
-use crate::models::TrackModel;
+use crate::models::QueuedTrackModel;
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
 #[cfg_attr(
@@ -11,5 +11,5 @@ use crate::models::TrackModel;
 )]
 pub enum QueueEventModel {
     /// The queue has been changed
-    QueueUpdated(Vec<TrackModel>),
+    QueueUpdated(Vec<QueuedTrackModel>),
 }

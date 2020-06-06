@@ -9,7 +9,7 @@ use log::debug;
 use async_trait::async_trait;
 use rustic_api::client::{QueueApiClient, Result};
 use rustic_api::cursor::from_cursor;
-use rustic_api::models::{QueueEventModel, TrackModel};
+use rustic_api::models::{QueueEventModel, QueuedTrackModel};
 use rustic_core::player::Player;
 use rustic_core::{Album, PlayerEvent, PlayerState, Playlist, SingleQuery, Track};
 
@@ -19,13 +19,13 @@ use rustic_extension_api::ExtensionApi;
 
 #[async_trait]
 impl QueueApiClient for RusticNativeClient {
-    async fn get_queue(&self, player_id: Option<&str>) -> Result<Vec<TrackModel>> {
+    async fn get_queue(&self, player_id: Option<&str>) -> Result<Vec<QueuedTrackModel>> {
         let player = self.get_player_or_default(player_id)?;
         let tracks = player
             .get_queue()
             .await?
             .into_iter()
-            .map(TrackModel::from)
+            .map(QueuedTrackModel::from)
             .collect();
 
         Ok(tracks)

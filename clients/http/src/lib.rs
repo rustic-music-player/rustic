@@ -246,7 +246,7 @@ impl<T> QueueApiClient for RusticHttpClient<T>
 where
     T: HttpClient,
 {
-    async fn get_queue(&self, player_id: Option<&str>) -> Result<Vec<TrackModel>> {
+    async fn get_queue(&self, player_id: Option<&str>) -> Result<Vec<QueuedTrackModel>> {
         let url = match player_id {
             Some(id) => format!("/api/queue/{}", id),
             None => "/api/queue".to_string(),

@@ -1,4 +1,5 @@
 use std::fmt::Debug;
+use serde::{Serialize, Deserialize};
 
 use failure::Error;
 
@@ -8,6 +9,13 @@ pub use memory_queue::*;
 use crate::Track;
 
 mod memory_queue;
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct QueuedTrack {
+    #[serde(flatten)]
+    pub track: Track,
+    pub playing: bool
+}
 
 #[async_trait]
 pub trait PlayerQueue: Send + Sync + Debug {
@@ -21,7 +29,7 @@ pub trait PlayerQueue: Send + Sync + Debug {
     async fn queue_next(&self, track: &Track) -> Result<(), Error>;
 
     /// Returns all tracks which are queued up right now
-    async fn get_queue(&self) -> Result<Vec<Track>, Error>;
+    async fn get_queue(&self) -> Result<Vec<QueuedTrack>, Error>;
 
     async fn remove_item(&self, index: usize) -> Result<(), Error>;
 

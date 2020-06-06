@@ -7,7 +7,7 @@ use rustic_core::provider::{
     ProviderItemType,
 };
 use rustic_core::sync::{SyncEvent, SyncItem, SyncItemState};
-use rustic_core::{Album, Artist, PlayerEvent, PlayerState, Playlist, ProviderType, Track};
+use rustic_core::{Album, Artist, PlayerEvent, PlayerState, Playlist, ProviderType, Track, QueuedTrack};
 use rustic_extension_api::ExtensionMetadata;
 
 use crate::cursor::{from_cursor, to_cursor, Cursor};
@@ -115,6 +115,15 @@ impl From<Track> for TrackModel {
             duration: track.duration,
             artist: track.artist.map(ArtistModel::from),
             album: track.album.map(AlbumModel::from),
+        }
+    }
+}
+
+impl From<QueuedTrack> for QueuedTrackModel {
+    fn from(track: QueuedTrack) -> Self {
+        QueuedTrackModel {
+            track: track.track.into(),
+            playing: track.playing
         }
     }
 }
@@ -253,7 +262,7 @@ impl From<PlayerEvent> for QueueEventModel {
     fn from(event: PlayerEvent) -> Self {
         match event {
             PlayerEvent::QueueUpdated(tracks) => {
-                QueueEventModel::QueueUpdated(tracks.into_iter().map(TrackModel::from).collect())
+                QueueEventModel::QueueUpdated(tracks.into_iter().map(QueuedTrackModel::from).collect())
             }
             _ => unreachable!("this should be filtered before"),
         }
