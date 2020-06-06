@@ -86,16 +86,22 @@ impl Default for FrontendConfig {
 #[derive(Deserialize, Clone, Debug)]
 pub struct ProviderConfig {
     #[cfg(feature = "pocketcasts-provider")]
+    #[serde(default = "rustic_pocketcasts_provider::PocketcastsProvider::new")]
     pub pocketcasts: Option<rustic_pocketcasts_provider::PocketcastsProvider>,
     #[cfg(feature = "soundcloud-provider")]
+    #[serde(default = "rustic_soundcloud_provider::SoundcloudProvider::new")]
     pub soundcloud: Option<rustic_soundcloud_provider::SoundcloudProvider>,
     #[cfg(feature = "spotify-provider")]
+    #[serde(default = "rustic_spotify_provider::SpotifyProvider::new")]
     pub spotify: Option<rustic_spotify_provider::SpotifyProvider>,
     #[cfg(feature = "gmusic-provider")]
+    #[serde(default = "rustic_gmusic_provider::GooglePlayMusicProvider::new")]
     pub gmusic: Option<rustic_gmusic_provider::GooglePlayMusicProvider>,
     #[cfg(feature = "local-files-provider")]
+    #[serde(default = "rustic_local_provider::LocalProvider::new")]
     pub local: Option<rustic_local_provider::LocalProvider>,
     #[cfg(feature = "youtube-provider")]
+    #[serde(default = "rustic_youtube_provider::YoutubeProvider::new")]
     pub youtube: Option<rustic_youtube_provider::YoutubeProvider>,
 }
 
@@ -107,9 +113,9 @@ impl Default for ProviderConfig {
             #[cfg(feature = "soundcloud-provider")]
             soundcloud: rustic_soundcloud_provider::SoundcloudProvider::new(),
             #[cfg(feature = "spotify-provider")]
-            spotify: None,
+            spotify: rustic_spotify_provider::SpotifyProvider::new(),
             #[cfg(feature = "gmusic-provider")]
-            gmusic: None,
+            gmusic: rustic_gmusic_provider::GooglePlayMusicProvider::new(),
             #[cfg(feature = "local-files-provider")]
             local: rustic_local_provider::LocalProvider::new(),
             #[cfg(feature = "youtube-provider")]

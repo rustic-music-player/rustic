@@ -35,7 +35,7 @@ impl From<GmusicTrack> for Track {
                 .cloned()
                 .unwrap_or_else(|| String::from("unknown"))
         );
-        let album_uri = format!("gmusic:album:{}", track.album_id);
+        let album_uri = format!("gmusic:album:{}", track.album_id.unwrap_or_else(|| "unknown".into()));
         Track {
             id: None,
             title: track.title,

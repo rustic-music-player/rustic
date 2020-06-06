@@ -1,6 +1,14 @@
 pipeline {
     agent none
 
+    environment {
+        SOUNDCLOUD_CLIENT_ID = credentials('rustic-soundcloud-client-id')
+        SPOTIFY_CLIENT_ID = credentials('rustic-spotify-client-id')
+        SPOTIFY_CLIENT_SECRET = credentials('rustic-spotify-client-secret')
+        GMUSIC_CLIENT_ID = credentials('rustic-gmusic-client-id')
+        GMUSIC_CLIENT_SECRET = credentials('rustic-gmusic-client-secret')
+    }
+
     stages {
         stage('Test') {
             agent {

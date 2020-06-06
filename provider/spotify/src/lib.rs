@@ -39,6 +39,20 @@ pub struct SpotifyProvider {
 }
 
 impl SpotifyProvider {
+    pub fn new() -> Option<Self> {
+        let client_id = option_env!("SPOTIFY_CLIENT_ID").map(String::from);
+        let client_secret = option_env!("SPOTIFY_CLIENT_SECRET").map(String::from);
+
+        client_id.and_then(|client_id| client_secret.map(|secret| (client_id, secret)))
+            .map(|(client_id, client_secret)| {
+                SpotifyProvider {
+                    client_id,
+                    client_secret,
+                    client: None
+                }
+            })
+    }
+
     async fn sync_tracks(&self, library: &SharedLibrary) -> Result<(usize, usize), Error> {
         let spotify = self.client.as_ref().unwrap();
 

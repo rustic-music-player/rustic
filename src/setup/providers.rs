@@ -1,4 +1,4 @@
-use log::error;
+use log::{error, info};
 
 use rustic_core::{CredentialStore, Provider};
 
@@ -14,36 +14,42 @@ pub(crate) async fn setup_providers(
     #[cfg(feature = "pocketcasts-provider")]
     {
         if let Some(pocketcasts) = config.provider.pocketcasts.clone() {
+            info!("Loading Pocketcasts Provider");
             providers.push(Box::new(pocketcasts));
         }
     }
     #[cfg(feature = "soundcloud-provider")]
     {
         if let Some(soundcloud) = config.provider.soundcloud.clone() {
+            info!("Loading Soundcloud Provider");
             providers.push(Box::new(soundcloud));
         }
     }
     #[cfg(feature = "spotify-provider")]
     {
         if let Some(spotify) = config.provider.spotify.clone() {
+            info!("Loading Spotify Provider");
             providers.push(Box::new(spotify));
         }
     }
     #[cfg(feature = "local-files-provider")]
     {
         if let Some(local) = config.provider.local.clone() {
+            info!("Loading Local Provider");
             providers.push(Box::new(local));
         }
     }
     #[cfg(feature = "gmusic-provider")]
     {
         if let Some(gmusic) = config.provider.gmusic.clone() {
+            info!("Loading Google Play Music Provider");
             providers.push(Box::new(gmusic));
         }
     }
     #[cfg(feature = "youtube-provider")]
     {
         if let Some(youtube) = config.provider.youtube.clone() {
+            info!("Loading Youtube Provider");
             providers.push(Box::new(youtube));
         }
     }
