@@ -49,7 +49,7 @@ pipeline {
                     }
                     post {
                         always {
-                            recordIssues enabledForFailure: true, tool: cargo(pattern: 'cargo-build.json')
+                            recordIssues failOnError: false, enabledForFailure: true, tool: cargo(pattern: 'cargo-build.json')
 //                            cleanWs()
                         }
                     }
