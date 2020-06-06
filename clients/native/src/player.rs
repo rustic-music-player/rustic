@@ -1,3 +1,5 @@
+use std::sync::Arc;
+
 use futures::future;
 use futures::stream::BoxStream;
 use futures::StreamExt;
@@ -7,25 +9,17 @@ use rustic_api::client::{PlayerApiClient, Result};
 use rustic_api::cursor::to_cursor;
 use rustic_api::models::*;
 use rustic_core::{PlayerEvent, PlayerState};
+use rustic_core::player::Player;
 
-use crate::stream_util::from_channel;
 use crate::RusticNativeClient;
+use crate::stream_util::from_channel;
 
 #[async_trait]
 impl PlayerApiClient for RusticNativeClient {
     async fn get_players(&self) -> Result<Vec<PlayerModel>> {
         let mut players = Vec::new();
         for (id, player) in self.app.get_players() {
-            let track = player.queue.current().await?.map(TrackModel::from);
-            let volume = player.backend.volume();
-
-            players.push(PlayerModel {
-                cursor: to_cursor(&id),
-                name: player.display_name.clone(),
-                playing: (player.backend.state() == PlayerState::Play),
-                volume,
-                current: track,
-            });
+            players.push(player_to_model(id, player).await?);
         }
 
         Ok(players)
@@ -37,16 +31,8 @@ impl PlayerApiClient for RusticNativeClient {
             .map(|id| id.to_owned())
             .or_else(|| self.app.get_default_player_id())
             .unwrap();
-        let current = player.queue.current().await?.map(TrackModel::from);
-        let volume = player.backend.volume();
 
-        let state = PlayerModel {
-            cursor: to_cursor(&player_id),
-            name: player.display_name.clone(),
-            playing: (player.backend.state() == PlayerState::Play),
-            volume,
-            current,
-        };
+        let state = player_to_model(player_id, player).await?;
 
         Ok(Some(state))
     }
@@ -93,4 +79,22 @@ impl PlayerApiClient for RusticNativeClient {
             .map(PlayerEventModel::from)
             .boxed()
     }
+}
+
+async fn player_to_model(player_id: String, player: Arc<Player>) -> Result<PlayerModel> {
+    let player_state = player.backend.state();
+    let current = if player_state == PlayerState::Stop {
+        None
+    } else {
+        player.queue.current().await?.map(TrackModel::from)
+    };
+    let volume = player.backend.volume();
+
+    Ok(PlayerModel {
+        cursor: to_cursor(&player_id),
+        name: player.display_name.clone(),
+        playing: (player_state == PlayerState::Play),
+        volume,
+        current,
+    })
 }
