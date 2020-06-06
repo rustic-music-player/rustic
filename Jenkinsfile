@@ -17,11 +17,14 @@ pipeline {
                 sh 'cargo test --workspace'
 //                sh 'cargo tarpaulin -o Xml -v --workspace'
             }
-//            post {
+            post {
+                always {
+                    cleanWs()
+                }
 //                success {
 //                    cobertura coberturaReportFile: 'cobertura.xml'
 //                }
-//            }
+            }
         }
         
         stage('Build') {
@@ -43,6 +46,7 @@ pipeline {
                     post {
                         always {
                             recordIssues enabledForFailure: true, tool: cargo(pattern: 'cargo-build.json')
+                            cleanWs()
                         }
                         success {
                             sh 'mv target/release/rustic rustic-linux-x86_64'
@@ -72,6 +76,9 @@ pipeline {
                         success {
                             archiveArtifacts artifacts: 'bindings.h', fingerprint: true
                         }
+                        always {
+                            cleanWs()
+                        }
                     }
                 }
 
@@ -90,6 +97,9 @@ pipeline {
                         success {
                             archiveArtifacts artifacts: 'clients/http/wasm/pkg/*.tgz', fingerprint: true
                         }
+                        always {
+                            cleanWs()
+                        }
                     }
                 }
 
@@ -105,6 +115,9 @@ pipeline {
                             bat 'move target\\release\\rustic.exe rustic-win32-x86_64.exe'
                             archiveArtifacts artifacts: 'rustic-win32-x86_64.exe', fingerprint: true
                         }
+                        always {
+                            cleanWs()
+                        }
                     }
                 }
 
@@ -119,6 +132,9 @@ pipeline {
                         success {
                             sh 'mv target/release/rustic rustic-osx-x86_64'
                             archiveArtifacts artifacts: 'rustic-osx-x86_64', fingerprint: true
+                        }
+                        always {
+                            cleanWs()
                         }
                     }
                 }
@@ -148,10 +164,11 @@ pipeline {
                     keepAll: false
                 ]
             }
+            post {
+                always {
+                    cleanWs()
+                }
+            }
         }
-    }
-
-    publishers {
-        cleanWs()
     }
 }
