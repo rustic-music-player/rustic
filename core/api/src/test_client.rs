@@ -42,7 +42,7 @@ impl RusticApiClient for TestApiClient {
             "search",
             (
                 query.to_owned(),
-                providers.map(|providers| providers.clone()),
+                providers,
             ),
         )
     }
