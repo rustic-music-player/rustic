@@ -20,10 +20,6 @@ pub struct TrackModel {
 }
 
 #[derive(Clone, Debug, Serialize, PartialEq, Eq, Deserialize)]
-#[cfg_attr(
-    target_arch = "wasm32",
-    derive(typescript_definitions::TypescriptDefinition)
-)]
 pub struct QueuedTrackModel {
     #[serde(flatten)]
     pub track: TrackModel,

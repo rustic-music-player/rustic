@@ -2,6 +2,10 @@ use wasm_bindgen::prelude::*;
 
 #[wasm_bindgen(typescript_custom_section)]
 const TS_APPEND_CONTENT: &'static str = r#"
+export interface QueuedTrackModel extends TrackModel {
+    playing: bool
+}
+
 export interface RusticApiClient {
     search(query: string, providers: any): Promise<SearchResults>;
     getExtensions(): Promise<ExtensionModel[]>;
