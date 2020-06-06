@@ -42,17 +42,15 @@ pipeline {
                     }
                     steps {
                         sh 'cargo build --workspace --release --message-format json > cargo-build.json'
+                        sh 'mv target/release/rustic rustic-linux-x86_64'
+                        archiveArtifacts artifacts: 'rustic-linux-x86_64', fingerprint: true
+                        archiveArtifacts artifacts: 'target/release/librustic_ffi_client.so', fingerprint: true
+                        //archiveArtifacts artifacts: 'target/release/rustic-*-extension', fingerprint: true
                     }
                     post {
                         always {
                             recordIssues enabledForFailure: true, tool: cargo(pattern: 'cargo-build.json')
                             cleanWs()
-                        }
-                        success {
-                            sh 'mv target/release/rustic rustic-linux-x86_64'
-                            archiveArtifacts artifacts: 'rustic-linux-x86_64', fingerprint: true
-                            archiveArtifacts artifacts: 'target/release/librustic_ffi_client.so', fingerprint: true
-                            //archiveArtifacts artifacts: 'target/release/rustic-*-extension', fingerprint: true
                         }
                     }
                 }
@@ -71,11 +69,9 @@ pipeline {
                     steps {
                         sh 'cargo expand -p rustic-ffi-client > ffi-client.rs'
                         sh 'cbindgen -o bindings.h -c clients/ffi/cbindgen.toml ffi-client.rs'
+                        archiveArtifacts artifacts: 'bindings.h', fingerprint: true
                     }
                     post {
-                        success {
-                            archiveArtifacts artifacts: 'bindings.h', fingerprint: true
-                        }
                         always {
                             cleanWs()
                         }
@@ -92,11 +88,9 @@ pipeline {
                     }
                     steps {
                         sh 'clients/http/wasm/package.sh'
+                        archiveArtifacts artifacts: 'clients/http/wasm/pkg/*.tgz', fingerprint: true
                     }
                     post {
-                        success {
-                            archiveArtifacts artifacts: 'clients/http/wasm/pkg/*.tgz', fingerprint: true
-                        }
                         always {
                             cleanWs()
                         }
@@ -109,12 +103,10 @@ pipeline {
                     }
                     steps {
                         bat 'cargo build --release --no-default-features --features "http-frontend rodio-backend local-files-provider pocketcasts-provider soundcloud-provider gmusic-provider youtube-provider"'
+                        bat 'move target\\release\\rustic.exe rustic-win32-x86_64.exe'
+                        archiveArtifacts artifacts: 'rustic-win32-x86_64.exe', fingerprint: true
                     }
                     post {
-                        success {
-                            bat 'move target\\release\\rustic.exe rustic-win32-x86_64.exe'
-                            archiveArtifacts artifacts: 'rustic-win32-x86_64.exe', fingerprint: true
-                        }
                         always {
                             cleanWs()
                         }
@@ -127,12 +119,10 @@ pipeline {
                     }
                     steps {
                         sh 'cargo build --bins --workspace --release'
+                        sh 'mv target/release/rustic rustic-osx-x86_64'
+                        archiveArtifacts artifacts: 'rustic-osx-x86_64', fingerprint: true
                     }
                     post {
-                        success {
-                            sh 'mv target/release/rustic rustic-osx-x86_64'
-                            archiveArtifacts artifacts: 'rustic-osx-x86_64', fingerprint: true
-                        }
                         always {
                             cleanWs()
                         }
