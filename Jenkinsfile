@@ -55,12 +55,12 @@ pipeline {
                         archiveArtifacts artifacts: 'target/release/librustic_ffi_client.so', fingerprint: true
                         //archiveArtifacts artifacts: 'target/release/rustic-*-extension', fingerprint: true
                     }
-                    post {
-                        always {
-                            recordIssues failOnError: false, enabledForFailure: true, tool: cargo(pattern: 'cargo-build.json')
+//                    post {
+//                        always {
+//                            recordIssues failOnError: false, enabledForFailure: true, tool: cargo(pattern: 'cargo-build.json')
 //                            cleanWs()
-                        }
-                    }
+//                        }
+//                    }
                 }
 
                 stage('C Bindings') {
