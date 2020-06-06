@@ -163,4 +163,8 @@ pipeline {
             }
         }
     }
+
+    publishers {
+        cleanWs()
+    }
 }
