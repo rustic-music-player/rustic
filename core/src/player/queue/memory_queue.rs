@@ -109,6 +109,17 @@ impl PlayerQueue for MemoryQueue {
         Ok(queue)
     }
 
+    async fn select_item(&self, index: usize) -> Result<(), Error> {
+        let queue = self.queue.read();
+        if queue.len() <= index {
+            Err(format_err!("Index out of bounds"))
+        }else {
+            self.current_index.store(index, atomic::Ordering::Relaxed);
+            self.select_track(&queue, index)?;
+            Ok(())
+        }
+    }
+
     async fn remove_item(&self, index: usize) -> Result<(), Error> {
         let current_index = self.current_index.load(atomic::Ordering::Relaxed);
         let mut queue = self.queue.read();

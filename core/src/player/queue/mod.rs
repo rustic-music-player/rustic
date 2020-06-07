@@ -31,6 +31,10 @@ pub trait PlayerQueue: Send + Sync + Debug {
     /// Returns all tracks which are queued up right now
     async fn get_queue(&self) -> Result<Vec<QueuedTrack>, Error>;
 
+    /// Jump to item at given index
+    async fn select_item(&self, index: usize) -> Result<(), Error>;
+
+    /// Remove item at the given index
     async fn remove_item(&self, index: usize) -> Result<(), Error>;
 
     /// Clear the current queue

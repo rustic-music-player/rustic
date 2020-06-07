@@ -112,6 +112,11 @@ pub async fn clear_queue(player_id: Option<String>) -> ApiResult {
     execute(CLIENT.clear_queue(player_id.as_deref())).await
 }
 
+#[wasm_bindgen(js_name = "selectQueueItem")]
+pub async fn select_queue_item(player_id: Option<String>, item: usize) -> ApiResult {
+    execute(CLIENT.select_queue_item(player_id.as_deref(), item)).await
+}
+
 #[wasm_bindgen(js_name = "removeQueueItem")]
 pub async fn remove_queue_item(player_id: Option<String>, item: usize) -> ApiResult {
     execute(CLIENT.remove_queue_item(player_id.as_deref(), item)).await

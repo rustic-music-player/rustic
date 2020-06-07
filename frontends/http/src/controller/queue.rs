@@ -1,8 +1,9 @@
-use actix_web::{delete, error, get, post, web, HttpResponse, Responder, Result};
+use actix_web::{delete, error, get, HttpResponse, post, Responder, Result, web};
 use serde::Deserialize;
 
-use crate::app::ApiClient;
 use rustic_api::cursor::from_cursor;
+
+use crate::app::ApiClient;
 
 #[derive(Deserialize)]
 pub struct PlayerParams {
@@ -135,6 +136,28 @@ pub async fn clear_default(client: web::Data<ApiClient>) -> Result<impl Responde
 pub async fn clear(client: web::Data<ApiClient>, player: web::Path<PlayerParams>) -> Result<impl Responder> {
     let player_id = from_cursor(&player.player_cursor)?;
     client.clear_queue(Some(&player_id)).await?;
+
+    Ok(HttpResponse::NoContent().finish())
+}
+
+#[post("/queue/select/{index}")]
+pub async fn select_item_default(
+    client: web::Data<ApiClient>,
+    params: web::Path<QueueItemParams>,
+) -> Result<impl Responder> {
+    client.select_queue_item(None, params.index).await?;
+
+    Ok(HttpResponse::NoContent().finish())
+}
+
+#[post("/queue/{player_cursor}/select/{index}")]
+pub async fn select_item(
+    client: web::Data<ApiClient>,
+    params: web::Path<QueueItemParams>,
+    player: web::Path<PlayerParams>,
+) -> Result<impl Responder> {
+    let player_id = from_cursor(&player.player_cursor)?;
+    client.select_queue_item(Some(&player_id), params.index).await?;
 
     Ok(HttpResponse::NoContent().finish())
 }

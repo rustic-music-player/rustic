@@ -83,6 +83,13 @@ impl QueueApiClient for RusticNativeClient {
         Ok(())
     }
 
+    async fn select_queue_item(&self, player_id: Option<&str>, item: usize) -> Result<()> {
+        let player = self.get_player_or_default(player_id)?;
+        player.queue.select_item(item).await?;
+
+        Ok(())
+    }
+
     async fn remove_queue_item(&self, player_id: Option<&str>, item: usize) -> Result<()> {
         let player = self.get_player_or_default(player_id)?;
         player.queue.remove_item(item).await?;

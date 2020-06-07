@@ -299,6 +299,17 @@ where
         Ok(())
     }
 
+    async fn select_queue_item(&self, player_id: Option<&str>, item: usize) -> Result<()> {
+        let url = match player_id {
+            Some(id) => format!("/api/queue/{}/select/{}", id, item),
+            None => format!("/api/queue/select/{}", item).to_string(),
+        };
+        // TODO: this should be PUT I guess
+        self.post::<(), ()>(&url, ()).await?;
+
+        Ok(())
+    }
+
     async fn remove_queue_item(&self, _player_id: Option<&str>, _item: usize) -> Result<()> {
         unimplemented!("required delete implementation")
     }

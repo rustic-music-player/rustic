@@ -92,6 +92,8 @@ pub trait QueueApiClient: Sync + Send {
 
     async fn clear_queue(&self, player_id: Option<&str>) -> Result<()>;
 
+    async fn select_queue_item(&self, player_id: Option<&str>, item: usize) -> Result<()>;
+
     async fn remove_queue_item(&self, player_id: Option<&str>, item: usize) -> Result<()>;
 
     async fn reorder_queue_item(

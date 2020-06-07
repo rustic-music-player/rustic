@@ -121,6 +121,10 @@ impl QueueApiClient for TestApiClient {
         unimplemented!()
     }
 
+    async fn select_queue_item(&self, player_id: Option<&str>, item: usize) -> Result<()> {
+        unimplemented!()
+    }
+
     async fn remove_queue_item(&self, player_id: Option<&str>, item: usize) -> Result<()> {
         unimplemented!()
     }

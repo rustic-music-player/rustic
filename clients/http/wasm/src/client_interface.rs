@@ -26,6 +26,7 @@ export interface RusticApiClient {
     queuePlaylist(player_id: string | undefined, cursor: string): Promise<void>;
     clearQueue(player_id?: string): Promise<void>;
     removeQueueItem(player_id: string | undefined, item: number): Promise<void>;
+    selectQueueItem(player_id: string | undefined, item: number): Promise<void>;
     reorderQueueItem(player_id: string | undefined, before: number, after: number): Promise<void>;
     getPlayers(): Promise<PlayerModel[]>;
     getPlayer(player_id?: string): Promise<PlayerModel>;
