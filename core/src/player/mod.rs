@@ -96,7 +96,11 @@ impl Player {
 
     async fn handle_queue_msg(&self, msg: QueueCommand) -> Result<(), Error> {
         match msg {
-            QueueCommand::Next => self.queue.next().await?,
+            QueueCommand::Next => {
+                if self.queue.next().await?.is_none() {
+                    self.bus.send_player_msg(PlayerCommand::Stop)?;
+                }
+            },
         };
         Ok(())
     }
