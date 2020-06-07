@@ -337,7 +337,7 @@ where
 
     async fn get_player(&self, player_id: Option<&str>) -> Result<Option<PlayerModel>> {
         let url = match player_id {
-            Some(id) => format!("/api/player/{}", id),
+            Some(id) => format!("/api/players/{}", id),
             None => "/api/player".to_string(),
         };
         let res = self.get(&url).await?;
@@ -347,7 +347,7 @@ where
 
     async fn player_control_next(&self, player_id: Option<&str>) -> Result<Option<()>> {
         let url = match player_id {
-            Some(id) => format!("/api/player/{}/next", id),
+            Some(id) => format!("/api/players/{}/next", id),
             None => "/api/player/next".to_string(),
         };
         self.post(&url, ()).await?;
@@ -357,7 +357,7 @@ where
 
     async fn player_control_prev(&self, player_id: Option<&str>) -> Result<Option<()>> {
         let url = match player_id {
-            Some(id) => format!("/api/player/{}/prev", id),
+            Some(id) => format!("/api/players/{}/prev", id),
             None => "/api/player/prev".to_string(),
         };
         self.post(&url, ()).await?;
@@ -367,7 +367,7 @@ where
 
     async fn player_control_play(&self, player_id: Option<&str>) -> Result<()> {
         let url = match player_id {
-            Some(id) => format!("/api/player/{}/play", id),
+            Some(id) => format!("/api/players/{}/play", id),
             None => "/api/player/play".to_string(),
         };
         self.post(&url, ()).await?;
@@ -377,7 +377,7 @@ where
 
     async fn player_control_pause(&self, player_id: Option<&str>) -> Result<()> {
         let url = match player_id {
-            Some(id) => format!("/api/player/{}/pause", id),
+            Some(id) => format!("/api/players/{}/pause", id),
             None => "/api/player/pause".to_string(),
         };
         self.post(&url, ()).await?;
@@ -387,7 +387,7 @@ where
 
     async fn player_set_volume(&self, player_id: Option<&str>, volume: f32) -> Result<()> {
         let url = match player_id {
-            Some(id) => format!("/api/player/{}/volume", id),
+            Some(id) => format!("/api/players/{}/volume", id),
             None => "/api/player/volume".to_string(),
         };
         self.post(&url, volume).await?;
