@@ -23,15 +23,13 @@ pipeline {
             }
             steps {
                 sh 'cargo test --workspace'
-//                sh 'cargo tarpaulin -o Xml -v --workspace'
+                //sh 'cargo tarpaulin -o Xml -v --workspace'
+                //cobertura coberturaReportFile: 'cobertura.xml'
             }
             post {
                 always {
                     cleanWs()
                 }
-//                success {
-//                    cobertura coberturaReportFile: 'cobertura.xml'
-//                }
             }
         }
         
@@ -54,13 +52,13 @@ pipeline {
                         archiveArtifacts artifacts: 'rustic-linux-x86_64', fingerprint: true
                         archiveArtifacts artifacts: 'target/release/librustic_ffi_client.so', fingerprint: true
                         //archiveArtifacts artifacts: 'target/release/rustic-*-extension', fingerprint: true
+                        //recordIssues failOnError: false, enabledForFailure: true, tool: cargo(pattern: 'cargo-build.json')
                     }
-//                    post {
-//                        always {
-//                            recordIssues failOnError: false, enabledForFailure: true, tool: cargo(pattern: 'cargo-build.json')
-//                            cleanWs()
-//                        }
-//                    }
+                    post {
+                        always {
+                            cleanWs()
+                        }
+                    }
                 }
 
                 stage('C Bindings') {
