@@ -10,29 +10,6 @@ pipeline {
     }
 
     stages {
-        stage('Test') {
-            agent {
-                dockerfile {
-                    filename '.jenkins/Dockerfile'
-                    additionalBuildArgs '--pull'
-                    args '-v /usr/share/jenkins/cache:/build_cache'
-                }
-            }
-            environment {
-                CARGO_HOME='/build_cache/cargo'
-            }
-            steps {
-                sh 'cargo test --workspace'
-                //sh 'cargo tarpaulin -o Xml -v --workspace'
-                //cobertura coberturaReportFile: 'cobertura.xml'
-            }
-            post {
-                always {
-                    cleanWs()
-                }
-            }
-        }
-        
         stage('Build') {
             parallel {
                 stage('Linux x64') {
@@ -44,15 +21,26 @@ pipeline {
                         }
                     }
                     environment {
-                        CARGO_HOME='/build_cache/cargo'
+                        CARGO_HOME = '/build_cache/cargo'
                     }
-                    steps {
-                        sh 'cargo build --workspace --release --message-format json > cargo-build.json'
-                        sh 'mv target/release/rustic rustic-linux-x86_64'
-                        archiveArtifacts artifacts: 'rustic-linux-x86_64', fingerprint: true
-                        archiveArtifacts artifacts: 'target/release/librustic_ffi_client.so', fingerprint: true
-                        //archiveArtifacts artifacts: 'target/release/rustic-*-extension', fingerprint: true
-                        //recordIssues failOnError: false, enabledForFailure: true, tool: cargo(pattern: 'cargo-build.json')
+                    stages {
+                        stage('Test') {
+                            steps {
+                                sh 'cargo test --workspace'
+                                //sh 'cargo tarpaulin -o Xml -v --workspace'
+                                //cobertura coberturaReportFile: 'cobertura.xml'
+                            }
+                        }
+                        stage('Build') {
+                            steps {
+                                sh 'cargo build --workspace --release --message-format json > cargo-build.json'
+                                sh 'mv target/release/rustic rustic-linux-x86_64'
+                                archiveArtifacts artifacts: 'rustic-linux-x86_64', fingerprint: true
+                                archiveArtifacts artifacts: 'target/release/librustic_ffi_client.so', fingerprint: true
+                                //archiveArtifacts artifacts: 'target/release/rustic-*-extension', fingerprint: true
+                                //recordIssues failOnError: false, enabledForFailure: true, tool: cargo(pattern: 'cargo-build.json')
+                            }
+                        }
                     }
                     post {
                         always {
@@ -70,12 +58,16 @@ pipeline {
                         }
                     }
                     environment {
-                        CARGO_HOME='/build_cache/cargo'
+                        CARGO_HOME = '/build_cache/cargo'
                     }
-                    steps {
-                        sh 'cargo expand -p rustic-ffi-client > ffi-client.rs'
-                        sh 'cbindgen -o bindings.h -c clients/ffi/cbindgen.toml ffi-client.rs'
-                        archiveArtifacts artifacts: 'bindings.h', fingerprint: true
+                    stages {
+                        stage('Build') {
+                            steps {
+                                sh 'cargo expand -p rustic-ffi-client > ffi-client.rs'
+                                sh 'cbindgen -o bindings.h -c clients/ffi/cbindgen.toml ffi-client.rs'
+                                archiveArtifacts artifacts: 'bindings.h', fingerprint: true
+                            }
+                        }
                     }
                     post {
                         always {
@@ -92,9 +84,13 @@ pipeline {
                             args '-v /usr/share/jenkins/cache:/build_cache'
                         }
                     }
-                    steps {
-                        sh 'clients/http/wasm/package.sh'
-                        archiveArtifacts artifacts: 'clients/http/wasm/pkg/*.tgz', fingerprint: true
+                    stages {
+                        stage('Build') {
+                            steps {
+                                sh 'clients/http/wasm/package.sh'
+                                archiveArtifacts artifacts: 'clients/http/wasm/pkg/*.tgz', fingerprint: true
+                            }
+                        }
                     }
                     post {
                         always {
@@ -107,10 +103,14 @@ pipeline {
                     agent {
                         label "windows"
                     }
-                    steps {
-                        bat 'cargo build --release --no-default-features --features "http-frontend rodio-backend local-files-provider pocketcasts-provider soundcloud-provider gmusic-provider youtube-provider"'
-                        bat 'move target\\release\\rustic.exe rustic-win32-x86_64.exe'
-                        archiveArtifacts artifacts: 'rustic-win32-x86_64.exe', fingerprint: true
+                    stages {
+                        stage('Build') {
+                            steps {
+                                bat 'cargo build --release --no-default-features --features "http-frontend rodio-backend local-files-provider pocketcasts-provider soundcloud-provider gmusic-provider youtube-provider"'
+                                bat 'move target\\release\\rustic.exe rustic-win32-x86_64.exe'
+                                archiveArtifacts artifacts: 'rustic-win32-x86_64.exe', fingerprint: true
+                            }
+                        }
                     }
 //                    post {
 //                        always {
@@ -123,10 +123,14 @@ pipeline {
                     agent {
                         label "osx"
                     }
-                    steps {
-                        sh 'cargo build --bins --workspace --release'
-                        sh 'mv target/release/rustic rustic-osx-x86_64'
-                        archiveArtifacts artifacts: 'rustic-osx-x86_64', fingerprint: true
+                    stages {
+                        stage('Build') {
+                            steps {
+                                sh 'cargo build --bins --workspace --release'
+                                sh 'mv target/release/rustic rustic-osx-x86_64'
+                                archiveArtifacts artifacts: 'rustic-osx-x86_64', fingerprint: true
+                            }
+                        }
                     }
                     post {
                         always {
@@ -146,7 +150,7 @@ pipeline {
                 }
             }
             environment {
-                CARGO_HOME='/build_cache/cargo'
+                CARGO_HOME = '/build_cache/cargo'
             }
             when {
                 branch 'master'
@@ -154,10 +158,10 @@ pipeline {
             steps {
                 sh 'cargo doc --workspace --no-deps --exclude rustic-wasm-http-client'
                 publishHTML target: [
-                    reportDir: 'target/doc',
+                    reportDir  : 'target/doc',
                     reportFiles: 'rustic/index.html',
-                    reportName: 'Documentation',
-                    keepAll: false
+                    reportName : 'Documentation',
+                    keepAll    : false
                 ]
             }
             post {
