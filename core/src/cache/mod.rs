@@ -98,6 +98,8 @@ impl Cache {
         use tokio::fs::File;
         use tokio_util::compat::Tokio02AsyncWriteCompatExt;
 
+        debug!("downloading thumbnail {}", url);
+
         let file_path = self.get_coverart_path(url);
         let mut file = File::create(&file_path).await?.compat_write();
         let res = reqwest_10::get(url).await?;

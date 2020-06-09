@@ -41,7 +41,7 @@ impl From<SoundcloudPlaylist> for Album {
             tracks: playlist.tracks,
             provider: provider::ProviderType::Soundcloud,
             uri: format!("soundcloud://playlist/{}", playlist.id),
-            image_url: playlist.artwork_url,
+            image_url: playlist.artwork_url.map(|url| url.replace("large", "t500x500")),
             artist: Some(SoundcloudUser::from(playlist.user).into()),
             meta: HashMap::new(),
             artist_id: None,

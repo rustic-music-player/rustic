@@ -19,7 +19,7 @@ impl From<SoundcloudUser> for Artist {
         Artist {
             id: None,
             name: user.username,
-            image_url: Some(user.avatar_url),
+            image_url: Some(user.avatar_url.replace("large", "t500x500")),
             uri: format!("soundcloud://user/{}", user.id),
             meta: hashmap!(
                 META_SOUNDCLOUD_USER_ID.into() => user.id.into()
