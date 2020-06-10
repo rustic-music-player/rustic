@@ -85,6 +85,14 @@ impl Stream for PlayerEvents {
                 });
                 Poll::Ready(Some(msg))
             }
+            Ok(PlayerEvent::VolumeChanged(volume)) => {
+                let msg = messages::PlayerMessageData::VolumeChanged(volume);
+                let msg = messages::Message::PlayerMessage(messages::PlayerMessage {
+                    message: msg,
+                    player_cursor: to_cursor(&self.id),
+                });
+                Poll::Ready(Some(msg))
+            }
             Ok(msg) => {
                 warn!("unexpected msg {:?}", msg);
                 Poll::Pending

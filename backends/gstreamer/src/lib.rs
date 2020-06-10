@@ -112,6 +112,7 @@ impl PlayerBackend for GstBackend {
 
     fn set_volume(&self, volume: f32) -> Result<(), Error> {
         self.player.set_volume(volume as f64);
+        self.bus.emit_event(PlayerEvent::VolumeChanged(volume))?;
         Ok(())
     }
 

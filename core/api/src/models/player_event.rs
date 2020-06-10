@@ -20,4 +20,6 @@ pub enum PlayerEventModel {
     TrackChanged(TrackModel),
     /// The player is waiting for I/O
     Buffering,
+    /// The current volume has changed
+    VolumeChanged(f32)
 }

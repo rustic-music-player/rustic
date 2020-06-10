@@ -15,4 +15,6 @@ pub enum PlayerEvent {
     QueueUpdated(Vec<QueuedTrack>),
     /// The player is waiting for I/O
     Buffering,
+    /// The Volume has changed
+    VolumeChanged(f32)
 }

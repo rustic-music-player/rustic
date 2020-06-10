@@ -126,11 +126,13 @@ impl RodioBackend {
 impl PlayerBackend for RodioBackend {
     fn set_track(&self, track: &Track, stream_url: String) -> Result<(), Error> {
         debug!("Selecting {:?}", track);
+        let volume = self.volume();
         {
             self.bus
                 .emit_event(PlayerEvent::TrackChanged(track.clone()))?;
             let source = self.decode_stream(track, stream_url)?;
             let sink = rodio::Sink::new(&self.device);
+            sink.set_volume(volume);
             sink.append(source);
             if self.state() != PlayerState::Play {
                 sink.stop();
@@ -164,6 +166,7 @@ impl PlayerBackend for RodioBackend {
     fn set_volume(&self, volume: f32) -> Result<(), Error> {
         if let Some(sink) = self.current_sink.lock().unwrap().deref_mut() {
             sink.set_volume(volume);
+            self.bus.emit_event(PlayerEvent::VolumeChanged(volume))?;
         }
         Ok(())
     }

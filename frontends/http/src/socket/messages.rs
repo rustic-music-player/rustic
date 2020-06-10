@@ -23,6 +23,7 @@ pub enum PlayerMessageData {
     PlayerStateChanged(bool),
     CurrentlyPlayingChanged(Option<TrackModel>),
     QueueUpdated(Vec<QueuedTrackModel>),
+    VolumeChanged(f32),
 }
 
 #[derive(Message)]
