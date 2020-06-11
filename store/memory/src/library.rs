@@ -151,13 +151,30 @@ impl Library for MemoryLibrary {
 
     fn add_track(&self, track: &mut Track) -> Result<(), Error> {
         track.id = Some(self.track_id.fetch_add(1, Ordering::Relaxed));
+        // add artist and album
         self.tracks.write().unwrap().push(track.clone());
         Ok(())
     }
 
     fn add_album(&self, album: &mut Album) -> Result<(), Error> {
         album.id = Some(self.album_id.fetch_add(1, Ordering::Relaxed));
+        if let Some(artist) = album.artist.as_mut() {
+            if artist.id.is_none() {
+                self.add_artist(artist)?;
+                album.artist_id = artist.id;
+            }
+        }
+        for track in album.tracks.as_mut_slice() {
+            if track.id.is_none() {
+                track.album_id = album.id;
+                if track.artist.is_none() {
+                    track.artist_id = album.artist_id;
+                };
+                self.add_track(track)?;
+            }
+        }
         self.albums.write().unwrap().push(album.clone());
+
         Ok(())
     }
 
@@ -174,38 +191,30 @@ impl Library for MemoryLibrary {
     }
 
     fn add_tracks(&self, tracks: &mut Vec<Track>) -> Result<(), Error> {
-        let tracks = tracks.iter().cloned().map(|mut track| {
-            track.id = Some(self.track_id.fetch_add(1, Ordering::Relaxed));
-            track
-        });
-        self.tracks.write().unwrap().extend(tracks);
+        for track in tracks {
+            self.add_track(track)?;
+        }
         Ok(())
     }
 
     fn add_albums(&self, albums: &mut Vec<Album>) -> Result<(), Error> {
-        let albums = albums.iter().cloned().map(|mut album| {
-            album.id = Some(self.album_id.fetch_add(1, Ordering::Relaxed));
-            album
-        });
-        self.albums.write().unwrap().extend(albums);
+        for album in albums {
+            self.add_album(album)?;
+        }
         Ok(())
     }
 
     fn add_artists(&self, artists: &mut Vec<Artist>) -> Result<(), Error> {
-        let artists = artists.iter().cloned().map(|mut artist| {
-            artist.id = Some(self.artist_id.fetch_add(1, Ordering::Relaxed));
-            artist
-        });
-        self.artists.write().unwrap().extend(artists);
+        for artist in artists {
+            self.add_artist(artist)?;
+        }
         Ok(())
     }
 
     fn add_playlists(&self, playlists: &mut Vec<Playlist>) -> Result<(), Error> {
-        let playlists = playlists.iter().cloned().map(|mut playlist| {
-            playlist.id = Some(self.playlist_id.fetch_add(1, Ordering::Relaxed));
-            playlist
-        });
-        self.playlists.write().unwrap().extend(playlists);
+        for playlist in playlists {
+            self.add_playlist(playlist)?;
+        }
         Ok(())
     }
 

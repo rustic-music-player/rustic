@@ -235,6 +235,19 @@ where
         Ok(res)
     }
 
+    async fn add_to_library(&self, cursor: Cursor) -> Result<()> {
+        let url = match cursor {
+            Cursor::Track(cursor) => format!("/api/library/tracks/{}", cursor),
+            Cursor::Album(cursor) => format!("/api/library/albums/{}", cursor),
+            Cursor::Artist(cursor) => format!("/api/library/artists/{}", cursor),
+            Cursor::Playlist(cursor) => format!("/api/library/playlists/{}", cursor),
+        };
+
+        self.post::<(), ()>(&url, ()).await?;
+
+        Ok(())
+    }
+
     fn sync_state(&self) -> BoxStream<'static, SyncStateModel> {
         unimplemented!("requires socket api")
     }

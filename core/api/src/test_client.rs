@@ -187,6 +187,10 @@ impl LibraryApiClient for TestApiClient {
         unimplemented!()
     }
 
+    async fn add_to_library(&self, _cursor: Cursor) -> Result<()> {
+        unimplemented!()
+    }
+
     fn sync_state(&self) -> BoxStream<'static, SyncStateModel> {
         unimplemented!()
     }

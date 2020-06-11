@@ -21,6 +21,18 @@ impl From<SingleQueryIdentifier> for SingleQuery {
     }
 }
 
+impl From<usize> for SingleQuery {
+    fn from(id: usize) -> Self {
+        SingleQueryIdentifier::Id(id).into()
+    }
+}
+
+impl From<String> for SingleQuery {
+    fn from(query: String) -> Self {
+        SingleQueryIdentifier::Uri(query).into()
+    }
+}
+
 impl Default for SingleQueryIdentifier {
     fn default() -> SingleQueryIdentifier {
         SingleQueryIdentifier::Id(0)

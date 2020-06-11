@@ -9,7 +9,7 @@ use url::Url;
 use async_trait::async_trait;
 
 use crate::library::{Album, Artist, SharedLibrary, Track};
-use crate::{CredentialStore, Playlist};
+use crate::{CredentialStore, Playlist, SingleQuery};
 
 pub use self::explorer::Explorer;
 pub use self::folder::ProviderFolder;

@@ -1,4 +1,4 @@
-use actix_web::{error, get, web, HttpResponse, Responder, Result};
+use actix_web::{error, get, post, web, HttpResponse, Responder, Result};
 use futures::stream::StreamExt;
 use serde::Deserialize;
 use serde_qs::actix::QsQuery;
@@ -9,7 +9,7 @@ use crate::app::ApiClient;
 use rustic_api::cursor::Cursor;
 
 #[derive(Deserialize)]
-pub struct GetEntityQuery {
+pub struct EntityQuery {
     cursor: String,
 }
 
@@ -21,7 +21,7 @@ pub struct GetEntitiesQuery {
 #[get("/library/albums/{cursor}")]
 pub async fn get_album(
     client: web::Data<ApiClient>,
-    params: web::Path<GetEntityQuery>,
+    params: web::Path<EntityQuery>,
 ) -> Result<impl Responder> {
     let album = client.get_album(&params.cursor).await?;
 
@@ -42,6 +42,17 @@ pub async fn get_albums(
     Ok(web::Json(albums))
 }
 
+#[post("/library/albums/{cursor}")]
+pub async fn add_album(
+    client: web::Data<ApiClient>,
+    params: web::Path<EntityQuery>,
+) -> Result<impl Responder> {
+    let cursor = params.into_inner().cursor;
+    client.add_to_library(Cursor::Album(cursor)).await?;
+
+    Ok(web::HttpResponse::NoContent())
+}
+
 #[get("/library/artists")]
 pub async fn get_artists(client: web::Data<ApiClient>) -> Result<impl Responder> {
     let artists = client.get_artists().await?;
@@ -52,7 +63,7 @@ pub async fn get_artists(client: web::Data<ApiClient>) -> Result<impl Responder>
 #[get("/library/artists/{cursor}")]
 pub async fn get_artist(
     client: web::Data<ApiClient>,
-    params: web::Path<GetEntityQuery>,
+    params: web::Path<EntityQuery>,
 ) -> Result<impl Responder> {
     let artist = client.get_artist(&params.cursor).await?;
 
@@ -60,6 +71,17 @@ pub async fn get_artist(
         Some(artist) => Ok(web::Json(artist)),
         None => Err(error::ErrorNotFound("Not Found")),
     }
+}
+
+#[post("/library/artists/{cursor}")]
+pub async fn add_artist(
+    client: web::Data<ApiClient>,
+    params: web::Path<EntityQuery>,
+) -> Result<impl Responder> {
+    let cursor = params.into_inner().cursor;
+    client.add_to_library(Cursor::Artist(cursor)).await?;
+
+    Ok(web::HttpResponse::NoContent())
 }
 
 #[get("/library/playlists")]
@@ -76,7 +98,7 @@ pub async fn get_playlists(
 #[get("/library/playlists/{cursor}")]
 pub async fn get_playlist(
     client: web::Data<ApiClient>,
-    params: web::Path<GetEntityQuery>,
+    params: web::Path<EntityQuery>,
 ) -> Result<impl Responder> {
     let playlist = client.get_playlist(&params.cursor).await?;
 
@@ -84,6 +106,17 @@ pub async fn get_playlist(
         Some(playlist) => Ok(web::Json(playlist)),
         None => Err(error::ErrorNotFound("Not Found")),
     }
+}
+
+#[post("/library/playlists/{cursor}")]
+pub async fn add_playlist(
+    client: web::Data<ApiClient>,
+    params: web::Path<EntityQuery>,
+) -> Result<impl Responder> {
+    let cursor = params.into_inner().cursor;
+    client.add_to_library(Cursor::Playlist(cursor)).await?;
+
+    Ok(web::HttpResponse::NoContent())
 }
 
 #[get("/library/tracks")]
@@ -100,7 +133,7 @@ pub async fn get_tracks(
 #[get("/tracks/{cursor}")]
 pub async fn get_track(
     client: web::Data<ApiClient>,
-    params: web::Path<GetEntityQuery>,
+    params: web::Path<EntityQuery>,
 ) -> Result<impl Responder> {
     let track = client.get_track(&params.cursor).await?;
 
@@ -108,6 +141,17 @@ pub async fn get_track(
         Some(track) => Ok(web::Json(track)),
         None => Err(error::ErrorNotFound("Not Found")),
     }
+}
+
+#[post("/library/tracks/{cursor}")]
+pub async fn add_track(
+    client: web::Data<ApiClient>,
+    params: web::Path<EntityQuery>,
+) -> Result<impl Responder> {
+    let cursor = params.into_inner().cursor;
+    client.add_to_library(Cursor::Track(cursor)).await?;
+
+    Ok(web::HttpResponse::NoContent())
 }
 
 fn get_cover_art(cover_art: Option<CoverArtModel>) -> Result<impl Responder> {
@@ -130,7 +174,7 @@ fn get_cover_art(cover_art: Option<CoverArtModel>) -> Result<impl Responder> {
 #[get("/albums/{cursor}/coverart")]
 pub async fn get_album_cover_art(
     client: web::Data<ApiClient>,
-    params: web::Path<GetEntityQuery>,
+    params: web::Path<EntityQuery>,
 ) -> Result<impl Responder> {
     let cover_art = client
         .get_thumbnail(Cursor::Album(params.cursor.clone()))
@@ -141,7 +185,7 @@ pub async fn get_album_cover_art(
 #[get("/artists/{cursor}/coverart")]
 pub async fn get_artist_cover_art(
     client: web::Data<ApiClient>,
-    params: web::Path<GetEntityQuery>,
+    params: web::Path<EntityQuery>,
 ) -> Result<impl Responder> {
     let cover_art = client
         .get_thumbnail(Cursor::Artist(params.cursor.clone()))
@@ -152,7 +196,7 @@ pub async fn get_artist_cover_art(
 #[get("/tracks/{cursor}/coverart")]
 pub async fn get_track_cover_art(
     client: web::Data<ApiClient>,
-    params: web::Path<GetEntityQuery>,
+    params: web::Path<EntityQuery>,
 ) -> Result<impl Responder> {
     let cover_art = client
         .get_thumbnail(Cursor::Track(params.cursor.clone()))

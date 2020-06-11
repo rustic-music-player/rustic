@@ -20,6 +20,10 @@ export interface RusticApiClient {
     getPlaylist(cursor: string): Promise<PlaylistModel>;
     getTracks(providers: any): Promise<TrackModel[]>;
     getTrack(cursor: string): Promise<TrackModel>;
+    addTrackToLibrary(cursor: string): Promise<void>;
+    addAlbumToLibrary(cursor: string): Promise<void>;
+    addArtistToLibrary(cursor: string): Promise<void>;
+    addPlaylistToLibrary(cursor: string): Promise<void>;
     getQueue(player_id?: string): Promise<QueuedTrackModel[]>;
     queueTrack(player_id: string | undefined, cursor: string): Promise<void>;
     queueAlbum(player_id: string | undefined, cursor: string): Promise<void>;

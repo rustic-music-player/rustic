@@ -76,6 +76,8 @@ pub trait LibraryApiClient: Sync + Send {
 
     async fn get_track(&self, cursor: &str) -> Result<Option<TrackModel>>;
 
+    async fn add_to_library(&self, cursor: Cursor) -> Result<()>;
+
     fn sync_state(&self) -> BoxStream<'static, SyncStateModel>;
 }
 
