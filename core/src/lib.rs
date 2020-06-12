@@ -204,13 +204,17 @@ impl Rustic {
             _ => None,
         };
         let cover = if let Some(cover) = cover {
-            let cached_cover = self.cache.fetch_thumbnail(&cover).await?;
-
-            if cached_cover.is_some() {
-                cached_cover
-            } else {
-                let cover = self.cache.cache_thumbnail(&cover).await?;
+            if cover.is_data() {
                 Some(cover)
+            }else {
+                let cached_cover = self.cache.fetch_thumbnail(&cover).await?;
+
+                if cached_cover.is_some() {
+                    cached_cover
+                } else {
+                    let cover = self.cache.cache_thumbnail(&cover).await?;
+                    Some(cover)
+                }
             }
         } else {
             None

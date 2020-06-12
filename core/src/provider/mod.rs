@@ -155,6 +155,22 @@ pub enum CoverArt {
     Url(String),
 }
 
+impl CoverArt {
+    pub fn is_data(&self) -> bool {
+        match &self {
+            CoverArt::Data { data: _, mime_type: _ } => true,
+            _ => false
+        }
+    }
+
+    pub fn is_url(&self) -> bool {
+        match &self {
+            CoverArt::Url(_) => true,
+            _ => false
+        }
+    }
+}
+
 impl From<String> for CoverArt {
     fn from(url: String) -> Self {
         CoverArt::Url(url)

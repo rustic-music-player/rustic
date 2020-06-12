@@ -79,7 +79,7 @@ impl Cache {
     pub async fn cache_thumbnail(&self, cover: &CoverArt) -> Result<CoverArt, Error> {
         match cover {
             CoverArt::Url(ref url) => self.download_coverart(url).await,
-            _ => Err(format_err!("")),
+            _ => Err(format_err!("only caching thumbnail urls")),
         }
     }
 
