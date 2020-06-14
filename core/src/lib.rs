@@ -12,7 +12,7 @@ pub use crate::library::{
 };
 use crate::player::Player;
 pub use crate::player::{PlayerBackend, PlayerEvent, PlayerState, QueuedTrack};
-use crate::provider::{CoverArt, InternalUri, ProviderItemType};
+use crate::provider::{Thumbnail, InternalUri, ProviderItemType, ThumbnailState};
 pub use crate::provider::{Explorer, Provider, ProviderType};
 
 pub mod cache;
@@ -187,40 +187,28 @@ impl Rustic {
     pub async fn thumbnail(
         &self,
         provider_item: &ProviderItemType,
-    ) -> Result<Option<CoverArt>, failure::Error> {
-        let cover = match provider_item {
-            ProviderItemType::Track(track) => {
-                let provider = self.get_provider(track)?;
-                provider.get().await.cover_art(track).await?
-            }
-            ProviderItemType::Album(album) => album
-                .image_url
-                .as_ref()
-                .map(|url| CoverArt::Url(url.clone())),
-            ProviderItemType::Artist(artist) => artist
-                .image_url
-                .as_ref()
-                .map(|url| CoverArt::Url(url.clone())),
-            _ => None,
-        };
-        let cover = if let Some(cover) = cover {
-            if cover.is_data() {
-                Some(cover)
-            }else {
-                let cached_cover = self.cache.fetch_thumbnail(&cover).await?;
+    ) -> Result<Option<Thumbnail>, failure::Error> {
+        let thumbnail = provider_item.thumbnail();
+        let thumbnail = match thumbnail {
+            ThumbnailState::Url(url) => {
+                let thumbnail = Thumbnail::Url(url);
+                let cached_cover = self.cache.fetch_thumbnail(&thumbnail).await?;
 
                 if cached_cover.is_some() {
                     cached_cover
                 } else {
-                    let cover = self.cache.cache_thumbnail(&cover).await?;
+                    let cover = self.cache.cache_thumbnail(&thumbnail).await?;
                     Some(cover)
                 }
-            }
-        } else {
-            None
+            },
+            ThumbnailState::Data => {
+                let provider = self.get_provider_for_item(provider_item)?;
+                provider.get().await.thumbnail(provider_item).await?
+            },
+            _ => None
         };
 
-        Ok(cover)
+        Ok(thumbnail)
     }
 
     fn get_provider(&self, track: &Track) -> Result<&Provider, failure::Error> {

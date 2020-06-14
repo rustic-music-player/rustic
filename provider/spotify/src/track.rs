@@ -10,6 +10,7 @@ use rustic_core::provider;
 
 use crate::meta::*;
 use crate::util::*;
+use rustic_core::provider::ThumbnailState;
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct SpotifyFullTrack(FullTrack);
@@ -33,10 +34,6 @@ impl From<SpotifyFullTrack> for Track {
             meta.insert(META_SPOTIFY_ID.into(), id.clone().into());
         }
 
-        if let Some(image) = convert_images(&track.album.images) {
-            meta.insert(META_SPOTIFY_COVER_ART_URL.into(), image.into());
-        }
-
         Track {
             id: None,
             title: track.name,
@@ -50,7 +47,7 @@ impl From<SpotifyFullTrack> for Track {
                 artist,
                 tracks: vec![],
                 provider: provider::ProviderType::Spotify,
-                image_url: convert_images(&track.album.images),
+                thumbnail: convert_images(&track.album.images),
                 uri: track
                     .album
                     .id
@@ -62,7 +59,7 @@ impl From<SpotifyFullTrack> for Track {
                 meta: HashMap::new(),
             }),
             provider: provider::ProviderType::Spotify,
-            has_coverart: !track.album.images.is_empty(),
+            thumbnail: convert_images(&track.album.images),
             uri: track
                 .id
                 .map(|id| format!("spotify://track/{}", id))
@@ -98,7 +95,7 @@ impl From<SpotifySimplifiedTrack> for Track {
             album_id: None,
             album: None,
             provider: provider::ProviderType::Spotify,
-            has_coverart: false,
+            thumbnail: ThumbnailState::None,
             uri: track
                 .id
                 .map(|id| format!("spotify://track/{}", id))

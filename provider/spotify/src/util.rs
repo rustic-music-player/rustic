@@ -5,9 +5,10 @@ use rspotify::model::image::Image;
 
 use rustic_core::library::Artist;
 use rustic_core::ProviderType;
+use rustic_core::provider::ThumbnailState;
 
-pub fn convert_images(images: &[Image]) -> Option<String> {
-    images.first().map(|image| image.url.clone())
+pub fn convert_images(images: &[Image]) -> ThumbnailState {
+    images.first().map(|image| image.url.clone()).map(ThumbnailState::Url).unwrap_or_default()
 }
 
 pub fn artists_to_artist(artists: Vec<SimplifiedArtist>) -> Option<Artist> {

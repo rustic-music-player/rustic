@@ -5,6 +5,7 @@ use rustic_core::provider;
 
 use crate::meta::*;
 use crate::user::SoundcloudUser;
+use rustic_core::provider::ThumbnailState;
 
 #[derive(Debug, Clone)]
 pub struct SoundcloudTrack(soundcloud::Track);
@@ -14,18 +15,10 @@ impl From<SoundcloudTrack> for Track {
         let track = track.0;
         let stream_url = track.stream_url.unwrap();
 
-        let mut meta = hashmap! {
+        let meta = hashmap! {
             META_SOUNDCLOUD_TRACK_ID.into() => track.id.into(),
             META_SOUNDCLOUD_STREAM_URL.into() => stream_url.into()
         };
-
-        if let Some(image_url) = track.artwork_url.as_ref() {
-            let image_url = image_url.replace("large", "t500x500");
-            meta.insert(
-                META_SOUNDCLOUD_COVER_ART_URL.into(),
-                image_url.into(),
-            );
-        }
 
         Track {
             id: None,
@@ -36,7 +29,7 @@ impl From<SoundcloudTrack> for Track {
             album_id: None,
             provider: provider::ProviderType::Soundcloud,
             uri: format!("soundcloud://track/{}", track.id),
-            has_coverart: track.artwork_url.is_some(),
+            thumbnail: track.artwork_url.map(|url| url.replace("large", "t500x500")).map(ThumbnailState::Url).unwrap_or_default(),
             duration: Some(track.duration / 1000),
             meta,
         }

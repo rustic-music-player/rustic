@@ -4,6 +4,7 @@ use rustic_core::{provider, Album};
 use crate::track::SoundcloudTrack;
 use crate::user::SoundcloudUser;
 use std::collections::HashMap;
+use rustic_core::provider::ThumbnailState;
 
 #[derive(Debug, Clone)]
 pub struct SoundcloudPlaylist {
@@ -41,7 +42,7 @@ impl From<SoundcloudPlaylist> for Album {
             tracks: playlist.tracks,
             provider: provider::ProviderType::Soundcloud,
             uri: format!("soundcloud://playlist/{}", playlist.id),
-            image_url: playlist.artwork_url.map(|url| url.replace("large", "t500x500")),
+            thumbnail: playlist.artwork_url.map(|url| url.replace("large", "t500x500")).map(ThumbnailState::Url).unwrap_or_default(),
             artist: Some(SoundcloudUser::from(playlist.user).into()),
             meta: HashMap::new(),
             artist_id: None,

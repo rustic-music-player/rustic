@@ -3,7 +3,7 @@ use std::collections::HashMap;
 use serde_derive::{Deserialize, Serialize};
 
 use crate::library::{Artist, Identifiable, MetaValue};
-use crate::provider::ProviderType;
+use crate::provider::{ProviderType, ThumbnailState};
 use crate::{SingleQueryIdentifier, Track};
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
@@ -14,7 +14,7 @@ pub struct Album {
     pub artist: Option<Artist>,
     pub tracks: Vec<Track>,
     pub provider: ProviderType,
-    pub image_url: Option<String>,
+    pub thumbnail: ThumbnailState,
     pub uri: String,
     pub meta: HashMap<String, MetaValue>,
 }

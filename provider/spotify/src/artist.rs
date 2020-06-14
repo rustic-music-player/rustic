@@ -5,7 +5,6 @@ use serde_derive::{Deserialize, Serialize};
 
 use rustic_core::library::Artist;
 
-use crate::util::*;
 use rustic_core::ProviderType;
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
@@ -20,7 +19,7 @@ impl From<SpotifyFullArtist> for Artist {
         Artist {
             id: None,
             name: artist.name,
-            image_url: convert_images(&artist.images),
+            image_url: artist.images.first().map(|image| image.url.clone()),
             uri: format!("spotify://artist/{}", artist.id),
             meta: HashMap::new(),
             provider: ProviderType::Spotify,

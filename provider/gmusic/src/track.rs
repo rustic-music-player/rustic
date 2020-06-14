@@ -5,6 +5,7 @@ use maplit::hashmap;
 use rustic_core::{Album, Artist, ProviderType, Track};
 
 use crate::meta::*;
+use rustic_core::provider::ThumbnailState;
 
 #[derive(Debug, Clone)]
 pub struct GmusicTrack(gmusic::Track);
@@ -23,9 +24,6 @@ impl From<GmusicTrack> for Track {
         );
         if let Some(store_id) = track.store_id.clone() {
             meta.insert(META_GMUSIC_STORE_ID.into(), store_id.into());
-        }
-        if let Some(image) = track.album_art_ref.first() {
-            meta.insert(META_GMUSIC_COVER_ART_URL.into(), image.url.clone().into());
         }
         let artist_uri = format!(
             "gmusic:artist:{}",
@@ -56,10 +54,11 @@ impl From<GmusicTrack> for Track {
                 uri: album_uri,
                 provider: ProviderType::GooglePlayMusic,
                 tracks: Vec::new(),
-                image_url: track
+                thumbnail: track
                     .album_art_ref
                     .first()
-                    .map(|art_ref| art_ref.url.clone()),
+                    .map(|art_ref| ThumbnailState::Url(art_ref.url.clone()))
+                    .unwrap_or_default(),
                 artist: None,
                 artist_id: None,
                 meta: HashMap::new(),
@@ -72,7 +71,7 @@ impl From<GmusicTrack> for Track {
                 .parse::<u64>()
                 .ok()
                 .map(|duration| duration / 1000),
-            has_coverart: track.album_art_ref.first().is_some(),
+            thumbnail: track.album_art_ref.first().map(|album_art| album_art.url.clone().into()).unwrap_or_default(),
             meta,
         }
     }

@@ -5,6 +5,7 @@ use rustic_core::library::MetaValue;
 use rustic_core::Track;
 use schema::{tracks, tracks_meta};
 use std::convert::TryInto;
+use rustic_core::provider::ThumbnailState;
 
 #[derive(Identifiable, Queryable, Associations, PartialEq, Debug)]
 #[table_name = "tracks"]
@@ -14,7 +15,7 @@ pub struct TrackEntity {
     pub artist_id: Option<i32>,
     pub album_id: Option<i32>,
     pub uri: String,
-    pub has_coverart: bool,
+    pub image_url: Option<String>,
     pub duration: Option<i32>,
     pub provider: i32,
 }
@@ -70,7 +71,7 @@ impl TrackEntity {
             album: None,
             provider: int_to_provider(self.provider),
             uri: self.uri,
-            has_coverart: self.has_coverart,
+            thumbnail: self.image_url.map(ThumbnailState::Url).unwrap_or_default(),
             duration: self.duration.map(|duration| duration as u64),
             meta: TrackMeta::to_meta_map(meta),
         }
@@ -84,7 +85,7 @@ pub struct TrackInsert {
     pub artist_id: Option<i32>,
     pub album_id: Option<i32>,
     pub uri: String,
-    pub has_coverart: bool,
+    pub image_url: Option<String>,
     pub duration: Option<i32>,
     pub provider: i32,
 }
@@ -96,7 +97,7 @@ impl From<Track> for TrackInsert {
             artist_id: track.artist_id.map(|id| id as i32),
             album_id: track.album_id.map(|id| id as i32),
             uri: track.uri,
-            has_coverart: track.has_coverart,
+            image_url: track.thumbnail.to_url(),
             duration: track.duration.map(|id| id as i32),
             provider: provider_to_int(track.provider),
         }

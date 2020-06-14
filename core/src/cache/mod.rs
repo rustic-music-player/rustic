@@ -8,7 +8,7 @@ use log::{debug, trace};
 use pinboard::NonEmptyPinboard;
 use reqwest::get;
 
-use crate::provider::CoverArt;
+use crate::provider::Thumbnail;
 use crate::Track;
 
 #[derive(Debug)]
@@ -61,9 +61,9 @@ impl Cache {
         Ok(())
     }
 
-    pub async fn fetch_thumbnail(&self, cover: &CoverArt) -> Result<Option<CoverArt>, Error> {
+    pub async fn fetch_thumbnail(&self, cover: &Thumbnail) -> Result<Option<Thumbnail>, Error> {
         match cover {
-            CoverArt::Url(ref url) => {
+            Thumbnail::Url(ref url) => {
                 let path = self.get_coverart_path(url);
                 if path.exists() {
                     let file = self.read_cache_file(&path).await?;
@@ -76,9 +76,9 @@ impl Cache {
         }
     }
 
-    pub async fn cache_thumbnail(&self, cover: &CoverArt) -> Result<CoverArt, Error> {
+    pub async fn cache_thumbnail(&self, cover: &Thumbnail) -> Result<Thumbnail, Error> {
         match cover {
-            CoverArt::Url(ref url) => self.download_coverart(url).await,
+            Thumbnail::Url(ref url) => self.download_coverart(url).await,
             _ => Err(format_err!("only caching thumbnail urls")),
         }
     }
@@ -93,7 +93,7 @@ impl Cache {
         result
     }
 
-    async fn download_coverart(&self, url: &str) -> Result<CoverArt, Error> {
+    async fn download_coverart(&self, url: &str) -> Result<Thumbnail, Error> {
         use futures::prelude::*;
         use tokio::fs::File;
         use tokio_util::compat::Tokio02AsyncWriteCompatExt;
@@ -113,10 +113,10 @@ impl Cache {
         self.read_cache_file(&file_path).await
     }
 
-    async fn read_cache_file(&self, path: &Path) -> Result<CoverArt, Error> {
+    async fn read_cache_file(&self, path: &Path) -> Result<Thumbnail, Error> {
         let data = tokio::fs::read(path).await?;
 
-        Ok(CoverArt::Data {
+        Ok(Thumbnail::Data {
             mime_type: String::from("image/jpeg"),
             data,
         })

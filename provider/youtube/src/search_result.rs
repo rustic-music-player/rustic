@@ -1,5 +1,4 @@
-use crate::meta::META_YOUTUBE_DEFAULT_THUMBNAIL_URL;
-use rustic_core::provider::{ProviderItem, ProviderItemType};
+use rustic_core::provider::{ProviderItem, ProviderItemType, ThumbnailState};
 use rustic_core::{Artist, Playlist, ProviderType, Track};
 use std::collections::HashMap;
 use youtube_api::models::{Id, SearchResult};
@@ -40,21 +39,19 @@ impl From<YoutubeSearchResult> for ProviderItem {
 impl From<YoutubeSearchResult> for Track {
     fn from(result: YoutubeSearchResult) -> Self {
         let result = result.into_inner();
-        let mut meta = HashMap::new();
         let thumbnail = result.snippet.thumbnails.get("high");
-        if let Some(thumbnail) = thumbnail.as_ref() {
-            meta.insert(
-                META_YOUTUBE_DEFAULT_THUMBNAIL_URL.into(),
-                thumbnail.url.clone().into(),
-            );
-        }
+        let thumbnail = if let Some(thumbnail) = thumbnail.as_ref() {
+            ThumbnailState::Url(thumbnail.url.clone())
+        }else {
+            ThumbnailState::None
+        };
 
         Track {
             id: None,
             title: result.snippet.title,
             uri: format!("youtube://video/{}", result.id.into_inner()),
             duration: None,
-            has_coverart: true,
+            thumbnail,
             provider: ProviderType::Youtube,
             artist_id: None,
             artist: Some(Artist {
@@ -69,7 +66,7 @@ impl From<YoutubeSearchResult> for Track {
             }),
             album: None,
             album_id: None,
-            meta,
+            meta: HashMap::new(),
         }
     }
 }

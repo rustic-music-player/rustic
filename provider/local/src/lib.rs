@@ -1,13 +1,15 @@
 use std::path::PathBuf;
 
-use failure::{format_err, Error};
+use failure::{Error, format_err};
 use maplit::hashmap;
 use serde_derive::Deserialize;
 
 use async_trait::async_trait;
-use rustic_core::library::{self, MetaValue, SharedLibrary};
-use rustic_core::provider::*;
 use rustic_core::CredentialStore;
+use rustic_core::library::{self, SharedLibrary};
+use rustic_core::provider::*;
+
+use crate::scanner::Track;
 
 pub mod scanner;
 
@@ -57,37 +59,14 @@ impl ProviderInstance for LocalProvider {
     async fn sync(&self, library: SharedLibrary) -> Result<SyncResult, Error> {
         let scanner = scanner::Scanner::new(&self.path);
         let tracks = scanner.scan()?;
-        let albums: Vec<library::Album> = tracks
-            .iter()
-            .cloned()
-            .map(|track| track.into())
-            .filter(|album: &Option<library::Album>| album.is_some())
-            .map(|album| album.unwrap())
-            .fold(Vec::new(), |mut albums, album| {
-                if albums.iter().find(|a| a.title == album.title).is_none() {
-                    albums.push(album);
-                }
-                albums
-            });
-        let albums: Vec<library::Album> = albums
-            .into_iter()
-            .map(|mut album| -> Result<library::Album, Error> {
-                library.add_album(&mut album)?;
-                Ok(album)
-            })
-            .filter(|a| a.is_ok())
-            .map(|a| a.unwrap())
-            .collect();
+        let albums = LocalProvider::sync_albums(&library, &tracks);
+        let artists = LocalProvider::sync_artists(&library, &tracks);
         let mut tracks = tracks
             .into_iter()
             .map(library::Track::from)
             .map(|mut t| {
-                if let Some(track_album) = &t.album {
-                    let album = albums.iter().find(|a| a.title == track_album.title);
-                    if let Some(album) = album {
-                        t.album_id = album.id;
-                    }
-                }
+                LocalProvider::apply_album_id(&albums, &mut t);
+                LocalProvider::apply_artist_id(&artists, &mut t);
                 t
             })
             .collect();
@@ -115,12 +94,16 @@ impl ProviderInstance for LocalProvider {
         Ok(vec![])
     }
 
-    async fn resolve_track(&self, _uri: &str) -> Result<Option<library::Track>, Error> {
-        unimplemented!()
+    async fn resolve_track(&self, uri: &str) -> Result<Option<library::Track>, Error> {
+        let track = self.get_track(uri)?;
+
+        Ok(Some(track.into()))
     }
 
-    async fn resolve_album(&self, _uri: &str) -> Result<Option<library::Album>, Error> {
-        unimplemented!()
+    async fn resolve_album(&self, uri: &str) -> Result<Option<library::Album>, Error> {
+        let track = self.get_track(uri)?;
+
+        Ok(track.into())
     }
 
     async fn resolve_artist(&self, _uri: &str) -> Result<Option<library::Artist>, Error> {
@@ -139,17 +122,35 @@ impl ProviderInstance for LocalProvider {
         Err(format_err!("Invalid provider: {:?}", track.provider))
     }
 
-    async fn cover_art(&self, track: &library::Track) -> Result<Option<CoverArt>, Error> {
-        if let MetaValue::String(url) = track.meta.get(META_LOCAL_FILE_URL).as_ref().unwrap() {
-            let tag = id3::Tag::read_from_path(&url)?;
-            let picture = tag.pictures().find(|_| true).map(|picture| CoverArt::Data {
+    async fn thumbnail(&self, provider_item: &ProviderItemType) -> Result<Option<Thumbnail>, Error> {
+        let uri = match provider_item {
+            ProviderItemType::Track(track) => {
+                if track.thumbnail == ThumbnailState::Data {
+                    Some(track.uri.clone())
+                }else {
+                    None
+                }
+            },
+            ProviderItemType::Album(album) => {
+                if album.thumbnail == ThumbnailState::Data {
+                    Some(album.uri.clone())
+                }else {
+                    None
+                }
+            },
+            _ => None
+        };
+        if let Some(uri) = uri {
+            let path = &uri["file://".len()..];
+            let tag = id3::Tag::read_from_path(path)?;
+            let picture = tag.pictures().find(|_| true).map(|picture| Thumbnail::Data {
                 data: picture.data.clone(),
                 mime_type: picture.mime_type.clone(),
             });
 
             Ok(picture)
-        } else {
-            unreachable!()
+        }else {
+            Ok(None)
         }
     }
 
@@ -158,40 +159,18 @@ impl ProviderInstance for LocalProvider {
     }
 }
 
+
 impl From<scanner::Track> for library::Track {
     fn from(track: scanner::Track) -> Self {
         let path = track.path.clone();
         library::Track {
             id: None,
-            title: track.title,
+            title: track.title.clone(),
             album_id: None,
-            album: track.album.map(|name| library::Album {
-                id: None,
-                title: name,
-                artist_id: None,
-                artist: None,
-                provider: ProviderType::LocalMedia,
-                image_url: None,
-                tracks: vec![],
-                uri: String::new(),
-                meta: hashmap!(
-                    META_LOCAL_FILE_URL.into() => path.clone().into()
-                ),
-            }),
+            album: track.clone().into(),
             artist_id: None,
-            artist: track.artist.map(|name| library::Artist {
-                id: None,
-                name,
-                uri: String::new(),
-                image_url: None,
-                meta: hashmap!(
-                    META_LOCAL_FILE_URL.into() => path.clone().into()
-                ),
-                provider: ProviderType::LocalMedia,
-                albums: vec![],
-                playlists: vec![],
-            }),
-            has_coverart: track.has_coverart,
+            artist: track.clone().into(),
+            thumbnail: if track.has_coverart { ThumbnailState::Data } else { ThumbnailState::None },
             provider: ProviderType::LocalMedia,
             uri: format!("file://{}", track.path),
             duration: None,
@@ -205,15 +184,17 @@ impl From<scanner::Track> for library::Track {
 impl From<scanner::Track> for Option<library::Album> {
     fn from(track: scanner::Track) -> Self {
         let path = track.path.clone();
+        let artist = track.clone().into();
+        let has_coverart = track.has_coverart;
         track.album.map(|name| library::Album {
             id: None,
             title: name,
             artist_id: None,
-            artist: None,
+            artist,
             provider: ProviderType::LocalMedia,
-            image_url: None,
+            thumbnail: if has_coverart { ThumbnailState::Data } else { ThumbnailState::None },
             tracks: vec![],
-            uri: String::new(),
+            uri: format!("file://{}", &path),
             meta: hashmap!(
                 META_LOCAL_FILE_URL.into() => path.into()
             ),
@@ -227,7 +208,7 @@ impl From<scanner::Track> for Option<library::Artist> {
         track.artist.map(|name| library::Artist {
             id: None,
             name,
-            uri: String::new(),
+            uri: format!("file://{}", &path),
             image_url: None,
             meta: hashmap!(
                 META_LOCAL_FILE_URL.into() => path.into()
@@ -236,5 +217,83 @@ impl From<scanner::Track> for Option<library::Artist> {
             albums: vec![],
             playlists: vec![],
         })
+    }
+}
+
+impl LocalProvider {
+    fn sync_albums(library: &SharedLibrary, tracks: &[Track]) -> Vec<library::Album> {
+        let albums: Vec<library::Album> = tracks
+            .iter()
+            .cloned()
+            .filter_map(Option::<library::Album>::from)
+            .fold(Vec::new(), |mut albums, album| {
+                if albums.iter().find(|a| a.title == album.title).is_none() {
+                    albums.push(album);
+                }
+                albums
+            });
+        let albums: Vec<library::Album> = albums
+            .into_iter()
+            .map(|mut album| -> Result<library::Album, Error> {
+                library.add_album(&mut album)?;
+                Ok(album)
+            })
+            .filter_map(|a| a.ok())
+            .collect();
+        albums
+    }
+
+    fn sync_artists(library: &SharedLibrary, tracks: &[Track]) -> Vec<library::Artist> {
+        let artists: Vec<library::Artist> = tracks
+            .iter()
+            .cloned()
+            .filter_map(Option::<library::Artist>::from)
+            .fold(Vec::new(), |mut artists, artist| {
+                if artists.iter().find(|a| a.name == artist.name).is_none() {
+                    artists.push(artist);
+                }
+                artists
+            });
+        let artists: Vec<library::Artist> = artists
+            .into_iter()
+            .map(|mut artist| -> Result<library::Artist, Error> {
+                library.add_artist(&mut artist)?;
+                Ok(artist)
+            })
+            .filter_map(|a| a.ok())
+            .collect();
+        artists
+    }
+
+    fn apply_album_id(albums: &[library::Album], mut t: &mut library::Track) {
+        if let Some(track_album) = &t.album {
+            let album = albums.iter().find(|a| a.title == track_album.title);
+            if let Some(album) = album {
+                t.album_id = album.id;
+            }
+        }
+    }
+
+    fn apply_artist_id(artists: &[library::Artist], mut t: &mut library::Track) {
+        if let Some(track_artist) = &t.artist {
+            let artist = artists.iter().find(|a| a.name == track_artist.name);
+            if let Some(artist) = artist {
+                t.artist_id = artist.id;
+            }
+        }
+    }
+
+    fn get_track(&self, uri: &str) -> Result<Track, Error> {
+        let path = &uri["file://".len()..];
+        let tag = id3::Tag::read_from_path(path)?;
+        let track = Track {
+            path: path.to_string(),
+            title: tag.title().map(String::from).unwrap_or_default(),
+            artist: tag.artist().map(String::from),
+            album: tag.album().map(String::from),
+            has_coverart: tag.pictures().any(|_| true),
+        };
+
+        Ok(track)
     }
 }

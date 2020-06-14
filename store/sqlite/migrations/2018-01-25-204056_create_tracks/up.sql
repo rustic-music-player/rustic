@@ -5,7 +5,7 @@ CREATE TABLE tracks
   artist_id INTEGER,
   album_id INTEGER,
   uri TEXT NOT NULL,
-  has_coverart BOOLEAN NOT NULL DEFAULT 0,
+  image_url TEXT,
   duration INTEGER,
   provider INTEGER NOT NULL,
   CONSTRAINT tracks_artists_id_fk FOREIGN KEY (artist_id) REFERENCES artists (id) ON DELETE SET NULL,

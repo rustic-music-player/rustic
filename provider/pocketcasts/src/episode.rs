@@ -3,7 +3,7 @@ use pocketcasts::Episode;
 use serde::{Deserialize, Serialize};
 
 use rustic_core::library::Track;
-use rustic_core::provider::ProviderType;
+use rustic_core::provider::{ProviderType, ThumbnailState};
 
 use crate::meta::*;
 
@@ -22,7 +22,7 @@ impl From<PocketcastTrack> for Track {
             album: None,
             provider: ProviderType::Pocketcasts,
             uri: format!("pocketcasts://episode/{}", episode.uuid),
-            has_coverart: false,
+            thumbnail: ThumbnailState::None,
             duration: Some(episode.duration),
             meta: hashmap!(
                 META_POCKETCASTS_STREAM_URL.into() => episode.url.into()

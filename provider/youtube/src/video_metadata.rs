@@ -1,8 +1,8 @@
-use crate::meta::META_YOUTUBE_DEFAULT_THUMBNAIL_URL;
 use rustic_core::{Artist, ProviderType, Track};
 use std::collections::HashMap;
 use std::str::FromStr;
 use youtube_api::models;
+use rustic_core::provider::ThumbnailState;
 
 pub(crate) struct YoutubeVideoMetadata(models::VideoMetadata);
 
@@ -22,13 +22,11 @@ impl From<YoutubeVideoMetadata> for Track {
     fn from(video: YoutubeVideoMetadata) -> Self {
         let video = video.into_inner();
         let thumbnail = video.video_details.thumbnail.thumbnails.last();
-        let mut meta = HashMap::new();
-        if let Some(thumbnail) = thumbnail.as_ref() {
-            meta.insert(
-                META_YOUTUBE_DEFAULT_THUMBNAIL_URL.into(),
-                thumbnail.url.clone().into(),
-            );
-        }
+        let thumbnail = if let Some(thumbnail) = thumbnail.as_ref() {
+            ThumbnailState::Url(thumbnail.url.clone())
+        }else {
+            ThumbnailState::None
+        };
         Track {
             title: video.video_details.title,
             artist: Some(Artist {
@@ -46,10 +44,10 @@ impl From<YoutubeVideoMetadata> for Track {
             artist_id: None,
             provider: ProviderType::Youtube,
             uri: format!("youtube://video/{}", video.video_details.video_id),
-            has_coverart: thumbnail.is_some(),
+            thumbnail,
             id: None,
             duration: u64::from_str(&video.video_details.length_seconds).ok(),
-            meta,
+            meta: HashMap::new(),
         }
     }
 }

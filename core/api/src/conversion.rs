@@ -2,15 +2,12 @@ use std::convert::TryFrom;
 
 use futures::StreamExt;
 
-use rustic_core::provider::{
-    AuthState, Authentication, CoverArt, InternalUri, ProviderFolder, ProviderItem,
-    ProviderItemType,
-};
+use rustic_core::{Album, Artist, PlayerEvent, PlayerState, Playlist, ProviderType, QueuedTrack, Track};
+use rustic_core::provider::{Authentication, AuthState, InternalUri, ProviderFolder, ProviderItem, ProviderItemType, Thumbnail};
 use rustic_core::sync::{SyncEvent, SyncItem, SyncItemState};
-use rustic_core::{Album, Artist, PlayerEvent, PlayerState, Playlist, ProviderType, Track, QueuedTrack};
 use rustic_extension_api::ExtensionMetadata;
 
-use crate::cursor::{from_cursor, to_cursor, Cursor};
+use crate::cursor::{Cursor, from_cursor, to_cursor};
 use crate::models::*;
 
 impl From<Album> for AlbumModel {
@@ -22,9 +19,11 @@ impl From<Album> for AlbumModel {
             artist: album.artist.map(ArtistModel::from),
             tracks: album.tracks.into_iter().map(TrackModel::from).collect(),
             provider: album.provider.into(),
-            coverart: album
-                .image_url
-                .map(|_| format!("/api/albums/{}/coverart", &cursor)),
+            coverart: if album.thumbnail.has_thumbnail() {
+                Some(format!("/api/albums/{}/coverart", &cursor))
+            } else {
+                None
+            },
         }
     }
 }
@@ -107,7 +106,7 @@ impl From<Track> for TrackModel {
             cursor: cursor.clone(),
             title: track.title,
             provider: track.provider.into(),
-            coverart: if track.has_coverart {
+            coverart: if track.thumbnail.has_thumbnail() {
                 Some(format!("/api/tracks/{}/coverart", &cursor))
             } else {
                 None
@@ -123,7 +122,7 @@ impl From<QueuedTrack> for QueuedTrackModel {
     fn from(track: QueuedTrack) -> Self {
         QueuedTrackModel {
             track: track.track.into(),
-            playing: track.playing
+            playing: track.playing,
         }
     }
 }
@@ -269,11 +268,11 @@ impl From<PlayerEvent> for QueueEventModel {
     }
 }
 
-impl From<CoverArt> for CoverArtModel {
-    fn from(cover_art: CoverArt) -> Self {
+impl From<Thumbnail> for CoverArtModel {
+    fn from(cover_art: Thumbnail) -> Self {
         match cover_art {
-            CoverArt::Url(url) => CoverArtModel::Url(url),
-            CoverArt::Data { data, mime_type } => {
+            Thumbnail::Url(url) => CoverArtModel::Url(url),
+            Thumbnail::Data { data, mime_type } => {
                 let stream = futures::stream::once(async { data });
 
                 CoverArtModel::Data {

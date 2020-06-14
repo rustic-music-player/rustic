@@ -64,7 +64,7 @@ table! {
         artist_id -> Nullable<Integer>,
         album_id -> Nullable<Integer>,
         uri -> Text,
-        has_coverart -> Bool,
+        image_url -> Nullable<Text>,
         duration -> Nullable<Integer>,
         provider -> Integer,
     }

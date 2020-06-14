@@ -13,7 +13,7 @@ use rustic_core::{provider, Album, Artist, CredentialStore, Playlist, SharedLibr
 
 use crate::album::GmusicAlbum;
 use crate::artist::GmusicArtist;
-use crate::meta::{META_GMUSIC_COVER_ART_URL, META_GMUSIC_STORE_ID};
+use crate::meta::META_GMUSIC_STORE_ID;
 use crate::playlist::GmusicPlaylist;
 use crate::track::GmusicTrack;
 
@@ -239,19 +239,6 @@ impl provider::ProviderInstance for GooglePlayMusicProvider {
         } else {
             unreachable!()
         }
-    }
-
-    async fn cover_art(&self, track: &Track) -> Result<Option<provider::CoverArt>, Error> {
-        let url = track
-            .meta
-            .get(META_GMUSIC_COVER_ART_URL)
-            .map(|value| match value {
-                MetaValue::String(url) => url.clone(),
-                _ => unreachable!(),
-            })
-            .map(|url| url.into());
-
-        Ok(url)
     }
 
     /// # Track

@@ -6,7 +6,7 @@ use serde::Deserialize;
 
 use async_trait::async_trait;
 use lazy_static::lazy_static;
-use rustic_core::library::{Album, Artist, MetaValue, Playlist, SharedLibrary, Track};
+use rustic_core::library::{Album, Artist, Playlist, SharedLibrary, Track};
 use rustic_core::{provider, CredentialStore, Credentials, ProviderType};
 
 use crate::playlist::SoundcloudPlaylist;
@@ -325,19 +325,6 @@ impl provider::ProviderInstance for SoundcloudProvider {
         }
 
         Err(format_err!("Invalid provider: {:?}", track.provider))
-    }
-
-    async fn cover_art(&self, track: &Track) -> Result<Option<provider::CoverArt>, Error> {
-        let url = track
-            .meta
-            .get(meta::META_SOUNDCLOUD_COVER_ART_URL)
-            .map(|value| match value {
-                MetaValue::String(url) => url.clone(),
-                _ => unreachable!(),
-            })
-            .map(|url| url.into());
-
-        Ok(url)
     }
 
     async fn resolve_share_url(

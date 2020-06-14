@@ -4,6 +4,7 @@ use std::convert::TryInto;
 use entities::provider::{int_to_provider, provider_to_int};
 use rustic_core::library::MetaValue;
 use rustic_core::Album;
+use rustic_core::provider::ThumbnailState;
 use schema::{albums, albums_meta};
 
 #[derive(Identifiable, Queryable, Associations, PartialEq, Debug)]
@@ -66,7 +67,7 @@ impl AlbumEntity {
             artist: None,
             tracks: vec![],
             provider: int_to_provider(self.provider),
-            image_url: self.image_url,
+            thumbnail: self.image_url.map(ThumbnailState::Url).unwrap_or_default(),
             uri: self.uri,
             meta: AlbumMeta::to_meta_map(meta),
         }
@@ -89,7 +90,7 @@ impl From<Album> for AlbumInsert {
             title: album.title,
             artist_id: album.artist_id.map(|id| id as i32),
             uri: album.uri,
-            image_url: album.image_url,
+            image_url: album.thumbnail.to_url(),
             provider: provider_to_int(album.provider),
         }
     }

@@ -10,14 +10,12 @@ use youtube_api::{YoutubeApi, YoutubeDl};
 
 use async_trait::async_trait;
 use lazy_static::lazy_static;
-use rustic_core::library::MetaValue;
 use rustic_core::provider::{
-    AuthState, Authentication, CoverArt, InternalUri, ProviderFolder, ProviderInstance,
+    AuthState, Authentication, InternalUri, ProviderFolder, ProviderInstance,
     ProviderItem, SyncResult,
 };
 use rustic_core::{Album, Artist, CredentialStore, Playlist, ProviderType, SharedLibrary, Track};
 
-use crate::meta::META_YOUTUBE_DEFAULT_THUMBNAIL_URL;
 use crate::playlist::{PlaylistWithItems, YoutubePlaylist};
 use crate::playlist_item::YoutubePlaylistItem;
 use crate::search_result::YoutubeSearchResult;
@@ -251,14 +249,6 @@ impl ProviderInstance for YoutubeProvider {
         let url = youtube_dl.get_audio_stream_url(id).await?;
 
         Ok(url)
-    }
-
-    async fn cover_art(&self, track: &Track) -> Result<Option<CoverArt>, Error> {
-        if let Some(MetaValue::String(url)) = track.meta.get(META_YOUTUBE_DEFAULT_THUMBNAIL_URL) {
-            Ok(Some(CoverArt::Url(url.clone())))
-        } else {
-            Ok(None)
-        }
     }
 
     async fn resolve_share_url(&self, url: Url) -> Result<Option<InternalUri>, Error> {

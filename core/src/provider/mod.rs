@@ -1,15 +1,15 @@
 use std::fmt::Debug;
 use std::sync::Arc;
-use tokio::sync::{RwLock, RwLockReadGuard, RwLockWriteGuard};
 
 use failure::{Error, Fail};
 use serde_derive::{Deserialize, Serialize};
+use tokio::sync::{RwLock, RwLockReadGuard, RwLockWriteGuard};
 use url::Url;
 
 use async_trait::async_trait;
 
+use crate::{CredentialStore, Playlist};
 use crate::library::{Album, Artist, SharedLibrary, Track};
-use crate::{CredentialStore, Playlist, SingleQuery};
 
 pub use self::explorer::Explorer;
 pub use self::folder::ProviderFolder;
@@ -113,7 +113,9 @@ pub trait ProviderInstance: Debug {
     async fn resolve_artist(&self, uri: &str) -> Result<Option<Artist>, Error>;
     async fn resolve_playlist(&self, uri: &str) -> Result<Option<Playlist>, Error>;
     async fn stream_url(&self, track: &Track) -> Result<String, Error>;
-    async fn cover_art(&self, track: &Track) -> Result<Option<CoverArt>, Error>;
+    async fn thumbnail(&self, _provider_item: &ProviderItemType) -> Result<Option<Thumbnail>, Error> {
+        Ok(None)
+    }
     async fn resolve_share_url(&self, url: Url) -> Result<Option<InternalUri>, Error>;
 }
 
@@ -149,31 +151,67 @@ pub enum Authentication {
     Password(String, String),
 }
 
+// TODO: for the lack of a better name
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
-pub enum CoverArt {
+pub enum ThumbnailState {
+    Url(String),
+    Data,
+    None,
+}
+
+impl Default for ThumbnailState {
+    fn default() -> Self {
+        ThumbnailState::None
+    }
+}
+
+impl From<String> for ThumbnailState {
+    fn from(url: String) -> Self {
+        ThumbnailState::Url(url)
+    }
+}
+
+impl ThumbnailState {
+    pub fn has_thumbnail(&self) -> bool {
+        match self {
+            ThumbnailState::None => false,
+            _ => true
+        }
+    }
+
+    pub fn to_url(&self) -> Option<String> {
+        match self {
+            ThumbnailState::Url(url) => Some(url.clone()),
+            _ => None
+        }
+    }
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+pub enum Thumbnail {
     Data { data: Vec<u8>, mime_type: String },
     Url(String),
 }
 
-impl CoverArt {
+impl Thumbnail {
     pub fn is_data(&self) -> bool {
         match &self {
-            CoverArt::Data { data: _, mime_type: _ } => true,
+            Thumbnail::Data { data: _, mime_type: _ } => true,
             _ => false
         }
     }
 
     pub fn is_url(&self) -> bool {
         match &self {
-            CoverArt::Url(_) => true,
+            Thumbnail::Url(_) => true,
             _ => false
         }
     }
 }
 
-impl From<String> for CoverArt {
+impl From<String> for Thumbnail {
     fn from(url: String) -> Self {
-        CoverArt::Url(url)
+        Thumbnail::Url(url)
     }
 }
 

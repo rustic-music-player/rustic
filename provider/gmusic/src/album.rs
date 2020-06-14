@@ -6,6 +6,7 @@ use rustic_core::{Album, Artist, ProviderType, Track};
 
 use crate::meta::*;
 use crate::track::GmusicTrack;
+use rustic_core::provider::ThumbnailState;
 
 #[derive(Debug, Clone)]
 pub struct GmusicAlbum(gmusic::Album);
@@ -51,7 +52,7 @@ impl From<GmusicAlbum> for Album {
                 .map(GmusicTrack::from)
                 .map(Track::from)
                 .collect(),
-            image_url: album.album_art_ref,
+            thumbnail: album.album_art_ref.map(ThumbnailState::Url).unwrap_or_default(),
         }
     }
 }
