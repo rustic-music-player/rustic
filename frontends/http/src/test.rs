@@ -42,7 +42,7 @@ where
         .service(controller::playlists::add_playlist)
         .service(controller::playlists::remove_playlist)
         .service(controller::playlists::add_track_to_playlist)
-        .service(controller::playlists::remove_track_to_playlist)
+        .service(controller::playlists::remove_track_from_playlist)
         .service(controller::queue::fetch_default)
         .service(controller::queue::fetch)
         .service(controller::queue::clear_default)
