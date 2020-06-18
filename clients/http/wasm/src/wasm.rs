@@ -3,8 +3,9 @@ use wasm_bindgen::prelude::*;
 use rustic_api::client::*;
 use rustic_http_client::*;
 
-use crate::client::RusticWasmHttpClient;
+use crate::client::{RusticWasmHttpClient, WasmResponse};
 use crate::utils::{execute, map_providers, ApiResult};
+use rustic_api::cursor::Cursor;
 
 // When the `wee_alloc` feature is enabled, use `wee_alloc` as the global
 // allocator.
@@ -12,7 +13,7 @@ use crate::utils::{execute, map_providers, ApiResult};
 #[global_allocator]
 static ALLOC: wee_alloc::WeeAlloc = wee_alloc::WeeAlloc::INIT;
 
-static CLIENT: RusticHttpClient<RusticWasmHttpClient> = RusticWasmHttpClient::new();
+static CLIENT: RusticHttpClient<RusticWasmHttpClient, WasmResponse> = RusticWasmHttpClient::new();
 
 // RusticApiClient
 
@@ -83,6 +84,48 @@ pub async fn get_tracks(providers: JsValue) -> ApiResult {
 #[wasm_bindgen(js_name = "getTrack")]
 pub async fn get_track(cursor: String) -> ApiResult {
     execute(CLIENT.get_track(&cursor)).await
+}
+
+#[wasm_bindgen(js_name = "addTrackToLibrary")]
+pub async fn add_track_to_library(cursor: String) -> ApiResult {
+    execute(CLIENT.add_to_library(Cursor::Track(cursor))).await
+}
+
+#[wasm_bindgen(js_name = "addAlbumToLibrary")]
+pub async fn add_album_to_library(cursor: String) -> ApiResult {
+    execute(CLIENT.add_to_library(Cursor::Album(cursor))).await
+}
+
+#[wasm_bindgen(js_name = "addArtistToLibrary")]
+pub async fn add_artist_to_library(cursor: String) -> ApiResult {
+    execute(CLIENT.add_to_library(Cursor::Artist(cursor))).await
+}
+
+#[wasm_bindgen(js_name = "addPlaylistToLibrary")]
+pub async fn add_playlist_to_library(cursor: String) -> ApiResult {
+    execute(CLIENT.add_to_library(Cursor::Playlist(cursor))).await
+}
+
+// PlaylistsApiClient
+
+#[wasm_bindgen(js_name = "addPlaylist")]
+pub async fn add_playlist(name: String) -> ApiResult {
+    execute(CLIENT.add_playlist(&name)).await
+}
+
+#[wasm_bindgen(js_name = "removePlaylist")]
+pub async fn remove_playlist(cursor: String) -> ApiResult {
+    execute(CLIENT.remove_playlist(&cursor)).await
+}
+
+#[wasm_bindgen(js_name = "addTrackToPlaylist")]
+pub async fn add_track_to_playlist(cursor: String, track: String) -> ApiResult {
+    execute(CLIENT.add_track_to_playlist(&cursor, &track)).await
+}
+
+#[wasm_bindgen(js_name = "removeTrackFromPlaylist")]
+pub async fn remove_track_from_playlist(cursor: String, track: String) -> ApiResult {
+    execute(CLIENT.remove_track_from_playlist(&cursor, &track)).await
 }
 
 // QueueApiClient

@@ -145,6 +145,26 @@ impl QueueApiClient for TestApiClient {
 
 #[cfg_attr(target_arch = "wasm32", async_trait(?Send))]
 #[cfg_attr(not(target_arch = "wasm32"), async_trait)]
+impl PlaylistApiClient for TestApiClient {
+    async fn add_playlist(&self, name: &str) -> Result<PlaylistModel> {
+        unimplemented!()
+    }
+
+    async fn remove_playlist(&self, cursor: &str) -> Result<()> {
+        unimplemented!()
+    }
+
+    async fn add_track_to_playlist(&self, cursor: &str, track: &str) -> Result<()> {
+        unimplemented!()
+    }
+
+    async fn remove_track_from_playlist(&self, cursor: &str, track: &str) -> Result<()> {
+        unimplemented!()
+    }
+}
+
+#[cfg_attr(target_arch = "wasm32", async_trait(?Send))]
+#[cfg_attr(not(target_arch = "wasm32"), async_trait)]
 impl LibraryApiClient for TestApiClient {
     async fn get_albums(
         &self,

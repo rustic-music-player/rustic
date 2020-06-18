@@ -10,7 +10,7 @@ use crate::RusticNativeClient;
 #[async_trait]
 impl ProviderApiClient for RusticNativeClient {
     async fn get_providers(&self) -> Result<Vec<ProviderModel>> {
-        let mut provider_models = Vec::new();
+        let mut provider_models = vec![ProviderModel::internal()];
         for provider in self.app.providers.iter() {
             let provider = provider.get().await;
             if !provider.auth_state().is_authenticated() {

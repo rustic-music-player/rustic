@@ -1,4 +1,4 @@
-use actix_web::{delete, error, get, HttpResponse, post, Responder, Result, web};
+use actix_web::{delete, error, get, HttpResponse, post, put, Responder, Result, web};
 use serde::Deserialize;
 
 use rustic_api::cursor::from_cursor;
@@ -140,7 +140,7 @@ pub async fn clear(client: web::Data<ApiClient>, player: web::Path<PlayerParams>
     Ok(HttpResponse::NoContent().finish())
 }
 
-#[post("/queue/select/{index}")]
+#[put("/queue/select/{index}")]
 pub async fn select_item_default(
     client: web::Data<ApiClient>,
     params: web::Path<QueueItemParams>,
@@ -150,7 +150,7 @@ pub async fn select_item_default(
     Ok(HttpResponse::NoContent().finish())
 }
 
-#[post("/queue/{player_cursor}/select/{index}")]
+#[put("/queue/{player_cursor}/select/{index}")]
 pub async fn select_item(
     client: web::Data<ApiClient>,
     params: web::Path<QueueItemParams>,

@@ -1,54 +1,98 @@
+use std::marker::PhantomData;
+
 use failure::format_err;
 use futures::stream::BoxStream;
-use serde::de::DeserializeOwned;
 use serde::{Deserialize, Serialize};
+use serde::de::DeserializeOwned;
+use serde_json::json;
 
 use async_trait::async_trait;
 use rustic_api::client::*;
-use rustic_api::cursor::{to_cursor, Cursor};
+use rustic_api::cursor::{Cursor, to_cursor};
 pub use rustic_api::models;
 use rustic_api::models::*;
 
 #[derive(Clone)]
-pub struct RusticHttpClient<T>
-where
-    T: HttpClient,
+pub struct RusticHttpClient<T, TRes>
+    where
+        T: HttpClient<TRes>,
+        TRes: HttpResponse
 {
     pub client: T,
+    pub _marker: PhantomData<TRes>,
 }
 
-#[cfg_attr(target_arch = "wasm32", async_trait(?Send))]
+impl<T, TRes> RusticHttpClient<T, TRes>
+    where
+        T: HttpClient<TRes>,
+        TRes: HttpResponse {
+    // Waiting for https://github.com/rust-lang/rfcs/pull/2632 to resolve before it can be const
+    pub fn new(client: T) -> Self {
+        RusticHttpClient {
+            client,
+            _marker: PhantomData,
+        }
+    }
+}
+
+#[cfg_attr(target_arch = "wasm32", async_trait(? Send))]
 #[cfg_attr(not(target_arch = "wasm32"), async_trait)]
-pub trait HttpClient: Clone + Sync + Send {
+pub trait HttpResponse: Clone + Sync + Send {
+    fn no_content(self) -> Result<()>;
+
+    async fn json<TRes>(self) -> Result<TRes>
+        where
+            TRes: DeserializeOwned;
+}
+
+#[cfg_attr(target_arch = "wasm32", async_trait(? Send))]
+#[cfg_attr(not(target_arch = "wasm32"), async_trait)]
+pub trait HttpClient<TRes>: Clone + Sync + Send where TRes: HttpResponse {
     async fn get<T>(&self, url: &str) -> Result<T>
-    where
-        T: DeserializeOwned;
+        where
+            T: DeserializeOwned;
 
-    async fn post<TReq, TRes>(&self, url: &str, req: TReq) -> Result<TRes>
-    where
-        TRes: DeserializeOwned,
-        TReq: Serialize + Send + Sync;
+    async fn post<TReq>(&self, url: &str, req: TReq) -> Result<TRes>
+        where
+            TReq: Serialize + Send + Sync;
+
+    async fn put<TReq>(&self, url: &str, req: TReq) -> Result<TRes>
+        where
+            TReq: Serialize + Send + Sync;
+
+    async fn delete(&self, url: &str) -> Result<()>;
 }
 
-#[cfg_attr(target_arch = "wasm32", async_trait(?Send))]
+#[cfg_attr(target_arch = "wasm32", async_trait(? Send))]
 #[cfg_attr(not(target_arch = "wasm32"), async_trait)]
-impl<T> HttpClient for RusticHttpClient<T>
-where
-    T: HttpClient,
+impl<T, TRes> HttpClient<TRes> for RusticHttpClient<T, TRes>
+    where
+        T: HttpClient<TRes>,
+        TRes: HttpResponse
 {
     async fn get<TReq>(&self, url: &str) -> Result<TReq>
-    where
-        TReq: DeserializeOwned,
+        where
+            TReq: DeserializeOwned,
     {
         self.client.get(url).await
     }
 
-    async fn post<TReq, TRes>(&self, url: &str, req: TReq) -> Result<TRes>
-    where
-        TRes: DeserializeOwned,
-        TReq: Serialize + Send + Sync,
+    async fn post<TReq>(&self, url: &str, req: TReq) -> Result<TRes>
+        where
+            TReq: Serialize + Send + Sync,
     {
         self.client.post(url, req).await
+    }
+
+    async fn put<TReq>(&self, url: &str, req: TReq) -> Result<TRes>
+        where
+            TReq: Serialize + Send + Sync,
+    {
+        self.client.put(url, req).await
+    }
+
+    async fn delete(&self, url: &str) -> Result<()> {
+        self.client.delete(url).await
     }
 }
 
@@ -58,11 +102,12 @@ struct SearchQuery<'a> {
     providers: Option<Vec<ProviderTypeModel>>,
 }
 
-#[cfg_attr(target_arch = "wasm32", async_trait(?Send))]
+#[cfg_attr(target_arch = "wasm32", async_trait(? Send))]
 #[cfg_attr(not(target_arch = "wasm32"), async_trait)]
-impl<T> RusticApiClient for RusticHttpClient<T>
-where
-    T: HttpClient,
+impl<T, TRes> RusticApiClient for RusticHttpClient<T, TRes>
+    where
+        T: HttpClient<TRes>,
+        TRes: HttpResponse
 {
     async fn search(
         &self,
@@ -99,11 +144,12 @@ where
     }
 }
 
-#[cfg_attr(target_arch = "wasm32", async_trait(?Send))]
+#[cfg_attr(target_arch = "wasm32", async_trait(? Send))]
 #[cfg_attr(not(target_arch = "wasm32"), async_trait)]
-impl<T> ProviderApiClient for RusticHttpClient<T>
-where
-    T: HttpClient,
+impl<T, TRes> ProviderApiClient for RusticHttpClient<T, TRes>
+    where
+        T: HttpClient<TRes>,
+        TRes: HttpResponse
 {
     async fn get_providers(&self) -> Result<Vec<ProviderModel>> {
         let res = self.get("/api/providers").await?;
@@ -139,7 +185,7 @@ where
                     provider,
                     ProviderAuthModel::OAuthToken { code, state, scope },
                 )
-                .await
+                    .await
             }
         }
     }
@@ -156,11 +202,12 @@ impl From<Option<Vec<ProviderTypeModel>>> for ProviderFilterQuery {
     }
 }
 
-#[cfg_attr(target_arch = "wasm32", async_trait(?Send))]
+#[cfg_attr(target_arch = "wasm32", async_trait(? Send))]
 #[cfg_attr(not(target_arch = "wasm32"), async_trait)]
-impl<T> LibraryApiClient for RusticHttpClient<T>
-where
-    T: HttpClient,
+impl<T, TRes> LibraryApiClient for RusticHttpClient<T, TRes>
+    where
+        T: HttpClient<TRes>,
+        TRes: HttpResponse
 {
     async fn get_albums(
         &self,
@@ -243,7 +290,7 @@ where
             Cursor::Playlist(cursor) => format!("/api/library/playlists/{}", cursor),
         };
 
-        self.post::<(), ()>(&url, ()).await?;
+        self.post(&url, ()).await?.no_content()?;
 
         Ok(())
     }
@@ -253,11 +300,12 @@ where
     }
 }
 
-#[cfg_attr(target_arch = "wasm32", async_trait(?Send))]
+#[cfg_attr(target_arch = "wasm32", async_trait(? Send))]
 #[cfg_attr(not(target_arch = "wasm32"), async_trait)]
-impl<T> QueueApiClient for RusticHttpClient<T>
-where
-    T: HttpClient,
+impl<T, TRes> QueueApiClient for RusticHttpClient<T, TRes>
+    where
+        T: HttpClient<TRes>,
+        TRes: HttpResponse
 {
     async fn get_queue(&self, player_id: Option<&str>) -> Result<Vec<QueuedTrackModel>> {
         let url = match player_id {
@@ -275,7 +323,7 @@ where
             None => format!("/api/queue/track/{}", cursor),
         };
         // TODO: handle 404
-        self.post::<(), ()>(&url, ()).await?;
+        self.post(&url, ()).await?.no_content()?;
 
         Ok(Some(()))
     }
@@ -286,7 +334,7 @@ where
             None => format!("/api/queue/album/{}", cursor),
         };
         // TODO: handle 404
-        self.post::<(), ()>(&url, ()).await?;
+        self.post(&url, ()).await?.no_content()?;
 
         Ok(Some(()))
     }
@@ -297,7 +345,7 @@ where
             None => format!("/api/queue/playlist/{}", cursor),
         };
         // TODO: handle 404
-        self.post::<(), ()>(&url, ()).await?;
+        self.post(&url, ()).await?.no_content()?;
 
         Ok(Some(()))
     }
@@ -307,7 +355,7 @@ where
             Some(id) => format!("/api/queue/{}/clear", id),
             None => "/api/queue/clear".to_string(),
         };
-        self.post::<(), ()>(&url, ()).await?;
+        self.post(&url, ()).await?.no_content()?;
 
         Ok(())
     }
@@ -317,14 +365,19 @@ where
             Some(id) => format!("/api/queue/{}/select/{}", id, item),
             None => format!("/api/queue/select/{}", item).to_string(),
         };
-        // TODO: this should be PUT I guess
-        self.post::<(), ()>(&url, ()).await?;
+        self.put(&url, ()).await?.no_content()?;
 
         Ok(())
     }
 
-    async fn remove_queue_item(&self, _player_id: Option<&str>, _item: usize) -> Result<()> {
-        unimplemented!("required delete implementation")
+    async fn remove_queue_item(&self, player_id: Option<&str>, item: usize) -> Result<()> {
+        let url = match player_id {
+            Some(id) => format!("/api/queue/{}/{}", id, item),
+            None => format!("/api/queue/{}", item).to_string(),
+        };
+        self.delete(&url).await?;
+
+        Ok(())
     }
 
     async fn reorder_queue_item(
@@ -337,7 +390,7 @@ where
             Some(id) => format!("/api/queue/{}/reorder/{}/{}", id, before, after),
             None => format!("/api/queue/reorder/{}/{}", before, after),
         };
-        self.post::<(), ()>(&url, ()).await?;
+        self.post(&url, ()).await?.no_content()?;
 
         Ok(())
     }
@@ -347,11 +400,46 @@ where
     }
 }
 
-#[cfg_attr(target_arch = "wasm32", async_trait(?Send))]
+#[cfg_attr(target_arch = "wasm32", async_trait(? Send))]
 #[cfg_attr(not(target_arch = "wasm32"), async_trait)]
-impl<T> PlayerApiClient for RusticHttpClient<T>
-where
-    T: HttpClient,
+impl<T, TRes> PlaylistApiClient for RusticHttpClient<T, TRes>
+    where
+        T: HttpClient<TRes>,
+        TRes: HttpResponse
+{
+    async fn add_playlist(&self, name: &str) -> Result<PlaylistModel> {
+        let res = self.post("/api/library/playlists", json!({
+            "name": name
+        })).await?.json().await?;
+
+        Ok(res)
+    }
+
+    async fn remove_playlist(&self, cursor: &str) -> Result<()> {
+        self.delete(&format!("/api/library/playlist/{}", cursor)).await?;
+
+        Ok(())
+    }
+
+    async fn add_track_to_playlist(&self, cursor: &str, track: &str) -> Result<()> {
+        self.put(&format!("/api/library/playlist/{}/{}", cursor, track), ()).await?.no_content()?;
+
+        Ok(())
+    }
+
+    async fn remove_track_from_playlist(&self, cursor: &str, track: &str) -> Result<()> {
+        self.delete(&format!("/api/library/playlist/{}/{}", cursor, track)).await?;
+
+        Ok(())
+    }
+}
+
+#[cfg_attr(target_arch = "wasm32", async_trait(? Send))]
+#[cfg_attr(not(target_arch = "wasm32"), async_trait)]
+impl<T, TRes> PlayerApiClient for RusticHttpClient<T, TRes>
+    where
+        T: HttpClient<TRes>,
+        TRes: HttpResponse
 {
     async fn get_players(&self) -> Result<Vec<PlayerModel>> {
         let res = self.get("/api/players").await?;
@@ -424,9 +512,10 @@ where
     }
 }
 
-impl<T> RusticHttpClient<T>
-where
-    T: HttpClient,
+impl<T, TRes> RusticHttpClient<T, TRes>
+    where
+        T: HttpClient<TRes>,
+        TRes: HttpResponse
 {
     async fn provider_basic_auth(
         &self,

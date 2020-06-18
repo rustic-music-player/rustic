@@ -14,7 +14,17 @@ pub struct ProviderModel {
     pub explore: ProviderFolderModel,
 }
 
-#[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Eq)]
+impl ProviderModel {
+    pub fn internal() -> Self {
+        ProviderModel {
+            title: "Internal".into(),
+            provider: ProviderTypeModel::Internal,
+            explore: ProviderFolderModel::default()
+        }
+    }
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Eq, Default)]
 #[cfg_attr(
     target_arch = "wasm32",
     derive(typescript_definitions::TypescriptDefinition)
@@ -54,6 +64,7 @@ pub enum ProviderItemTypeModel {
 )]
 #[serde(rename_all = "lowercase")]
 pub enum ProviderTypeModel {
+    Internal,
     Pocketcasts,
     Soundcloud,
     #[serde(rename = "gmusic")]

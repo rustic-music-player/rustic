@@ -1,3 +1,4 @@
+pub mod playlists;
 pub mod extensions;
 pub mod library;
 pub mod player;

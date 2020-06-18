@@ -167,6 +167,7 @@ impl From<&ProviderItemType> for ProviderItemTypeModel {
 impl From<ProviderType> for ProviderTypeModel {
     fn from(provider: ProviderType) -> Self {
         match provider {
+            ProviderType::Internal => ProviderTypeModel::Internal,
             ProviderType::Pocketcasts => ProviderTypeModel::Pocketcasts,
             ProviderType::GooglePlayMusic => ProviderTypeModel::GooglePlayMusic,
             ProviderType::LocalMedia => ProviderTypeModel::LocalMedia,
@@ -180,6 +181,7 @@ impl From<ProviderType> for ProviderTypeModel {
 impl From<ProviderTypeModel> for ProviderType {
     fn from(provider: ProviderTypeModel) -> Self {
         match provider {
+            ProviderTypeModel::Internal => ProviderType::Internal,
             ProviderTypeModel::Pocketcasts => ProviderType::Pocketcasts,
             ProviderTypeModel::GooglePlayMusic => ProviderType::GooglePlayMusic,
             ProviderTypeModel::LocalMedia => ProviderType::LocalMedia,

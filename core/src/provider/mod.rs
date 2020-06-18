@@ -82,6 +82,7 @@ impl SyncResult {
 #[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq, Hash)]
 #[serde(rename_all = "lowercase")]
 pub enum ProviderType {
+    Internal,
     Pocketcasts,
     Soundcloud,
     #[serde(rename = "gmusic")]

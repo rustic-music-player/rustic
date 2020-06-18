@@ -13,7 +13,7 @@ pub type Result<T> = std::result::Result<T, failure::Error>;
 #[cfg_attr(target_arch = "wasm32", async_trait(?Send))]
 #[cfg_attr(not(target_arch = "wasm32"), async_trait)]
 pub trait RusticApiClient:
-    Sync + Send + QueueApiClient + LibraryApiClient + PlayerApiClient + ProviderApiClient
+    Sync + Send + QueueApiClient + LibraryApiClient + PlayerApiClient + ProviderApiClient + PlaylistApiClient
 {
     async fn search(
         &self,
@@ -106,6 +106,18 @@ pub trait QueueApiClient: Sync + Send {
     ) -> Result<()>;
 
     fn observe_queue(&self, player_id: Option<&str>) -> BoxStream<'static, QueueEventModel>;
+}
+
+#[cfg_attr(target_arch = "wasm32", async_trait(?Send))]
+#[cfg_attr(not(target_arch = "wasm32"), async_trait)]
+pub trait PlaylistApiClient: Sync + Send {
+    async fn add_playlist(&self, name: &str) -> Result<PlaylistModel>;
+
+    async fn remove_playlist(&self, cursor: &str) -> Result<()>;
+
+    async fn add_track_to_playlist(&self, cursor: &str, track: &str) -> Result<()>;
+
+    async fn remove_track_from_playlist(&self, cursor: &str, track: &str) -> Result<()>;
 }
 
 #[cfg_attr(target_arch = "wasm32", async_trait(?Send))]

@@ -14,6 +14,7 @@ use std::convert::TryInto;
 
 mod library;
 mod player;
+mod playlist;
 mod provider;
 mod queue;
 mod stream_util;
