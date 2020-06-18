@@ -416,19 +416,19 @@ impl<T, TRes> PlaylistApiClient for RusticHttpClient<T, TRes>
     }
 
     async fn remove_playlist(&self, cursor: &str) -> Result<()> {
-        self.delete(&format!("/api/library/playlist/{}", cursor)).await?;
+        self.delete(&format!("/api/library/playlists/{}", cursor)).await?;
 
         Ok(())
     }
 
     async fn add_track_to_playlist(&self, cursor: &str, track: &str) -> Result<()> {
-        self.put(&format!("/api/library/playlist/{}/{}", cursor, track), ()).await?.no_content()?;
+        self.put(&format!("/api/library/playlists/{}/{}", cursor, track), ()).await?.no_content()?;
 
         Ok(())
     }
 
     async fn remove_track_from_playlist(&self, cursor: &str, track: &str) -> Result<()> {
-        self.delete(&format!("/api/library/playlist/{}/{}", cursor, track)).await?;
+        self.delete(&format!("/api/library/playlists/{}/{}", cursor, track)).await?;
 
         Ok(())
     }
