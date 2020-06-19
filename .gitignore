@@ -38,3 +38,8 @@ config.toml
 
 # Static Http Files
 static
+
+# Store Files
+.store.json
+*.sqlite
+*.db

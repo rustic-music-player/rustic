@@ -1,10 +1,13 @@
-use std::sync::{
-    atomic::{AtomicUsize, Ordering},
-    RwLock,
-};
+use std::fs;
+use std::io::BufReader;
+use std::path::Path;
+use std::sync::atomic::{AtomicUsize, Ordering};
 
 use failure::Error;
 use log::trace;
+use pinboard::NonEmptyPinboard;
+use serde::{Deserialize, Serialize};
+use serde_json::from_reader;
 
 use rustic_core::{
     Album, Artist, Library, MultiQuery, Playlist, SearchResults, SingleQuery,
@@ -12,26 +15,106 @@ use rustic_core::{
 };
 use rustic_store_helpers::{join_album, join_albums, join_track};
 
-#[derive(Debug, Default)]
+#[derive(Debug, Serialize, Deserialize)]
+struct LibrarySnapshot {
+    album_id: usize,
+    artist_id: usize,
+    track_id: usize,
+    playlist_id: usize,
+    albums: Vec<Album>,
+    artists: Vec<Artist>,
+    tracks: Vec<Track>,
+    playlists: Vec<Playlist>,
+}
+
+impl From<LibrarySnapshot> for MemoryLibrary {
+    fn from(snapshot: LibrarySnapshot) -> Self {
+        MemoryLibrary {
+            album_id: AtomicUsize::new(snapshot.album_id),
+            artist_id: AtomicUsize::new(snapshot.artist_id),
+            track_id: AtomicUsize::new(snapshot.track_id),
+            playlist_id: AtomicUsize::new(snapshot.playlist_id),
+            albums: NonEmptyPinboard::new(snapshot.albums),
+            artists: NonEmptyPinboard::new(snapshot.artists),
+            tracks: NonEmptyPinboard::new(snapshot.tracks),
+            playlists: NonEmptyPinboard::new(snapshot.playlists),
+        }
+    }
+}
+
+#[derive(Debug)]
 pub struct MemoryLibrary {
     album_id: AtomicUsize,
     artist_id: AtomicUsize,
     track_id: AtomicUsize,
     playlist_id: AtomicUsize,
-    albums: RwLock<Vec<Album>>,
-    artists: RwLock<Vec<Artist>>,
-    tracks: RwLock<Vec<Track>>,
-    playlists: RwLock<Vec<Playlist>>,
+    albums: NonEmptyPinboard<Vec<Album>>,
+    artists: NonEmptyPinboard<Vec<Artist>>,
+    tracks: NonEmptyPinboard<Vec<Track>>,
+    playlists: NonEmptyPinboard<Vec<Playlist>>,
 }
 
-impl MemoryLibrary {
-    pub fn new() -> MemoryLibrary {
+impl Default for MemoryLibrary {
+    fn default() -> Self {
         MemoryLibrary {
             album_id: AtomicUsize::new(1),
             artist_id: AtomicUsize::new(1),
             track_id: AtomicUsize::new(1),
             playlist_id: AtomicUsize::new(1),
-            ..MemoryLibrary::default()
+            albums: NonEmptyPinboard::new(Vec::new()),
+            artists: NonEmptyPinboard::new(Vec::new()),
+            tracks: NonEmptyPinboard::new(Vec::new()),
+            playlists: NonEmptyPinboard::new(Vec::new()),
+        }
+    }
+}
+
+impl MemoryLibrary {
+    pub fn new() -> MemoryLibrary {
+        let library = match MemoryLibrary::try_load() {
+            Ok(lib) => lib,
+            Err(e) => {
+                log::error!("Failed to load previous library {}", e);
+                None
+            }
+        };
+        library.unwrap_or_default()
+    }
+
+    fn try_load() -> Result<Option<Self>, Error> {
+        let path = Path::new(".store.json");
+        if !path.exists() {
+            Ok(None)
+        } else {
+            let file = fs::File::open(&path)?;
+            let reader = BufReader::new(file);
+            let library: LibrarySnapshot = from_reader(reader)?;
+            Ok(Some(library.into()))
+        }
+    }
+
+    fn snapshot(&self) -> LibrarySnapshot {
+        LibrarySnapshot {
+            album_id: self.album_id.load(Ordering::Relaxed),
+            artist_id: self.artist_id.load(Ordering::Relaxed),
+            track_id: self.track_id.load(Ordering::Relaxed),
+            playlist_id: self.playlist_id.load(Ordering::Relaxed),
+            albums: self.albums.read(),
+            artists: self.artists.read(),
+            tracks: self.tracks.read(),
+            playlists: self.playlists.read(),
+        }
+    }
+
+    fn persist(&self) {
+        let snapshot = self.snapshot();
+        if let Err(e) = fs::OpenOptions::new()
+            .create(true)
+            .write(true)
+            .open(".store.json")
+            .and_then(|file| Ok(serde_json::to_writer(file, &snapshot)?))
+        {
+            log::error!("Storing memory library failed {}", e);
         }
     }
 }
@@ -39,7 +122,7 @@ impl MemoryLibrary {
 impl Library for MemoryLibrary {
     fn query_track(&self, query: SingleQuery) -> Result<Option<Track>, Error> {
         trace!("Query Track {:?}", query);
-        let mut tracks = self.tracks.read().unwrap().clone().into_iter();
+        let mut tracks = self.tracks.read().into_iter();
         let track = match query.identifier {
             SingleQueryIdentifier::Id(id) => tracks.find(|track| track.id == Some(id)),
             SingleQueryIdentifier::Uri(uri) => tracks.find(|track| track.uri == uri),
@@ -56,8 +139,6 @@ impl Library for MemoryLibrary {
         trace!("Query Tracks {:?}", query);
         self.tracks
             .read()
-            .unwrap()
-            .clone()
             .into_iter()
             .filter(|track| {
                 if query.providers.is_empty() {
@@ -72,7 +153,7 @@ impl Library for MemoryLibrary {
 
     fn query_album(&self, query: SingleQuery) -> Result<Option<Album>, Error> {
         trace!("Query Album {:?}", query);
-        let mut albums = self.albums.read().unwrap().clone().into_iter();
+        let mut albums = self.albums.read().into_iter();
         let album = match query.identifier {
             SingleQueryIdentifier::Id(id) => albums.find(|album| album.id == Some(id)),
             SingleQueryIdentifier::Uri(uri) => albums.find(|album| album.uri == uri),
@@ -87,8 +168,9 @@ impl Library for MemoryLibrary {
 
     fn query_albums(&self, query: MultiQuery) -> Result<Vec<Album>, Error> {
         trace!("Query Albums {:?}", query);
-        let albums = self.albums.read().unwrap().clone();
-        let albums: Vec<_> = albums
+        let albums: Vec<_> = self
+            .albums
+            .read()
             .into_iter()
             .filter(|album| {
                 if query.providers.is_empty() {
@@ -107,9 +189,7 @@ impl Library for MemoryLibrary {
             SingleQueryIdentifier::Id(id) => self
                 .artists
                 .read()
-                .unwrap()
-                .iter()
-                .cloned()
+                .into_iter()
                 .find(|artist| artist.id == Some(id)),
             _ => None,
         };
@@ -118,25 +198,24 @@ impl Library for MemoryLibrary {
 
     fn query_artists(&self, query: MultiQuery) -> Result<Vec<Artist>, Error> {
         trace!("Query Artists {:?}", query);
-        let artists = self.artists.read().unwrap().clone();
-        Ok(artists)
+        Ok(self.artists.read())
     }
 
     fn query_playlist(&self, query: SingleQuery) -> Result<Option<Playlist>, Error> {
         trace!("Query Playlist {:?}", query);
-        let playlists = self.playlists.read().unwrap();
-        let mut playlist_iter = playlists.iter();
+        let mut playlist_iter = self.playlists.read().into_iter();
         let playlist = match query.identifier {
             SingleQueryIdentifier::Id(id) => playlist_iter.find(|playlist| playlist.id == Some(id)),
             SingleQueryIdentifier::Uri(uri) => playlist_iter.find(|playlist| playlist.uri == uri),
         };
-        Ok(playlist.cloned())
+        Ok(playlist)
     }
 
     fn query_playlists(&self, query: MultiQuery) -> Result<Vec<Playlist>, Error> {
         trace!("Query Playlists {:?}", query);
-        let playlists = self.playlists.read().unwrap().clone();
-        let playlists = playlists
+        let playlists = self
+            .playlists
+            .read()
             .into_iter()
             .filter(|playlist| {
                 if query.providers.is_empty() {
@@ -151,8 +230,11 @@ impl Library for MemoryLibrary {
 
     fn add_track(&self, track: &mut Track) -> Result<(), Error> {
         track.id = Some(self.track_id.fetch_add(1, Ordering::Relaxed));
-        // add artist and album
-        self.tracks.write().unwrap().push(track.clone());
+        // TODO: add artist and album
+        let mut tracks = self.tracks.read();
+        tracks.push(track.clone());
+        self.tracks.set(tracks);
+        self.persist();
         Ok(())
     }
 
@@ -173,20 +255,29 @@ impl Library for MemoryLibrary {
                 self.add_track(track)?;
             }
         }
-        self.albums.write().unwrap().push(album.clone());
+        let mut albums = self.albums.read();
+        albums.push(album.clone());
+        self.albums.set(albums);
+        self.persist();
 
         Ok(())
     }
 
     fn add_artist(&self, artist: &mut Artist) -> Result<(), Error> {
         artist.id = Some(self.artist_id.fetch_add(1, Ordering::Relaxed));
-        self.artists.write().unwrap().push(artist.clone());
+        let mut artists = self.artists.read();
+        artists.push(artist.clone());
+        self.artists.set(artists);
+        self.persist();
         Ok(())
     }
 
     fn add_playlist(&self, playlist: &mut Playlist) -> Result<(), Error> {
         playlist.id = Some(self.playlist_id.fetch_add(1, Ordering::Relaxed));
-        self.playlists.write().unwrap().push(playlist.clone());
+        let mut playlists = self.playlists.read();
+        playlists.push(playlist.clone());
+        self.playlists.set(playlists);
+        self.persist();
         Ok(())
     }
 
@@ -220,7 +311,7 @@ impl Library for MemoryLibrary {
 
     fn sync_track(&self, track: &mut Track) -> Result<(), Error> {
         let has_track = {
-            let tracks = self.tracks.read().unwrap();
+            let tracks = self.tracks.read();
             tracks.iter().find(|a| a.uri == track.uri).map(|a| a.id)
         };
 
@@ -230,14 +321,17 @@ impl Library for MemoryLibrary {
         track.id = Some(id);
 
         if has_track.is_none() {
-            self.tracks.write().unwrap().push(track.clone());
+            let mut tracks = self.tracks.read();
+            tracks.push(track.clone());
+            self.tracks.set(tracks);
         }
+        self.persist();
         Ok(())
     }
 
     fn sync_album(&self, album: &mut Album) -> Result<(), Error> {
         let has_album = {
-            let albums = self.albums.read().unwrap();
+            let albums = self.albums.read();
             albums.iter().find(|a| a.uri == album.uri).map(|a| a.id)
         };
 
@@ -247,14 +341,17 @@ impl Library for MemoryLibrary {
         album.id = Some(id);
 
         if has_album.is_none() {
-            self.albums.write().unwrap().push(album.clone());
+            let mut albums = self.albums.read();
+            albums.push(album.clone());
+            self.albums.set(albums);
         }
+        self.persist();
         Ok(())
     }
 
     fn sync_artist(&self, artist: &mut Artist) -> Result<(), Error> {
         let has_artist = {
-            let artists = self.artists.read().unwrap();
+            let artists = self.artists.read();
             artists.iter().find(|a| a.uri == artist.uri).map(|a| a.id)
         };
 
@@ -264,14 +361,17 @@ impl Library for MemoryLibrary {
         artist.id = Some(id);
 
         if has_artist.is_none() {
-            self.artists.write().unwrap().push(artist.clone());
+            let mut artists = self.artists.read();
+            artists.push(artist.clone());
+            self.artists.set(artists);
         }
+        self.persist();
         Ok(())
     }
 
     fn sync_playlist(&self, playlist: &mut Playlist) -> Result<(), Error> {
         let (index, id) = {
-            let playlists = { self.playlists.read().unwrap() };
+            let playlists = self.playlists.read();
             let index = playlists.iter().position(|a| a.uri == playlist.uri);
             let id: usize = index
                 .and_then(|index| playlists[index].id)
@@ -281,13 +381,15 @@ impl Library for MemoryLibrary {
         };
         playlist.id = Some(id);
 
-        let mut playlists = self.playlists.write().unwrap();
+        let mut playlists = self.playlists.read();
         if let Some(index) = index {
             let target_playlist = playlists.get_mut(index).unwrap();
             *target_playlist = playlist.clone();
         } else {
             playlists.push(playlist.clone());
         }
+        self.playlists.set(playlists);
+        self.persist();
         Ok(())
     }
 
@@ -295,8 +397,8 @@ impl Library for MemoryLibrary {
         tracks
             .iter_mut()
             .filter(|track| {
-                let tracks = self.tracks.read().unwrap();
-                tracks
+                self.tracks
+                    .read()
                     .iter()
                     .find(|t| t.uri == track.uri)
                     .map(|_t| false)
@@ -310,8 +412,8 @@ impl Library for MemoryLibrary {
         albums
             .iter_mut()
             .filter(|album| {
-                let albums = self.albums.read().unwrap();
-                albums
+                self.albums
+                    .read()
                     .iter()
                     .find(|t| t.uri == album.uri)
                     .map(|_t| false)
@@ -325,8 +427,8 @@ impl Library for MemoryLibrary {
         artists
             .iter_mut()
             .filter(|artist| {
-                let artists = self.artists.read().unwrap();
-                artists
+                self.artists
+                    .read()
                     .iter()
                     .find(|t| t.uri == artist.uri)
                     .map(|_t| false)
@@ -337,7 +439,7 @@ impl Library for MemoryLibrary {
     }
 
     fn sync_playlists(&self, playlists: &mut Vec<Playlist>) -> Result<(), Error> {
-        let stored_playlists = { self.playlists.read().unwrap().clone() };
+        let stored_playlists = self.playlists.read();
         for playlist in playlists {
             if stored_playlists.contains(&playlist) {
                 self.sync_playlist(playlist)?;
@@ -352,9 +454,7 @@ impl Library for MemoryLibrary {
         let tracks = self
             .tracks
             .read()
-            .unwrap()
-            .iter()
-            .cloned()
+            .into_iter()
             .filter(|track| track.title.contains(query.as_str()))
             .collect();
 
