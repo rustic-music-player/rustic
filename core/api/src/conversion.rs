@@ -253,7 +253,8 @@ impl From<PlayerEvent> for PlayerEventModel {
             PlayerEvent::Seek(seek) => PlayerEventModel::Seek(seek),
             PlayerEvent::StateChanged(state) => {
                 PlayerEventModel::StateChanged(state == PlayerState::Play)
-            }
+            },
+            PlayerEvent::VolumeChanged(volume) => PlayerEventModel::VolumeChanged(volume),
             _ => unreachable!("this should be filtered before"),
         }
     }
