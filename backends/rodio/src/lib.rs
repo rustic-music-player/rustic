@@ -135,7 +135,7 @@ impl PlayerBackend for RodioBackend {
             sink.set_volume(volume);
             sink.append(source);
             if self.state() != PlayerState::Play {
-                sink.stop();
+                sink.pause();
             }
             let mut current_sink = self.current_sink.lock().unwrap();
             if let Some(prev_sink) = current_sink.take() {
