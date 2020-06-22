@@ -235,7 +235,7 @@ impl LocalProvider {
         let albums: Vec<library::Album> = albums
             .into_iter()
             .map(|mut album| -> Result<library::Album, Error> {
-                library.add_album(&mut album)?;
+                library.sync_album(&mut album)?;
                 Ok(album)
             })
             .filter_map(|a| a.ok())
@@ -257,7 +257,7 @@ impl LocalProvider {
         let artists: Vec<library::Artist> = artists
             .into_iter()
             .map(|mut artist| -> Result<library::Artist, Error> {
-                library.add_artist(&mut artist)?;
+                library.sync_artist(&mut artist)?;
                 Ok(artist)
             })
             .filter_map(|a| a.ok())
