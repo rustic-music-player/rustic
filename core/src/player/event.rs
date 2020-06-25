@@ -1,7 +1,7 @@
 use super::state::PlayerState;
 use crate::library::Track;
 use std::time::Duration;
-use crate::player::QueuedTrack;
+use crate::player::{QueuedTrack, RepeatMode};
 
 #[derive(Debug)]
 pub enum PlayerEvent {
@@ -16,5 +16,7 @@ pub enum PlayerEvent {
     /// The player is waiting for I/O
     Buffering,
     /// The Volume has changed
-    VolumeChanged(f32)
+    VolumeChanged(f32),
+    /// The repeat mode has changed
+    RepeatChanged(RepeatMode)
 }

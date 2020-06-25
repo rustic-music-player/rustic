@@ -11,7 +11,7 @@ pub use crate::library::{
     SharedLibrary, SingleQuery, SingleQueryIdentifier, Track,
 };
 use crate::player::Player;
-pub use crate::player::{PlayerBackend, PlayerEvent, PlayerState, QueuedTrack};
+pub use crate::player::{PlayerBackend, PlayerEvent, PlayerState, QueuedTrack, RepeatMode};
 use crate::provider::{Thumbnail, InternalUri, ProviderItemType, ThumbnailState};
 pub use crate::provider::{Explorer, Provider, ProviderType};
 

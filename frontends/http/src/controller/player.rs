@@ -1,7 +1,10 @@
-use crate::app::ApiClient;
-use actix_web::{get, post, web, HttpResponse, Responder, Result};
-use rustic_api::cursor::from_cursor;
+use actix_web::{get, HttpResponse, post, Responder, Result, web};
 use serde::Deserialize;
+
+use rustic_api::cursor::from_cursor;
+use rustic_api::models::RepeatModeModel;
+
+use crate::app::ApiClient;
 
 #[derive(Deserialize)]
 pub struct PlayerQuery {
@@ -116,6 +119,23 @@ pub async fn set_volume(
     let player_id = from_cursor(&params.player)?;
     client
         .player_set_volume(Some(&player_id), volume.into_inner())
+        .await?;
+
+    Ok(HttpResponse::NoContent().finish())
+}
+
+#[post("/player/repeat")]
+pub async fn default_set_repeat(client: web::Data<ApiClient>, repeat: web::Json<RepeatModeModel>) -> Result<impl Responder> {
+    client.player_set_repeat(None, repeat.into_inner())
+        .await?;
+
+    Ok(HttpResponse::NoContent().finish())
+}
+
+#[post("/players/{player}/repeat")]
+pub async fn set_repeat(client: web::Data<ApiClient>, params: web::Path<PlayerQuery>, repeat: web::Json<RepeatModeModel>) -> Result<impl Responder> {
+    let player_id = from_cursor(&params.player)?;
+    client.player_set_repeat(Some(&player_id), repeat.into_inner())
         .await?;
 
     Ok(HttpResponse::NoContent().finish())

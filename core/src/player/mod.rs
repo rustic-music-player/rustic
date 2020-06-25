@@ -11,7 +11,7 @@ pub use crate::player::backend::PlayerBackend;
 
 pub use self::builder::PlayerBuilder;
 pub use self::event::PlayerEvent;
-pub use self::queue::{PlayerQueue, QueuedTrack};
+pub use self::queue::{PlayerQueue, QueuedTrack, RepeatMode};
 pub use self::state::PlayerState;
 use crate::player::bus::PlayerBusCommand;
 use crate::Rustic;

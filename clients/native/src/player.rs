@@ -68,6 +68,13 @@ impl PlayerApiClient for RusticNativeClient {
         Ok(())
     }
 
+    async fn player_set_repeat(&self, player_id: Option<&str>, repeat: RepeatModeModel) -> Result<()> {
+        let player = self.get_player_or_default(player_id)?;
+        player.queue.set_repeat(repeat.into()).await?;
+
+        Ok(())
+    }
+
     fn observe_player(&self, player_id: Option<&str>) -> BoxStream<'static, PlayerEventModel> {
         let player = self.get_player_or_default(player_id).unwrap();
 
@@ -89,6 +96,7 @@ async fn player_to_model(player_id: String, player: Arc<Player>) -> Result<Playe
         player.queue.current().await?.map(TrackModel::from)
     };
     let volume = player.backend.volume();
+    let repeat_mode = player.queue.repeat().await?;
 
     Ok(PlayerModel {
         cursor: to_cursor(&player_id),
@@ -96,5 +104,6 @@ async fn player_to_model(player_id: String, player: Arc<Player>) -> Result<Playe
         playing: (player_state == PlayerState::Play),
         volume,
         current,
+        repeat: repeat_mode.into()
     })
 }

@@ -2,7 +2,7 @@ use std::convert::TryFrom;
 
 use futures::StreamExt;
 
-use rustic_core::{Album, Artist, PlayerEvent, PlayerState, Playlist, ProviderType, QueuedTrack, Track};
+use rustic_core::{Album, Artist, PlayerEvent, PlayerState, Playlist, ProviderType, QueuedTrack, Track, RepeatMode};
 use rustic_core::provider::{Authentication, AuthState, InternalUri, ProviderFolder, ProviderItem, ProviderItemType, Thumbnail};
 use rustic_core::sync::{SyncEvent, SyncItem, SyncItemState};
 use rustic_extension_api::ExtensionMetadata;
@@ -312,6 +312,26 @@ impl From<InternalUri> for Cursor {
             Album(uri) => Cursor::Album(to_cursor(&uri)),
             Artist(uri) => Cursor::Artist(to_cursor(&uri)),
             Playlist(uri) => Cursor::Playlist(to_cursor(&uri)),
+        }
+    }
+}
+
+impl From<RepeatMode> for RepeatModeModel {
+    fn from(repeat: RepeatMode) -> Self {
+        match repeat {
+            RepeatMode::None => RepeatModeModel::None,
+            RepeatMode::Single => RepeatModeModel::Single,
+            RepeatMode::All => RepeatModeModel::All,
+        }
+    }
+}
+
+impl From<RepeatModeModel> for RepeatMode {
+    fn from(repeat: RepeatModeModel) -> Self {
+        match repeat {
+            RepeatModeModel::None => RepeatMode::None,
+            RepeatModeModel::Single => RepeatMode::Single,
+            RepeatModeModel::All => RepeatMode::All,
         }
     }
 }

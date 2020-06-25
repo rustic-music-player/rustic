@@ -507,6 +507,16 @@ impl<T, TRes> PlayerApiClient for RusticHttpClient<T, TRes>
         Ok(())
     }
 
+    async fn player_set_repeat(&self, player_id: Option<&str>, repeat: RepeatModeModel) -> Result<()> {
+        let url = match player_id {
+            Some(id) => format!("/api/players/{}/repeat", id),
+            None => "/api/player/repeat".to_string(),
+        };
+        self.post(&url, repeat).await?;
+
+        Ok(())
+    }
+
     fn observe_player(&self, _player_id: Option<&str>) -> BoxStream<'static, PlayerEventModel> {
         unimplemented!("requires socket api")
     }

@@ -137,5 +137,7 @@ pub trait PlayerApiClient: Sync + Send {
 
     async fn player_set_volume(&self, player_id: Option<&str>, volume: f32) -> Result<()>;
 
+    async fn player_set_repeat(&self, player_id: Option<&str>, repeat: RepeatModeModel) -> Result<()>;
+
     fn observe_player(&self, player_id: Option<&str>) -> BoxStream<'static, PlayerEventModel>;
 }

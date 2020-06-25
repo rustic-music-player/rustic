@@ -17,6 +17,13 @@ pub struct QueuedTrack {
     pub playing: bool
 }
 
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
+pub enum RepeatMode {
+    None,
+    Single,
+    All
+}
+
 #[async_trait]
 pub trait PlayerQueue: Send + Sync + Debug {
     /// Put a single track at the end of the current queue
@@ -52,4 +59,12 @@ pub trait PlayerQueue: Send + Sync + Debug {
     /// Move item at index_before to index_after
     /// Should fail when index_before or index_after are out of bounds
     async fn reorder_item(&self, index_before: usize, index_after: usize) -> Result<(), Error>;
+
+    async fn set_shuffle(&self, shuffle: bool) -> Result<(), Error>;
+
+    async fn shuffle(&self) -> Result<bool, Error>;
+
+    async fn set_repeat(&self, repeat: RepeatMode) -> Result<(), Error>;
+
+    async fn repeat(&self) -> Result<RepeatMode, Error>;
 }

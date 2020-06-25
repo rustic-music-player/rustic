@@ -1,4 +1,4 @@
-use crate::models::TrackModel;
+use crate::models::{TrackModel, RepeatModeModel};
 use serde::{Deserialize, Serialize};
 #[cfg(target_arch = "wasm32")]
 use wasm_bindgen::prelude::*;
@@ -14,4 +14,5 @@ pub struct PlayerModel {
     pub playing: bool,
     pub volume: f32,
     pub current: Option<TrackModel>,
+    pub repeat: RepeatModeModel,
 }

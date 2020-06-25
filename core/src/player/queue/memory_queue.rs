@@ -5,7 +5,7 @@ use pinboard::NonEmptyPinboard;
 
 use async_trait::async_trait;
 
-use crate::player::{PlayerBuilder, PlayerBus, PlayerCommand};
+use crate::player::{PlayerBuilder, PlayerBus, PlayerCommand, RepeatMode};
 use crate::{PlayerEvent, Track};
 
 use super::{PlayerQueue, QueuedTrack};
@@ -16,6 +16,7 @@ pub struct MemoryQueue {
     current_index: atomic::AtomicUsize,
     current_track: NonEmptyPinboard<Option<Track>>,
     bus: PlayerBus,
+    repeat: NonEmptyPinboard<RepeatMode>,
 }
 
 impl MemoryQueue {
@@ -25,6 +26,7 @@ impl MemoryQueue {
             current_index: atomic::AtomicUsize::new(0),
             current_track: NonEmptyPinboard::new(None),
             bus,
+            repeat: NonEmptyPinboard::new(RepeatMode::None),
         }
     }
 
@@ -169,11 +171,18 @@ impl PlayerQueue for MemoryQueue {
     async fn next(&self) -> Result<Option<()>, Error> {
         let mut current_index = self.current_index.load(atomic::Ordering::Relaxed);
         let queue = self.queue.read();
+        let repeat_mode = self.repeat().await?;
 
         if current_index >= queue.len() {
-            return Ok(None);
+            if repeat_mode == RepeatMode::None {
+                return Ok(None);
+            }
+            if repeat_mode == RepeatMode::All {
+                current_index = 0;
+            }
+        }else if repeat_mode != RepeatMode::Single {
+            current_index += 1;
         }
-        current_index += 1;
         self.current_index
             .store(current_index, atomic::Ordering::Relaxed);
 
@@ -193,6 +202,23 @@ impl PlayerQueue for MemoryQueue {
         self.queue_changed().await?;
 
         Ok(())
+    }
+
+    async fn set_shuffle(&self, shuffle: bool) -> Result<(), Error> {
+        unimplemented!()
+    }
+
+    async fn shuffle(&self) -> Result<bool, Error> {
+        unimplemented!()
+    }
+
+    async fn set_repeat(&self, repeat: RepeatMode) -> Result<(), Error> {
+        self.repeat.set(repeat);
+        Ok(())
+    }
+
+    async fn repeat(&self) -> Result<RepeatMode, Error> {
+        Ok(self.repeat.read())
     }
 }
 
