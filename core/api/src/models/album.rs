@@ -9,6 +9,7 @@ use wasm_bindgen::prelude::*;
     target_arch = "wasm32",
     derive(typescript_definitions::TypescriptDefinition)
 )]
+#[serde(rename_all="camelCase")]
 pub struct AlbumModel {
     pub cursor: String,
     pub title: String,
@@ -16,6 +17,7 @@ pub struct AlbumModel {
     pub tracks: Vec<TrackModel>,
     pub provider: ProviderTypeModel,
     pub coverart: Option<String>,
+    pub in_library: bool
 }
 
 impl PartialOrd for AlbumModel {

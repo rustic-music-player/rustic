@@ -59,14 +59,14 @@ impl ProviderInstance for LocalProvider {
     async fn sync(&self, library: SharedLibrary) -> Result<SyncResult, Error> {
         let scanner = scanner::Scanner::new(&self.path);
         let tracks = scanner.scan()?;
-        let albums = LocalProvider::sync_albums(&library, &tracks);
         let artists = LocalProvider::sync_artists(&library, &tracks);
+        let albums = LocalProvider::sync_albums(&library, &tracks, &artists);
         let mut tracks = tracks
             .into_iter()
             .map(library::Track::from)
             .map(|mut t| {
-                LocalProvider::apply_album_id(&albums, &mut t);
                 LocalProvider::apply_artist_id(&artists, &mut t);
+                LocalProvider::apply_album_id(&albums, &mut t);
                 t
             })
             .collect();
@@ -221,13 +221,16 @@ impl From<scanner::Track> for Option<library::Artist> {
 }
 
 impl LocalProvider {
-    fn sync_albums(library: &SharedLibrary, tracks: &[Track]) -> Vec<library::Album> {
+    fn sync_albums(library: &SharedLibrary, tracks: &[Track], artists: &[library::Artist]) -> Vec<library::Album> {
         let albums: Vec<library::Album> = tracks
             .iter()
             .cloned()
             .filter_map(Option::<library::Album>::from)
-            .fold(Vec::new(), |mut albums, album| {
+            .fold(Vec::new(), |mut albums, mut album| {
                 if albums.iter().find(|a| a.title == album.title).is_none() {
+                    if let Some(artist) = artists.iter().find(|artist| Some(&artist.name) == album.artist.as_ref().map(|artist| &artist.name)) {
+                        album.artist_id = artist.id;
+                    }
                     albums.push(album);
                 }
                 albums

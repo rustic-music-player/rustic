@@ -11,8 +11,9 @@ use serde_json::from_reader;
 
 use rustic_core::{
     Album, Artist, Library, MultiQuery, Playlist, SearchResults, SingleQuery,
-    SingleQueryIdentifier, Track,
+    Track,
 };
+use rustic_core::library::Identifiable;
 use rustic_store_helpers::{join_album, join_albums, join_track};
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -117,17 +118,19 @@ impl MemoryLibrary {
             log::error!("Storing memory library failed {}", e);
         }
     }
+
+    fn find<I, T>(&self, iter: &mut I, query: &SingleQuery) -> Option<T> where
+        I: Iterator<Item = T>,
+        T: Identifiable {
+        iter.find(|entity| query.matches(entity.get_identifier()))
+    }
 }
 
 impl Library for MemoryLibrary {
     fn query_track(&self, query: SingleQuery) -> Result<Option<Track>, Error> {
         trace!("Query Track {:?}", query);
         let mut tracks = self.tracks.read().into_iter();
-        let track = match query.identifier {
-            SingleQueryIdentifier::Id(id) => tracks.find(|track| track.id == Some(id)),
-            SingleQueryIdentifier::Uri(uri) => tracks.find(|track| track.uri == uri),
-        };
-        let track = if let Some(track) = track {
+        let track = if let Some(track) = self.find(&mut tracks, &query) {
             Some(join_track(self, track, query.joins)?)
         } else {
             None
@@ -154,11 +157,7 @@ impl Library for MemoryLibrary {
     fn query_album(&self, query: SingleQuery) -> Result<Option<Album>, Error> {
         trace!("Query Album {:?}", query);
         let mut albums = self.albums.read().into_iter();
-        let album = match query.identifier {
-            SingleQueryIdentifier::Id(id) => albums.find(|album| album.id == Some(id)),
-            SingleQueryIdentifier::Uri(uri) => albums.find(|album| album.uri == uri),
-        };
-        let album = if let Some(album) = album {
+        let album = if let Some(album) = self.find(&mut albums, &query) {
             Some(join_album(self, album, query.joins)?)
         } else {
             None
@@ -185,14 +184,8 @@ impl Library for MemoryLibrary {
 
     fn query_artist(&self, query: SingleQuery) -> Result<Option<Artist>, Error> {
         trace!("Query Artist {:?}", query);
-        let artist = match query.identifier {
-            SingleQueryIdentifier::Id(id) => self
-                .artists
-                .read()
-                .into_iter()
-                .find(|artist| artist.id == Some(id)),
-            _ => None,
-        };
+        let mut artists = self.artists.read().into_iter();
+        let artist = self.find(&mut artists, &query);
         Ok(artist)
     }
 
@@ -203,11 +196,8 @@ impl Library for MemoryLibrary {
 
     fn query_playlist(&self, query: SingleQuery) -> Result<Option<Playlist>, Error> {
         trace!("Query Playlist {:?}", query);
-        let mut playlist_iter = self.playlists.read().into_iter();
-        let playlist = match query.identifier {
-            SingleQueryIdentifier::Id(id) => playlist_iter.find(|playlist| playlist.id == Some(id)),
-            SingleQueryIdentifier::Uri(uri) => playlist_iter.find(|playlist| playlist.uri == uri),
-        };
+        let mut playlists = self.playlists.read().into_iter();
+        let playlist = self.find(&mut playlists, &query);
         Ok(playlist)
     }
 
@@ -264,11 +254,16 @@ impl Library for MemoryLibrary {
     }
 
     fn add_artist(&self, artist: &mut Artist) -> Result<(), Error> {
-        artist.id = Some(self.artist_id.fetch_add(1, Ordering::Relaxed));
-        let mut artists = self.artists.read();
-        artists.push(artist.clone());
-        self.artists.set(artists);
-        self.persist();
+        trace!("Adding artist {}", artist.name);
+        if let Some(a) = self.query_artist(SingleQuery::uri(artist.uri.clone()))? {
+            artist.id = a.id;
+        }else {
+            artist.id = Some(self.artist_id.fetch_add(1, Ordering::Relaxed));
+            let mut artists = self.artists.read();
+            artists.push(artist.clone());
+            self.artists.set(artists);
+            self.persist();
+        }
         Ok(())
     }
 

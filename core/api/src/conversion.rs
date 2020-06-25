@@ -19,6 +19,7 @@ impl From<Album> for AlbumModel {
             artist: album.artist.map(ArtistModel::from),
             tracks: album.tracks.into_iter().map(TrackModel::from).collect(),
             provider: album.provider.into(),
+            in_library: album.id.is_some(),
             coverart: if album.thumbnail.has_thumbnail() {
                 Some(format!("/api/albums/{}/coverart", &cursor))
             } else {

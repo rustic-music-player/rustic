@@ -6,7 +6,7 @@ pub struct SingleQuery {
     pub joins: LibraryQueryJoins,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub enum SingleQueryIdentifier {
     Id(usize),
     Uri(String),
@@ -52,6 +52,10 @@ impl SingleQuery {
             identifier: SingleQueryIdentifier::Uri(uri),
             ..SingleQuery::default()
         }
+    }
+    
+    pub fn matches(&self, identifier: SingleQueryIdentifier) -> bool {
+        self.identifier == identifier
     }
 }
 
