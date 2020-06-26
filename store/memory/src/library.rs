@@ -9,10 +9,7 @@ use pinboard::NonEmptyPinboard;
 use serde::{Deserialize, Serialize};
 use serde_json::from_reader;
 
-use rustic_core::{
-    Album, Artist, Library, MultiQuery, Playlist, SearchResults, SingleQuery,
-    Track,
-};
+use rustic_core::{Album, Artist, Library, MultiQuery, Playlist, SearchResults, SingleQuery, Track, SingleQueryIdentifier};
 use rustic_core::library::Identifiable;
 use rustic_store_helpers::{join_album, join_albums, join_track};
 
@@ -31,6 +28,7 @@ struct LibrarySnapshot {
 impl From<LibrarySnapshot> for MemoryLibrary {
     fn from(snapshot: LibrarySnapshot) -> Self {
         MemoryLibrary {
+            persist: true,
             album_id: AtomicUsize::new(snapshot.album_id),
             artist_id: AtomicUsize::new(snapshot.artist_id),
             track_id: AtomicUsize::new(snapshot.track_id),
@@ -45,6 +43,7 @@ impl From<LibrarySnapshot> for MemoryLibrary {
 
 #[derive(Debug)]
 pub struct MemoryLibrary {
+    persist: bool,
     album_id: AtomicUsize,
     artist_id: AtomicUsize,
     track_id: AtomicUsize,
@@ -58,6 +57,7 @@ pub struct MemoryLibrary {
 impl Default for MemoryLibrary {
     fn default() -> Self {
         MemoryLibrary {
+            persist: false,
             album_id: AtomicUsize::new(1),
             artist_id: AtomicUsize::new(1),
             track_id: AtomicUsize::new(1),
@@ -71,7 +71,7 @@ impl Default for MemoryLibrary {
 }
 
 impl MemoryLibrary {
-    pub fn new() -> MemoryLibrary {
+    pub fn new(persist: bool) -> MemoryLibrary {
         let library = match MemoryLibrary::try_load() {
             Ok(lib) => lib,
             Err(e) => {
@@ -79,7 +79,9 @@ impl MemoryLibrary {
                 None
             }
         };
-        library.unwrap_or_default()
+        let mut library = library.unwrap_or_default();
+        library.persist = persist;
+        library
     }
 
     fn try_load() -> Result<Option<Self>, Error> {
@@ -108,6 +110,9 @@ impl MemoryLibrary {
     }
 
     fn persist(&self) {
+        if !self.persist {
+            return
+        }
         let snapshot = self.snapshot();
         if let Err(e) = fs::OpenOptions::new()
             .create(true)
@@ -122,7 +127,10 @@ impl MemoryLibrary {
     fn find<I, T>(&self, iter: &mut I, query: &SingleQuery) -> Option<T> where
         I: Iterator<Item = T>,
         T: Identifiable {
-        iter.find(|entity| query.matches(entity.get_identifier()))
+        match query.identifier {
+            SingleQueryIdentifier::Id(id) => iter.find(|entity| entity.get_id() == Some(id)),
+            SingleQueryIdentifier::Uri(ref uri) => iter.find(|entity| &entity.get_uri() == uri),
+        }
     }
 }
 
@@ -459,5 +467,33 @@ impl Library for MemoryLibrary {
             artists: vec![],
             playlists: vec![],
         })
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use rustic_core::{Artist, ProviderType, Library};
+    use std::collections::HashMap;
+    use crate::MemoryLibrary;
+
+    #[test]
+    fn adding_the_same_artist_twice_should_only_store_it_once() {
+        let mut artist = Artist {
+            id: None,
+            name: "Test Artist".into(),
+            uri: "test:artist".into(),
+            image_url: None,
+            meta: HashMap::new(),
+            provider: ProviderType::Internal,
+            albums: Vec::new(),
+            playlists: Vec::new()
+        };
+        let mut second = artist.clone();
+        let store = MemoryLibrary::default();
+        store.add_artist(&mut artist).unwrap();
+
+        store.add_artist(&mut second).unwrap();
+
+        assert_eq!(second.id, artist.id);
     }
 }

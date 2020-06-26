@@ -53,10 +53,6 @@ impl SingleQuery {
             ..SingleQuery::default()
         }
     }
-    
-    pub fn matches(&self, identifier: SingleQueryIdentifier) -> bool {
-        self.identifier == identifier
-    }
 }
 
 impl QueryJoins for SingleQuery {

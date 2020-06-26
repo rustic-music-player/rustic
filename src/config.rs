@@ -127,7 +127,9 @@ impl Default for ProviderConfig {
 #[derive(Deserialize, Clone, Debug)]
 #[serde(tag = "store", rename_all = "lowercase")]
 pub enum LibraryConfig {
-    Memory,
+    Memory {
+        persist: bool
+    },
     #[cfg(feature = "sqlite-store")]
     SQLite {
         path: String,
@@ -140,7 +142,9 @@ pub enum LibraryConfig {
 
 impl Default for LibraryConfig {
     fn default() -> Self {
-        LibraryConfig::Memory
+        LibraryConfig::Memory {
+            persist: true
+        }
     }
 }
 

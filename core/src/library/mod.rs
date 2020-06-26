@@ -15,5 +15,14 @@ pub use self::queries::*;
 pub use self::track::Track;
 
 pub trait Identifiable {
-    fn get_identifier(&self) -> SingleQueryIdentifier;
+    fn get_uri(&self) -> String;
+    fn get_id(&self) -> Option<usize>;
+
+    fn get_identifier(&self) -> SingleQueryIdentifier {
+        if let Some(id) = self.get_id() {
+            SingleQueryIdentifier::Id(id)
+        } else {
+            SingleQueryIdentifier::Uri(self.get_uri())
+        }
+    }
 }

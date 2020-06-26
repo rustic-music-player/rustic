@@ -5,7 +5,6 @@ use serde_derive::{Deserialize, Serialize};
 
 use crate::library::{Album, Artist, Identifiable, MetaValue};
 use crate::provider::{ProviderType, self};
-use crate::SingleQueryIdentifier;
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct Track {
@@ -52,11 +51,11 @@ impl std::fmt::Display for Track {
 }
 
 impl Identifiable for Track {
-    fn get_identifier(&self) -> SingleQueryIdentifier {
-        if let Some(id) = self.id {
-            SingleQueryIdentifier::Id(id)
-        } else {
-            SingleQueryIdentifier::Uri(self.uri.clone())
-        }
+    fn get_uri(&self) -> String {
+        self.uri.clone()
+    }
+
+    fn get_id(&self) -> Option<usize> {
+        self.id
     }
 }

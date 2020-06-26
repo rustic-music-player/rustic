@@ -4,7 +4,6 @@ use serde_derive::{Deserialize, Serialize};
 
 use crate::library::{Identifiable, Track};
 use crate::provider::ProviderType;
-use crate::SingleQueryIdentifier;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Playlist {
@@ -36,11 +35,11 @@ impl Ord for Playlist {
 }
 
 impl Identifiable for Playlist {
-    fn get_identifier(&self) -> SingleQueryIdentifier {
-        if let Some(id) = self.id {
-            SingleQueryIdentifier::Id(id)
-        } else {
-            SingleQueryIdentifier::Uri(self.uri.clone())
-        }
+    fn get_uri(&self) -> String {
+        self.uri.clone()
+    }
+
+    fn get_id(&self) -> Option<usize> {
+        self.id
     }
 }

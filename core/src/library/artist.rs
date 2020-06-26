@@ -3,7 +3,7 @@ use std::collections::HashMap;
 use serde_derive::{Deserialize, Serialize};
 
 use crate::library::{Identifiable, MetaValue};
-use crate::{Album, Playlist, ProviderType, SingleQueryIdentifier};
+use crate::{Album, Playlist, ProviderType};
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct Artist {
@@ -26,11 +26,11 @@ impl PartialEq for Artist {
 impl Eq for Artist {}
 
 impl Identifiable for Artist {
-    fn get_identifier(&self) -> SingleQueryIdentifier {
-        if let Some(id) = self.id {
-            SingleQueryIdentifier::Id(id)
-        } else {
-            SingleQueryIdentifier::Uri(self.uri.clone())
-        }
+    fn get_uri(&self) -> String {
+        self.uri.clone()
+    }
+
+    fn get_id(&self) -> Option<usize> {
+        self.id
     }
 }

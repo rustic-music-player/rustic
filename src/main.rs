@@ -72,7 +72,7 @@ async fn setup_instance(
     let providers = setup_providers(&config, credential_store.as_ref()).await?;
 
     let store: Box<dyn rustic_core::Library> = match config.library {
-        LibraryConfig::Memory => Box::new(MemoryLibrary::new()),
+        LibraryConfig::Memory { persist } => Box::new(MemoryLibrary::new(persist)),
         #[cfg(feature = "sqlite-store")]
         LibraryConfig::SQLite { ref path } => {
             let library = rustic_sqlite_store::SqliteLibrary::new(path.clone())?;
