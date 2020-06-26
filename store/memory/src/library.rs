@@ -9,7 +9,7 @@ use pinboard::NonEmptyPinboard;
 use serde::{Deserialize, Serialize};
 use serde_json::from_reader;
 
-use rustic_core::{Album, Artist, Library, MultiQuery, Playlist, SearchResults, SingleQuery, Track, SingleQueryIdentifier};
+use rustic_core::{Album, Artist, Library, MultiQuery, Playlist, SearchResults, SingleQuery, SingleQueryIdentifier, Track};
 use rustic_core::library::Identifiable;
 use rustic_store_helpers::{join_album, join_albums, join_track};
 
@@ -113,19 +113,30 @@ impl MemoryLibrary {
         if !self.persist {
             return
         }
+        // TODO: this should happen on an interval on a background thread
         let snapshot = self.snapshot();
-        if let Err(e) = fs::OpenOptions::new()
+        tokio::spawn(async {
+            if let Err(e) = MemoryLibrary::store(snapshot).await {
+                log::error!("Storing memory library failed {}", e);
+            }
+        });
+    }
+
+    async fn store(snapshot: LibrarySnapshot) -> Result<(), failure::Error> {
+        use tokio::io::AsyncWriteExt;
+        let mut file = tokio::fs::OpenOptions::new()
             .create(true)
             .write(true)
             .open(".store.json")
-            .and_then(|file| Ok(serde_json::to_writer(file, &snapshot)?))
-        {
-            log::error!("Storing memory library failed {}", e);
-        }
+            .await?;
+        let content = serde_json::to_string(&snapshot)?;
+        file.write(content.as_bytes()).await?;
+
+        Ok(())
     }
 
     fn find<I, T>(&self, iter: &mut I, query: &SingleQuery) -> Option<T> where
-        I: Iterator<Item = T>,
+        I: Iterator<Item=T>,
         T: Identifiable {
         match query.identifier {
             SingleQueryIdentifier::Id(id) => iter.find(|entity| entity.get_id() == Some(id)),
@@ -472,8 +483,10 @@ impl Library for MemoryLibrary {
 
 #[cfg(test)]
 mod tests {
-    use rustic_core::{Artist, ProviderType, Library};
     use std::collections::HashMap;
+
+    use rustic_core::{Artist, Library, ProviderType};
+
     use crate::MemoryLibrary;
 
     #[test]
