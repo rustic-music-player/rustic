@@ -93,6 +93,10 @@ impl PlayerApiClient for TestApiClient {
         unimplemented!()
     }
 
+    async fn player_set_repeat(&self, player_id: Option<&str>, repeat: RepeatModeModel) -> Result<()> {
+        unimplemented!()
+    }
+
     fn observe_player(&self, player_id: Option<&str>) -> BoxStream<'static, PlayerEventModel> {
         unimplemented!()
     }
