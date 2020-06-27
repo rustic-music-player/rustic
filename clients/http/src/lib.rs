@@ -33,6 +33,16 @@ impl<T, TRes> RusticHttpClient<T, TRes>
             _marker: PhantomData,
         }
     }
+
+    fn url_for_item(cursor: Cursor) -> String {
+        let url = match cursor {
+            Cursor::Track(cursor) => format!("/api/library/tracks/{}", cursor),
+            Cursor::Album(cursor) => format!("/api/library/albums/{}", cursor),
+            Cursor::Artist(cursor) => format!("/api/library/artists/{}", cursor),
+            Cursor::Playlist(cursor) => format!("/api/library/playlists/{}", cursor),
+        };
+        url
+    }
 }
 
 #[cfg_attr(target_arch = "wasm32", async_trait(? Send))]
@@ -283,14 +293,15 @@ impl<T, TRes> LibraryApiClient for RusticHttpClient<T, TRes>
     }
 
     async fn add_to_library(&self, cursor: Cursor) -> Result<()> {
-        let url = match cursor {
-            Cursor::Track(cursor) => format!("/api/library/tracks/{}", cursor),
-            Cursor::Album(cursor) => format!("/api/library/albums/{}", cursor),
-            Cursor::Artist(cursor) => format!("/api/library/artists/{}", cursor),
-            Cursor::Playlist(cursor) => format!("/api/library/playlists/{}", cursor),
-        };
-
+        let url = <RusticHttpClient<T, TRes>>::url_for_item(cursor);
         self.post(&url, ()).await?.no_content()?;
+
+        Ok(())
+    }
+
+    async fn remove_from_library(&self, cursor: Cursor) -> Result<()> {
+        let url = <RusticHttpClient<T, TRes>>::url_for_item(cursor);
+        self.delete(&url).await?;
 
         Ok(())
     }
@@ -299,6 +310,7 @@ impl<T, TRes> LibraryApiClient for RusticHttpClient<T, TRes>
         unimplemented!("requires socket api")
     }
 }
+
 
 #[cfg_attr(target_arch = "wasm32", async_trait(? Send))]
 #[cfg_attr(not(target_arch = "wasm32"), async_trait)]

@@ -154,6 +154,22 @@ impl rustic_core::Library for SqliteLibrary {
         self.playlists.sync_all(playlists)
     }
 
+    fn remove_track(&self, _track: &Track) -> Result<(), Error> {
+        unimplemented!()
+    }
+
+    fn remove_album(&self, _album: &Album) -> Result<(), Error> {
+        unimplemented!()
+    }
+
+    fn remove_artist(&self, _artist: &Artist) -> Result<(), Error> {
+        unimplemented!()
+    }
+
+    fn remove_playlist(&self, _playlist: &Playlist) -> Result<(), Error> {
+        unimplemented!()
+    }
+
     fn search(&self, _query: String) -> Result<SearchResults, Error> {
         unimplemented!()
     }

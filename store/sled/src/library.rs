@@ -272,6 +272,22 @@ impl rustic_core::Library for SledLibrary {
         Ok(())
     }
 
+    fn remove_track(&self, _track: &Track) -> Result<(), Error> {
+        unimplemented!()
+    }
+
+    fn remove_album(&self, _album: &Album) -> Result<(), Error> {
+        unimplemented!()
+    }
+
+    fn remove_artist(&self, _artist: &Artist) -> Result<(), Error> {
+        unimplemented!()
+    }
+
+    fn remove_playlist(&self, _playlist: &Playlist) -> Result<(), Error> {
+        unimplemented!()
+    }
+
     fn search(&self, query: String) -> Result<SearchResults, Error> {
         let tracks = search_entities(&self.tracks_tree, |track: &Track| {
             track.title.contains(&query)

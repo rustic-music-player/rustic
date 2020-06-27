@@ -123,5 +123,13 @@ pub trait Library: Sync + Send {
             .collect()
     }
 
+    fn remove_track(&self, track: &Track) -> Result<(), Error>;
+
+    fn remove_album(&self, album: &Album) -> Result<(), Error>;
+
+    fn remove_artist(&self, artist: &Artist) -> Result<(), Error>;
+
+    fn remove_playlist(&self, playlist: &Playlist) -> Result<(), Error>;
+
     fn search(&self, query: String) -> Result<SearchResults, Error>;
 }

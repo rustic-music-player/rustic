@@ -464,6 +464,50 @@ impl Library for MemoryLibrary {
         Ok(())
     }
 
+    fn remove_track(&self, track: &Track) -> Result<(), Error> {
+        let mut tracks = self.tracks.read();
+        if let Some(position) = tracks.iter().position(|t| t.id == track.id) {
+            tracks.remove(position);
+            self.tracks.set(tracks);
+            Ok(())
+        }else {
+            Ok(())
+        }
+    }
+
+    fn remove_album(&self, album: &Album) -> Result<(), Error> {
+        let mut albums = self.albums.read();
+        if let Some(position) = albums.iter().position(|t| t.id == album.id) {
+            albums.remove(position);
+            self.albums.set(albums);
+            Ok(())
+        }else {
+            Ok(())
+        }
+    }
+
+    fn remove_artist(&self, artist: &Artist) -> Result<(), Error> {
+        let mut artists = self.artists.read();
+        if let Some(position) = artists.iter().position(|t| t.id == artist.id) {
+            artists.remove(position);
+            self.artists.set(artists);
+            Ok(())
+        }else {
+            Ok(())
+        }
+    }
+
+    fn remove_playlist(&self, playlist: &Playlist) -> Result<(), Error> {
+        let mut playlists = self.playlists.read();
+        if let Some(position) = playlists.iter().position(|t| t.id == playlist.id) {
+            playlists.remove(position);
+            self.playlists.set(playlists);
+            Ok(())
+        }else {
+            Ok(())
+        }
+    }
+
     fn search(&self, query: String) -> Result<SearchResults, Error> {
         let tracks = self
             .tracks

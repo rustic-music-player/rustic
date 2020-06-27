@@ -78,6 +78,8 @@ pub trait LibraryApiClient: Sync + Send {
 
     async fn add_to_library(&self, cursor: Cursor) -> Result<()>;
 
+    async fn remove_from_library(&self, cursor: Cursor) -> Result<()>;
+
     fn sync_state(&self) -> BoxStream<'static, SyncStateModel>;
 }
 

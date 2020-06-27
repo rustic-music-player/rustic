@@ -23,7 +23,10 @@ impl PlaylistApiClient for RusticNativeClient {
     }
 
     async fn remove_playlist(&self, cursor: &str) -> Result<()> {
-        unimplemented!()
+        let playlist = self.app.library.query_playlist(from_cursor(cursor)?.into())?.ok_or_else(|| format_err!("unknown playlist"))?;
+        self.app.library.remove_playlist(&playlist)?;
+
+        Ok(())
     }
 
     async fn add_track_to_playlist(&self, cursor: &str, track: &str) -> Result<()> {

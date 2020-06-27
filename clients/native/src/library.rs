@@ -149,6 +149,15 @@ impl LibraryApiClient for RusticNativeClient {
         }
     }
 
+    async fn remove_from_library(&self, cursor: Cursor) -> Result<()> {
+        match cursor.try_into()? {
+            InternalUri::Track(uri) => self.remove_track_from_library(uri.into()).await,
+            InternalUri::Album(uri) => self.remove_album_from_library(uri.into()).await,
+            InternalUri::Artist(uri) => self.remove_artist_from_library(uri.into()).await,
+            InternalUri::Playlist(uri) => self.remove_playlist_from_library(uri.into()).await,
+        }
+    }
+
     fn sync_state(&self) -> BoxStream<'static, SyncStateModel> {
         from_channel(self.app.sync.events.clone())
             .map(SyncStateModel::from)
@@ -185,6 +194,38 @@ impl RusticNativeClient {
         let playlist = self.app.query_playlist(query).await?;
         if let Some(mut playlist) = playlist {
             self.app.library.add_playlist(&mut playlist)?;
+        }
+        Ok(())
+    }
+
+    async fn remove_track_from_library(&self, query: SingleQuery) -> Result<()> {
+        let track = self.app.query_track(query).await?;
+        if let Some(track) = track {
+            self.app.library.remove_track(&track)?;
+        }
+        Ok(())
+    }
+
+    async fn remove_album_from_library(&self, query: SingleQuery) -> Result<()> {
+        let album = self.app.query_album(query).await?;
+        if let Some(album) = album {
+            self.app.library.remove_album(&album)?;
+        }
+        Ok(())
+    }
+
+    async fn remove_artist_from_library(&self, query: SingleQuery) -> Result<()> {
+        let artist = self.app.query_artist(query).await?;
+        if let Some(artist) = artist {
+            self.app.library.remove_artist(&artist)?;
+        }
+        Ok(())
+    }
+
+    async fn remove_playlist_from_library(&self, query: SingleQuery) -> Result<()> {
+        let playlist = self.app.query_playlist(query).await?;
+        if let Some(playlist) = playlist {
+            self.app.library.remove_playlist(&playlist)?;
         }
         Ok(())
     }
