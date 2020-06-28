@@ -1,6 +1,17 @@
 use rustic_api::models::*;
 
-pub mod player;
+pub use self::artist::*;
+pub use self::album::*;
+pub use self::player::*;
+pub use self::playlist::*;
+pub use self::track::*;
+
+mod artist;
+mod album;
+mod player;
+mod playlist;
+mod track;
+
 
 #[derive(Debug)]
 #[repr(C)]
@@ -21,6 +32,11 @@ pub struct FFIOpenResultModel;
 #[repr(C)]
 // TODO: add fields
 pub struct FFICoverArtModel;
+
+#[derive(Debug)]
+#[repr(C)]
+// TODO: add fields
+pub struct FFISyncStateModel;
 
 impl From<SearchResults> for FFISearchResults {
     fn from(_: SearchResults) -> Self {
@@ -43,5 +59,11 @@ impl From<OpenResultModel> for FFIOpenResultModel {
 impl From<CoverArtModel> for FFICoverArtModel {
     fn from(_: CoverArtModel) -> Self {
         FFICoverArtModel
+    }
+}
+
+impl From<SyncStateModel> for FFISyncStateModel {
+    fn from(_: SyncStateModel) -> Self {
+        FFISyncStateModel
     }
 }

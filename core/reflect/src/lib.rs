@@ -42,6 +42,7 @@ pub fn put_trait(item_trait: ItemTrait) {
                 .map(TraitMethodParameter::from)
                 .collect(),
             return_type: item.sig.output.into(),
+            is_async: item.sig.asyncness.is_some()
         })
         .collect();
 
@@ -65,6 +66,7 @@ pub struct TraitMethodSignature {
     pub name: String,
     pub parameters: Vec<TraitMethodParameter>,
     pub return_type: TraitMethodReturnType,
+    pub is_async: bool
 }
 
 #[derive(Debug, Clone)]
@@ -128,6 +130,13 @@ impl From<ReturnType> for TraitMethodReturnType {
 impl From<Type> for TraitMethodReturnType {
     fn from(path: Type) -> Self {
         match path {
+            Type::Tuple(ref tuple) => {
+                if tuple.elems.len() == 0 {
+                    TraitMethodReturnType::Unit
+                }else {
+                    unimplemented!("From<Type> for TraitMethodReturnType Tuple")
+                }
+            },
             Type::Path(ref type_path) => {
                 let segment = type_path.path.segments.first().unwrap();
                 let ident = segment.ident.to_string();
@@ -190,6 +199,7 @@ impl ToTokens for TraitMethodSignature {
             .iter()
             .map(|param| quote! { parameters.push(#param); })
             .collect();
+        let is_async = self.is_async;
         tokens.extend(quote! {
             {
                 let mut parameters = Vec::new();
@@ -197,7 +207,8 @@ impl ToTokens for TraitMethodSignature {
                 methods.push(rustic_reflect::TraitMethodSignature {
                     name: String::from(#name),
                     parameters,
-                    return_type: #return_type
+                    return_type: #return_type,
+                    is_async: #is_async
                 });
             }
         });

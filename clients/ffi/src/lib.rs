@@ -1,27 +1,30 @@
 use std::ptr;
 
 use libc::*;
+use tokio::runtime::Runtime;
 
+use lazy_static::lazy_static;
+use rustic_api::client::*;
 #[cfg(feature = "http")]
 use rustic_native_http_client::RusticNativeHttpClient;
 
+use crate::client::{Client, RusticClientHandle, to_str};
 use crate::models::*;
-pub use rustic_api::models::*;
 
-use crate::client::{to_str, Client, RusticClientHandle};
-use rustic_api::RusticApiClient;
-
-#[cfg(feature = "async_extern_executor")]
-mod async_extern_executor;
-#[cfg(feature = "sync")]
-mod sync;
+#[macro_use]
+mod helpers;
 
 pub mod models;
 
 pub(crate) mod client;
 pub(crate) mod error;
 
+lazy_static! {
+    static ref RUNTIME: Runtime = Runtime::new().unwrap();
+}
+
 rustic_ffi_client_macros::ffi_client!(RusticApiClient, crate::client::Client);
+rustic_ffi_client_macros::ffi_client!(LibraryApiClient, crate::client::Client);
 
 #[no_mangle]
 #[cfg(feature = "http")]

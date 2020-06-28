@@ -1,6 +1,6 @@
 use futures::stream::BoxStream;
 
-use rustic_reflect_macros::reflect;
+use rustic_reflect_macros::reflect_trait;
 
 use async_trait::async_trait;
 
@@ -9,7 +9,7 @@ use crate::models::*;
 
 pub type Result<T> = std::result::Result<T, failure::Error>;
 
-#[reflect]
+#[reflect_trait]
 #[cfg_attr(target_arch = "wasm32", async_trait(?Send))]
 #[cfg_attr(not(target_arch = "wasm32"), async_trait)]
 pub trait RusticApiClient:
@@ -28,6 +28,7 @@ pub trait RusticApiClient:
     async fn get_thumbnail(&self, cursor: Cursor) -> Result<Option<CoverArtModel>>;
 }
 
+#[reflect_trait]
 #[cfg_attr(target_arch = "wasm32", async_trait(?Send))]
 #[cfg_attr(not(target_arch = "wasm32"), async_trait)]
 pub trait ProviderApiClient: Sync + Send {
@@ -48,6 +49,7 @@ pub trait ProviderApiClient: Sync + Send {
     ) -> Result<()>;
 }
 
+#[reflect_trait]
 #[cfg_attr(target_arch = "wasm32", async_trait(?Send))]
 #[cfg_attr(not(target_arch = "wasm32"), async_trait)]
 pub trait LibraryApiClient: Sync + Send {
@@ -83,6 +85,7 @@ pub trait LibraryApiClient: Sync + Send {
     fn sync_state(&self) -> BoxStream<'static, SyncStateModel>;
 }
 
+#[reflect_trait]
 #[cfg_attr(target_arch = "wasm32", async_trait(?Send))]
 #[cfg_attr(not(target_arch = "wasm32"), async_trait)]
 pub trait QueueApiClient: Sync + Send {
@@ -110,6 +113,7 @@ pub trait QueueApiClient: Sync + Send {
     fn observe_queue(&self, player_id: Option<&str>) -> BoxStream<'static, QueueEventModel>;
 }
 
+#[reflect_trait]
 #[cfg_attr(target_arch = "wasm32", async_trait(?Send))]
 #[cfg_attr(not(target_arch = "wasm32"), async_trait)]
 pub trait PlaylistApiClient: Sync + Send {
@@ -122,6 +126,7 @@ pub trait PlaylistApiClient: Sync + Send {
     async fn remove_track_from_playlist(&self, cursor: &str, track: &str) -> Result<()>;
 }
 
+#[reflect_trait]
 #[cfg_attr(target_arch = "wasm32", async_trait(?Send))]
 #[cfg_attr(not(target_arch = "wasm32"), async_trait)]
 pub trait PlayerApiClient: Sync + Send {

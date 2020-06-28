@@ -6,7 +6,7 @@ use std::ptr::{null, null_mut};
 
 use crate::client::{Client, RusticClientHandle};
 use crate::error::FFIError;
-use crate::models::player::Player;
+use crate::models::FFIPlayerModel;
 
 fn handle_result<T>(result: Result<T, FFIError>, callback: fn(*mut c_char, *const T)) {
     match result {
@@ -18,7 +18,7 @@ fn handle_result<T>(result: Result<T, FFIError>, callback: fn(*mut c_char, *cons
 #[no_mangle]
 pub unsafe extern "C" fn client_get_default_player_async(
     client: *mut RusticClientHandle,
-    callback: fn(*mut c_char, *const Player),
+    callback: fn(*mut c_char, *const FFIPlayerModel),
 ) {
     let client = Client::from_ptr(client);
 

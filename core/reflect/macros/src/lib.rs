@@ -6,7 +6,7 @@ use proc_macro::TokenStream;
 use quote::quote;
 
 #[proc_macro_attribute]
-pub fn reflect(_: TokenStream, input: TokenStream) -> TokenStream {
+pub fn reflect_trait(_: TokenStream, input: TokenStream) -> TokenStream {
     let trait_input = input.clone();
     let trait_item = parse_macro_input!(trait_input as ItemTrait);
 
@@ -14,6 +14,16 @@ pub fn reflect(_: TokenStream, input: TokenStream) -> TokenStream {
 
     input
 }
+//
+// #[proc_macro_attribute]
+// pub fn reflect_struct(_: TokenStream, input: TokenStream) -> TokenStream {
+//     let trait_input = input.clone();
+//     let trait_item = parse_macro_input!(trait_input as ItemStruct);
+//
+//     put_trait(trait_item);
+//
+//     input
+// }
 
 #[proc_macro]
 pub fn export_reflections(_: TokenStream) -> TokenStream {

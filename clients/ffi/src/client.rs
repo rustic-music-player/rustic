@@ -1,16 +1,19 @@
-use crate::error::FFIError;
-use crate::models::player::Player;
-use libc::*;
-use rustic_api::client::RusticApiClient;
 use std::ffi::CStr;
 use std::ptr::NonNull;
+
+use libc::*;
+
+use rustic_api::client::RusticApiClient;
+
+use crate::error::FFIError;
+use std::sync::Arc;
 
 #[repr(C)]
 pub struct RusticClientHandle {
     _private: [u8; 0],
 }
 
-pub(crate) struct Client(NonNull<Box<dyn RusticApiClient>>);
+pub(crate) struct Client(NonNull<Arc<Box<dyn RusticApiClient>>>);
 
 unsafe impl std::marker::Send for Client {}
 
@@ -30,7 +33,7 @@ pub(crate) unsafe fn to_str<'s>(input: *const c_char) -> Result<Option<&'s str>,
 
 impl Client {
     pub(crate) unsafe fn new(client: Box<dyn RusticApiClient>) -> Self {
-        Client(NonNull::new_unchecked(Box::into_raw(Box::new(client))))
+        Client(NonNull::new_unchecked(Box::into_raw(Box::new(Arc::new(client)))))
     }
 
     pub(crate) unsafe fn to_ptr(&self) -> *mut RusticClientHandle {
@@ -43,15 +46,7 @@ impl Client {
         Client(NonNull::new_unchecked(client))
     }
 
-    pub(crate) fn get_client(&self) -> &Box<dyn RusticApiClient> {
+    pub(crate) fn get_client(&self) -> &Arc<Box<dyn RusticApiClient>> {
         unsafe { self.0.as_ref() }
-    }
-
-    pub async fn get_player(&self) -> Result<Player, FFIError> {
-        let client = unsafe { self.0.as_ref() };
-
-        let res = client.get_player(None).await?;
-
-        Ok(res.unwrap().into())
     }
 }
