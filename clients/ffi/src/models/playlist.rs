@@ -1,5 +1,4 @@
 use libc::c_char;
-use std::ffi::CString;
 use rustic_api::models::PlaylistModel;
 
 #[derive(Debug)]
@@ -13,12 +12,9 @@ pub struct FFIPlaylistModel {
 
 impl From<PlaylistModel> for FFIPlaylistModel {
     fn from(playlist: PlaylistModel) -> Self {
-        let cursor = CString::new(playlist.cursor).unwrap();
-        let title = CString::new(playlist.title).unwrap();
-
         FFIPlaylistModel {
-            cursor: cursor.as_ptr(),
-            title: title.as_ptr()
+            cursor: cstr!(playlist.cursor),
+            title: cstr!(playlist.title)
         }
     }
 }

@@ -36,7 +36,9 @@ pub struct FFICoverArtModel;
 #[derive(Debug)]
 #[repr(C)]
 // TODO: add fields
-pub struct FFISyncStateModel;
+pub enum FFISyncStateModel {
+    Idle
+}
 
 impl From<SearchResults> for FFISearchResults {
     fn from(_: SearchResults) -> Self {
@@ -64,6 +66,6 @@ impl From<CoverArtModel> for FFICoverArtModel {
 
 impl From<SyncStateModel> for FFISyncStateModel {
     fn from(_: SyncStateModel) -> Self {
-        FFISyncStateModel
+        FFISyncStateModel::Idle
     }
 }
