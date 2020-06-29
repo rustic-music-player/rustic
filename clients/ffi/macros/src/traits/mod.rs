@@ -30,7 +30,7 @@ pub fn gen_apis(input: &FFIClientWrapper, methods: Vec<TraitMethodSignature>) ->
                     TraitMethodParameterType::String => quote! {
                         #name: *const libc::c_char
                     },
-                    TraitMethodParameterType::Type(ref p_type) => {
+                    TraitMethodParameterType::Type(_) => {
                         quote! { #name: () }
                     }
                 }

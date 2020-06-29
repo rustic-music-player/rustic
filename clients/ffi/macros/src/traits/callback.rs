@@ -40,6 +40,11 @@ pub fn gen_callback_method(
     let exposed_name = format_ident!("client_{}_cb", method.name);
     let return_type = to_return_type_cb(&method.return_type);
     let return_type_conversion = super::convert_return_type(&method.return_type, true);
+    let default_value = if let TraitMethodReturnType::Unit = method.return_type {
+        quote! { () }
+    } else {
+        quote! { ::std::ptr::null() }
+    };
     let content = quote! {
         let mut client_handle = #client_handle::from_ptr(ptr);
         let client = ::std::sync::Arc::clone(client_handle.get_client());
@@ -47,21 +52,23 @@ pub fn gen_callback_method(
         #(#call_params)*
 
         RUNTIME.spawn(async move {
-            let res = client.#method_name(#(#param_names),*).await.unwrap();
-            callback(::std::ptr::null_mut(), { #return_type_conversion })
+            match client.#method_name(#(#param_names),*).await {
+                Ok(res) => callback(::std::ptr::null(), { #return_type_conversion }),
+                Err(e) => callback(cstr!(e.to_string()), #default_value)
+            }
         });
     };
     if parameters.is_empty() {
         quote! {
             #[no_mangle]
-            pub unsafe extern "C" fn #exposed_name(ptr: *mut RusticClientHandle, callback: fn(*mut libc::c_char, #return_type)) {
+            pub unsafe extern "C" fn #exposed_name(ptr: *mut RusticClientHandle, callback: fn(*const libc::c_char, #return_type)) {
                 #content
             }
         }
     } else {
         quote! {
             #[no_mangle]
-            pub unsafe extern "C" fn #exposed_name(ptr: *mut RusticClientHandle, #(#parameters),*, callback: fn(*mut libc::c_char, #return_type)) {
+            pub unsafe extern "C" fn #exposed_name(ptr: *mut RusticClientHandle, #(#parameters),*, callback: fn(*const libc::c_char, #return_type)) {
                 #content
             }
         }
@@ -76,6 +83,6 @@ fn to_return_type_cb(return_type: &TraitMethodReturnType) -> proc_macro2::TokenS
             quote! { *const #name }
         }
         TraitMethodReturnType::Option(t) => to_return_type_cb(t),
-        TraitMethodReturnType::Vec(_) => quote! { *mut libc::c_void },
+        TraitMethodReturnType::Vec(_) => quote! { *const libc::c_void },
     }
 }
