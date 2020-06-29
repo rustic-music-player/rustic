@@ -1,8 +1,10 @@
 use crate::models::{AlbumModel, ArtistModel, PlaylistModel, TrackModel};
 use serde::{Deserialize, Serialize};
+use rustic_reflect_macros::reflect_struct;
 #[cfg(target_arch = "wasm32")]
 use wasm_bindgen::prelude::*;
 
+#[reflect_struct]
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Eq)]
 #[cfg_attr(
     target_arch = "wasm32",
@@ -24,6 +26,7 @@ impl ProviderModel {
     }
 }
 
+#[reflect_struct]
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Eq, Default)]
 #[cfg_attr(
     target_arch = "wasm32",
@@ -34,6 +37,7 @@ pub struct ProviderFolderModel {
     pub items: Vec<ProviderItemModel>,
 }
 
+#[reflect_struct]
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Eq)]
 #[cfg_attr(
     target_arch = "wasm32",

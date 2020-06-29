@@ -1,15 +1,15 @@
-use std::ptr;
-
-use libc::*;
 use tokio::runtime::Runtime;
 
 use lazy_static::lazy_static;
-use rustic_api::client::*;
-#[cfg(feature = "http")]
-use rustic_native_http_client::RusticNativeHttpClient;
 
-use crate::client::{Client, RusticClientHandle, to_str};
+use crate::client::RusticClientHandle;
 use crate::models::*;
+
+#[cfg(feature = "http")]
+pub use self::http::*;
+
+#[cfg(feature = "http")]
+mod http;
 
 #[macro_use]
 mod helpers;
@@ -24,25 +24,8 @@ lazy_static! {
 }
 
 rustic_ffi_client_macros::ffi_client!(RusticApiClient, crate::client::Client);
+rustic_ffi_client_macros::ffi_client!(ProviderApiClient, crate::client::Client);
 rustic_ffi_client_macros::ffi_client!(LibraryApiClient, crate::client::Client);
-
-#[no_mangle]
-#[cfg(feature = "http")]
-pub unsafe extern "C" fn connect_http_client(url: *const c_char) -> *mut RusticClientHandle {
-    let url = to_str(url);
-
-    let url = match url {
-        Ok(s) => s,
-        Err(_) => return ptr::null_mut(),
-    };
-
-    if let Some(url) = url {
-        let client = RusticNativeHttpClient::new(url);
-        let client: Box<dyn RusticApiClient> = Box::new(client);
-        let client = Client::new(client);
-
-        client.to_ptr()
-    } else {
-        ptr::null_mut()
-    }
-}
+// rustic_ffi_client_macros::ffi_client!(QueueApiClient, crate::client::Client);
+rustic_ffi_client_macros::ffi_client!(PlaylistApiClient, crate::client::Client);
+// rustic_ffi_client_macros::ffi_client!(PlayerApiClient, crate::client::Client);

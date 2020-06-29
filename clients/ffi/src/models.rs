@@ -5,16 +5,6 @@ rustic_ffi_client_macros::client_models!();
 #[derive(Debug)]
 #[repr(C)]
 // TODO: add fields
-pub struct FFISearchResults;
-
-#[derive(Debug)]
-#[repr(C)]
-// TODO: add fields
-pub struct FFIExtensionModel;
-
-#[derive(Debug)]
-#[repr(C)]
-// TODO: add fields
 pub struct FFIOpenResultModel;
 
 #[derive(Debug)]
@@ -26,14 +16,14 @@ pub struct FFICoverArtModel;
 #[repr(C)]
 // TODO: add fields
 pub enum FFISyncStateModel {
-    Idle
+    Idle,
 }
 
 #[derive(Debug)]
 #[repr(C)]
 // TODO: add fields
 pub enum FFIProviderTypeModel {
-    Idle
+    Idle,
 }
 
 #[derive(Debug)]
@@ -41,20 +31,23 @@ pub enum FFIProviderTypeModel {
 pub enum FFIRepeatModeModel {
     None,
     Single,
-    All
+    All,
 }
 
-impl From<SearchResults> for FFISearchResults {
-    fn from(_: SearchResults) -> Self {
-        FFISearchResults
-    }
+#[derive(Debug)]
+#[repr(C)]
+pub enum FFISyncItemStateModel {
+    Idle,
+    Syncing,
+    Done,
+    Error,
 }
 
-impl From<ExtensionModel> for FFIExtensionModel {
-    fn from(_: ExtensionModel) -> Self {
-        FFIExtensionModel
-    }
-}
+#[repr(C)]
+pub struct FFIProviderItemTypeModel;
+
+#[repr(C)]
+pub struct FFIProviderAuthenticationState;
 
 impl From<OpenResultModel> for FFIOpenResultModel {
     fn from(_: OpenResultModel) -> Self {
@@ -79,7 +72,18 @@ impl From<RepeatModeModel> for FFIRepeatModeModel {
         match model {
             RepeatModeModel::None => FFIRepeatModeModel::None,
             RepeatModeModel::Single => FFIRepeatModeModel::Single,
-            RepeatModeModel::All => FFIRepeatModeModel::All
+            RepeatModeModel::All => FFIRepeatModeModel::All,
+        }
+    }
+}
+
+impl From<SyncItemStateModel> for FFISyncItemStateModel {
+    fn from(model: SyncItemStateModel) -> Self {
+        match model {
+            SyncItemStateModel::Idle => FFISyncItemStateModel::Idle,
+            SyncItemStateModel::Syncing => FFISyncItemStateModel::Syncing,
+            SyncItemStateModel::Done => FFISyncItemStateModel::Done,
+            SyncItemStateModel::Error => FFISyncItemStateModel::Error,
         }
     }
 }

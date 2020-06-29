@@ -21,6 +21,7 @@ pub struct TrackModel {
     pub duration: Option<u64>,
 }
 
+#[reflect_struct]
 #[derive(Clone, Debug, Serialize, PartialEq, Eq, Deserialize)]
 pub struct QueuedTrackModel {
     #[serde(flatten)]

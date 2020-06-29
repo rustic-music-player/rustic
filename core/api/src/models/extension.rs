@@ -1,7 +1,9 @@
 use serde::{Deserialize, Serialize};
+use rustic_reflect_macros::reflect_struct;
 #[cfg(target_arch = "wasm32")]
 use wasm_bindgen::prelude::*;
 
+#[reflect_struct]
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 #[cfg_attr(
     target_arch = "wasm32",

@@ -6,8 +6,8 @@ use rustic_api::{get_signature_for_trait, get_structs};
 
 use crate::traits::FFIClientWrapper;
 
-mod traits;
 mod models;
+mod traits;
 
 #[proc_macro]
 pub fn ffi_client(args: TokenStream) -> TokenStream {
@@ -27,7 +27,8 @@ pub fn ffi_client(args: TokenStream) -> TokenStream {
 pub fn client_models(_: TokenStream) -> TokenStream {
     let structs = get_structs();
 
-    let tokens: proc_macro2::TokenStream = structs.into_iter()
+    let tokens: proc_macro2::TokenStream = structs
+        .into_iter()
         .map(crate::models::gen_ffi_model)
         .collect();
 

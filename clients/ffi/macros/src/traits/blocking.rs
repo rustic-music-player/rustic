@@ -5,7 +5,11 @@ use rustic_reflect::*;
 
 use super::convert_return_type;
 
-pub fn gen_blocking_method(client_handle: &Path, method: &TraitMethodSignature, parameters: &[proc_macro2::TokenStream]) -> proc_macro2::TokenStream {
+pub fn gen_blocking_method(
+    client_handle: &Path,
+    method: &TraitMethodSignature,
+    parameters: &[proc_macro2::TokenStream],
+) -> proc_macro2::TokenStream {
     let call_params: Vec<_> = method
         .parameters
         .iter()
@@ -13,10 +17,9 @@ pub fn gen_blocking_method(client_handle: &Path, method: &TraitMethodSignature, 
             let name = format_ident!("{}", param.name);
             match param.type_ident {
                 TraitMethodParameterType::String => quote! {
-                    to_str(#name).unwrap().unwrap()
+                    crate::helpers::to_str(#name).unwrap().unwrap()
                 },
-                TraitMethodParameterType::Type(ref p_type)
-                if p_type.starts_with("Option") => {
+                TraitMethodParameterType::Type(ref p_type) if p_type.starts_with("Option") => {
                     quote! {
                         None
                     }
@@ -54,6 +57,6 @@ fn to_return_type(return_type: &TraitMethodReturnType) -> proc_macro2::TokenStre
             quote! { -> *const #name }
         }
         TraitMethodReturnType::Option(t) => to_return_type(t),
-        TraitMethodReturnType::Vec(_) => quote! { -> *mut c_void },
+        TraitMethodReturnType::Vec(_) => quote! { -> *mut libc::c_void },
     }
 }

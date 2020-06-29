@@ -7,7 +7,8 @@ pub fn gen_ffi_model(struct_decl: StructSignature) -> TokenStream {
     let original = format_ident!("{}", struct_decl.name);
     let name = format_ident!("FFI{}", struct_decl.name);
 
-    let fields: TokenStream = struct_decl.fields
+    let fields: TokenStream = struct_decl
+        .fields
         .iter()
         .map(|(name, decl)| {
             let name = format_ident!("{}", name);
@@ -18,7 +19,8 @@ pub fn gen_ffi_model(struct_decl: StructSignature) -> TokenStream {
         })
         .collect();
 
-    let conversions: TokenStream = struct_decl.fields
+    let conversions: TokenStream = struct_decl
+        .fields
         .iter()
         .map(|(name, decl)| field_conversion(name, decl))
         .collect();
@@ -52,27 +54,33 @@ fn to_type(ty: &StructFieldType) -> TokenStream {
             quote! { *const #ty }
         }
         StructFieldType::Option(nested) => to_type(&nested),
-        _ => quote! { *const libc::c_void }
+        _ => quote! { *const libc::c_void },
     }
 }
-
 
 fn field_conversion(name: &str, decl: &StructField) -> TokenStream {
     let name = format_ident!("{}", name);
     match &decl.ty {
         StructFieldType::Type(ty) if ty == "String" => quote! { #name: cstr!(model.#name), },
-        StructFieldType::Type(ty) if ty == "bool" || ty == "u64" || ty == "f32" || ty == "f64" => quote! { #name: model.#name, },
+        StructFieldType::Type(ty) if ty == "bool" || ty == "u64" || ty == "f32" || ty == "f64" => {
+            quote! { #name: model.#name, }
+        }
         StructFieldType::Option(nested) => {
             match nested.as_ref() {
-                StructFieldType::Type(ref ty) if ty == "String" => quote! { #name: optional_cstr!(model.#name), },
+                StructFieldType::Type(ref ty) if ty == "String" => {
+                    quote! { #name: optional_cstr!(model.#name), }
+                }
                 // TODO: maybe we should add a layer of indirection (aka a pointer) here, as this may cause problems
-                StructFieldType::Type(ref ty) if ty == "u64" || ty == "f32" || ty == "f64" => quote! { #name: optional_number!(model.#name), },                StructFieldType::Type(ref ty) => {
+                StructFieldType::Type(ref ty) if ty == "u64" || ty == "f32" || ty == "f64" => {
+                    quote! { #name: optional_number!(model.#name), }
+                }
+                StructFieldType::Type(ref ty) => {
                     let ty = format_ident!("FFI{}", ty);
                     quote! { #name: nested_optional!(model.#name, #ty), }
                 }
-                _ => quote! { #name: ::std::ptr::null(), }
+                _ => quote! { #name: ::std::ptr::null(), },
             }
-        },
-        _ => quote! { #name: ::std::ptr::null(), }
+        }
+        _ => quote! { #name: ::std::ptr::null(), },
     }
 }

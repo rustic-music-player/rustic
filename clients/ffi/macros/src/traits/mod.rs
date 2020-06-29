@@ -1,12 +1,12 @@
-use syn::{Ident, Path, Result, Token};
 use syn::parse::{Parse, ParseStream};
+use syn::{Ident, Path, Result, Token};
 
+use proc_macro2::TokenStream;
 use quote::{format_ident, quote};
 use rustic_reflect::*;
-use proc_macro2::TokenStream;
 
-mod callback;
 mod blocking;
+mod callback;
 
 pub struct FFIClientWrapper {
     pub client_trait: Ident,
@@ -28,16 +28,24 @@ pub fn gen_apis(input: &FFIClientWrapper, methods: Vec<TraitMethodSignature>) ->
                 let name = format_ident!("{}", param.name);
                 match param.type_ident {
                     TraitMethodParameterType::String => quote! {
-                            #name: *const c_char
-                        },
+                        #name: *const libc::c_char
+                    },
                     TraitMethodParameterType::Type(ref p_type) => {
                         quote! { #name: () }
                     }
                 }
             })
             .collect();
-        tokens.extend(self::callback::gen_callback_method(&input.client_handle, &method, &parameters));
-        tokens.extend(self::blocking::gen_blocking_method(&input.client_handle, &method, &parameters));
+        tokens.extend(self::callback::gen_callback_method(
+            &input.client_handle,
+            &method,
+            &parameters,
+        ));
+        tokens.extend(self::blocking::gen_blocking_method(
+            &input.client_handle,
+            &method,
+            &parameters,
+        ));
     }
     tokens
 }
@@ -81,7 +89,7 @@ pub(crate) fn convert_return_type(
                     Some(res) => {
                         #return_type
                     },
-                    None => ptr::null()
+                    None => ::std::ptr::null()
                 }
             }
         }
@@ -94,7 +102,7 @@ pub(crate) fn convert_return_type(
                         #return_type
                     })
                     .collect();
-                Box::into_raw(Box::new(res)) as *mut c_void
+                Box::into_raw(Box::new(res)) as *mut libc::c_void
             }
         }
     }
