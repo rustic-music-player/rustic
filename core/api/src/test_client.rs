@@ -38,13 +38,8 @@ impl RusticApiClient for TestApiClient {
         query: &str,
         providers: Option<Vec<ProviderTypeModel>>,
     ) -> Result<SearchResults> {
-        self.e.was_called_returning(
-            "search",
-            (
-                query.to_owned(),
-                providers,
-            ),
-        )
+        self.e
+            .was_called_returning("search", (query.to_owned(), providers))
     }
 
     async fn get_extensions(&self) -> Result<Vec<ExtensionModel>> {
@@ -93,7 +88,11 @@ impl PlayerApiClient for TestApiClient {
         unimplemented!()
     }
 
-    async fn player_set_repeat(&self, player_id: Option<&str>, repeat: RepeatModeModel) -> Result<()> {
+    async fn player_set_repeat(
+        &self,
+        player_id: Option<&str>,
+        repeat: RepeatModeModel,
+    ) -> Result<()> {
         unimplemented!()
     }
 

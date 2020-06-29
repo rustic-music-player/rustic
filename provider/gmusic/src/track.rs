@@ -33,7 +33,10 @@ impl From<GmusicTrack> for Track {
                 .cloned()
                 .unwrap_or_else(|| String::from("unknown"))
         );
-        let album_uri = format!("gmusic:album:{}", track.album_id.unwrap_or_else(|| "unknown".into()));
+        let album_uri = format!(
+            "gmusic:album:{}",
+            track.album_id.unwrap_or_else(|| "unknown".into())
+        );
         Track {
             id: None,
             title: track.title,
@@ -71,7 +74,11 @@ impl From<GmusicTrack> for Track {
                 .parse::<u64>()
                 .ok()
                 .map(|duration| duration / 1000),
-            thumbnail: track.album_art_ref.first().map(|album_art| album_art.url.clone().into()).unwrap_or_default(),
+            thumbnail: track
+                .album_art_ref
+                .first()
+                .map(|album_art| album_art.url.clone().into())
+                .unwrap_or_default(),
             meta,
         }
     }

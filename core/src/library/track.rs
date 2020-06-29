@@ -4,7 +4,7 @@ use std::collections::HashMap;
 use serde_derive::{Deserialize, Serialize};
 
 use crate::library::{Album, Artist, Identifiable, MetaValue};
-use crate::provider::{ProviderType, self};
+use crate::provider::{self, ProviderType};
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct Track {

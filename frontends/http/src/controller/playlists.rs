@@ -1,4 +1,4 @@
-use actix_web::{delete, post, put, Responder, Result, web};
+use actix_web::{delete, post, put, web, Responder, Result};
 use serde::Deserialize;
 
 use rustic_api::ApiClient;
@@ -17,7 +17,7 @@ pub struct TrackQuery {
 
 #[derive(Deserialize)]
 pub struct AddPlaylistRequest {
-    name: String
+    name: String,
 }
 
 #[post("/library/playlists")]
@@ -46,7 +46,9 @@ pub async fn add_track_to_playlist(
     playlist: web::Path<EntityQuery>,
     track: web::Path<TrackQuery>,
 ) -> Result<impl Responder> {
-    client.add_track_to_playlist(&playlist.cursor, &track.cursor).await?;
+    client
+        .add_track_to_playlist(&playlist.cursor, &track.cursor)
+        .await?;
 
     Ok(web::HttpResponse::NoContent())
 }
@@ -57,7 +59,9 @@ pub async fn remove_track_from_playlist(
     playlist: web::Path<EntityQuery>,
     track: web::Path<TrackQuery>,
 ) -> Result<impl Responder> {
-    client.remove_track_from_playlist(&playlist.cursor, &track.cursor).await?;
+    client
+        .remove_track_from_playlist(&playlist.cursor, &track.cursor)
+        .await?;
 
     Ok(web::HttpResponse::NoContent())
 }

@@ -1,7 +1,7 @@
 use crate::models::{ArtistModel, ProviderTypeModel, TrackModel};
+use rustic_reflect_macros::reflect_struct;
 use serde::{Deserialize, Serialize};
 use std::cmp::Ordering;
-use rustic_reflect_macros::reflect_struct;
 #[cfg(target_arch = "wasm32")]
 use wasm_bindgen::prelude::*;
 
@@ -11,7 +11,7 @@ use wasm_bindgen::prelude::*;
     target_arch = "wasm32",
     derive(typescript_definitions::TypescriptDefinition)
 )]
-#[serde(rename_all="camelCase")]
+#[serde(rename_all = "camelCase")]
 pub struct AlbumModel {
     pub cursor: String,
     pub title: String,
@@ -19,7 +19,7 @@ pub struct AlbumModel {
     pub tracks: Vec<TrackModel>,
     pub provider: ProviderTypeModel,
     pub coverart: Option<String>,
-    pub in_library: bool
+    pub in_library: bool,
 }
 
 impl PartialOrd for AlbumModel {

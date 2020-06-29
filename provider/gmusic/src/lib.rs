@@ -52,20 +52,21 @@ impl GooglePlayMusicProvider {
     pub fn new() -> Option<Self> {
         let client_id = option_env!("GMUSIC_CLIENT_ID").map(String::from);
         let client_secret = option_env!("GMUSIC_CLIENT_SECRET").map(String::from);
-        let device_id = GoogleMusicApi::get_device_id_from_mac_address().ok().flatten();
+        let device_id = GoogleMusicApi::get_device_id_from_mac_address()
+            .ok()
+            .flatten();
         if device_id.is_none() {
             warn!("Could not derive a device id from mac address. Please specify in config file");
         }
 
-        zip_options(client_id, client_secret, device_id)
-            .map(|(client_id, client_secret, device_id)| {
-                GooglePlayMusicProvider {
-                    client_id,
-                    client_secret,
-                    device_id,
-                    client: None
-                }
-            })
+        zip_options(client_id, client_secret, device_id).map(
+            |(client_id, client_secret, device_id)| GooglePlayMusicProvider {
+                client_id,
+                client_secret,
+                device_id,
+                client: None,
+            },
+        )
     }
 
     fn get_client(&self) -> Result<&GoogleMusicApi, Error> {
@@ -324,9 +325,15 @@ impl TryFrom<GoogleSearchResult> for provider::ProviderItem {
     }
 }
 
-fn zip_options<T>(client_id: Option<T>, client_secret: Option<T>, device_id: Option<T>) -> Option<(T, T, T)> {
+fn zip_options<T>(
+    client_id: Option<T>,
+    client_secret: Option<T>,
+    device_id: Option<T>,
+) -> Option<(T, T, T)> {
     match (client_id, client_secret, device_id) {
-        (Some(client_id), Some(client_secret), Some(device_id)) => Some((client_id, client_secret, device_id)),
-        _ => None
+        (Some(client_id), Some(client_secret), Some(device_id)) => {
+            Some((client_id, client_secret, device_id))
+        }
+        _ => None,
     }
 }

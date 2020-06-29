@@ -1,6 +1,6 @@
-use crate::models::{TrackModel, RepeatModeModel};
-use serde::{Deserialize, Serialize};
+use crate::models::{RepeatModeModel, TrackModel};
 use rustic_reflect_macros::reflect_struct;
+use serde::{Deserialize, Serialize};
 #[cfg(target_arch = "wasm32")]
 use wasm_bindgen::prelude::*;
 

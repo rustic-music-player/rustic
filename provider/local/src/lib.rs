@@ -1,13 +1,13 @@
 use std::path::PathBuf;
 
-use failure::{Error, format_err};
+use failure::{format_err, Error};
 use maplit::hashmap;
 use serde_derive::Deserialize;
 
 use async_trait::async_trait;
-use rustic_core::CredentialStore;
 use rustic_core::library::{self, SharedLibrary};
 use rustic_core::provider::*;
+use rustic_core::CredentialStore;
 
 use crate::scanner::Track;
 
@@ -122,34 +122,40 @@ impl ProviderInstance for LocalProvider {
         Err(format_err!("Invalid provider: {:?}", track.provider))
     }
 
-    async fn thumbnail(&self, provider_item: &ProviderItemType) -> Result<Option<Thumbnail>, Error> {
+    async fn thumbnail(
+        &self,
+        provider_item: &ProviderItemType,
+    ) -> Result<Option<Thumbnail>, Error> {
         let uri = match provider_item {
             ProviderItemType::Track(track) => {
                 if track.thumbnail == ThumbnailState::Data {
                     Some(track.uri.clone())
-                }else {
+                } else {
                     None
                 }
-            },
+            }
             ProviderItemType::Album(album) => {
                 if album.thumbnail == ThumbnailState::Data {
                     Some(album.uri.clone())
-                }else {
+                } else {
                     None
                 }
-            },
-            _ => None
+            }
+            _ => None,
         };
         if let Some(uri) = uri {
             let path = &uri["file://".len()..];
             let tag = id3::Tag::read_from_path(path)?;
-            let picture = tag.pictures().find(|_| true).map(|picture| Thumbnail::Data {
-                data: picture.data.clone(),
-                mime_type: picture.mime_type.clone(),
-            });
+            let picture = tag
+                .pictures()
+                .find(|_| true)
+                .map(|picture| Thumbnail::Data {
+                    data: picture.data.clone(),
+                    mime_type: picture.mime_type.clone(),
+                });
 
             Ok(picture)
-        }else {
+        } else {
             Ok(None)
         }
     }
@@ -158,7 +164,6 @@ impl ProviderInstance for LocalProvider {
         Ok(None)
     }
 }
-
 
 impl From<scanner::Track> for library::Track {
     fn from(track: scanner::Track) -> Self {
@@ -170,7 +175,11 @@ impl From<scanner::Track> for library::Track {
             album: track.clone().into(),
             artist_id: None,
             artist: track.clone().into(),
-            thumbnail: if track.has_coverart { ThumbnailState::Data } else { ThumbnailState::None },
+            thumbnail: if track.has_coverart {
+                ThumbnailState::Data
+            } else {
+                ThumbnailState::None
+            },
             provider: ProviderType::LocalMedia,
             uri: format!("file://{}", track.path),
             duration: None,
@@ -192,7 +201,11 @@ impl From<scanner::Track> for Option<library::Album> {
             artist_id: None,
             artist,
             provider: ProviderType::LocalMedia,
-            thumbnail: if has_coverart { ThumbnailState::Data } else { ThumbnailState::None },
+            thumbnail: if has_coverart {
+                ThumbnailState::Data
+            } else {
+                ThumbnailState::None
+            },
             tracks: vec![],
             uri: format!("file://{}", &path),
             meta: hashmap!(
@@ -221,14 +234,20 @@ impl From<scanner::Track> for Option<library::Artist> {
 }
 
 impl LocalProvider {
-    fn sync_albums(library: &SharedLibrary, tracks: &[Track], artists: &[library::Artist]) -> Vec<library::Album> {
+    fn sync_albums(
+        library: &SharedLibrary,
+        tracks: &[Track],
+        artists: &[library::Artist],
+    ) -> Vec<library::Album> {
         let albums: Vec<library::Album> = tracks
             .iter()
             .cloned()
             .filter_map(Option::<library::Album>::from)
             .fold(Vec::new(), |mut albums, mut album| {
                 if albums.iter().find(|a| a.title == album.title).is_none() {
-                    if let Some(artist) = artists.iter().find(|artist| Some(&artist.name) == album.artist.as_ref().map(|artist| &artist.name)) {
+                    if let Some(artist) = artists.iter().find(|artist| {
+                        Some(&artist.name) == album.artist.as_ref().map(|artist| &artist.name)
+                    }) {
                         album.artist_id = artist.id;
                     }
                     albums.push(album);

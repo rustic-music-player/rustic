@@ -1,7 +1,7 @@
 use actix::Recipient;
 use serde::Serialize;
 
-use rustic_api::models::{TrackModel, QueuedTrackModel};
+use rustic_api::models::{QueuedTrackModel, TrackModel};
 
 #[derive(Message, Clone, Debug, Serialize)]
 #[rtype(result = "()")]

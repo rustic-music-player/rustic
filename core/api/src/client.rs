@@ -13,7 +13,13 @@ pub type Result<T> = std::result::Result<T, failure::Error>;
 #[cfg_attr(target_arch = "wasm32", async_trait(?Send))]
 #[cfg_attr(not(target_arch = "wasm32"), async_trait)]
 pub trait RusticApiClient:
-    Sync + Send + QueueApiClient + LibraryApiClient + PlayerApiClient + ProviderApiClient + PlaylistApiClient
+    Sync
+    + Send
+    + QueueApiClient
+    + LibraryApiClient
+    + PlayerApiClient
+    + ProviderApiClient
+    + PlaylistApiClient
 {
     async fn search(
         &self,
@@ -144,7 +150,11 @@ pub trait PlayerApiClient: Sync + Send {
 
     async fn player_set_volume(&self, player_id: Option<&str>, volume: f32) -> Result<()>;
 
-    async fn player_set_repeat(&self, player_id: Option<&str>, repeat: RepeatModeModel) -> Result<()>;
+    async fn player_set_repeat(
+        &self,
+        player_id: Option<&str>,
+        repeat: RepeatModeModel,
+    ) -> Result<()>;
 
     fn observe_player(&self, player_id: Option<&str>) -> BoxStream<'static, PlayerEventModel>;
 }

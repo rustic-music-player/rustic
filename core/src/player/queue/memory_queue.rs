@@ -102,10 +102,12 @@ impl PlayerQueue for MemoryQueue {
     async fn get_queue(&self) -> Result<Vec<QueuedTrack>, Error> {
         let queue = self.queue.read();
         let current_index = self.current_index.load(atomic::Ordering::Relaxed);
-        let queue = queue.into_iter().enumerate()
+        let queue = queue
+            .into_iter()
+            .enumerate()
             .map(|(i, track)| QueuedTrack {
                 track,
-                playing: i == current_index
+                playing: i == current_index,
             })
             .collect();
         Ok(queue)
@@ -115,7 +117,7 @@ impl PlayerQueue for MemoryQueue {
         let queue = self.queue.read();
         if queue.len() <= index {
             Err(format_err!("Index out of bounds"))
-        }else {
+        } else {
             self.current_index.store(index, atomic::Ordering::Relaxed);
             self.select_track(&queue, index)?;
             Ok(())
@@ -180,7 +182,7 @@ impl PlayerQueue for MemoryQueue {
             if repeat_mode == RepeatMode::All {
                 current_index = 0;
             }
-        }else if repeat_mode != RepeatMode::Single {
+        } else if repeat_mode != RepeatMode::Single {
             current_index += 1;
         }
         self.current_index

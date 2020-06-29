@@ -21,5 +21,5 @@ pub enum PlayerEventModel {
     /// The player is waiting for I/O
     Buffering,
     /// The current volume has changed
-    VolumeChanged(f32)
+    VolumeChanged(f32),
 }

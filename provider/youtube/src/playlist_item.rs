@@ -1,8 +1,8 @@
 use youtube_api::models::PlaylistItemResource;
 
+use rustic_core::provider::ThumbnailState;
 use rustic_core::{Artist, ProviderType, Track};
 use std::collections::HashMap;
-use rustic_core::provider::ThumbnailState;
 
 #[derive(Clone)]
 pub struct YoutubePlaylistItem(PlaylistItemResource);
@@ -25,7 +25,7 @@ impl From<YoutubePlaylistItem> for Track {
         let thumbnail = resource.snippet.inner.thumbnails.get("high");
         let thumbnail = if let Some(thumbnail) = thumbnail.as_ref() {
             ThumbnailState::Url(thumbnail.url.clone())
-        }else {
+        } else {
             ThumbnailState::None
         };
 

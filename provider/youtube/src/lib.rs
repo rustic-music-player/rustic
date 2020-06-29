@@ -11,8 +11,8 @@ use youtube_api::{YoutubeApi, YoutubeDl};
 use async_trait::async_trait;
 use lazy_static::lazy_static;
 use rustic_core::provider::{
-    AuthState, Authentication, InternalUri, ProviderFolder, ProviderInstance,
-    ProviderItem, SyncResult,
+    AuthState, Authentication, InternalUri, ProviderFolder, ProviderInstance, ProviderItem,
+    SyncResult,
 };
 use rustic_core::{Album, Artist, CredentialStore, Playlist, ProviderType, SharedLibrary, Track};
 

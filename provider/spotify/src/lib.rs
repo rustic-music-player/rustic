@@ -43,13 +43,12 @@ impl SpotifyProvider {
         let client_id = option_env!("SPOTIFY_CLIENT_ID").map(String::from);
         let client_secret = option_env!("SPOTIFY_CLIENT_SECRET").map(String::from);
 
-        client_id.and_then(|client_id| client_secret.map(|secret| (client_id, secret)))
-            .map(|(client_id, client_secret)| {
-                SpotifyProvider {
-                    client_id,
-                    client_secret,
-                    client: None
-                }
+        client_id
+            .and_then(|client_id| client_secret.map(|secret| (client_id, secret)))
+            .map(|(client_id, client_secret)| SpotifyProvider {
+                client_id,
+                client_secret,
+                client: None,
             })
     }
 

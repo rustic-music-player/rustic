@@ -3,10 +3,10 @@ use std::sync::RwLock;
 
 use syn::{ItemStruct, Type};
 
-use lazy_static::lazy_static;
-use quote::{quote, ToTokens};
-use proc_macro2::TokenStream;
 use crate::helpers::unwrap_generic;
+use lazy_static::lazy_static;
+use proc_macro2::TokenStream;
+use quote::{quote, ToTokens};
 
 lazy_static! {
     static ref STRUCTS: RwLock<Vec<StructSignature>> = RwLock::new(Vec::new());
@@ -22,9 +22,7 @@ pub fn put_struct(item_struct: ItemStruct) {
         .map(|item| {
             let name = item.ident.unwrap().to_string();
 
-            let field = StructField {
-                ty: item.ty.into()
-            };
+            let field = StructField { ty: item.ty.into() };
 
             (name, field)
         })
@@ -40,22 +38,20 @@ pub fn put_struct(item_struct: ItemStruct) {
 
 pub fn get_structs() -> Vec<StructSignature> {
     let structs = STRUCTS.read().unwrap();
-    structs
-        .iter()
-        .cloned()
-        .collect()
+    structs.iter().cloned().collect()
 }
 
 #[derive(Debug, Clone)]
 pub struct StructSignature {
     pub name: String,
-    pub fields: HashMap<String, StructField>
+    pub fields: HashMap<String, StructField>,
 }
 
 impl ToTokens for StructSignature {
     fn to_tokens(&self, tokens: &mut TokenStream) {
         let name = &self.name;
-        let fields: TokenStream = self.fields
+        let fields: TokenStream = self
+            .fields
             .iter()
             .map(|(name, field)| {
                 quote! { fields.insert(#name.into(), #field); }
@@ -76,7 +72,7 @@ impl ToTokens for StructSignature {
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct StructField {
-    pub ty: StructFieldType
+    pub ty: StructFieldType,
 }
 
 impl ToTokens for StructField {
@@ -90,16 +86,13 @@ impl ToTokens for StructField {
 pub enum StructFieldType {
     Option(Box<StructFieldType>),
     Vec(Box<StructFieldType>),
-    Type(String)
+    Type(String),
 }
-
 
 impl From<Type> for StructFieldType {
     fn from(path: Type) -> Self {
         match path {
-            Type::Tuple(ref tuple) => {
-                unimplemented!("From<Type> for TraitMethodReturnType Tuple")
-            },
+            Type::Tuple(ref tuple) => unimplemented!("From<Type> for TraitMethodReturnType Tuple"),
             Type::Path(ref type_path) => {
                 let segment = type_path.path.segments.first().unwrap();
                 let ident = segment.ident.to_string();
@@ -109,7 +102,7 @@ impl From<Type> for StructFieldType {
                 } else if ident == "Option" {
                     let p = unwrap_generic(type_path);
                     StructFieldType::Option(Box::new(StructFieldType::from(p)))
-                }else {
+                } else {
                     let p = quote! { #path };
                     StructFieldType::Type(p.to_string())
                 }

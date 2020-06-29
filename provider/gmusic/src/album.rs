@@ -52,7 +52,10 @@ impl From<GmusicAlbum> for Album {
                 .map(GmusicTrack::from)
                 .map(Track::from)
                 .collect(),
-            thumbnail: album.album_art_ref.map(ThumbnailState::Url).unwrap_or_default(),
+            thumbnail: album
+                .album_art_ref
+                .map(ThumbnailState::Url)
+                .unwrap_or_default(),
         }
     }
 }

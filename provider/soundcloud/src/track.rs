@@ -29,7 +29,11 @@ impl From<SoundcloudTrack> for Track {
             album_id: None,
             provider: provider::ProviderType::Soundcloud,
             uri: format!("soundcloud://track/{}", track.id),
-            thumbnail: track.artwork_url.map(|url| url.replace("large", "t500x500")).map(ThumbnailState::Url).unwrap_or_default(),
+            thumbnail: track
+                .artwork_url
+                .map(|url| url.replace("large", "t500x500"))
+                .map(ThumbnailState::Url)
+                .unwrap_or_default(),
             duration: Some(track.duration / 1000),
             meta,
         }

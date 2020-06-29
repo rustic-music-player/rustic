@@ -1,5 +1,5 @@
+use serde::{Deserialize, Serialize};
 use std::fmt::Debug;
-use serde::{Serialize, Deserialize};
 
 use failure::Error;
 
@@ -14,14 +14,14 @@ mod memory_queue;
 pub struct QueuedTrack {
     #[serde(flatten)]
     pub track: Track,
-    pub playing: bool
+    pub playing: bool,
 }
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
 pub enum RepeatMode {
     None,
     Single,
-    All
+    All,
 }
 
 #[async_trait]

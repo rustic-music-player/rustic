@@ -6,15 +6,15 @@ use log::debug;
 
 use async_trait::async_trait;
 use rustic_api::client::{LibraryApiClient, Result};
-use rustic_api::cursor::{Cursor, from_cursor};
+use rustic_api::cursor::{from_cursor, Cursor};
 use rustic_api::models::{
     AlbumModel, ArtistModel, PlaylistModel, ProviderTypeModel, SyncStateModel, TrackModel,
 };
-use rustic_core::{MultiQuery, ProviderType, QueryJoins, SingleQuery};
 use rustic_core::provider::InternalUri;
+use rustic_core::{MultiQuery, ProviderType, QueryJoins, SingleQuery};
 
-use crate::RusticNativeClient;
 use crate::stream_util::from_channel;
+use crate::RusticNativeClient;
 
 #[async_trait]
 impl LibraryApiClient for RusticNativeClient {

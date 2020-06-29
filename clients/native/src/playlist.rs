@@ -23,15 +23,27 @@ impl PlaylistApiClient for RusticNativeClient {
     }
 
     async fn remove_playlist(&self, cursor: &str) -> Result<()> {
-        let playlist = self.app.library.query_playlist(from_cursor(cursor)?.into())?.ok_or_else(|| format_err!("unknown playlist"))?;
+        let playlist = self
+            .app
+            .library
+            .query_playlist(from_cursor(cursor)?.into())?
+            .ok_or_else(|| format_err!("unknown playlist"))?;
         self.app.library.remove_playlist(&playlist)?;
 
         Ok(())
     }
 
     async fn add_track_to_playlist(&self, cursor: &str, track: &str) -> Result<()> {
-        let mut playlist = self.app.library.query_playlist(from_cursor(cursor)?.into())?.ok_or_else(|| format_err!("unknown playlist"))?;
-        let track = self.app.query_track(from_cursor(track)?.into()).await?.ok_or_else(|| format_err!("unknown track"))?;
+        let mut playlist = self
+            .app
+            .library
+            .query_playlist(from_cursor(cursor)?.into())?
+            .ok_or_else(|| format_err!("unknown playlist"))?;
+        let track = self
+            .app
+            .query_track(from_cursor(track)?.into())
+            .await?
+            .ok_or_else(|| format_err!("unknown track"))?;
         playlist.tracks.push(track);
         self.app.library.sync_playlist(&mut playlist)?;
 
@@ -39,7 +51,11 @@ impl PlaylistApiClient for RusticNativeClient {
     }
 
     async fn remove_track_from_playlist(&self, cursor: &str, track: &str) -> Result<()> {
-        let mut playlist = self.app.library.query_playlist(from_cursor(cursor)?.into())?.ok_or_else(|| format_err!("unknown playlist"))?;
+        let mut playlist = self
+            .app
+            .library
+            .query_playlist(from_cursor(cursor)?.into())?
+            .ok_or_else(|| format_err!("unknown playlist"))?;
         let track_uri = from_cursor(track)?;
         if let Some(track_index) = playlist.tracks.iter().position(|t| t.uri == track_uri) {
             playlist.tracks.remove(track_index);

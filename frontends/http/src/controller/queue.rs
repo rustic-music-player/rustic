@@ -1,4 +1,4 @@
-use actix_web::{delete, error, get, HttpResponse, post, put, Responder, Result, web};
+use actix_web::{delete, error, get, post, put, web, HttpResponse, Responder, Result};
 use serde::Deserialize;
 
 use rustic_api::cursor::from_cursor;
@@ -34,7 +34,10 @@ pub async fn fetch_default(client: web::Data<ApiClient>) -> Result<impl Responde
 }
 
 #[get("/queue/{player_cursor}")]
-pub async fn fetch(client: web::Data<ApiClient>, params: web::Path<PlayerParams>) -> Result<impl Responder> {
+pub async fn fetch(
+    client: web::Data<ApiClient>,
+    params: web::Path<PlayerParams>,
+) -> Result<impl Responder> {
     let player_id = from_cursor(&params.player_cursor)?;
     let tracks = client.get_queue(Some(&player_id)).await?;
 
@@ -114,10 +117,12 @@ pub async fn queue_playlist_default(
 pub async fn queue_playlist(
     client: web::Data<ApiClient>,
     params: web::Path<AddToQueueQuery>,
-    player: web::Path<PlayerParams>
+    player: web::Path<PlayerParams>,
 ) -> Result<impl Responder> {
     let player_id = from_cursor(&player.player_cursor)?;
-    let result = client.queue_playlist(Some(&player_id), &params.cursor).await?;
+    let result = client
+        .queue_playlist(Some(&player_id), &params.cursor)
+        .await?;
 
     match result {
         Some(_) => Ok(HttpResponse::NoContent().finish()),
@@ -133,7 +138,10 @@ pub async fn clear_default(client: web::Data<ApiClient>) -> Result<impl Responde
 }
 
 #[post("/queue/{player_cursor}/clear")]
-pub async fn clear(client: web::Data<ApiClient>, player: web::Path<PlayerParams>) -> Result<impl Responder> {
+pub async fn clear(
+    client: web::Data<ApiClient>,
+    player: web::Path<PlayerParams>,
+) -> Result<impl Responder> {
     let player_id = from_cursor(&player.player_cursor)?;
     client.clear_queue(Some(&player_id)).await?;
 
@@ -157,7 +165,9 @@ pub async fn select_item(
     player: web::Path<PlayerParams>,
 ) -> Result<impl Responder> {
     let player_id = from_cursor(&player.player_cursor)?;
-    client.select_queue_item(Some(&player_id), params.index).await?;
+    client
+        .select_queue_item(Some(&player_id), params.index)
+        .await?;
 
     Ok(HttpResponse::NoContent().finish())
 }
@@ -179,7 +189,9 @@ pub async fn remove_item(
     player: web::Path<PlayerParams>,
 ) -> Result<impl Responder> {
     let player_id = from_cursor(&player.player_cursor)?;
-    client.remove_queue_item(Some(&player_id), params.index).await?;
+    client
+        .remove_queue_item(Some(&player_id), params.index)
+        .await?;
 
     Ok(HttpResponse::NoContent().finish())
 }

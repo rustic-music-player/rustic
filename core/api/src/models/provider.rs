@@ -1,6 +1,6 @@
 use crate::models::{AlbumModel, ArtistModel, PlaylistModel, TrackModel};
-use serde::{Deserialize, Serialize};
 use rustic_reflect_macros::reflect_struct;
+use serde::{Deserialize, Serialize};
 #[cfg(target_arch = "wasm32")]
 use wasm_bindgen::prelude::*;
 
@@ -21,7 +21,7 @@ impl ProviderModel {
         ProviderModel {
             title: "Internal".into(),
             provider: ProviderTypeModel::Internal,
-            explore: ProviderFolderModel::default()
+            explore: ProviderFolderModel::default(),
         }
     }
 }

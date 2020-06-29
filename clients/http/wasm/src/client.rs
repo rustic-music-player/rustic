@@ -5,7 +5,7 @@ use web_sys::{Request, RequestInit, Response};
 
 use crate::utils::map_value;
 use async_trait::async_trait;
-use rustic_http_client::{HttpClient, RusticHttpClient, HttpResponse};
+use rustic_http_client::{HttpClient, HttpResponse, RusticHttpClient};
 use serde::de::DeserializeOwned;
 use serde::Serialize;
 
@@ -16,7 +16,7 @@ impl RusticWasmHttpClient {
     pub const fn new() -> RusticHttpClient<RusticWasmHttpClient, WasmResponse> {
         RusticHttpClient {
             client: RusticWasmHttpClient,
-            _marker: std::marker::PhantomData
+            _marker: std::marker::PhantomData,
         }
     }
 }
@@ -35,8 +35,9 @@ impl HttpResponse for WasmResponse {
     }
 
     async fn json<TRes>(self) -> Result<TRes, failure::Error>
-        where
-            TRes: DeserializeOwned {
+    where
+        TRes: DeserializeOwned,
+    {
         let resp = self.0;
         let json = JsFuture::from(resp.json().unwrap())
             .await
@@ -109,8 +110,8 @@ impl HttpClient<WasmResponse> for RusticWasmHttpClient {
     }
 
     async fn put<TReq>(&self, url: &str, body: TReq) -> Result<WasmResponse, failure::Error>
-        where
-            TReq: Serialize,
+    where
+        TReq: Serialize,
     {
         let body = serde_json::to_string(&body)?.into();
         let mut opts = RequestInit::new();

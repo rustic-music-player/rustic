@@ -8,8 +8,8 @@ use url::Url;
 
 use async_trait::async_trait;
 
-use crate::{CredentialStore, Playlist};
 use crate::library::{Album, Artist, SharedLibrary, Track};
+use crate::{CredentialStore, Playlist};
 
 pub use self::explorer::Explorer;
 pub use self::folder::ProviderFolder;
@@ -114,7 +114,10 @@ pub trait ProviderInstance: Debug {
     async fn resolve_artist(&self, uri: &str) -> Result<Option<Artist>, Error>;
     async fn resolve_playlist(&self, uri: &str) -> Result<Option<Playlist>, Error>;
     async fn stream_url(&self, track: &Track) -> Result<String, Error>;
-    async fn thumbnail(&self, _provider_item: &ProviderItemType) -> Result<Option<Thumbnail>, Error> {
+    async fn thumbnail(
+        &self,
+        _provider_item: &ProviderItemType,
+    ) -> Result<Option<Thumbnail>, Error> {
         Ok(None)
     }
     async fn resolve_share_url(&self, url: Url) -> Result<Option<InternalUri>, Error>;
@@ -176,14 +179,14 @@ impl ThumbnailState {
     pub fn has_thumbnail(&self) -> bool {
         match self {
             ThumbnailState::None => false,
-            _ => true
+            _ => true,
         }
     }
 
     pub fn to_url(&self) -> Option<String> {
         match self {
             ThumbnailState::Url(url) => Some(url.clone()),
-            _ => None
+            _ => None,
         }
     }
 }
@@ -197,15 +200,18 @@ pub enum Thumbnail {
 impl Thumbnail {
     pub fn is_data(&self) -> bool {
         match &self {
-            Thumbnail::Data { data: _, mime_type: _ } => true,
-            _ => false
+            Thumbnail::Data {
+                data: _,
+                mime_type: _,
+            } => true,
+            _ => false,
         }
     }
 
     pub fn is_url(&self) -> bool {
         match &self {
             Thumbnail::Url(_) => true,
-            _ => false
+            _ => false,
         }
     }
 }

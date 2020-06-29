@@ -42,7 +42,7 @@ impl From<YoutubeSearchResult> for Track {
         let thumbnail = result.snippet.thumbnails.get("high");
         let thumbnail = if let Some(thumbnail) = thumbnail.as_ref() {
             ThumbnailState::Url(thumbnail.url.clone())
-        }else {
+        } else {
             ThumbnailState::None
         };
 

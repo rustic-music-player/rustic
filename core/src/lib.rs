@@ -12,8 +12,8 @@ pub use crate::library::{
 };
 use crate::player::Player;
 pub use crate::player::{PlayerBackend, PlayerEvent, PlayerState, QueuedTrack, RepeatMode};
-use crate::provider::{Thumbnail, InternalUri, ProviderItemType, ThumbnailState};
 pub use crate::provider::{Explorer, Provider, ProviderType};
+use crate::provider::{InternalUri, ProviderItemType, Thumbnail, ThumbnailState};
 
 pub mod cache;
 mod cred_store;
@@ -200,12 +200,12 @@ impl Rustic {
                     let cover = self.cache.cache_thumbnail(&thumbnail).await?;
                     Some(cover)
                 }
-            },
+            }
             ThumbnailState::Data => {
                 let provider = self.get_provider_for_item(provider_item)?;
                 provider.get().await.thumbnail(provider_item).await?
-            },
-            _ => None
+            }
+            _ => None,
         };
 
         Ok(thumbnail)

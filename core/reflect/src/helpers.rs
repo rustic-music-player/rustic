@@ -1,4 +1,4 @@
-use syn::{PathArguments, Type, TypePath, GenericArgument};
+use syn::{GenericArgument, PathArguments, Type, TypePath};
 
 pub fn unwrap_generic(p: &TypePath) -> Type {
     if let Some(path) = p.path.segments.first() {

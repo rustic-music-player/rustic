@@ -2,10 +2,7 @@ use std::collections::HashMap;
 use std::sync::RwLock;
 
 use proc_macro2::TokenStream;
-use syn::{
-    FnArg, ItemTrait, Pat, PatType, ReturnType, TraitItem, Type,
-    TypePath,
-};
+use syn::{FnArg, ItemTrait, Pat, PatType, ReturnType, TraitItem, Type, TypePath};
 
 use lazy_static::lazy_static;
 use quote::{quote, ToTokens};
@@ -44,7 +41,7 @@ pub fn put_trait(item_trait: ItemTrait) {
                 .map(TraitMethodParameter::from)
                 .collect(),
             return_type: item.sig.output.into(),
-            is_async: item.sig.asyncness.is_some()
+            is_async: item.sig.asyncness.is_some(),
         })
         .collect();
 
@@ -68,7 +65,7 @@ pub struct TraitMethodSignature {
     pub name: String,
     pub parameters: Vec<TraitMethodParameter>,
     pub return_type: TraitMethodReturnType,
-    pub is_async: bool
+    pub is_async: bool,
 }
 
 #[derive(Debug, Clone)]
@@ -135,10 +132,10 @@ impl From<Type> for TraitMethodReturnType {
             Type::Tuple(ref tuple) => {
                 if tuple.elems.len() == 0 {
                     TraitMethodReturnType::Unit
-                }else {
+                } else {
                     unimplemented!("From<Type> for TraitMethodReturnType Tuple")
                 }
-            },
+            }
             Type::Path(ref type_path) => {
                 let segment = type_path.path.segments.first().unwrap();
                 let ident = segment.ident.to_string();

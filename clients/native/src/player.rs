@@ -8,11 +8,11 @@ use async_trait::async_trait;
 use rustic_api::client::{PlayerApiClient, Result};
 use rustic_api::cursor::to_cursor;
 use rustic_api::models::*;
-use rustic_core::{PlayerEvent, PlayerState};
 use rustic_core::player::Player;
+use rustic_core::{PlayerEvent, PlayerState};
 
-use crate::RusticNativeClient;
 use crate::stream_util::from_channel;
+use crate::RusticNativeClient;
 
 #[async_trait]
 impl PlayerApiClient for RusticNativeClient {
@@ -68,7 +68,11 @@ impl PlayerApiClient for RusticNativeClient {
         Ok(())
     }
 
-    async fn player_set_repeat(&self, player_id: Option<&str>, repeat: RepeatModeModel) -> Result<()> {
+    async fn player_set_repeat(
+        &self,
+        player_id: Option<&str>,
+        repeat: RepeatModeModel,
+    ) -> Result<()> {
         let player = self.get_player_or_default(player_id)?;
         player.queue.set_repeat(repeat.into()).await?;
 
@@ -104,6 +108,6 @@ async fn player_to_model(player_id: String, player: Arc<Player>) -> Result<Playe
         playing: (player_state == PlayerState::Play),
         volume,
         current,
-        repeat: repeat_mode.into()
+        repeat: repeat_mode.into(),
     })
 }

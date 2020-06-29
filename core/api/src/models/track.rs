@@ -1,7 +1,7 @@
 use crate::models::{AlbumModel, ArtistModel, ProviderTypeModel};
+use rustic_reflect_macros::reflect_struct;
 use serde::{Deserialize, Serialize};
 use std::cmp::Ordering;
-use rustic_reflect_macros::reflect_struct;
 #[cfg(target_arch = "wasm32")]
 use wasm_bindgen::prelude::*;
 
@@ -26,7 +26,7 @@ pub struct TrackModel {
 pub struct QueuedTrackModel {
     #[serde(flatten)]
     pub track: TrackModel,
-    pub playing: bool
+    pub playing: bool,
 }
 
 impl PartialOrd for TrackModel {

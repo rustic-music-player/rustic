@@ -100,7 +100,7 @@ impl Player {
                 if self.queue.next().await?.is_none() {
                     self.bus.send_player_msg(PlayerCommand::Stop)?;
                 }
-            },
+            }
         };
         Ok(())
     }

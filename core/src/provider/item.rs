@@ -1,6 +1,6 @@
 use crate::library::{Album, Artist, Playlist, Track};
-use serde_derive::{Deserialize, Serialize};
 use crate::provider::ThumbnailState;
+use serde_derive::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Serialize, PartialEq, Deserialize)]
 pub struct ProviderItem {
@@ -56,7 +56,11 @@ impl ProviderItemType {
         match self {
             Track(track) => track.thumbnail.clone(),
             Album(album) => album.thumbnail.clone(),
-            Artist(artist) => artist.image_url.clone().map(ThumbnailState::Url).unwrap_or(ThumbnailState::None),
+            Artist(artist) => artist
+                .image_url
+                .clone()
+                .map(ThumbnailState::Url)
+                .unwrap_or(ThumbnailState::None),
             Playlist(_) => ThumbnailState::None,
         }
     }

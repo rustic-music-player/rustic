@@ -1,11 +1,11 @@
-use failure::{Error, format_err};
+use failure::{format_err, Error};
 use futures::prelude::*;
 use pocketcasts::{Episode, PocketcastClient, Podcast};
 use serde::Deserialize;
 
 use async_trait::async_trait;
-use rustic_core::{Credentials, CredentialStore, Playlist, provider};
 use rustic_core::library::{Album, Artist, SharedLibrary, Track};
+use rustic_core::{provider, CredentialStore, Credentials, Playlist};
 
 use crate::episode::PocketcastTrack;
 use crate::podcast::{PocketcastAlbum, PocketcastAlbums, PocketcastSearchResult};
@@ -232,7 +232,7 @@ impl provider::ProviderInstance for PocketcastsProvider {
     async fn stream_url(&self, track: &Track) -> Result<String, Error> {
         if track.provider == provider::ProviderType::Pocketcasts {
             if let rustic_core::library::MetaValue::String(stream_url) =
-            track.meta.get(meta::META_POCKETCASTS_STREAM_URL).unwrap()
+                track.meta.get(meta::META_POCKETCASTS_STREAM_URL).unwrap()
             {
                 return Ok(stream_url.to_string());
             }

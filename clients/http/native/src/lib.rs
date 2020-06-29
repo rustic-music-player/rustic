@@ -6,8 +6,8 @@ use serde::Serialize;
 use url::Url;
 
 use async_trait::async_trait;
-use rustic_http_client::*;
 pub use rustic_http_client::RusticHttpClient;
+use rustic_http_client::*;
 
 #[derive(Debug, Clone)]
 pub struct RusticNativeHttpClient {
@@ -16,7 +16,9 @@ pub struct RusticNativeHttpClient {
 }
 
 impl RusticNativeHttpClient {
-    pub fn new<S: Into<String>>(url: S) -> RusticHttpClient<RusticNativeHttpClient, ReqwestResponse> {
+    pub fn new<S: Into<String>>(
+        url: S,
+    ) -> RusticHttpClient<RusticNativeHttpClient, ReqwestResponse> {
         let client = reqwest::Client::new();
         RusticHttpClient::new(RusticNativeHttpClient {
             base_url: url.into(),
@@ -35,9 +37,11 @@ impl HttpResponse for ReqwestResponse {
     }
 
     async fn json<TRes>(self) -> Result<TRes, failure::Error>
-        where
-            TRes: DeserializeOwned {
-        let res = Arc::try_unwrap(self.0).unwrap_or_else(|_| unreachable!("This shouldn't be possible"));
+    where
+        TRes: DeserializeOwned,
+    {
+        let res =
+            Arc::try_unwrap(self.0).unwrap_or_else(|_| unreachable!("This shouldn't be possible"));
         let body = res.json::<TRes>().await?;
 
         Ok(body)
@@ -53,20 +57,27 @@ impl From<reqwest::Response> for ReqwestResponse {
 #[async_trait]
 impl HttpClient<ReqwestResponse> for RusticNativeHttpClient {
     async fn get<T>(&self, api_url: &str) -> Result<T, failure::Error>
-        where
-            T: DeserializeOwned,
+    where
+        T: DeserializeOwned,
     {
         let mut url = Url::parse(&self.base_url)?;
         url.set_path(api_url);
         debug!("GET {}", url);
-        let body = self.client.get(url).send().await?.error_for_status()?.json::<T>().await?;
+        let body = self
+            .client
+            .get(url)
+            .send()
+            .await?
+            .error_for_status()?
+            .json::<T>()
+            .await?;
 
         Ok(body)
     }
 
     async fn post<TReq>(&self, api_url: &str, body: TReq) -> Result<ReqwestResponse, failure::Error>
-        where
-            TReq: Serialize + Send + Sync,
+    where
+        TReq: Serialize + Send + Sync,
     {
         let mut url = Url::parse(&self.base_url)?;
         url.set_path(api_url);
@@ -83,8 +94,8 @@ impl HttpClient<ReqwestResponse> for RusticNativeHttpClient {
     }
 
     async fn put<TReq>(&self, api_url: &str, body: TReq) -> Result<ReqwestResponse, failure::Error>
-        where
-            TReq: Serialize + Send + Sync,
+    where
+        TReq: Serialize + Send + Sync,
     {
         let mut url = Url::parse(&self.base_url)?;
         url.set_path(api_url);
@@ -104,12 +115,7 @@ impl HttpClient<ReqwestResponse> for RusticNativeHttpClient {
         let mut url = Url::parse(&self.base_url)?;
         url.set_path(api_url);
         debug!("DELETE {}", url);
-        self
-            .client
-            .delete(url)
-            .send()
-            .await?
-            .error_for_status()?;
+        self.client.delete(url).send().await?.error_for_status()?;
 
         Ok(())
     }
@@ -134,8 +140,8 @@ mod test {
         url: &str,
         response: &T,
     ) -> Result<mockito::Mock, failure::Error>
-        where
-            T: Serialize,
+    where
+        T: Serialize,
     {
         let m = mock(method, url)
             .with_status(200)

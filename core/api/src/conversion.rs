@@ -2,12 +2,17 @@ use std::convert::TryFrom;
 
 use futures::StreamExt;
 
-use rustic_core::{Album, Artist, PlayerEvent, PlayerState, Playlist, ProviderType, QueuedTrack, Track, RepeatMode};
-use rustic_core::provider::{Authentication, AuthState, InternalUri, ProviderFolder, ProviderItem, ProviderItemType, Thumbnail};
+use rustic_core::provider::{
+    AuthState, Authentication, InternalUri, ProviderFolder, ProviderItem, ProviderItemType,
+    Thumbnail,
+};
 use rustic_core::sync::{SyncEvent, SyncItem, SyncItemState};
+use rustic_core::{
+    Album, Artist, PlayerEvent, PlayerState, Playlist, ProviderType, QueuedTrack, RepeatMode, Track,
+};
 use rustic_extension_api::ExtensionMetadata;
 
-use crate::cursor::{Cursor, from_cursor, to_cursor};
+use crate::cursor::{from_cursor, to_cursor, Cursor};
 use crate::models::*;
 
 impl From<Album> for AlbumModel {
@@ -254,7 +259,7 @@ impl From<PlayerEvent> for PlayerEventModel {
             PlayerEvent::Seek(seek) => PlayerEventModel::Seek(seek),
             PlayerEvent::StateChanged(state) => {
                 PlayerEventModel::StateChanged(state == PlayerState::Play)
-            },
+            }
             PlayerEvent::VolumeChanged(volume) => PlayerEventModel::VolumeChanged(volume),
             _ => unreachable!("this should be filtered before"),
         }
@@ -264,9 +269,9 @@ impl From<PlayerEvent> for PlayerEventModel {
 impl From<PlayerEvent> for QueueEventModel {
     fn from(event: PlayerEvent) -> Self {
         match event {
-            PlayerEvent::QueueUpdated(tracks) => {
-                QueueEventModel::QueueUpdated(tracks.into_iter().map(QueuedTrackModel::from).collect())
-            }
+            PlayerEvent::QueueUpdated(tracks) => QueueEventModel::QueueUpdated(
+                tracks.into_iter().map(QueuedTrackModel::from).collect(),
+            ),
             _ => unreachable!("this should be filtered before"),
         }
     }

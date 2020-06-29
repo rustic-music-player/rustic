@@ -1,5 +1,5 @@
 use rustic_reflect::*;
-use syn::{parse_macro_input, ItemTrait, ItemStruct};
+use syn::{parse_macro_input, ItemStruct, ItemTrait};
 
 use proc_macro::TokenStream;
 

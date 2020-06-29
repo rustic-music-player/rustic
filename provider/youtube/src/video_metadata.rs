@@ -1,8 +1,8 @@
+use rustic_core::provider::ThumbnailState;
 use rustic_core::{Artist, ProviderType, Track};
 use std::collections::HashMap;
 use std::str::FromStr;
 use youtube_api::models;
-use rustic_core::provider::ThumbnailState;
 
 pub(crate) struct YoutubeVideoMetadata(models::VideoMetadata);
 
@@ -24,7 +24,7 @@ impl From<YoutubeVideoMetadata> for Track {
         let thumbnail = video.video_details.thumbnail.thumbnails.last();
         let thumbnail = if let Some(thumbnail) = thumbnail.as_ref() {
             ThumbnailState::Url(thumbnail.url.clone())
-        }else {
+        } else {
             ThumbnailState::None
         };
         Track {

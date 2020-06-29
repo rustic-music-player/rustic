@@ -4,7 +4,7 @@ use serde_derive::{Deserialize, Serialize};
 
 use crate::library::{Artist, Identifiable, MetaValue};
 use crate::provider::{ProviderType, ThumbnailState};
-use crate::{Track};
+use crate::Track;
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct Album {

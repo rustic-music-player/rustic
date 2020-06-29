@@ -9,8 +9,11 @@ use pinboard::NonEmptyPinboard;
 use serde::{Deserialize, Serialize};
 use serde_json::from_reader;
 
-use rustic_core::{Album, Artist, Library, MultiQuery, Playlist, SearchResults, SingleQuery, SingleQueryIdentifier, Track};
 use rustic_core::library::Identifiable;
+use rustic_core::{
+    Album, Artist, Library, MultiQuery, Playlist, SearchResults, SingleQuery,
+    SingleQueryIdentifier, Track,
+};
 use rustic_store_helpers::{join_album, join_albums, join_track};
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -111,7 +114,7 @@ impl MemoryLibrary {
 
     fn persist(&self) {
         if !self.persist {
-            return
+            return;
         }
         // TODO: this should happen on an interval on a background thread
         let snapshot = self.snapshot();
@@ -135,9 +138,11 @@ impl MemoryLibrary {
         Ok(())
     }
 
-    fn find<I, T>(&self, iter: &mut I, query: &SingleQuery) -> Option<T> where
-        I: Iterator<Item=T>,
-        T: Identifiable {
+    fn find<I, T>(&self, iter: &mut I, query: &SingleQuery) -> Option<T>
+    where
+        I: Iterator<Item = T>,
+        T: Identifiable,
+    {
         match query.identifier {
             SingleQueryIdentifier::Id(id) => iter.find(|entity| entity.get_id() == Some(id)),
             SingleQueryIdentifier::Uri(ref uri) => iter.find(|entity| &entity.get_uri() == uri),
@@ -276,7 +281,7 @@ impl Library for MemoryLibrary {
         trace!("Adding artist {}", artist.name);
         if let Some(a) = self.query_artist(SingleQuery::uri(artist.uri.clone()))? {
             artist.id = a.id;
-        }else {
+        } else {
             artist.id = Some(self.artist_id.fetch_add(1, Ordering::Relaxed));
             let mut artists = self.artists.read();
             artists.push(artist.clone());
@@ -470,7 +475,7 @@ impl Library for MemoryLibrary {
             tracks.remove(position);
             self.tracks.set(tracks);
             Ok(())
-        }else {
+        } else {
             Ok(())
         }
     }
@@ -481,7 +486,7 @@ impl Library for MemoryLibrary {
             albums.remove(position);
             self.albums.set(albums);
             Ok(())
-        }else {
+        } else {
             Ok(())
         }
     }
@@ -492,7 +497,7 @@ impl Library for MemoryLibrary {
             artists.remove(position);
             self.artists.set(artists);
             Ok(())
-        }else {
+        } else {
             Ok(())
         }
     }
@@ -503,7 +508,7 @@ impl Library for MemoryLibrary {
             playlists.remove(position);
             self.playlists.set(playlists);
             Ok(())
-        }else {
+        } else {
             Ok(())
         }
     }
@@ -543,7 +548,7 @@ mod tests {
             meta: HashMap::new(),
             provider: ProviderType::Internal,
             albums: Vec::new(),
-            playlists: Vec::new()
+            playlists: Vec::new(),
         };
         let mut second = artist.clone();
         let store = MemoryLibrary::default();
