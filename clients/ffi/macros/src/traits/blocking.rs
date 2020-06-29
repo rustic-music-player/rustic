@@ -3,7 +3,7 @@ use syn::Path;
 use quote::{format_ident, quote};
 use rustic_reflect::*;
 
-use crate::convert_return_type;
+use super::convert_return_type;
 
 pub fn gen_blocking_method(client_handle: &Path, method: &TraitMethodSignature, parameters: &[proc_macro2::TokenStream]) -> proc_macro2::TokenStream {
     let call_params: Vec<_> = method
@@ -13,18 +13,17 @@ pub fn gen_blocking_method(client_handle: &Path, method: &TraitMethodSignature, 
             let name = format_ident!("{}", param.name);
             match param.type_ident {
                 TraitMethodParameterType::String => quote! {
-                        to_str(#name).unwrap().unwrap()
-                    },
+                    to_str(#name).unwrap().unwrap()
+                },
                 TraitMethodParameterType::Type(ref p_type)
-                if p_type.starts_with("Option") =>
-                    {
-                        quote! {
-                            None
-                        }
+                if p_type.starts_with("Option") => {
+                    quote! {
+                        None
                     }
+                }
                 TraitMethodParameterType::Type(_) => quote! {
-                        unimplemented!()
-                    },
+                    unimplemented!()
+                },
             }
         })
         .collect();

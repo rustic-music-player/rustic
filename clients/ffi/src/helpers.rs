@@ -10,6 +10,12 @@ macro_rules! optional_cstr {
     }
 }
 
+macro_rules! optional_number {
+    ($ptr:expr) => {
+        $ptr.unwrap_or_default()
+    }
+}
+
 macro_rules! nested_optional {
     ($ptr:expr, $target:ty) => {
         $ptr.map(<$target>::from).map(|model| Box::into_raw(Box::new(model)) as _).unwrap_or_else(::std::ptr::null)

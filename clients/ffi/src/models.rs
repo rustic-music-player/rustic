@@ -1,17 +1,6 @@
 use rustic_api::models::*;
 
-pub use self::artist::*;
-pub use self::album::*;
-pub use self::player::*;
-pub use self::playlist::*;
-pub use self::track::*;
-
-mod artist;
-mod album;
-mod player;
-mod playlist;
-mod track;
-
+rustic_ffi_client_macros::client_models!();
 
 #[derive(Debug)]
 #[repr(C)]
@@ -38,6 +27,21 @@ pub struct FFICoverArtModel;
 // TODO: add fields
 pub enum FFISyncStateModel {
     Idle
+}
+
+#[derive(Debug)]
+#[repr(C)]
+// TODO: add fields
+pub enum FFIProviderTypeModel {
+    Idle
+}
+
+#[derive(Debug)]
+#[repr(C)]
+pub enum FFIRepeatModeModel {
+    None,
+    Single,
+    All
 }
 
 impl From<SearchResults> for FFISearchResults {
@@ -67,5 +71,15 @@ impl From<CoverArtModel> for FFICoverArtModel {
 impl From<SyncStateModel> for FFISyncStateModel {
     fn from(_: SyncStateModel) -> Self {
         FFISyncStateModel::Idle
+    }
+}
+
+impl From<RepeatModeModel> for FFIRepeatModeModel {
+    fn from(model: RepeatModeModel) -> Self {
+        match model {
+            RepeatModeModel::None => FFIRepeatModeModel::None,
+            RepeatModeModel::Single => FFIRepeatModeModel::Single,
+            RepeatModeModel::All => FFIRepeatModeModel::All
+        }
     }
 }

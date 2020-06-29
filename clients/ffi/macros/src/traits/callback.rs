@@ -37,7 +37,7 @@ pub fn gen_callback_method(client_handle: &Path, method: &TraitMethodSignature, 
     let method_name = format_ident!("{}", method.name);
     let exposed_name = format_ident!("client_{}_cb", method.name);
     let return_type = to_return_type_cb(&method.return_type);
-    let return_type_conversion = crate::convert_return_type(&method.return_type, true);
+    let return_type_conversion = super::convert_return_type(&method.return_type, true);
     let content = quote! {
     let mut client_handle = #client_handle::from_ptr(ptr);
     let client = ::std::sync::Arc::clone(client_handle.get_client());

@@ -1,5 +1,5 @@
 use rustic_reflect::*;
-use syn::{parse_macro_input, ItemTrait};
+use syn::{parse_macro_input, ItemTrait, ItemStruct};
 
 use proc_macro::TokenStream;
 
@@ -14,16 +14,16 @@ pub fn reflect_trait(_: TokenStream, input: TokenStream) -> TokenStream {
 
     input
 }
-//
-// #[proc_macro_attribute]
-// pub fn reflect_struct(_: TokenStream, input: TokenStream) -> TokenStream {
-//     let trait_input = input.clone();
-//     let trait_item = parse_macro_input!(trait_input as ItemStruct);
-//
-//     put_trait(trait_item);
-//
-//     input
-// }
+
+#[proc_macro_attribute]
+pub fn reflect_struct(_: TokenStream, input: TokenStream) -> TokenStream {
+    let struct_input = input.clone();
+    let struct_item = parse_macro_input!(struct_input as ItemStruct);
+
+    put_struct(struct_item);
+
+    input
+}
 
 #[proc_macro]
 pub fn export_reflections(_: TokenStream) -> TokenStream {
@@ -40,6 +40,8 @@ pub fn export_reflections(_: TokenStream) -> TokenStream {
         })
         .collect();
 
+    let structs = get_structs();
+
     let result = quote! {
         #[doc(hidden)]
         #[inline]
@@ -47,6 +49,12 @@ pub fn export_reflections(_: TokenStream) -> TokenStream {
             #trait_blocks
 
             None
+        }
+
+        #[doc(hidden)]
+        #[inline]
+        pub fn get_structs() -> Vec<rustic_reflect::StructSignature> {
+            vec![#(#structs),*]
         }
     };
     result.into()

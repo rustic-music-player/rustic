@@ -1,9 +1,11 @@
 use crate::models::{AlbumModel, PlaylistModel, ProviderTypeModel, TrackModel};
 use serde::{Deserialize, Serialize};
 use std::cmp::Ordering;
+use rustic_reflect_macros::reflect_struct;
 #[cfg(target_arch = "wasm32")]
 use wasm_bindgen::prelude::*;
 
+#[reflect_struct]
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Eq)]
 #[cfg_attr(
     target_arch = "wasm32",
