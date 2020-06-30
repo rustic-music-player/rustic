@@ -44,6 +44,13 @@ pub enum FFISyncItemStateModel {
 }
 
 #[repr(C)]
+pub struct FFIAggregatedTrack;
+#[repr(C)]
+pub struct FFIAggregatedAlbum;
+#[repr(C)]
+pub struct FFIAggregatedArtist;
+
+#[repr(C)]
 pub struct FFIProviderItemTypeModel;
 
 #[repr(C)]

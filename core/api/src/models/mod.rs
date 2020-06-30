@@ -1,3 +1,4 @@
+pub use self::aggregations::*;
 pub use self::album::*;
 pub use self::artist::*;
 pub use self::available_provider::*;
@@ -14,6 +15,7 @@ pub use self::search::*;
 pub use self::sync_state::*;
 pub use self::track::*;
 
+mod aggregations;
 mod album;
 mod artist;
 mod available_provider;

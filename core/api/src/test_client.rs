@@ -42,6 +42,14 @@ impl RusticApiClient for TestApiClient {
             .was_called_returning("search", (query.to_owned(), providers))
     }
 
+    async fn aggregated_search(
+        &self,
+        query: &str,
+        providers: Option<Vec<ProviderTypeModel>>,
+    ) -> Result<AggregatedSearchResults> {
+        unimplemented!()
+    }
+
     async fn get_extensions(&self) -> Result<Vec<ExtensionModel>> {
         Ok(self.extensions.clone())
     }

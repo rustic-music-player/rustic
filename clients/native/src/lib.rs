@@ -122,6 +122,16 @@ impl RusticApiClient for RusticNativeClient {
         })
     }
 
+    async fn aggregated_search(
+        &self,
+        query: &str,
+        providers: Option<Vec<ProviderTypeModel>>,
+    ) -> Result<AggregatedSearchResults> {
+        let results = self.search(query, providers).await?;
+
+        Ok(aggregate_results(results))
+    }
+
     async fn get_extensions(&self) -> Result<Vec<ExtensionModel>> {
         let extensions = self
             .extensions
@@ -175,5 +185,18 @@ impl RusticApiClient for RusticNativeClient {
 impl std::fmt::Debug for RusticNativeClient {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.debug_struct("RusticNativeClient").finish()
+    }
+}
+
+fn aggregate_results(results: SearchResults) -> AggregatedSearchResults {
+    let tracks: Vec<TrackCollection> = Aggregate::aggregate(results.tracks);
+    let albums: Vec<AlbumCollection> = Aggregate::aggregate(results.albums);
+    let artists: Vec<ArtistCollection> = Aggregate::aggregate(results.artists);
+
+    AggregatedSearchResults {
+        tracks: tracks.into_iter().map(AggregatedTrack::from).collect(),
+        albums: albums.into_iter().map(AggregatedAlbum::from).collect(),
+        artists: artists.into_iter().map(AggregatedArtist::from).collect(),
+        playlists: results.playlists,
     }
 }

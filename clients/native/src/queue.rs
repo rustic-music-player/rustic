@@ -11,7 +11,7 @@ use rustic_api::client::{QueueApiClient, Result};
 use rustic_api::cursor::from_cursor;
 use rustic_api::models::{QueueEventModel, QueuedTrackModel};
 use rustic_core::player::Player;
-use rustic_core::{Album, PlayerEvent, PlayerState, Playlist, SingleQuery, Track, QueryJoins};
+use rustic_core::{Album, PlayerEvent, PlayerState, Playlist, QueryJoins, SingleQuery, Track};
 
 use crate::stream_util::from_channel;
 use crate::RusticNativeClient;

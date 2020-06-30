@@ -1,8 +1,7 @@
+use async_trait::async_trait;
 use futures::stream::BoxStream;
 
 use rustic_reflect_macros::reflect_trait;
-
-use async_trait::async_trait;
 
 use crate::cursor::Cursor;
 use crate::models::*;
@@ -26,6 +25,12 @@ pub trait RusticApiClient:
         query: &str,
         providers: Option<Vec<ProviderTypeModel>>,
     ) -> Result<SearchResults>;
+
+    async fn aggregated_search(
+        &self,
+        query: &str,
+        providers: Option<Vec<ProviderTypeModel>>,
+    ) -> Result<AggregatedSearchResults>;
 
     async fn get_extensions(&self) -> Result<Vec<ExtensionModel>>;
 

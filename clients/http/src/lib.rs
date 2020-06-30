@@ -1,12 +1,12 @@
 use std::marker::PhantomData;
 
+use async_trait::async_trait;
 use failure::format_err;
 use futures::stream::BoxStream;
 use serde::de::DeserializeOwned;
 use serde::{Deserialize, Serialize};
 use serde_json::json;
 
-use async_trait::async_trait;
 use rustic_api::client::*;
 use rustic_api::cursor::{to_cursor, Cursor};
 pub use rustic_api::models;
@@ -36,13 +36,12 @@ where
     }
 
     fn url_for_item(cursor: Cursor) -> String {
-        let url = match cursor {
+        match cursor {
             Cursor::Track(cursor) => format!("/api/library/tracks/{}", cursor),
             Cursor::Album(cursor) => format!("/api/library/albums/{}", cursor),
             Cursor::Artist(cursor) => format!("/api/library/artists/{}", cursor),
             Cursor::Playlist(cursor) => format!("/api/library/playlists/{}", cursor),
-        };
-        url
+        }
     }
 }
 
@@ -126,15 +125,26 @@ where
     async fn search(
         &self,
         query: &str,
-        provider: Option<Vec<ProviderTypeModel>>,
+        providers: Option<Vec<ProviderTypeModel>>,
     ) -> Result<SearchResults> {
-        let query = SearchQuery {
-            query,
-            providers: provider,
-        };
+        let query = SearchQuery { query, providers };
         let query = serde_qs::to_string(&query)
             .map_err(|e| format_err!("Query String serialization failed: {:?}", e))?;
         let url = format!("/api/search?{}", query);
+        let res = self.get(&url).await?;
+
+        Ok(res)
+    }
+
+    async fn aggregated_search(
+        &self,
+        query: &str,
+        providers: Option<Vec<ProviderTypeModel>>,
+    ) -> Result<AggregatedSearchResults> {
+        let query = SearchQuery { query, providers };
+        let query = serde_qs::to_string(&query)
+            .map_err(|e| format_err!("Query String serialization failed: {:?}", e))?;
+        let url = format!("/api/search/aggregated?{}", query);
         let res = self.get(&url).await?;
 
         Ok(res)

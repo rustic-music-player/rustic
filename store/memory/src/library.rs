@@ -112,7 +112,6 @@ impl MemoryLibrary {
         }
     }
 
-
     fn store(snapshot: LibrarySnapshot) -> Result<(), failure::Error> {
         let mut file = fs::OpenOptions::new()
             .create(true)

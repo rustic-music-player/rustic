@@ -30,6 +30,20 @@ pub async fn search(
     Ok(web::Json(result))
 }
 
+#[get("/search/aggregated")]
+pub async fn search_aggregated(
+    client: web::Data<ApiClient>,
+    params: QsQuery<SearchQuery>,
+) -> Result<impl Responder, error::Error> {
+    trace!("search {}", &params.query);
+    let query = params.into_inner();
+    let result = client
+        .aggregated_search(&query.query, query.providers)
+        .await?;
+
+    Ok(web::Json(result))
+}
+
 #[get("/open/{url}")]
 pub async fn open(
     client: web::Data<ApiClient>,
