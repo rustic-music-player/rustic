@@ -92,7 +92,7 @@ pub enum StructFieldType {
 impl From<Type> for StructFieldType {
     fn from(path: Type) -> Self {
         match path {
-            Type::Tuple(ref tuple) => unimplemented!("From<Type> for TraitMethodReturnType Tuple"),
+            Type::Tuple(_) => unimplemented!("From<Type> for TraitMethodReturnType Tuple"),
             Type::Path(ref type_path) => {
                 let segment = type_path.path.segments.first().unwrap();
                 let ident = segment.ident.to_string();

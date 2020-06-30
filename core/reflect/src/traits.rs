@@ -2,7 +2,7 @@ use std::collections::HashMap;
 use std::sync::RwLock;
 
 use proc_macro2::TokenStream;
-use syn::{FnArg, ItemTrait, Pat, PatType, ReturnType, TraitItem, Type, TypePath};
+use syn::{FnArg, ItemTrait, Pat, PatType, ReturnType, TraitItem, Type};
 
 use lazy_static::lazy_static;
 use quote::{quote, ToTokens};
@@ -130,7 +130,7 @@ impl From<Type> for TraitMethodReturnType {
     fn from(path: Type) -> Self {
         match path {
             Type::Tuple(ref tuple) => {
-                if tuple.elems.len() == 0 {
+                if tuple.elems.is_empty() {
                     TraitMethodReturnType::Unit
                 } else {
                     unimplemented!("From<Type> for TraitMethodReturnType Tuple")
