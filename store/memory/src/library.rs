@@ -112,28 +112,13 @@ impl MemoryLibrary {
         }
     }
 
-    fn persist(&self) {
-        if !self.persist {
-            return;
-        }
-        // TODO: this should happen on an interval on a background thread
-        let snapshot = self.snapshot();
-        tokio::spawn(async {
-            if let Err(e) = MemoryLibrary::store(snapshot).await {
-                log::error!("Storing memory library failed {}", e);
-            }
-        });
-    }
 
-    async fn store(snapshot: LibrarySnapshot) -> Result<(), failure::Error> {
-        use tokio::io::AsyncWriteExt;
-        let mut file = tokio::fs::OpenOptions::new()
+    fn store(snapshot: LibrarySnapshot) -> Result<(), failure::Error> {
+        let mut file = fs::OpenOptions::new()
             .create(true)
             .write(true)
-            .open(".store.json")
-            .await?;
-        let content = serde_json::to_string(&snapshot)?;
-        file.write(content.as_bytes()).await?;
+            .open(".store.json")?;
+        let content = serde_json::to_writer(file, &snapshot)?;
 
         Ok(())
     }
@@ -248,7 +233,6 @@ impl Library for MemoryLibrary {
         let mut tracks = self.tracks.read();
         tracks.push(track.clone());
         self.tracks.set(tracks);
-        self.persist();
         Ok(())
     }
 
@@ -272,7 +256,6 @@ impl Library for MemoryLibrary {
         let mut albums = self.albums.read();
         albums.push(album.clone());
         self.albums.set(albums);
-        self.persist();
 
         Ok(())
     }
@@ -286,7 +269,6 @@ impl Library for MemoryLibrary {
             let mut artists = self.artists.read();
             artists.push(artist.clone());
             self.artists.set(artists);
-            self.persist();
         }
         Ok(())
     }
@@ -296,7 +278,6 @@ impl Library for MemoryLibrary {
         let mut playlists = self.playlists.read();
         playlists.push(playlist.clone());
         self.playlists.set(playlists);
-        self.persist();
         Ok(())
     }
 
@@ -344,7 +325,6 @@ impl Library for MemoryLibrary {
             tracks.push(track.clone());
             self.tracks.set(tracks);
         }
-        self.persist();
         Ok(())
     }
 
@@ -364,7 +344,6 @@ impl Library for MemoryLibrary {
             albums.push(album.clone());
             self.albums.set(albums);
         }
-        self.persist();
         Ok(())
     }
 
@@ -384,7 +363,6 @@ impl Library for MemoryLibrary {
             artists.push(artist.clone());
             self.artists.set(artists);
         }
-        self.persist();
         Ok(())
     }
 
@@ -408,7 +386,6 @@ impl Library for MemoryLibrary {
             playlists.push(playlist.clone());
         }
         self.playlists.set(playlists);
-        self.persist();
         Ok(())
     }
 
@@ -527,6 +504,17 @@ impl Library for MemoryLibrary {
             artists: vec![],
             playlists: vec![],
         })
+    }
+
+    fn flush(&self) -> Result<(), Error> {
+        if !self.persist {
+            return Ok(());
+        }
+        let snapshot = self.snapshot();
+        if let Err(e) = MemoryLibrary::store(snapshot) {
+            log::error!("Storing memory library failed {}", e);
+        }
+        Ok(())
     }
 }
 

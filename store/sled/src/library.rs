@@ -308,4 +308,9 @@ impl rustic_core::Library for SledLibrary {
             playlists,
         })
     }
+
+    fn flush(&self) -> Result<(), Error> {
+        self.db.flush()?;
+        Ok(())
+    }
 }

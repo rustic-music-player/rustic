@@ -19,6 +19,7 @@ impl PlaylistApiClient for RusticNativeClient {
             uri: format!("internal://playlist/{}", name),
         };
         self.app.library.add_playlist(&mut playlist)?;
+        self.app.library.flush()?;
         Ok(playlist.into())
     }
 
@@ -29,6 +30,7 @@ impl PlaylistApiClient for RusticNativeClient {
             .query_playlist(from_cursor(cursor)?.into())?
             .ok_or_else(|| format_err!("unknown playlist"))?;
         self.app.library.remove_playlist(&playlist)?;
+        self.app.library.flush()?;
 
         Ok(())
     }
@@ -46,6 +48,7 @@ impl PlaylistApiClient for RusticNativeClient {
             .ok_or_else(|| format_err!("unknown track"))?;
         playlist.tracks.push(track);
         self.app.library.sync_playlist(&mut playlist)?;
+        self.app.library.flush()?;
 
         Ok(())
     }
@@ -60,6 +63,7 @@ impl PlaylistApiClient for RusticNativeClient {
         if let Some(track_index) = playlist.tracks.iter().position(|t| t.uri == track_uri) {
             playlist.tracks.remove(track_index);
             self.app.library.sync_playlist(&mut playlist)?;
+            self.app.library.flush()?;
             Ok(())
         } else {
             Err(format_err!("Track is not in playlist"))

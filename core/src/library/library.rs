@@ -132,4 +132,7 @@ pub trait Library: Sync + Send {
     fn remove_playlist(&self, playlist: &Playlist) -> Result<(), Error>;
 
     fn search(&self, query: String) -> Result<SearchResults, Error>;
+
+    // TODO: this should happen on an interval on a background thread
+    fn flush(&self) -> Result<(), Error>;
 }

@@ -173,4 +173,8 @@ impl rustic_core::Library for SqliteLibrary {
     fn search(&self, _query: String) -> Result<SearchResults, Error> {
         unimplemented!()
     }
+
+    fn flush(&self) -> Result<(), Error> {
+        Ok(())
+    }
 }

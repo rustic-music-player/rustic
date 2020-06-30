@@ -99,5 +99,8 @@ async fn synchronize(app: &Arc<Rustic>) {
         }
         app.sync.next(SyncEvent::Synchronizing(sync_items.clone()));
     }
+    if let Err(e) = app.library.flush() {
+        error!("Flushing of library failed {:?}", e);
+    }
     app.sync.next(SyncEvent::Idle);
 }

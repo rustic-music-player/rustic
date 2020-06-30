@@ -142,20 +142,24 @@ impl LibraryApiClient for RusticNativeClient {
 
     async fn add_to_library(&self, cursor: Cursor) -> Result<()> {
         match cursor.try_into()? {
-            InternalUri::Track(uri) => self.add_track_to_library(uri.into()).await,
-            InternalUri::Album(uri) => self.add_album_to_library(uri.into()).await,
-            InternalUri::Artist(uri) => self.add_artist_to_library(uri.into()).await,
-            InternalUri::Playlist(uri) => self.add_playlist_to_library(uri.into()).await,
+            InternalUri::Track(uri) => self.add_track_to_library(uri.into()).await?,
+            InternalUri::Album(uri) => self.add_album_to_library(uri.into()).await?,
+            InternalUri::Artist(uri) => self.add_artist_to_library(uri.into()).await?,
+            InternalUri::Playlist(uri) => self.add_playlist_to_library(uri.into()).await?,
         }
+        self.app.library.flush()?;
+        Ok(())
     }
 
     async fn remove_from_library(&self, cursor: Cursor) -> Result<()> {
         match cursor.try_into()? {
-            InternalUri::Track(uri) => self.remove_track_from_library(uri.into()).await,
-            InternalUri::Album(uri) => self.remove_album_from_library(uri.into()).await,
-            InternalUri::Artist(uri) => self.remove_artist_from_library(uri.into()).await,
-            InternalUri::Playlist(uri) => self.remove_playlist_from_library(uri.into()).await,
+            InternalUri::Track(uri) => self.remove_track_from_library(uri.into()).await?,
+            InternalUri::Album(uri) => self.remove_album_from_library(uri.into()).await?,
+            InternalUri::Artist(uri) => self.remove_artist_from_library(uri.into()).await?,
+            InternalUri::Playlist(uri) => self.remove_playlist_from_library(uri.into()).await?,
         }
+        self.app.library.flush()?;
+        Ok(())
     }
 
     fn sync_state(&self) -> BoxStream<'static, SyncStateModel> {
