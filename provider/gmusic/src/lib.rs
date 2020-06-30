@@ -16,6 +16,7 @@ use crate::artist::GmusicArtist;
 use crate::meta::META_GMUSIC_STORE_ID;
 use crate::playlist::GmusicPlaylist;
 use crate::track::GmusicTrack;
+use std::collections::HashMap;
 
 mod album;
 mod artist;
@@ -141,26 +142,35 @@ impl provider::ProviderInstance for GooglePlayMusicProvider {
 
     async fn sync(&self, library: SharedLibrary) -> Result<provider::SyncResult, Error> {
         let client = self.get_client()?;
-        let mut playlists: Vec<Playlist> = client
-            .get_all_playlists()
-            .await?
-            .into_iter()
-            .map(GmusicPlaylist::from)
-            .map(Playlist::from)
-            .collect();
+        let gmusic_playlists = client.get_all_playlists().await?;
+        let mut tracks = HashMap::new();
+        for playlist in &gmusic_playlists {
+            let entries = client
+                .get_shared_playlist_contents(&playlist.share_token)
+                .await?;
+            tracks.insert(playlist.share_token.clone(), entries);
+        }
 
-        let playlist_entries = client.get_playlist_entries().await?;
+        // TODO: self uploaded tracks are missing right now
+        // let playlist_entries = client.get_playlist_entries().await?;
 
-        for playlist in &mut playlists {
-            let playlist_id = &playlist.uri["gmusic:playlist:".len()..];
-            playlist.tracks = playlist_entries
+        let mut playlists = Vec::new();
+
+        for gmusic_playlist in gmusic_playlists {
+            let shared_tracks = tracks
+                .get(&gmusic_playlist.share_token)
+                .cloned()
+                .unwrap_or_default();
+            let mut playlist = Playlist::from(GmusicPlaylist::from(gmusic_playlist));
+            playlist.tracks = shared_tracks
                 .iter()
-                .filter(|entry| entry.playlist_id == playlist_id)
                 .filter_map(|entry| entry.track.as_ref())
                 .cloned()
                 .map(GmusicTrack::from)
                 .map(Track::from)
                 .collect();
+
+            playlists.push(playlist);
         }
 
         library.sync_playlists(&mut playlists)?;
