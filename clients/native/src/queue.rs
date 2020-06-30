@@ -11,7 +11,7 @@ use rustic_api::client::{QueueApiClient, Result};
 use rustic_api::cursor::from_cursor;
 use rustic_api::models::{QueueEventModel, QueuedTrackModel};
 use rustic_core::player::Player;
-use rustic_core::{Album, PlayerEvent, PlayerState, Playlist, SingleQuery, Track};
+use rustic_core::{Album, PlayerEvent, PlayerState, Playlist, SingleQuery, Track, QueryJoins};
 
 use crate::stream_util::from_channel;
 use crate::RusticNativeClient;
@@ -50,7 +50,9 @@ impl QueueApiClient for RusticNativeClient {
         let player = self.get_player_or_default(player_id)?;
         let uri = from_cursor(cursor)?;
         debug!("adding album to queue {}", uri);
-        let album: Option<Album> = self.app.query_album(SingleQuery::uri(uri)).await?;
+        let mut query = SingleQuery::uri(uri);
+        query.join_tracks();
+        let album: Option<Album> = self.app.query_album(query).await?;
         match album {
             Some(album) => {
                 self.queue_multiple(player, &album.tracks).await?;
