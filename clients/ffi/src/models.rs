@@ -44,11 +44,49 @@ pub enum FFISyncItemStateModel {
 }
 
 #[repr(C)]
-pub struct FFIAggregatedTrack;
+pub enum FFIAggregatedTrack {
+    Single(FFITrackModel),
+    Multi(FFITrackCollection),
+}
+
+impl From<AggregatedTrack> for FFIAggregatedTrack {
+    fn from(track: AggregatedTrack) -> Self {
+        match track {
+            AggregatedTrack::Single(track) => FFIAggregatedTrack::Single(track.into()),
+            AggregatedTrack::Multi(track) => FFIAggregatedTrack::Multi(track.into()),
+        }
+    }
+}
+
 #[repr(C)]
-pub struct FFIAggregatedAlbum;
+pub enum FFIAggregatedAlbum {
+    Single(FFIAlbumModel),
+    Multi(FFIAlbumCollection),
+}
+
+impl From<AggregatedAlbum> for FFIAggregatedAlbum {
+    fn from(album: AggregatedAlbum) -> Self {
+        match album {
+            AggregatedAlbum::Single(album) => FFIAggregatedAlbum::Single(album.into()),
+            AggregatedAlbum::Multi(album) => FFIAggregatedAlbum::Multi(album.into()),
+        }
+    }
+}
+
 #[repr(C)]
-pub struct FFIAggregatedArtist;
+pub enum FFIAggregatedArtist {
+    Single(FFIArtistModel),
+    Multi(FFIArtistCollection),
+}
+
+impl From<AggregatedArtist> for FFIAggregatedArtist {
+    fn from(artist: AggregatedArtist) -> Self {
+        match artist {
+            AggregatedArtist::Single(artist) => FFIAggregatedArtist::Single(artist.into()),
+            AggregatedArtist::Multi(artist) => FFIAggregatedArtist::Multi(artist.into()),
+        }
+    }
+}
 
 #[repr(C)]
 pub struct FFIProviderItemTypeModel;
