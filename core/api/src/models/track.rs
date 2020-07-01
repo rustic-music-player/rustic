@@ -65,6 +65,12 @@ impl From<TrackCollection> for AggregatedTrack {
     }
 }
 
+impl From<TrackModel> for AggregatedTrack {
+    fn from(track: TrackModel) -> Self {
+        AggregatedTrack::Single(track)
+    }
+}
+
 #[reflect_struct]
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Eq)]
 #[cfg_attr(
@@ -84,7 +90,12 @@ pub struct TrackCollection {
 impl Aggregate<TrackModel> for TrackCollection {
     fn add_entry(&mut self, track: TrackModel) {
         self.entries.push(track);
-        // TODO: calculate cursor
+        let cursors = self
+            .entries
+            .iter()
+            .map(|entry| entry.cursor.clone())
+            .collect::<Vec<_>>();
+        self.cursor = format!("a:{}", cursors.join(":"));
         self.album = Aggregate::aggregate(
             self.entries
                 .iter()

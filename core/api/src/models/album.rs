@@ -58,6 +58,12 @@ impl From<AlbumCollection> for AggregatedAlbum {
     }
 }
 
+impl From<AlbumModel> for AggregatedAlbum {
+    fn from(album: AlbumModel) -> Self {
+        AggregatedAlbum::Single(album)
+    }
+}
+
 #[reflect_struct]
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Eq)]
 #[cfg_attr(
@@ -76,8 +82,12 @@ pub struct AlbumCollection {
 impl Aggregate<AlbumModel> for AlbumCollection {
     fn add_entry(&mut self, album: AlbumModel) {
         self.entries.push(album);
-        // TODO: calculate cursor
-        // TODO: set tracks
+        let cursors = self
+            .entries
+            .iter()
+            .map(|entry| entry.cursor.clone())
+            .collect::<Vec<_>>();
+        self.cursor = format!("a:{}", cursors.join(":"));
         self.artist = Aggregate::aggregate(
             self.entries
                 .iter()
@@ -86,6 +96,12 @@ impl Aggregate<AlbumModel> for AlbumCollection {
         )
         .first()
         .cloned();
+        self.tracks = Aggregate::aggregate(
+            self.entries
+                .iter()
+                .flat_map(|album| album.tracks.clone())
+                .collect(),
+        );
         self.coverart = self
             .entries
             .iter()

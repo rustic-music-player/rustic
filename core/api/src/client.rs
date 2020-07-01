@@ -69,11 +69,11 @@ pub trait LibraryApiClient: Sync + Send {
         providers: Option<Vec<ProviderTypeModel>>,
     ) -> Result<Vec<AlbumModel>>;
 
-    async fn get_album(&self, cursor: &str) -> Result<Option<AlbumModel>>;
+    async fn get_album(&self, cursor: &str) -> Result<Option<AggregatedAlbum>>;
 
     async fn get_artists(&self) -> Result<Vec<ArtistModel>>;
 
-    async fn get_artist(&self, cursor: &str) -> Result<Option<ArtistModel>>;
+    async fn get_artist(&self, cursor: &str) -> Result<Option<AggregatedArtist>>;
 
     async fn get_playlists(
         &self,
@@ -87,7 +87,7 @@ pub trait LibraryApiClient: Sync + Send {
         providers: Option<Vec<ProviderTypeModel>>,
     ) -> Result<Vec<TrackModel>>;
 
-    async fn get_track(&self, cursor: &str) -> Result<Option<TrackModel>>;
+    async fn get_track(&self, cursor: &str) -> Result<Option<AggregatedTrack>>;
 
     async fn add_to_library(&self, cursor: Cursor) -> Result<()>;
 

@@ -184,7 +184,7 @@ impl LibraryApiClient for TestApiClient {
         unimplemented!()
     }
 
-    async fn get_album(&self, cursor: &str) -> Result<Option<AlbumModel>> {
+    async fn get_album(&self, cursor: &str) -> Result<Option<AggregatedAlbum>> {
         unimplemented!()
     }
 
@@ -192,7 +192,7 @@ impl LibraryApiClient for TestApiClient {
         unimplemented!()
     }
 
-    async fn get_artist(&self, cursor: &str) -> Result<Option<ArtistModel>> {
+    async fn get_artist(&self, cursor: &str) -> Result<Option<AggregatedArtist>> {
         unimplemented!()
     }
 
@@ -214,7 +214,7 @@ impl LibraryApiClient for TestApiClient {
         unimplemented!()
     }
 
-    async fn get_track(&self, cursor: &str) -> Result<Option<TrackModel>> {
+    async fn get_track(&self, cursor: &str) -> Result<Option<AggregatedTrack>> {
         unimplemented!()
     }
 

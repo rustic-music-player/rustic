@@ -7,9 +7,7 @@ use log::debug;
 use async_trait::async_trait;
 use rustic_api::client::{LibraryApiClient, Result};
 use rustic_api::cursor::{from_cursor, Cursor};
-use rustic_api::models::{
-    AlbumModel, ArtistModel, PlaylistModel, ProviderTypeModel, SyncStateModel, TrackModel,
-};
+use rustic_api::models::*;
 use rustic_core::provider::InternalUri;
 use rustic_core::{MultiQuery, ProviderType, QueryJoins, SingleQuery};
 
@@ -39,16 +37,21 @@ impl LibraryApiClient for RusticNativeClient {
         Ok(albums)
     }
 
-    async fn get_album(&self, cursor: &str) -> Result<Option<AlbumModel>> {
+    async fn get_album(&self, cursor: &str) -> Result<Option<AggregatedAlbum>> {
         let sw = stopwatch::Stopwatch::start_new();
 
-        let uri = from_cursor(cursor)?;
-        let mut query = SingleQuery::uri(uri);
-        query.join_all();
-        let album = self.app.query_album(query).await?.map(AlbumModel::from);
+        let cursors = RusticNativeClient::get_cursors(cursor);
+
+        let mut albums = Vec::new();
+        for cursor in cursors {
+            if let Some(album) = self.query_album(cursor).await? {
+                albums.push(album);
+            }
+        }
+        let album: Option<AlbumCollection> = Aggregate::aggregate_single(albums);
         debug!("Fetching album took {}ms", sw.elapsed_ms());
 
-        Ok(album)
+        Ok(album.map(AggregatedAlbum::from))
     }
 
     async fn get_artists(&self) -> Result<Vec<ArtistModel>> {
@@ -60,16 +63,21 @@ impl LibraryApiClient for RusticNativeClient {
         Ok(artists)
     }
 
-    async fn get_artist(&self, cursor: &str) -> Result<Option<ArtistModel>> {
+    async fn get_artist(&self, cursor: &str) -> Result<Option<AggregatedArtist>> {
         let sw = stopwatch::Stopwatch::start_new();
 
-        let uri = from_cursor(cursor)?;
-        let mut query = SingleQuery::uri(uri);
-        query.join_all();
-        let artist = self.app.query_artist(query).await?.map(ArtistModel::from);
+        let cursors = RusticNativeClient::get_cursors(cursor);
+
+        let mut artists = Vec::new();
+        for cursor in cursors {
+            if let Some(artist) = self.query_artist(cursor).await? {
+                artists.push(artist);
+            }
+        }
+        let artist: Option<ArtistCollection> = Aggregate::aggregate_single(artists);
         debug!("Fetching artist took {}ms", sw.elapsed_ms());
 
-        Ok(artist)
+        Ok(artist.map(AggregatedArtist::from))
     }
 
     async fn get_playlists(
@@ -131,13 +139,21 @@ impl LibraryApiClient for RusticNativeClient {
         Ok(tracks)
     }
 
-    async fn get_track(&self, cursor: &str) -> Result<Option<TrackModel>> {
-        let uri = from_cursor(cursor)?;
-        let query = SingleQuery::uri(uri);
-        let track = self.app.query_track(query).await?;
-        let track = track.map(TrackModel::from);
+    async fn get_track(&self, cursor: &str) -> Result<Option<AggregatedTrack>> {
+        let sw = stopwatch::Stopwatch::start_new();
 
-        Ok(track)
+        let cursors = RusticNativeClient::get_cursors(cursor);
+
+        let mut tracks = Vec::new();
+        for cursor in cursors {
+            if let Some(track) = self.query_track(cursor).await? {
+                tracks.push(track);
+            }
+        }
+        let track: Option<TrackCollection> = Aggregate::aggregate_single(tracks);
+        debug!("Fetching track took {}ms", sw.elapsed_ms());
+
+        Ok(track.map(AggregatedTrack::from))
     }
 
     async fn add_to_library(&self, cursor: Cursor) -> Result<()> {
@@ -232,5 +248,40 @@ impl RusticNativeClient {
             self.app.library.remove_playlist(&playlist)?;
         }
         Ok(())
+    }
+
+    async fn query_album(&self, cursor: &str) -> Result<Option<AlbumModel>> {
+        let uri = from_cursor(cursor)?;
+        let mut query = SingleQuery::uri(uri);
+        query.join_all();
+        let album = self.app.query_album(query).await?.map(AlbumModel::from);
+
+        Ok(album)
+    }
+
+    async fn query_artist(&self, cursor: &str) -> Result<Option<ArtistModel>> {
+        let uri = from_cursor(cursor)?;
+        let mut query = SingleQuery::uri(uri);
+        query.join_all();
+        let artist = self.app.query_artist(query).await?.map(ArtistModel::from);
+
+        Ok(artist)
+    }
+
+    async fn query_track(&self, cursor: &str) -> Result<Option<TrackModel>> {
+        let uri = from_cursor(cursor)?;
+        let query = SingleQuery::uri(uri);
+        let track = self.app.query_track(query).await?;
+        let track = track.map(TrackModel::from);
+
+        Ok(track)
+    }
+
+    fn get_cursors(cursor: &str) -> Vec<&str> {
+        if cursor.starts_with("a:") {
+            cursor.split(':').skip(1).collect()
+        } else {
+            vec![cursor]
+        }
     }
 }

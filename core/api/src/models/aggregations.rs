@@ -15,4 +15,9 @@ pub trait Aggregate<M>: From<M> {
                 aggregated
             })
     }
+
+    fn aggregate_single(models: Vec<M>) -> Option<Self> {
+        let mut aggregations = Aggregate::aggregate(models);
+        aggregations.pop()
+    }
 }

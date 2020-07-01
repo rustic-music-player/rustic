@@ -246,7 +246,7 @@ where
         Ok(res)
     }
 
-    async fn get_album(&self, cursor: &str) -> Result<Option<AlbumModel>> {
+    async fn get_album(&self, cursor: &str) -> Result<Option<AggregatedAlbum>> {
         let res = self.get(&format!("/api/library/albums/{}", cursor)).await?;
 
         Ok(res)
@@ -258,7 +258,7 @@ where
         Ok(res)
     }
 
-    async fn get_artist(&self, cursor: &str) -> Result<Option<ArtistModel>> {
+    async fn get_artist(&self, cursor: &str) -> Result<Option<AggregatedArtist>> {
         let res = self
             .get(&format!("/api/library/artists/{}", cursor))
             .await?;
@@ -300,7 +300,7 @@ where
         Ok(res)
     }
 
-    async fn get_track(&self, cursor: &str) -> Result<Option<TrackModel>> {
+    async fn get_track(&self, cursor: &str) -> Result<Option<AggregatedTrack>> {
         let res = self.get(&format!("/api/library/tracks/{}", cursor)).await?;
 
         Ok(res)

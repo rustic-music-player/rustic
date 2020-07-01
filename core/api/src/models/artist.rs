@@ -1,12 +1,15 @@
+use std::cmp::Ordering;
+
+use serde::{Deserialize, Serialize};
+#[cfg(target_arch = "wasm32")]
+use wasm_bindgen::prelude::*;
+
+use rustic_reflect_macros::reflect_struct;
+
 use crate::models::aggregations::Aggregate;
 use crate::models::{
     AlbumCollection, AlbumModel, PlaylistModel, ProviderTypeModel, TrackCollection, TrackModel,
 };
-use rustic_reflect_macros::reflect_struct;
-use serde::{Deserialize, Serialize};
-use std::cmp::Ordering;
-#[cfg(target_arch = "wasm32")]
-use wasm_bindgen::prelude::*;
 
 #[reflect_struct]
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Eq)]
@@ -57,6 +60,12 @@ impl From<ArtistCollection> for AggregatedArtist {
     }
 }
 
+impl From<ArtistModel> for AggregatedArtist {
+    fn from(artist: ArtistModel) -> Self {
+        AggregatedArtist::Single(artist)
+    }
+}
+
 #[reflect_struct]
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Eq)]
 #[cfg_attr(
@@ -76,8 +85,44 @@ pub struct ArtistCollection {
 impl Aggregate<ArtistModel> for ArtistCollection {
     fn add_entry(&mut self, artist: ArtistModel) {
         self.entries.push(artist);
-        // TODO: calculate cursor
-        // TODO: set albums, tracks and playlists
+        let cursors = self
+            .entries
+            .iter()
+            .map(|entry| entry.cursor.clone())
+            .collect::<Vec<_>>();
+        self.cursor = format!("a:{}", cursors.join(":"));
+        self.albums = if self.entries.iter().any(|entry| entry.albums.is_some()) {
+            Some(Aggregate::aggregate(
+                self.entries
+                    .iter()
+                    .flat_map(|artist| artist.albums.clone().unwrap_or_default())
+                    .collect(),
+            ))
+        } else {
+            None
+        };
+
+        self.tracks = if self.entries.iter().any(|entry| entry.tracks.is_some()) {
+            Some(Aggregate::aggregate(
+                self.entries
+                    .iter()
+                    .flat_map(|artist| artist.tracks.clone().unwrap_or_default())
+                    .collect(),
+            ))
+        } else {
+            None
+        };
+
+        self.playlists = if self.entries.iter().any(|entry| entry.playlists.is_some()) {
+            Some(
+                self.entries
+                    .iter()
+                    .flat_map(|artist| artist.playlists.clone().unwrap_or_default())
+                    .collect(),
+            )
+        } else {
+            None
+        };
         self.image = self
             .entries
             .iter()
