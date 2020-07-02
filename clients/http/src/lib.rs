@@ -320,6 +320,12 @@ where
         Ok(())
     }
 
+    async fn search_library(&self, query: &str) -> Result<SearchResults> {
+        let res = self.get(&format!("/api/library/search?query={}", query)).await?;
+
+        Ok(res)
+    }
+
     fn sync_state(&self) -> BoxStream<'static, SyncStateModel> {
         unimplemented!("requires socket api")
     }

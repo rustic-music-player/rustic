@@ -8,6 +8,8 @@ export interface QueuedTrackModel extends TrackModel {
 
 export interface RusticApiClient {
     search(query: string, providers: any): Promise<SearchResults>;
+    aggregatedSearch(query: string, providers: any): Promise<AggregatedSearchResults>;
+    searchLibrary(query: string): Promise<SearchResults>;
     getExtensions(): Promise<ExtensionModel[]>;
     openShareUrl(url: string): Promise<OpenResultModel>;
     getProviders(): Promise<ProviderModel[]>;

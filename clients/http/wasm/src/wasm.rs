@@ -22,6 +22,11 @@ pub async fn search(query: String, providers: JsValue) -> ApiResult {
     execute(CLIENT.search(&query, map_providers(providers))).await
 }
 
+#[wasm_bindgen(js_name = "aggregatedSearch")]
+pub async fn aggregated_search(query: String, providers: JsValue) -> ApiResult {
+    execute(CLIENT.aggregated_search(&query, map_providers(providers))).await
+}
+
 #[wasm_bindgen(js_name = "getExtensions")]
 pub async fn get_extensions() -> ApiResult {
     execute(CLIENT.get_extensions()).await
@@ -104,6 +109,11 @@ pub async fn add_artist_to_library(cursor: String) -> ApiResult {
 #[wasm_bindgen(js_name = "addPlaylistToLibrary")]
 pub async fn add_playlist_to_library(cursor: String) -> ApiResult {
     execute(CLIENT.add_to_library(Cursor::Playlist(cursor))).await
+}
+
+#[wasm_bindgen(js_name = "searchLibrary")]
+pub async fn search_library(query: String) -> ApiResult {
+    execute(CLIENT.search_library(&query)).await
 }
 
 // PlaylistsApiClient

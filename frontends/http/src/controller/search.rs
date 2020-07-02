@@ -25,8 +25,8 @@ pub async fn search(
     params: QsQuery<SearchQuery>,
 ) -> Result<impl Responder, error::Error> {
     trace!("search {}", &params.query);
-    let search = params.into_inner();
-    let result = client.search(&search.query, search.providers).await?;
+    let query = params.into_inner();
+    let result = client.search(&query.query, query.providers).await?;
     Ok(web::Json(result))
 }
 
@@ -41,6 +41,17 @@ pub async fn search_aggregated(
         .aggregated_search(&query.query, query.providers)
         .await?;
 
+    Ok(web::Json(result))
+}
+
+#[get("/library/search")]
+pub async fn search_library(
+    client: web::Data<ApiClient>,
+    params: QsQuery<SearchQuery>,
+) -> Result<impl Responder, error::Error> {
+    trace!("search {}", &params.query);
+    let query = params.into_inner();
+    let result = client.search_library(&query.query).await?;
     Ok(web::Json(result))
 }
 

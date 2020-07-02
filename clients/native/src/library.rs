@@ -178,6 +178,17 @@ impl LibraryApiClient for RusticNativeClient {
         Ok(())
     }
 
+    async fn search_library(&self, query: &str) -> Result<SearchResults> {
+        let results = self.app.library.search(query.into())?;
+
+        Ok(SearchResults {
+            tracks: results.tracks.into_iter().map(TrackModel::from).collect(),
+            albums: results.albums.into_iter().map(AlbumModel::from).collect(),
+            artists: results.artists.into_iter().map(ArtistModel::from).collect(),
+            playlists: results.playlists.into_iter().map(PlaylistModel::from).collect(),
+        })
+    }
+
     fn sync_state(&self) -> BoxStream<'static, SyncStateModel> {
         from_channel(self.app.sync.events.clone())
             .map(SyncStateModel::from)

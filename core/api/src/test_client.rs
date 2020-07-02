@@ -226,6 +226,10 @@ impl LibraryApiClient for TestApiClient {
         unimplemented!()
     }
 
+    async fn search_library(&self, query: &str) -> Result<SearchResults> {
+        unimplemented!()
+    }
+
     fn sync_state(&self) -> BoxStream<'static, SyncStateModel> {
         unimplemented!()
     }
