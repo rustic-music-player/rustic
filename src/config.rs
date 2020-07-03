@@ -4,8 +4,11 @@ use std::io::prelude::*;
 use std::net::IpAddr;
 use std::path::Path;
 
+use rustic_extension_api::ExtensionConfigValue;
+
 use failure::Error;
 use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
 
 #[derive(Deserialize, Debug, Clone)]
 pub struct Config {
@@ -169,6 +172,8 @@ pub enum PlayerBackend {
 #[derive(Deserialize, Clone, Debug, Serialize, Default)]
 pub struct ExtensionConfig {
     pub path: Option<String>,
+    #[serde(flatten)]
+    pub extensions: HashMap<String, HashMap<String, ExtensionConfigValue>>,
 }
 
 #[derive(Deserialize, Clone, Debug)]

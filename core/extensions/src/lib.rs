@@ -1,13 +1,14 @@
 use std::collections::HashMap;
 use std::sync::Arc;
 
+use async_trait::async_trait;
 use log::info;
 use serde::{Deserialize, Serialize};
 
-use async_trait::async_trait;
 use rustic_core::Track;
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
+#[serde(untagged)]
 pub enum ExtensionConfigValue {
     Bool(bool),
     String(String),
@@ -15,7 +16,7 @@ pub enum ExtensionConfigValue {
     Int(i64),
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct ExtensionMetadata {
     pub id: String,
     pub name: String,
@@ -23,16 +24,13 @@ pub struct ExtensionMetadata {
 }
 
 pub trait ExtensionLibrary {
-    fn new() -> Box<dyn Extension>;
+    fn metadata() -> ExtensionMetadata;
+
+    fn new(config: HashMap<String, ExtensionConfigValue>) -> Box<dyn Extension>;
 }
 
 pub trait Extension: std::fmt::Debug + Send + Sync + ExtensionApi {
-    fn metadata(&self) -> ExtensionMetadata;
-
-    fn setup(
-        &mut self,
-        _config: Option<HashMap<String, ExtensionConfigValue>>,
-    ) -> Result<(), failure::Error> {
+    fn setup(&mut self) -> Result<(), failure::Error> {
         Ok(())
     }
 }
@@ -46,18 +44,18 @@ pub trait ExtensionApi {
 
 #[derive(Debug, Default)]
 pub struct ExtensionManagerBuilder {
-    extensions: Vec<Box<dyn Extension>>,
+    extensions: Vec<(ExtensionMetadata, Box<dyn Extension>)>,
 }
 
 impl ExtensionManagerBuilder {
-    pub fn load<T>(&mut self)
+    pub fn load<T>(&mut self, config: HashMap<String, ExtensionConfigValue>)
     where
         T: ExtensionLibrary,
     {
-        let extension = T::new();
-        let metadata = extension.metadata();
+        let extension = T::new(config);
+        let metadata = T::metadata();
         info!("Loaded Extension: {} v{}", metadata.name, metadata.version);
-        self.extensions.push(extension);
+        self.extensions.push((metadata, extension));
     }
 
     pub fn build(self) -> ExtensionManager {
@@ -69,12 +67,12 @@ impl ExtensionManagerBuilder {
 
 #[derive(Debug, Clone)]
 pub struct ExtensionManager {
-    extensions: Arc<Vec<Box<dyn Extension>>>,
+    extensions: Arc<Vec<(ExtensionMetadata, Box<dyn Extension>)>>,
 }
 
 impl ExtensionManager {
     pub fn get_extensions(&self) -> Vec<ExtensionMetadata> {
-        self.extensions.iter().map(|e| e.metadata()).collect()
+        self.extensions.iter().map(|(m, _)| m).cloned().collect()
     }
 }
 
@@ -82,7 +80,7 @@ impl ExtensionManager {
 impl ExtensionApi for ExtensionManager {
     async fn on_add_to_queue(&self, tracks: Vec<Track>) -> Result<Vec<Track>, failure::Error> {
         let mut tracks = tracks;
-        for extension in self.extensions.iter() {
+        for (_, extension) in self.extensions.iter() {
             tracks = extension.on_add_to_queue(tracks).await?;
         }
 
