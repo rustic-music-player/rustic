@@ -111,6 +111,26 @@ pub async fn add_playlist_to_library(cursor: String) -> ApiResult {
     execute(CLIENT.add_to_library(Cursor::Playlist(cursor))).await
 }
 
+#[wasm_bindgen(js_name = "removeTrackFromLibrary")]
+pub async fn remove_track_from_library(cursor: String) -> ApiResult {
+    execute(CLIENT.remove_from_library(Cursor::Track(cursor))).await
+}
+
+#[wasm_bindgen(js_name = "removeAlbumFromLibrary")]
+pub async fn remove_album_from_library(cursor: String) -> ApiResult {
+    execute(CLIENT.remove_from_library(Cursor::Album(cursor))).await
+}
+
+#[wasm_bindgen(js_name = "removeArtistFromLibrary")]
+pub async fn remove_artist_from_library(cursor: String) -> ApiResult {
+    execute(CLIENT.remove_from_library(Cursor::Artist(cursor))).await
+}
+
+#[wasm_bindgen(js_name = "removePlaylistFromLibrary")]
+pub async fn remove_playlist_from_library(cursor: String) -> ApiResult {
+    execute(CLIENT.remove_from_library(Cursor::Playlist(cursor))).await
+}
+
 #[wasm_bindgen(js_name = "searchLibrary")]
 pub async fn search_library(query: String) -> ApiResult {
     execute(CLIENT.search_library(&query)).await

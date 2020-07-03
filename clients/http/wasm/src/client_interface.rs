@@ -26,6 +26,10 @@ export interface RusticApiClient {
     addAlbumToLibrary(cursor: string): Promise<void>;
     addArtistToLibrary(cursor: string): Promise<void>;
     addPlaylistToLibrary(cursor: string): Promise<void>;
+    removeTrackFromLibrary(cursor: string): Promise<void>;
+    removeAlbumFromLibrary(cursor: string): Promise<void>;
+    removeArtistFromLibrary(cursor: string): Promise<void>;
+    removePlaylistFromLibrary(cursor: string): Promise<void>;
     addPlaylist(name: String): Promise<PlaylistModel>;
     removePlaylist(cursor: String): Promise<void>;
     addTrackToPlaylist(playlist: String, track: String): Promise<void>;
