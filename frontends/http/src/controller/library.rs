@@ -1,4 +1,4 @@
-use actix_web::{error, get, post, web, HttpResponse, Responder, Result};
+use actix_web::{delete, error, get, post, web, HttpResponse, Responder, Result};
 use futures::stream::StreamExt;
 use serde::Deserialize;
 use serde_qs::actix::QsQuery;
@@ -49,6 +49,17 @@ pub async fn add_album(
 ) -> Result<impl Responder> {
     let cursor = params.into_inner().cursor;
     client.add_to_library(Cursor::Album(cursor)).await?;
+
+    Ok(web::HttpResponse::NoContent())
+}
+
+#[delete("/library/albums/{cursor}")]
+pub async fn remove_album(
+    client: web::Data<ApiClient>,
+    params: web::Path<EntityQuery>,
+) -> Result<impl Responder> {
+    let cursor = params.into_inner().cursor;
+    client.remove_from_library(Cursor::Album(cursor)).await?;
 
     Ok(web::HttpResponse::NoContent())
 }
