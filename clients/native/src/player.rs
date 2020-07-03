@@ -63,7 +63,7 @@ impl PlayerApiClient for RusticNativeClient {
 
     async fn player_set_volume(&self, player_id: Option<&str>, volume: f32) -> Result<()> {
         let player = self.get_player_or_default(player_id)?;
-        player.backend.set_volume(volume)?;
+        player.backend.set_volume(volume.max(0f32).min(1f32))?;
 
         Ok(())
     }
