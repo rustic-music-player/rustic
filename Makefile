@@ -4,6 +4,9 @@ CCFLAGS = -B target/debug -iquote . -lrustic_ffi_client
 wasm:
 	./clients/http/wasm/package.sh
 
+wasm-publish: wasm
+	cd clients/http/wasm/pkg; npm publish
+
 ffi: ffi-header ffi-library
 
 ffi-library:
