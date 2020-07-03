@@ -321,7 +321,9 @@ where
     }
 
     async fn search_library(&self, query: &str) -> Result<SearchResults> {
-        let res = self.get(&format!("/api/library/search?query={}", query)).await?;
+        let res = self
+            .get(&format!("/api/library/search?query={}", query))
+            .await?;
 
         Ok(res)
     }

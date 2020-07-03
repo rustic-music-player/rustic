@@ -396,8 +396,11 @@ impl Library for MemoryLibrary {
         let mut artists = self.artists.read();
         if has_artist.is_none() {
             artists.push(artist.clone());
-        }else {
-            let index = artists.iter().position(|artist| artist.id == Some(id)).unwrap();
+        } else {
+            let index = artists
+                .iter()
+                .position(|artist| artist.id == Some(id))
+                .unwrap();
             let target_artist = artists.get_mut(index).unwrap();
             *target_artist = artist.clone();
         }
