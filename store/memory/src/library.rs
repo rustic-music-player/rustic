@@ -132,6 +132,38 @@ impl MemoryLibrary {
             SingleQueryIdentifier::Uri(ref uri) => iter.find(|entity| &entity.get_uri() == uri),
         }
     }
+
+    fn search_tracks(&self, query: &str) -> Vec<Track> {
+        self.tracks
+            .read()
+            .into_iter()
+            .filter(|track| track.title.to_lowercase().contains(query))
+            .collect()
+    }
+
+    fn search_artists(&self, query: &str) -> Vec<Artist> {
+        self.artists
+            .read()
+            .into_iter()
+            .filter(|artist| artist.name.to_lowercase().contains(query))
+            .collect()
+    }
+
+    fn search_albums(&self, query: &str) -> Vec<Album> {
+        self.albums
+            .read()
+            .into_iter()
+            .filter(|album| album.title.to_lowercase().contains(query))
+            .collect()
+    }
+
+    fn search_playlists(&self, query: &str) -> Vec<Playlist> {
+        self.playlists
+            .read()
+            .into_iter()
+            .filter(|playlist| playlist.title.to_lowercase().contains(query))
+            .collect()
+    }
 }
 
 impl Library for MemoryLibrary {
@@ -490,18 +522,17 @@ impl Library for MemoryLibrary {
     }
 
     fn search(&self, query: String) -> Result<SearchResults, Error> {
-        let tracks = self
-            .tracks
-            .read()
-            .into_iter()
-            .filter(|track| track.title.contains(query.as_str()))
-            .collect();
+        let query = query.to_lowercase();
+        let tracks = self.search_tracks(&query);
+        let artists = self.search_artists(&query);
+        let albums = self.search_albums(&query);
+        let playlists = self.search_playlists(&query);
 
         Ok(SearchResults {
             tracks,
-            albums: vec![],
-            artists: vec![],
-            playlists: vec![],
+            albums,
+            artists,
+            playlists,
         })
     }
 
