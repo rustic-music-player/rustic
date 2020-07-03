@@ -1,6 +1,6 @@
 use failure::Error;
 
-use rustic_core::{Album, Library, LibraryQueryJoins, MultiQuery, SingleQuery, Track};
+use rustic_core::{Album, Artist, Library, LibraryQueryJoins, MultiQuery, SingleQuery, Track};
 
 pub fn join_track(
     store: &dyn Library,
@@ -97,4 +97,21 @@ pub fn join_albums(
         })
         .collect();
     Ok(albums)
+}
+
+pub fn join_artist(
+    store: &dyn Library,
+    artist: Artist,
+    joins: LibraryQueryJoins,
+) -> Result<Artist, Error> {
+    let albums = if joins.has_albums() {
+        let albums = store.query_albums(MultiQuery::new())?;
+        albums
+            .into_iter()
+            .filter(|album| album.artist_id == artist.id)
+            .collect()
+    } else {
+        artist.albums
+    };
+    Ok(Artist { albums, ..artist })
 }

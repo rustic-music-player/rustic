@@ -14,7 +14,7 @@ use rustic_core::{
     Album, Artist, Library, MultiQuery, Playlist, SearchResults, SingleQuery,
     SingleQueryIdentifier, Track,
 };
-use rustic_store_helpers::{join_album, join_albums, join_track};
+use rustic_store_helpers::{join_album, join_albums, join_artist, join_track};
 
 #[derive(Debug, Serialize, Deserialize)]
 struct LibrarySnapshot {
@@ -113,11 +113,11 @@ impl MemoryLibrary {
     }
 
     fn store(snapshot: LibrarySnapshot) -> Result<(), failure::Error> {
-        let mut file = fs::OpenOptions::new()
+        let file = fs::OpenOptions::new()
             .create(true)
             .write(true)
             .open(".store.json")?;
-        let content = serde_json::to_writer(file, &snapshot)?;
+        serde_json::to_writer(file, &snapshot)?;
 
         Ok(())
     }
@@ -226,7 +226,11 @@ impl Library for MemoryLibrary {
         trace!("Query Artist {:?}", query);
         let mut artists = self.artists.read().into_iter();
         let artist = self.find(&mut artists, &query);
-        Ok(artist)
+        if let Some(artist) = artist {
+            Ok(Some(join_artist(self, artist, query.joins)?))
+        } else {
+            Ok(None)
+        }
     }
 
     fn query_artists(&self, query: MultiQuery) -> Result<Vec<Artist>, Error> {
