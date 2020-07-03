@@ -185,7 +185,11 @@ impl LibraryApiClient for RusticNativeClient {
             tracks: results.tracks.into_iter().map(TrackModel::from).collect(),
             albums: results.albums.into_iter().map(AlbumModel::from).collect(),
             artists: results.artists.into_iter().map(ArtistModel::from).collect(),
-            playlists: results.playlists.into_iter().map(PlaylistModel::from).collect(),
+            playlists: results
+                .playlists
+                .into_iter()
+                .map(PlaylistModel::from)
+                .collect(),
         })
     }
 
@@ -209,6 +213,11 @@ impl RusticNativeClient {
         let album = self.app.query_album(query).await?;
         if let Some(mut album) = album {
             self.app.library.add_album(&mut album)?;
+            if let Some(artist) = album.artist {
+                if let Some(mut artist) = self.app.query_artist(artist.uri.into()).await? {
+                    self.app.library.sync_artist(&mut artist)?;
+                }
+            }
         }
         Ok(())
     }

@@ -393,11 +393,15 @@ impl Library for MemoryLibrary {
             .unwrap_or_else(|| self.artist_id.fetch_add(1, Ordering::Relaxed));
         artist.id = Some(id);
 
+        let mut artists = self.artists.read();
         if has_artist.is_none() {
-            let mut artists = self.artists.read();
             artists.push(artist.clone());
-            self.artists.set(artists);
+        }else {
+            let index = artists.iter().position(|artist| artist.id == Some(id)).unwrap();
+            let target_artist = artists.get_mut(index).unwrap();
+            *target_artist = artist.clone();
         }
+        self.artists.set(artists);
         Ok(())
     }
 
