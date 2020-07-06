@@ -116,8 +116,12 @@ impl MemoryLibrary {
         let file = fs::OpenOptions::new()
             .create(true)
             .write(true)
-            .open(".store.json")?;
+            .open(".store.json.next")?;
         serde_json::to_writer(file, &snapshot)?;
+        if std::path::Path::new(".store.json").exists() {
+            fs::remove_file(".store.json")?;
+        }
+        fs::rename(".store.json.next", ".store.json")?;
 
         Ok(())
     }
