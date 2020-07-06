@@ -37,7 +37,7 @@ pipeline {
                                 sh 'mv target/release/rustic rustic-linux-x86_64'
                                 archiveArtifacts artifacts: 'rustic-linux-x86_64', fingerprint: true
                                 archiveArtifacts artifacts: 'target/release/librustic_ffi_client.so', fingerprint: true
-                                archiveArtifacts artifacts: 'target/release/rustic-*-extension.so', fingerprint: true
+                                archiveArtifacts artifacts: 'target/release/librustic_*_extension.so', fingerprint: true, allowEmptyArchive: true
                                 //recordIssues failOnError: false, enabledForFailure: true, tool: cargo(pattern: 'cargo-build.json')
                             }
                         }
@@ -109,7 +109,7 @@ pipeline {
                                 bat 'cargo build --release --no-default-features --features "http-frontend rodio-backend local-files-provider pocketcasts-provider soundcloud-provider gmusic-provider youtube-provider"'
                                 bat 'move target\\release\\rustic.exe rustic-win32-x86_64.exe'
                                 archiveArtifacts artifacts: 'rustic-win32-x86_64.exe', fingerprint: true
-                                archiveArtifacts artifacts: 'target/release/rustic-*-extension.dll', fingerprint: true
+                                archiveArtifacts artifacts: 'target/release/librustic_*_extension.dll', fingerprint: true, allowEmptyArchive: true
                             }
                         }
                     }
@@ -130,7 +130,7 @@ pipeline {
                                 sh 'cargo build --bins --workspace --release'
                                 sh 'mv target/release/rustic rustic-osx-x86_64'
                                 archiveArtifacts artifacts: 'rustic-osx-x86_64', fingerprint: true
-                                archiveArtifacts artifacts: 'target/release/rustic-*-extension.dylib', fingerprint: true
+                                archiveArtifacts artifacts: 'target/release/librustic_*_extension.dylib', fingerprint: true, allowEmptyArchive: true
                             }
                         }
                     }
