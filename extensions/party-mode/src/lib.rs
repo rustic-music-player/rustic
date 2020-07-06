@@ -6,8 +6,8 @@ use rustic_extension_api::*;
 pub struct PartyModeExtension;
 
 impl ExtensionLibrary for PartyModeExtension {
-    fn new(_config: HashMap<String, ExtensionConfigValue>) -> Box<dyn Extension> {
-        Box::new(PartyModeExtension)
+    fn new(_config: HashMap<String, ExtensionConfigValue>) -> Self {
+        PartyModeExtension
     }
 
     fn metadata() -> ExtensionMetadata {
@@ -22,3 +22,5 @@ impl ExtensionLibrary for PartyModeExtension {
 impl Extension for PartyModeExtension {}
 
 impl ExtensionApi for PartyModeExtension {}
+
+host_extension!(PartyModeExtension);

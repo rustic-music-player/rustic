@@ -29,6 +29,7 @@ use crate::util::*;
 ///
 /// Also we could update associations on changes
 /// would make writes slower but reads way faster
+#[derive(Debug)]
 pub struct SledLibrary {
     db: sled::Db,
     artists_tree: sled::Tree,

@@ -14,7 +14,7 @@ pub struct SearchResults {
     pub playlists: Vec<Playlist>,
 }
 
-pub trait Library: Sync + Send {
+pub trait Library: Sync + Send + std::fmt::Debug {
     /**
      * Fetch a single track
      */

@@ -7,6 +7,7 @@ use structopt::StructOpt;
 
 use rustic_api::ApiClient;
 use rustic_core::{CredentialStore, Rustic};
+use rustic_extension_api::ExtensionRuntime;
 #[cfg(feature = "google-cast-backend")]
 use rustic_google_cast_backend::GoogleCastBackend;
 use rustic_memory_store::MemoryLibrary;
@@ -62,7 +63,7 @@ async fn setup_instance(
     options: &options::CliOptions,
     config: &config::Config,
 ) -> Result<(Arc<Rustic>, ApiClient), failure::Error> {
-    let extensions = load_extensions(&options, &config)?;
+    let mut extensions = load_extensions(&options, &config).await?;
     let credential_store: Box<dyn CredentialStore> = match config.credential_store {
         CredentialStoreConfig::Keychain => Box::new(KeychainCredentialStore),
         CredentialStoreConfig::File { ref path } => {
@@ -86,6 +87,8 @@ async fn setup_instance(
     };
 
     let app = Rustic::new(store, providers)?;
+    let extension_runtime = ExtensionRuntime::new(Arc::clone(&app.library));
+    extensions.setup(extension_runtime).await?;
     let client = setup_client(&app, extensions, credential_store);
 
     for player_config in config.players.iter() {

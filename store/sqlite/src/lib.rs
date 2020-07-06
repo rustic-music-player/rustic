@@ -33,6 +33,12 @@ pub struct SqliteLibrary {
     playlists: PlaylistRepository,
 }
 
+impl std::fmt::Debug for SqliteLibrary {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("SqliteLibrary").finish()
+    }
+}
+
 impl SqliteLibrary {
     pub fn new(url: String) -> Result<SqliteLibrary, Error> {
         debug!("Initializing connection");
