@@ -8,8 +8,9 @@ use rustic_reflect_macros::reflect_struct;
 
 use crate::models::aggregations::Aggregate;
 use crate::models::{
-    AlbumCollection, AlbumModel, PlaylistModel, ProviderTypeModel, TrackCollection, TrackModel,
+    AlbumCollection, AlbumModel, PlaylistModel, ProviderTypeModel, TrackCollection, TrackModel, MetaValueModel,
 };
+use std::collections::HashMap;
 
 #[reflect_struct]
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Eq)]
@@ -25,6 +26,7 @@ pub struct ArtistModel {
     pub playlists: Option<Vec<PlaylistModel>>,
     pub image: Option<String>,
     pub provider: ProviderTypeModel,
+    pub meta: HashMap<String, MetaValueModel>,
 }
 
 impl PartialOrd for ArtistModel {

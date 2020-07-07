@@ -1,9 +1,11 @@
+
 pub use self::aggregations::*;
 pub use self::album::*;
 pub use self::artist::*;
 pub use self::available_provider::*;
 pub use self::cover_art::*;
 pub use self::extension::*;
+pub use self::meta::*;
 pub use self::open_result::*;
 pub use self::player::*;
 pub use self::player_event::*;
@@ -21,6 +23,7 @@ mod artist;
 mod available_provider;
 mod cover_art;
 mod extension;
+mod meta;
 mod open_result;
 mod player;
 mod player_event;

@@ -1,10 +1,11 @@
 use crate::models::aggregations::Aggregate;
 use crate::models::{
-    AlbumCollection, AlbumModel, ArtistCollection, ArtistModel, ProviderTypeModel,
+    AlbumCollection, AlbumModel, ArtistCollection, ArtistModel, ProviderTypeModel, MetaValueModel,
 };
 use rustic_reflect_macros::reflect_struct;
 use serde::{Deserialize, Serialize};
 use std::cmp::Ordering;
+use std::collections::HashMap;
 #[cfg(target_arch = "wasm32")]
 use wasm_bindgen::prelude::*;
 
@@ -22,6 +23,7 @@ pub struct TrackModel {
     pub provider: ProviderTypeModel,
     pub coverart: Option<String>,
     pub duration: Option<u64>,
+    pub meta: HashMap<String, MetaValueModel>,
 }
 
 #[reflect_struct]

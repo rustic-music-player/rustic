@@ -49,6 +49,25 @@ pub enum FFIAggregatedTrack {
     Multi(FFITrackCollection),
 }
 
+#[repr(C)]
+pub enum FFIMetaValueModel {
+    Bool(bool),
+    String(String),
+    Float(f64),
+    Int(u64),
+}
+
+impl From<MetaValueModel> for FFIMetaValueModel {
+    fn from(value: MetaValueModel) -> Self {
+        match value {
+            MetaValueModel::String(string) => FFIMetaValueModel::String(string),
+            MetaValueModel::Int(int) => FFIMetaValueModel::Int(int),
+            MetaValueModel::Float(float) => FFIMetaValueModel::Float(float),
+            MetaValueModel::Bool(bool) => FFIMetaValueModel::Bool(bool),
+        }
+    }
+}
+
 impl From<AggregatedTrack> for FFIAggregatedTrack {
     fn from(track: AggregatedTrack) -> Self {
         match track {

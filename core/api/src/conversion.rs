@@ -14,6 +14,7 @@ use rustic_extension_api::ExtensionMetadata;
 
 use crate::cursor::{from_cursor, to_cursor, Cursor};
 use crate::models::*;
+use rustic_core::library::MetaValue;
 
 impl From<Album> for AlbumModel {
     fn from(album: Album) -> Self {
@@ -30,6 +31,7 @@ impl From<Album> for AlbumModel {
             } else {
                 None
             },
+            meta: album.meta.into_iter().map(|(k, v)| (k, v.into())).collect(),
         }
     }
 }
@@ -53,6 +55,7 @@ impl From<Artist> for ArtistModel {
                 .image_url
                 .map(|_| format!("/api/artists/{}/coverart", &cursor)),
             provider: artist.provider.into(),
+            meta: artist.meta.into_iter().map(|(k, v)| (k, v.into())).collect(),
         }
     }
 }
@@ -120,6 +123,7 @@ impl From<Track> for TrackModel {
             duration: track.duration,
             artist: track.artist.map(ArtistModel::from),
             album: track.album.map(AlbumModel::from),
+            meta: track.meta.into_iter().map(|(k, v)| (k, v.into())).collect(),
         }
     }
 }
@@ -338,6 +342,17 @@ impl From<RepeatModeModel> for RepeatMode {
             RepeatModeModel::None => RepeatMode::None,
             RepeatModeModel::Single => RepeatMode::Single,
             RepeatModeModel::All => RepeatMode::All,
+        }
+    }
+}
+
+impl From<MetaValue> for MetaValueModel {
+    fn from(value: MetaValue) -> Self {
+        match value {
+            MetaValue::String(string) => MetaValueModel::String(string),
+            MetaValue::Int(int) => MetaValueModel::Int(int),
+            MetaValue::Float(float) => MetaValueModel::Float(float),
+            MetaValue::Bool(bool) => MetaValueModel::Bool(bool),
         }
     }
 }

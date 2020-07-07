@@ -1,10 +1,11 @@
 use crate::models::aggregations::Aggregate;
 use crate::models::{
-    ArtistCollection, ArtistModel, ProviderTypeModel, TrackCollection, TrackModel,
+    ArtistCollection, ArtistModel, ProviderTypeModel, TrackCollection, TrackModel, MetaValueModel,
 };
 use rustic_reflect_macros::reflect_struct;
 use serde::{Deserialize, Serialize};
 use std::cmp::Ordering;
+use std::collections::HashMap;
 #[cfg(target_arch = "wasm32")]
 use wasm_bindgen::prelude::*;
 
@@ -23,6 +24,7 @@ pub struct AlbumModel {
     pub provider: ProviderTypeModel,
     pub coverart: Option<String>,
     pub in_library: bool,
+    pub meta: HashMap<String, MetaValueModel>,
 }
 
 impl PartialOrd for AlbumModel {
