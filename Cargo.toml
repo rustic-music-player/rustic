@@ -54,8 +54,7 @@ default = [
 	"gmusic-provider",
 	"youtube-provider",
 	"iced-frontend",
-	"http-client",
-	"extensions"
+	"http-client"
 ]
 
 all-frontends = ["mpd-frontend", "http-frontend", "dbus-frontend", "qt-frontend", "iced-frontend", "systray-frontend"]
@@ -80,7 +79,6 @@ all-stores = ["sled-store", "sqlite-store"]
 sled-store = ["rustic-sled-store"]
 sqlite-store = ["rustic-sqlite-store"]
 http-client = ["rustic-native-http-client"]
-extensions = ["rustic-party-mode-extension"]
 
 [dependencies]
 env_logger = "0.7"
@@ -183,8 +181,4 @@ optional = true
 
 [dependencies.rustic-youtube-provider]
 path = "provider/youtube"
-optional = true
-
-[dependencies.rustic-party-mode-extension]
-path = "extensions/party-mode"
 optional = true

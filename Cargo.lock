@@ -5051,7 +5051,6 @@ dependencies = [
  "rustic-mpd-frontend 0.1.0",
  "rustic-native-client 0.1.0",
  "rustic-native-http-client 0.1.0",
- "rustic-party-mode-extension 0.1.0",
  "rustic-pocketcasts-provider 0.1.0",
  "rustic-qt-frontend 0.1.0",
  "rustic-rodio-backend 0.1.0",
