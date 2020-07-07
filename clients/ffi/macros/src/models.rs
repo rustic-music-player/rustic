@@ -69,6 +69,10 @@ fn field_conversion(name: &str, decl: &StructField) -> TokenStream {
         StructFieldType::Type(ty) if ty == "HashMap < String, MetaValueModel >" => quote! { #name: model.#name.into_iter().map(|(k, v)| (k, v.into())).collect(), },
         StructFieldType::Option(nested) => {
             match nested.as_ref() {
+                StructFieldType::Type(ref ty) if ty == "bool" => {
+                    // TODO: this is not quite the same but close enough for now
+                    quote! { #name: model.#name.unwrap_or_default(), }
+                }
                 StructFieldType::Type(ref ty) if ty == "String" => {
                     quote! { #name: optional_cstr!(model.#name), }
                 }

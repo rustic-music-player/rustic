@@ -19,6 +19,7 @@ pub struct Track {
     pub thumbnail: provider::ThumbnailState,
     pub duration: Option<u64>,
     pub meta: HashMap<String, MetaValue>,
+    pub explicit: Option<bool>,
 }
 
 impl PartialEq for Track {

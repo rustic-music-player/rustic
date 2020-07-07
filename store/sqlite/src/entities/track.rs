@@ -74,6 +74,7 @@ impl TrackEntity {
             thumbnail: self.image_url.map(ThumbnailState::Url).unwrap_or_default(),
             duration: self.duration.map(|duration| duration as u64),
             meta: TrackMeta::to_meta_map(meta),
+            explicit: None,
         }
     }
 }

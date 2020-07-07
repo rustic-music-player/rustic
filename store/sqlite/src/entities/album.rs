@@ -70,6 +70,7 @@ impl AlbumEntity {
             thumbnail: self.image_url.map(ThumbnailState::Url).unwrap_or_default(),
             uri: self.uri,
             meta: AlbumMeta::to_meta_map(meta),
+            explicit: None,
         }
     }
 }

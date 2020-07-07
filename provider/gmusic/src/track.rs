@@ -65,6 +65,7 @@ impl From<GmusicTrack> for Track {
                 artist: None,
                 artist_id: None,
                 meta: HashMap::new(),
+                explicit: None,
             }),
             album_id: None,
             uri: format!("gmusic:track:{}", track.store_id.unwrap_or(track.id)),
@@ -80,6 +81,7 @@ impl From<GmusicTrack> for Track {
                 .map(|album_art| album_art.url.clone().into())
                 .unwrap_or_default(),
             meta,
+            explicit: None,
         }
     }
 }

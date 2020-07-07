@@ -24,6 +24,7 @@ pub struct TrackModel {
     pub coverart: Option<String>,
     pub duration: Option<u64>,
     pub meta: HashMap<String, MetaValueModel>,
+    pub explicit: Option<bool>,
 }
 
 #[reflect_struct]

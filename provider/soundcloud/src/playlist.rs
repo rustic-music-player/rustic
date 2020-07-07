@@ -50,6 +50,7 @@ impl From<SoundcloudPlaylist> for Album {
             artist: Some(SoundcloudUser::from(playlist.user).into()),
             meta: HashMap::new(),
             artist_id: None,
+            explicit: None,
         }
     }
 }

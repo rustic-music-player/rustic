@@ -57,6 +57,7 @@ impl From<SpotifyFullTrack> for Track {
                         format!("spotify://album/{}", &album.name)
                     }),
                 meta: HashMap::new(),
+                explicit: None,
             }),
             provider: provider::ProviderType::Spotify,
             thumbnail: convert_images(&track.album.images),
@@ -69,6 +70,7 @@ impl From<SpotifyFullTrack> for Track {
                 }),
             duration: Some(u64::from(track.duration_ms / 1000)),
             meta,
+            explicit: Some(track.explicit),
         }
     }
 }
@@ -105,6 +107,7 @@ impl From<SpotifySimplifiedTrack> for Track {
                 }),
             duration: Some(u64::from(track.duration_ms / 1000)),
             meta,
+            explicit: Some(track.explicit),
         }
     }
 }

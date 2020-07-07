@@ -28,6 +28,7 @@ impl From<SpotifyFullAlbum> for Album {
             thumbnail: convert_images(&album.images),
             uri: format!("spotify://album/{}", album.id),
             meta: HashMap::new(),
+            explicit: None,
         }
     }
 }
@@ -49,6 +50,7 @@ impl From<SpotifySimplifiedAlbum> for Album {
                 .map(|id| format!("spotify://album/{}", id))
                 .unwrap(),
             meta: HashMap::new(),
+            explicit: None,
         }
     }
 }

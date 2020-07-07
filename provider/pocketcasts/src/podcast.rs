@@ -46,6 +46,7 @@ impl From<PocketcastAlbum> for Album {
                 META_POCKETCASTS_PODCAST_UUID.into() => podcast.uuid.into(),
                 META_POCKETCASTS_COVER_ART_URL.into() => thumbnail_url.into()
             ),
+            explicit: None,
         }
     }
 }
@@ -106,6 +107,7 @@ impl From<PocketcastSearchResult> for Album {
             meta: hashmap!(
                 META_POCKETCASTS_COVER_ART_URL.into() => thumbnail_url.into()
             ),
+            explicit: None,
         }
     }
 }

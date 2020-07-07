@@ -67,6 +67,7 @@ impl From<YoutubeSearchResult> for Track {
             album: None,
             album_id: None,
             meta: HashMap::new(),
+            explicit: None,
         }
     }
 }

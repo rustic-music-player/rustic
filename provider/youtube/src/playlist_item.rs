@@ -54,6 +54,7 @@ impl From<YoutubePlaylistItem> for Track {
             thumbnail,
             duration: None,
             meta: HashMap::new(),
+            explicit: None,
         }
     }
 }

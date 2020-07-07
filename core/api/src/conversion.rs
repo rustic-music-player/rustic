@@ -32,6 +32,7 @@ impl From<Album> for AlbumModel {
                 None
             },
             meta: album.meta.into_iter().map(|(k, v)| (k, v.into())).collect(),
+            explicit: album.explicit,
         }
     }
 }
@@ -124,6 +125,7 @@ impl From<Track> for TrackModel {
             artist: track.artist.map(ArtistModel::from),
             album: track.album.map(AlbumModel::from),
             meta: track.meta.into_iter().map(|(k, v)| (k, v.into())).collect(),
+            explicit: track.explicit,
         }
     }
 }

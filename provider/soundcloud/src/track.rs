@@ -36,6 +36,7 @@ impl From<SoundcloudTrack> for Track {
                 .unwrap_or_default(),
             duration: Some(track.duration / 1000),
             meta,
+            explicit: None,
         }
     }
 }

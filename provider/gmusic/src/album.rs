@@ -56,6 +56,7 @@ impl From<GmusicAlbum> for Album {
                 .album_art_ref
                 .map(ThumbnailState::Url)
                 .unwrap_or_default(),
+            explicit: Some(album.explicit_type == "1"),
         }
     }
 }

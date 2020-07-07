@@ -27,6 +27,7 @@ impl From<PocketcastTrack> for Track {
             meta: hashmap!(
                 META_POCKETCASTS_STREAM_URL.into() => episode.url.into()
             ),
+            explicit: None,
         }
     }
 }

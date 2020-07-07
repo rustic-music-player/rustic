@@ -17,6 +17,7 @@ pub struct Album {
     pub thumbnail: ThumbnailState,
     pub uri: String,
     pub meta: HashMap<String, MetaValue>,
+    pub explicit: Option<bool>,
 }
 
 impl PartialEq for Album {

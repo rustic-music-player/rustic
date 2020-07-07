@@ -186,6 +186,7 @@ impl From<scanner::Track> for library::Track {
             meta: hashmap!(
                 META_LOCAL_FILE_URL.into() => path.into()
             ),
+            explicit: None,
         }
     }
 }
@@ -211,6 +212,7 @@ impl From<scanner::Track> for Option<library::Album> {
             meta: hashmap!(
                 META_LOCAL_FILE_URL.into() => path.into()
             ),
+            explicit: None,
         })
     }
 }

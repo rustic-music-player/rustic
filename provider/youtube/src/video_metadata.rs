@@ -48,6 +48,7 @@ impl From<YoutubeVideoMetadata> for Track {
             id: None,
             duration: u64::from_str(&video.video_details.length_seconds).ok(),
             meta: HashMap::new(),
+            explicit: None,
         }
     }
 }
