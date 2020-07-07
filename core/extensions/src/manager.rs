@@ -67,9 +67,9 @@ impl ExtensionManagerBuilder {
             .filter(|file| {
                 trace!("checking whether {:?} is an extension", file.file_name());
                 let file_name = file.file_name().into_string().unwrap();
-                file_name.ends_with(".so")
-                    || file_name.ends_with(".dylib")
-                    || file_name.ends_with(".dll")
+                file_name.ends_with("extension.so")
+                    || file_name.ends_with("extension.dylib")
+                    || file_name.ends_with("extension.dll")
             })
             .collect();
         for entry in extensions {
