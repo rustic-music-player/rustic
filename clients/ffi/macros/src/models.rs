@@ -49,6 +49,7 @@ fn to_type(ty: &StructFieldType) -> TokenStream {
         StructFieldType::Type(ty) if ty == "u64" => quote! { libc::c_ulong },
         StructFieldType::Type(ty) if ty == "f32" => quote! { libc::c_float },
         StructFieldType::Type(ty) if ty == "f64" => quote! { libc::c_double },
+        StructFieldType::Type(ty) if ty == "HashMap < String, MetaValueModel >" => quote! { ::std::collections::HashMap<String, FFIMetaValueModel> },
         StructFieldType::Type(ty) => {
             let ty = format_ident!("FFI{}", ty);
             quote! { *const #ty }
@@ -64,7 +65,8 @@ fn field_conversion(name: &str, decl: &StructField) -> TokenStream {
         StructFieldType::Type(ty) if ty == "String" => quote! { #name: cstr!(model.#name), },
         StructFieldType::Type(ty) if ty == "bool" || ty == "u64" || ty == "f32" || ty == "f64" => {
             quote! { #name: model.#name, }
-        }
+        },
+        StructFieldType::Type(ty) if ty == "HashMap < String, MetaValueModel >" => quote! { #name: model.#name.into_iter().map(|(k, v)| (k, v.into())).collect(), },
         StructFieldType::Option(nested) => {
             match nested.as_ref() {
                 StructFieldType::Type(ref ty) if ty == "String" => {

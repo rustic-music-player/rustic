@@ -49,6 +49,7 @@ pub enum FFIAggregatedTrack {
     Multi(FFITrackCollection),
 }
 
+#[derive(Clone, Debug)]
 #[repr(C)]
 pub enum FFIMetaValueModel {
     Bool(bool),
