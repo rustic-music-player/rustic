@@ -11,7 +11,7 @@ use youtube_api::{YoutubeApi, YoutubeDl};
 use async_trait::async_trait;
 use lazy_static::lazy_static;
 use rustic_core::provider::{
-    AuthState, Authentication, InternalUri, ProviderFolder, ProviderInstance, ProviderItem,
+    Authentication, InternalUri, ProviderFolder, ProviderInstance, ProviderItem, ProviderState,
     SyncResult,
 };
 use rustic_core::{Album, Artist, CredentialStore, Playlist, ProviderType, SharedLibrary, Track};
@@ -122,18 +122,18 @@ impl ProviderInstance for YoutubeProvider {
         ProviderType::Youtube
     }
 
-    fn auth_state(&self) -> AuthState {
+    fn state(&self) -> ProviderState {
         if let Some(client) = self.client.as_ref() {
             if client.has_token() {
-                AuthState::Authenticated(None)
+                ProviderState::Authenticated(None)
             } else {
                 let (url, state) = client.get_oauth_url().unwrap();
                 let mut state_cache = STATE_CACHE.try_lock().unwrap();
                 *state_cache = Some(state);
-                AuthState::RequiresOAuth(url)
+                ProviderState::RequiresOAuth(url)
             }
         } else {
-            AuthState::NoAuthentication
+            ProviderState::InvalidConfiguration(Some("Api Configuration is missing".into()))
         }
     }
 

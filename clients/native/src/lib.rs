@@ -66,7 +66,7 @@ impl RusticApiClient for RusticNativeClient {
         // TODO: run in parallel
         for provider in providers {
             let provider = provider.get().await;
-            if !provider.auth_state().is_authenticated() {
+            if !provider.state().is_authenticated() {
                 continue;
             }
             match provider.search(query.to_string()).await {

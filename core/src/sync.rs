@@ -70,7 +70,7 @@ async fn synchronize(app: &Arc<Rustic>) {
     app.sync.next(SyncEvent::Synchronizing(sync_items.clone()));
     for provider in providers {
         let provider = provider.get().await;
-        if !provider.auth_state().is_authenticated() {
+        if !provider.state().is_authenticated() {
             continue;
         }
         info!("Syncing {} library", provider.title());

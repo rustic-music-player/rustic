@@ -162,11 +162,11 @@ impl provider::ProviderInstance for SoundcloudProvider {
         provider::ProviderType::Soundcloud
     }
 
-    fn auth_state(&self) -> provider::AuthState {
+    fn state(&self) -> provider::ProviderState {
         if self.auth_token.is_some() {
-            provider::AuthState::Authenticated(None)
+            provider::ProviderState::Authenticated(None)
         } else {
-            provider::AuthState::RequiresOAuth(
+            provider::ProviderState::RequiresOAuth(
                 format!("https://soundcloud.com/connect?client_id={}&response_type=token&redirect_uri={}/api/auth/soundcloud", &self.client_id, SOUNDCLOUD_REDIRECT_URI)
             )
         }

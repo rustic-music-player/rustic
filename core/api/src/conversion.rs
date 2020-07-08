@@ -3,7 +3,7 @@ use std::convert::TryFrom;
 use futures::StreamExt;
 
 use rustic_core::provider::{
-    AuthState, Authentication, InternalUri, ProviderFolder, ProviderItem, ProviderItemType,
+    Authentication, InternalUri, ProviderFolder, ProviderItem, ProviderItemType, ProviderState,
     Thumbnail,
 };
 use rustic_core::sync::{SyncEvent, SyncItem, SyncItemState};
@@ -56,20 +56,25 @@ impl From<Artist> for ArtistModel {
                 .image_url
                 .map(|_| format!("/api/artists/{}/coverart", &cursor)),
             provider: artist.provider.into(),
-            meta: artist.meta.into_iter().map(|(k, v)| (k, v.into())).collect(),
+            meta: artist
+                .meta
+                .into_iter()
+                .map(|(k, v)| (k, v.into()))
+                .collect(),
         }
     }
 }
 
-impl From<AuthState> for ProviderAuthenticationState {
-    fn from(state: AuthState) -> Self {
+impl From<ProviderState> for ProviderStateModel {
+    fn from(state: ProviderState) -> Self {
         match state {
-            AuthState::NoAuthentication => ProviderAuthenticationState::NoAuthentication,
-            AuthState::RequiresOAuth(url) => {
-                ProviderAuthenticationState::OAuthAuthentication { url }
+            ProviderState::InvalidConfiguration(msg) => {
+                ProviderStateModel::InvalidConfiguration(msg)
             }
-            AuthState::RequiresPassword => ProviderAuthenticationState::PasswordAuthentication,
-            AuthState::Authenticated(_) => ProviderAuthenticationState::Authenticated,
+            ProviderState::NoAuthentication => ProviderStateModel::NoAuthentication,
+            ProviderState::RequiresOAuth(url) => ProviderStateModel::OAuthAuthentication { url },
+            ProviderState::RequiresPassword => ProviderStateModel::PasswordAuthentication,
+            ProviderState::Authenticated(_) => ProviderStateModel::Authenticated,
         }
     }
 }

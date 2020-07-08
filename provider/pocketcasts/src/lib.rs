@@ -71,11 +71,11 @@ impl provider::ProviderInstance for PocketcastsProvider {
         provider::ProviderType::Pocketcasts
     }
 
-    fn auth_state(&self) -> provider::AuthState {
+    fn state(&self) -> provider::ProviderState {
         if self.client.is_some() {
-            provider::AuthState::Authenticated(None)
+            provider::ProviderState::Authenticated(None)
         } else {
-            provider::AuthState::RequiresPassword
+            provider::ProviderState::RequiresPassword
         }
     }
 

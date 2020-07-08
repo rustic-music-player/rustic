@@ -150,14 +150,14 @@ impl rustic_core::provider::ProviderInstance for SpotifyProvider {
         Ok(())
     }
 
-    fn auth_state(&self) -> provider::AuthState {
+    fn state(&self) -> provider::ProviderState {
         if self.client.is_some() {
-            provider::AuthState::Authenticated(None)
+            provider::ProviderState::Authenticated(None)
         } else {
             let oauth = self.get_oauth_client().build();
             let state = generate_random_string(16);
             let auth_url = oauth.get_authorize_url(Some(&state), None);
-            provider::AuthState::RequiresOAuth(auth_url)
+            provider::ProviderState::RequiresOAuth(auth_url)
         }
     }
 

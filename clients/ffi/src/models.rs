@@ -112,7 +112,7 @@ impl From<AggregatedArtist> for FFIAggregatedArtist {
 pub struct FFIProviderItemTypeModel;
 
 #[repr(C)]
-pub struct FFIProviderAuthenticationState;
+pub struct FFIProviderStateModel;
 
 impl From<OpenResultModel> for FFIOpenResultModel {
     fn from(_: OpenResultModel) -> Self {

@@ -99,7 +99,7 @@ pub trait ProviderInstance: Debug {
     fn title(&self) -> &'static str;
     fn uri_scheme(&self) -> &'static str;
     fn provider(&self) -> ProviderType;
-    fn auth_state(&self) -> AuthState;
+    fn state(&self) -> ProviderState;
     async fn authenticate(
         &mut self,
         auth: Authentication,
@@ -124,18 +124,19 @@ pub trait ProviderInstance: Debug {
 }
 
 #[derive(Debug, Clone)]
-pub enum AuthState {
+pub enum ProviderState {
+    InvalidConfiguration(Option<String>),
     NoAuthentication,
     RequiresOAuth(String),
     RequiresPassword,
     Authenticated(Option<User>),
 }
 
-impl AuthState {
+impl ProviderState {
     pub fn is_authenticated(&self) -> bool {
         match self {
-            AuthState::NoAuthentication => true,
-            AuthState::Authenticated(_) => true,
+            ProviderState::NoAuthentication => true,
+            ProviderState::Authenticated(_) => true,
             _ => false,
         }
     }

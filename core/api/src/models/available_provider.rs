@@ -15,7 +15,7 @@ pub struct AvailableProviderModel {
     pub title: String,
     pub provider: ProviderTypeModel,
     pub enabled: bool,
-    pub auth_state: ProviderAuthenticationState,
+    pub auth_state: ProviderStateModel,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone, PartialEq, Eq)]
@@ -24,7 +24,8 @@ pub struct AvailableProviderModel {
     derive(typescript_definitions::TypescriptDefinition)
 )]
 #[serde(rename_all = "kebab-case", tag = "state")]
-pub enum ProviderAuthenticationState {
+pub enum ProviderStateModel {
+    InvalidConfiguration(Option<String>),
     NoAuthentication,
     OAuthAuthentication { url: String },
     PasswordAuthentication,

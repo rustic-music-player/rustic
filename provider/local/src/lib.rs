@@ -44,8 +44,8 @@ impl ProviderInstance for LocalProvider {
         Ok(())
     }
 
-    fn auth_state(&self) -> AuthState {
-        AuthState::NoAuthentication
+    fn state(&self) -> ProviderState {
+        ProviderState::NoAuthentication
     }
 
     async fn authenticate(

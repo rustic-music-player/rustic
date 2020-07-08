@@ -1,13 +1,14 @@
+use std::collections::HashMap;
 use std::convert::TryFrom;
-use tokio::sync::Mutex;
 
 use async_trait::async_trait;
 use failure::{format_err, Error};
-use log::{debug, warn};
-use serde_derive::Deserialize;
-
 use gmusic::GoogleMusicApi;
 use lazy_static::lazy_static;
+use log::{debug, warn};
+use serde_derive::Deserialize;
+use tokio::sync::Mutex;
+
 use rustic_core::library::MetaValue;
 use rustic_core::{provider, Album, Artist, CredentialStore, Playlist, SharedLibrary, Track};
 
@@ -16,7 +17,6 @@ use crate::artist::GmusicArtist;
 use crate::meta::META_GMUSIC_STORE_ID;
 use crate::playlist::GmusicPlaylist;
 use crate::track::GmusicTrack;
-use std::collections::HashMap;
 
 mod album;
 mod artist;
@@ -44,7 +44,8 @@ const GMUSIC_REDIRECT_URI: &str = "http://localhost:8080/api/providers/gmusic/au
 pub struct GooglePlayMusicProvider {
     client_id: String,
     client_secret: String,
-    device_id: String,
+    #[serde(default = "GooglePlayMusicProvider::device_id")]
+    device_id: Option<String>,
     #[serde(skip)]
     client: Option<GoogleMusicApi>,
 }
@@ -53,21 +54,22 @@ impl GooglePlayMusicProvider {
     pub fn new() -> Option<Self> {
         let client_id = option_env!("GMUSIC_CLIENT_ID").map(String::from);
         let client_secret = option_env!("GMUSIC_CLIENT_SECRET").map(String::from);
-        let device_id = GoogleMusicApi::get_device_id_from_mac_address()
-            .ok()
-            .flatten();
-        if device_id.is_none() {
-            warn!("Could not derive a device id from mac address. Please specify in config file");
-        }
+        let device_id = Self::device_id();
 
         zip_options(client_id, client_secret, device_id).map(
             |(client_id, client_secret, device_id)| GooglePlayMusicProvider {
                 client_id,
                 client_secret,
-                device_id,
+                device_id: Some(device_id),
                 client: None,
             },
         )
+    }
+
+    fn device_id() -> Option<String> {
+        GoogleMusicApi::get_device_id_from_mac_address()
+            .ok()
+            .flatten()
     }
 
     fn get_client(&self) -> Result<&GoogleMusicApi, Error> {
@@ -75,11 +77,21 @@ impl GooglePlayMusicProvider {
             .as_ref()
             .ok_or_else(|| format_err!("Provider Google Play Music is not setup yet"))
     }
+
+    fn get_client_mut(&mut self) -> Result<&mut GoogleMusicApi, Error> {
+        self.client
+            .as_mut()
+            .ok_or_else(|| format_err!("Provider Google Play Music is not setup yet"))
+    }
 }
 
 #[async_trait]
 impl provider::ProviderInstance for GooglePlayMusicProvider {
     async fn setup(&mut self, _cred_store: &dyn CredentialStore) -> Result<(), Error> {
+        if self.device_id.is_none() {
+            warn!("Could not derive a device id from mac address. Please specify in config file");
+            return Ok(());
+        }
         let api = GoogleMusicApi::new(
             self.client_id.clone(),
             self.client_secret.clone(),
@@ -105,15 +117,21 @@ impl provider::ProviderInstance for GooglePlayMusicProvider {
         provider::ProviderType::GooglePlayMusic
     }
 
-    fn auth_state(&self) -> provider::AuthState {
-        let client = self.client.as_ref().expect("client isn't setup yet");
-        if client.has_token() {
-            provider::AuthState::Authenticated(None)
+    fn state(&self) -> provider::ProviderState {
+        if let Some(ref client) = self.client {
+            if client.has_token() {
+                provider::ProviderState::Authenticated(None)
+            } else {
+                let (url, state) = client.get_oauth_url();
+                let mut state_cache = STATE_CACHE.try_lock().unwrap();
+                *state_cache = Some(state);
+                provider::ProviderState::RequiresOAuth(url)
+            }
         } else {
-            let (url, state) = client.get_oauth_url();
-            let mut state_cache = STATE_CACHE.try_lock().unwrap();
-            *state_cache = Some(state);
-            provider::AuthState::RequiresOAuth(url)
+            provider::ProviderState::InvalidConfiguration(Some(
+                "Could not derive a device id from mac address. Please specify in config file"
+                    .into(),
+            ))
         }
     }
 
@@ -122,8 +140,8 @@ impl provider::ProviderInstance for GooglePlayMusicProvider {
         authenticate: provider::Authentication,
         _cred_store: &dyn CredentialStore,
     ) -> Result<(), Error> {
-        let client = self.client.as_mut().expect("client isn't setup yet");
         use provider::Authentication::*;
+        let client = self.get_client_mut()?;
 
         match authenticate {
             Token(token) | TokenWithState(token, _) => {
@@ -245,7 +263,14 @@ impl provider::ProviderInstance for GooglePlayMusicProvider {
             .ok_or_else(|| format_err!("missing track id"))?;
         if let MetaValue::String(ref id) = id {
             let client = self.get_client()?;
-            let url = client.get_stream_url(&id, &self.device_id).await?;
+            let url = client
+                .get_stream_url(
+                    &id,
+                    self.device_id
+                        .as_ref()
+                        .ok_or_else(|| format_err!("Missing device id"))?,
+                )
+                .await?;
             Ok(url.to_string())
         } else {
             unreachable!()
