@@ -55,7 +55,7 @@ pub async fn search_library(
     Ok(web::Json(result))
 }
 
-#[get("/open/{url}")]
+#[get("/open/{url:.*}")]
 pub async fn open(
     client: web::Data<ApiClient>,
     params: web::Path<OpenParams>,
