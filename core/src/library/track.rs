@@ -3,7 +3,7 @@ use std::collections::HashMap;
 
 use serde_derive::{Deserialize, Serialize};
 
-use crate::library::{Album, Artist, Identifiable, MetaValue};
+use crate::library::{Album, Artist, Identifiable, MetaValue, Rating};
 use crate::provider::{self, ProviderType};
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
@@ -20,6 +20,7 @@ pub struct Track {
     pub duration: Option<u64>,
     pub meta: HashMap<String, MetaValue>,
     pub explicit: Option<bool>,
+    pub rating: Rating,
 }
 
 impl PartialEq for Track {

@@ -6,7 +6,7 @@ use rspotify::model::track::{FullTrack, SimplifiedTrack};
 use serde_derive::{Deserialize, Serialize};
 
 use rustic_core::library::{Album, MetaValue, Track};
-use rustic_core::provider;
+use rustic_core::{provider, Rating};
 
 use crate::meta::*;
 use crate::util::*;
@@ -71,6 +71,7 @@ impl From<SpotifyFullTrack> for Track {
             duration: Some(u64::from(track.duration_ms / 1000)),
             meta,
             explicit: Some(track.explicit),
+            rating: Rating::None,
         }
     }
 }
@@ -108,6 +109,7 @@ impl From<SpotifySimplifiedTrack> for Track {
             duration: Some(u64::from(track.duration_ms / 1000)),
             meta,
             explicit: Some(track.explicit),
+            rating: Rating::None,
         }
     }
 }

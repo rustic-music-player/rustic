@@ -3,7 +3,7 @@ use std::collections::HashMap;
 use entities::provider::{int_to_provider, provider_to_int};
 use rustic_core::library::MetaValue;
 use rustic_core::provider::ThumbnailState;
-use rustic_core::Track;
+use rustic_core::{Track, Rating};
 use schema::{tracks, tracks_meta};
 use std::convert::TryInto;
 
@@ -75,6 +75,7 @@ impl TrackEntity {
             duration: self.duration.map(|duration| duration as u64),
             meta: TrackMeta::to_meta_map(meta),
             explicit: None,
+            rating: Rating::None,
         }
     }
 }

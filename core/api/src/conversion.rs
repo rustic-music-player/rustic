@@ -7,9 +7,7 @@ use rustic_core::provider::{
     Thumbnail,
 };
 use rustic_core::sync::{SyncEvent, SyncItem, SyncItemState};
-use rustic_core::{
-    Album, Artist, PlayerEvent, PlayerState, Playlist, ProviderType, QueuedTrack, RepeatMode, Track,
-};
+use rustic_core::{Album, Artist, PlayerEvent, PlayerState, Playlist, ProviderType, QueuedTrack, RepeatMode, Track, Rating};
 use rustic_extension_api::ExtensionMetadata;
 
 use crate::cursor::{from_cursor, to_cursor, Cursor};
@@ -131,6 +129,7 @@ impl From<Track> for TrackModel {
             album: track.album.map(AlbumModel::from),
             meta: track.meta.into_iter().map(|(k, v)| (k, v.into())).collect(),
             explicit: track.explicit,
+            rating: track.rating.into(),
         }
     }
 }
@@ -360,6 +359,17 @@ impl From<MetaValue> for MetaValueModel {
             MetaValue::Int(int) => MetaValueModel::Int(int),
             MetaValue::Float(float) => MetaValueModel::Float(float),
             MetaValue::Bool(bool) => MetaValueModel::Bool(bool),
+        }
+    }
+}
+
+impl From<Rating> for RatingModel {
+    fn from(rating: Rating) -> Self {
+        match rating {
+            Rating::None => RatingModel::None,
+            Rating::Like => RatingModel::Like,
+            Rating::Dislike => RatingModel::Dislike,
+            Rating::Stars(stars) => RatingModel::Stars(stars)
         }
     }
 }

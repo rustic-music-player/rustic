@@ -1,7 +1,7 @@
 use maplit::hashmap;
 
 use rustic_core::library::Track;
-use rustic_core::provider;
+use rustic_core::{provider, Rating};
 
 use crate::meta::*;
 use crate::user::SoundcloudUser;
@@ -37,6 +37,7 @@ impl From<SoundcloudTrack> for Track {
             duration: Some(track.duration / 1000),
             meta,
             explicit: None,
+            rating: Rating::None,
         }
     }
 }

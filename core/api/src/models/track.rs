@@ -25,6 +25,7 @@ pub struct TrackModel {
     pub duration: Option<u64>,
     pub meta: HashMap<String, MetaValueModel>,
     pub explicit: Option<bool>,
+    pub rating: RatingModel,
 }
 
 #[reflect_struct]
@@ -149,4 +150,16 @@ impl From<TrackModel> for TrackCollection {
             entries: vec![track],
         }
     }
+}
+
+#[derive(Debug, Copy, Clone, Deserialize, Serialize, PartialEq, Eq, PartialOrd, Ord)]
+#[cfg_attr(
+    target_arch = "wasm32",
+    derive(typescript_definitions::TypescriptDefinition)
+)]
+pub enum RatingModel {
+    None,
+    Like,
+    Dislike,
+    Stars(u8),
 }

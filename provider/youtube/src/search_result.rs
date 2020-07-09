@@ -1,5 +1,5 @@
 use rustic_core::provider::{ProviderItem, ProviderItemType, ThumbnailState};
-use rustic_core::{Artist, Playlist, ProviderType, Track};
+use rustic_core::{Artist, Playlist, ProviderType, Track, Rating};
 use std::collections::HashMap;
 use youtube_api::models::{Id, SearchResult};
 
@@ -68,6 +68,7 @@ impl From<YoutubeSearchResult> for Track {
             album_id: None,
             meta: HashMap::new(),
             explicit: None,
+            rating: Rating::None,
         }
     }
 }

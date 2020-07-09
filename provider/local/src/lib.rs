@@ -7,7 +7,7 @@ use serde_derive::Deserialize;
 use async_trait::async_trait;
 use rustic_core::library::{self, SharedLibrary};
 use rustic_core::provider::*;
-use rustic_core::CredentialStore;
+use rustic_core::{CredentialStore, Rating};
 
 use crate::scanner::Track;
 
@@ -187,6 +187,7 @@ impl From<scanner::Track> for library::Track {
                 META_LOCAL_FILE_URL.into() => path.into()
             ),
             explicit: None,
+            rating: Rating::None,
         }
     }
 }

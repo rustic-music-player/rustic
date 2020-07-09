@@ -2,7 +2,7 @@ use maplit::hashmap;
 use pocketcasts::Episode;
 use serde::{Deserialize, Serialize};
 
-use rustic_core::library::Track;
+use rustic_core::library::{Track, Rating};
 use rustic_core::provider::{ProviderType, ThumbnailState};
 
 use crate::meta::*;
@@ -28,6 +28,7 @@ impl From<PocketcastTrack> for Track {
                 META_POCKETCASTS_STREAM_URL.into() => episode.url.into()
             ),
             explicit: None,
+            rating: Rating::None,
         }
     }
 }

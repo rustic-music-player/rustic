@@ -1,8 +1,9 @@
 use std::collections::HashMap;
+use gmusic::TrackRating;
 
 use maplit::hashmap;
 
-use rustic_core::{Album, Artist, ProviderType, Track};
+use rustic_core::{Album, Artist, ProviderType, Track, Rating};
 
 use crate::meta::*;
 use rustic_core::provider::ThumbnailState;
@@ -82,6 +83,15 @@ impl From<GmusicTrack> for Track {
                 .unwrap_or_default(),
             meta,
             explicit: None,
+            rating: convert_rating(track.rating)
         }
+    }
+}
+
+fn convert_rating(rating: Option<TrackRating>) -> Rating {
+    match rating {
+        None | Some(TrackRating::None) => Rating::None,
+        Some(TrackRating::Like) => Rating::Like,
+        Some(TrackRating::Dislike) => Rating::Dislike
     }
 }

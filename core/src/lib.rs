@@ -8,7 +8,7 @@ use url::Url;
 pub use crate::cred_store::{CredentialStore, Credentials};
 pub use crate::library::{
     Album, Artist, Library, LibraryQueryJoins, MultiQuery, Playlist, QueryJoins, SearchResults,
-    SharedLibrary, SingleQuery, SingleQueryIdentifier, Track,
+    SharedLibrary, SingleQuery, SingleQueryIdentifier, Track, Rating,
 };
 use crate::player::Player;
 pub use crate::player::{PlayerBackend, PlayerEvent, PlayerState, QueuedTrack, RepeatMode};

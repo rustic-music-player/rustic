@@ -152,3 +152,6 @@ impl From<SyncItemStateModel> for FFISyncItemStateModel {
         }
     }
 }
+
+#[repr(C)]
+pub struct FFIRatingModel;

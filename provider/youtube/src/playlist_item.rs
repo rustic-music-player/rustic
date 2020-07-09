@@ -1,7 +1,7 @@
 use youtube_api::models::PlaylistItemResource;
 
 use rustic_core::provider::ThumbnailState;
-use rustic_core::{Artist, ProviderType, Track};
+use rustic_core::{Artist, ProviderType, Track, Rating};
 use std::collections::HashMap;
 
 #[derive(Clone)]
@@ -55,6 +55,7 @@ impl From<YoutubePlaylistItem> for Track {
             duration: None,
             meta: HashMap::new(),
             explicit: None,
+            rating: Rating::None,
         }
     }
 }
