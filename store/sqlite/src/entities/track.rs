@@ -76,6 +76,7 @@ impl TrackEntity {
             meta: TrackMeta::to_meta_map(meta),
             explicit: None,
             rating: Rating::None,
+            position: None,
         }
     }
 }
