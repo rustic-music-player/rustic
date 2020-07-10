@@ -1,16 +1,17 @@
 use std::collections::HashMap;
+use std::convert::TryInto;
 
 use log::warn;
 use maplit::hashmap;
 use rspotify::model::track::{FullTrack, SimplifiedTrack};
 use serde_derive::{Deserialize, Serialize};
 
-use rustic_core::library::{Album, MetaValue, Track};
 use rustic_core::{provider, Rating};
+use rustic_core::library::{Album, MetaValue, Track, TrackPosition};
+use rustic_core::provider::ThumbnailState;
 
 use crate::meta::*;
 use crate::util::*;
-use rustic_core::provider::ThumbnailState;
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct SpotifyFullTrack(FullTrack);
@@ -72,6 +73,7 @@ impl From<SpotifyFullTrack> for Track {
             meta,
             explicit: Some(track.explicit),
             rating: Rating::None,
+            position: TrackPosition::new(Some(track.track_number as u64), track.disc_number.try_into().ok()),
         }
     }
 }
@@ -110,6 +112,7 @@ impl From<SpotifySimplifiedTrack> for Track {
             meta,
             explicit: Some(track.explicit),
             rating: Rating::None,
+            position: TrackPosition::new(Some(track.track_number as u64), track.disc_number.try_into().ok()),
         }
     }
 }

@@ -21,6 +21,25 @@ pub struct Track {
     pub meta: HashMap<String, MetaValue>,
     pub explicit: Option<bool>,
     pub rating: Rating,
+    pub position: Option<TrackPosition>,
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct TrackPosition {
+    pub track: Option<u64>,
+    pub disc: Option<u64>,
+}
+
+impl TrackPosition {
+    pub fn new(track: Option<u64>, disc: Option<u64>) -> Option<Self> {
+        match (track, disc) {
+            (None, None) => None,
+            (track, disc) => Some(TrackPosition {
+                track,
+                disc
+            })
+        }
+    }
 }
 
 impl PartialEq for Track {

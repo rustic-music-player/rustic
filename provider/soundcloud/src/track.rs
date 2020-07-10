@@ -38,6 +38,7 @@ impl From<SoundcloudTrack> for Track {
             meta,
             explicit: None,
             rating: Rating::None,
+            position: None,
         }
     }
 }

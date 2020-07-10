@@ -7,7 +7,7 @@ use serde_derive::Deserialize;
 use async_trait::async_trait;
 use rustic_core::library::{self, SharedLibrary};
 use rustic_core::provider::*;
-use rustic_core::{CredentialStore, Rating};
+use rustic_core::{CredentialStore, Rating, TrackPosition};
 
 use crate::scanner::Track;
 
@@ -182,12 +182,13 @@ impl From<scanner::Track> for library::Track {
             },
             provider: ProviderType::LocalMedia,
             uri: format!("file://{}", track.path),
-            duration: None,
+            duration: track.duration.map(u64::from),
             meta: hashmap!(
                 META_LOCAL_FILE_URL.into() => path.into()
             ),
             explicit: None,
             rating: Rating::None,
+            position: TrackPosition::new(track.track.map(u64::from), track.disc.map(u64::from)),
         }
     }
 }
@@ -317,6 +318,9 @@ impl LocalProvider {
             artist: tag.artist().map(String::from),
             album: tag.album().map(String::from),
             has_coverart: tag.pictures().any(|_| true),
+            duration: tag.duration(),
+            track: tag.track(),
+            disc: tag.disc(),
         };
 
         Ok(track)

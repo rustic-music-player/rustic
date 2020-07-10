@@ -69,6 +69,7 @@ impl From<YoutubeSearchResult> for Track {
             meta: HashMap::new(),
             explicit: None,
             rating: Rating::None,
+            position: None,
         }
     }
 }

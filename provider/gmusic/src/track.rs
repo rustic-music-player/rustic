@@ -3,7 +3,7 @@ use gmusic::TrackRating;
 
 use maplit::hashmap;
 
-use rustic_core::{Album, Artist, ProviderType, Track, Rating};
+use rustic_core::{Album, Artist, ProviderType, Track, Rating, TrackPosition};
 
 use crate::meta::*;
 use rustic_core::provider::ThumbnailState;
@@ -83,7 +83,8 @@ impl From<GmusicTrack> for Track {
                 .unwrap_or_default(),
             meta,
             explicit: None,
-            rating: convert_rating(track.rating)
+            rating: convert_rating(track.rating),
+            position: TrackPosition::new(Some(track.track_number), track.disc_number),
         }
     }
 }

@@ -13,7 +13,7 @@ pub use self::library::{Library, SearchResults, SharedLibrary};
 pub use self::meta::MetaValue;
 pub use self::playlist::Playlist;
 pub use self::queries::*;
-pub use self::track::Track;
+pub use self::track::{Track, TrackPosition};
 pub use self::rating::Rating;
 
 pub trait Identifiable {

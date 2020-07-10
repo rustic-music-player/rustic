@@ -9,6 +9,9 @@ pub struct Track {
     pub artist: Option<String>,
     pub album: Option<String>,
     pub has_coverart: bool,
+    pub duration: Option<u32>,
+    pub disc: Option<u32>,
+    pub track: Option<u32>,
 }
 
 #[derive(Debug, Clone)]
@@ -54,6 +57,9 @@ impl Scanner {
                             let artist = tag.artist().map(|s| s.to_string());
                             let album = tag.album().map(|s| s.to_string());
                             let has_coverart = tag.pictures().any(|_| true);
+                            let duration = tag.duration();
+                            let disc = tag.disc();
+                            let track = tag.track();
 
                             Ok(Track {
                                 path,
@@ -61,6 +67,9 @@ impl Scanner {
                                 artist,
                                 album,
                                 has_coverart,
+                                duration,
+                                disc,
+                                track
                             })
                         }
                         Err(id3::Error {
@@ -72,6 +81,9 @@ impl Scanner {
                             artist: None,
                             album: None,
                             has_coverart: false,
+                            duration: None,
+                            track: None,
+                            disc: None,
                         }),
                         Err(e) => {
                             error!("{:?} {:?}", entry.path(), e);

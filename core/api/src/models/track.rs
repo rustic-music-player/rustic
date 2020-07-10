@@ -15,6 +15,7 @@ use wasm_bindgen::prelude::*;
     target_arch = "wasm32",
     derive(typescript_definitions::TypescriptDefinition)
 )]
+#[serde(rename_all = "camelCase")]
 pub struct TrackModel {
     pub cursor: String,
     pub title: String,
@@ -26,6 +27,28 @@ pub struct TrackModel {
     pub meta: HashMap<String, MetaValueModel>,
     pub explicit: Option<bool>,
     pub rating: RatingModel,
+    pub position: Option<TrackPositionModel>,
+}
+
+#[reflect_struct]
+#[derive(Copy, Clone, Debug, Serialize, PartialEq, Eq, Deserialize, Ord)]
+#[cfg_attr(
+    target_arch = "wasm32",
+    derive(typescript_definitions::TypescriptDefinition)
+)]
+#[serde(rename_all = "camelCase")]
+pub struct TrackPositionModel {
+    pub track: Option<u64>,
+    pub disc: Option<u64>,
+}
+
+impl PartialOrd for TrackPositionModel {
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        match self.disc.partial_cmp(&other.disc) {
+            None | Some(Ordering::Equal) => self.track.partial_cmp(&other.track),
+            ordering => ordering
+        }
+    }
 }
 
 #[reflect_struct]
@@ -157,6 +180,7 @@ impl From<TrackModel> for TrackCollection {
     target_arch = "wasm32",
     derive(typescript_definitions::TypescriptDefinition)
 )]
+#[serde(rename_all = "lowercase", tag = "type", content = "stars")]
 pub enum RatingModel {
     None,
     Like,

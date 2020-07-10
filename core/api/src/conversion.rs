@@ -7,7 +7,7 @@ use rustic_core::provider::{
     Thumbnail,
 };
 use rustic_core::sync::{SyncEvent, SyncItem, SyncItemState};
-use rustic_core::{Album, Artist, PlayerEvent, PlayerState, Playlist, ProviderType, QueuedTrack, RepeatMode, Track, Rating};
+use rustic_core::{Album, Artist, PlayerEvent, PlayerState, Playlist, ProviderType, QueuedTrack, RepeatMode, Track, Rating, TrackPosition};
 use rustic_extension_api::ExtensionMetadata;
 
 use crate::cursor::{from_cursor, to_cursor, Cursor};
@@ -17,11 +17,13 @@ use rustic_core::library::MetaValue;
 impl From<Album> for AlbumModel {
     fn from(album: Album) -> Self {
         let cursor = to_cursor(&album.uri);
+        let mut tracks = album.tracks.into_iter().map(TrackModel::from).collect::<Vec<_>>();
+        tracks.sort_by_key(|track| track.position);
         AlbumModel {
             cursor: cursor.clone(),
             title: album.title,
             artist: album.artist.map(ArtistModel::from),
-            tracks: album.tracks.into_iter().map(TrackModel::from).collect(),
+            tracks,
             provider: album.provider.into(),
             in_library: album.id.is_some(),
             coverart: if album.thumbnail.has_thumbnail() {
@@ -130,6 +132,16 @@ impl From<Track> for TrackModel {
             meta: track.meta.into_iter().map(|(k, v)| (k, v.into())).collect(),
             explicit: track.explicit,
             rating: track.rating.into(),
+            position: track.position.map(TrackPositionModel::from),
+        }
+    }
+}
+
+impl From<TrackPosition> for TrackPositionModel {
+    fn from(position: TrackPosition) -> Self {
+        TrackPositionModel {
+            track: position.track,
+            disc: position.disc,
         }
     }
 }

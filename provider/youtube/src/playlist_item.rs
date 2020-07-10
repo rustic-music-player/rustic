@@ -56,6 +56,7 @@ impl From<YoutubePlaylistItem> for Track {
             meta: HashMap::new(),
             explicit: None,
             rating: Rating::None,
+            position: None,
         }
     }
 }
