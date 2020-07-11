@@ -10,7 +10,10 @@ fn test_scan() {
             title: "Ukulele".into(),
             artist: Some("Bensound".into()),
             album: None,
-            has_coverart: false
+            has_coverart: false,
+            duration: None,
+            track: None,
+            disc: None,
         }]
     );
 }
