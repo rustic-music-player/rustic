@@ -85,6 +85,7 @@ impl From<GmusicTrack> for Track {
             explicit: None,
             rating: convert_rating(track.rating),
             position: TrackPosition::new(Some(track.track_number), track.disc_number),
+            share_url: None,
         }
     }
 }

@@ -133,6 +133,7 @@ impl From<Track> for TrackModel {
             explicit: track.explicit,
             rating: track.rating.into(),
             position: track.position.map(TrackPositionModel::from),
+            share_url: track.share_url,
         }
     }
 }

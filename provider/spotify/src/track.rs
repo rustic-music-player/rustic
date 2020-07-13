@@ -74,6 +74,7 @@ impl From<SpotifyFullTrack> for Track {
             explicit: Some(track.explicit),
             rating: Rating::None,
             position: TrackPosition::new(Some(track.track_number as u64), track.disc_number.try_into().ok()),
+            share_url: None,
         }
     }
 }
@@ -113,6 +114,7 @@ impl From<SpotifySimplifiedTrack> for Track {
             explicit: Some(track.explicit),
             rating: Rating::None,
             position: TrackPosition::new(Some(track.track_number as u64), track.disc_number.try_into().ok()),
+            share_url: None,
         }
     }
 }

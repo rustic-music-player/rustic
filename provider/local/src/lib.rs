@@ -189,6 +189,7 @@ impl From<scanner::Track> for library::Track {
             explicit: None,
             rating: Rating::None,
             position: TrackPosition::new(track.track.map(u64::from), track.disc.map(u64::from)),
+            share_url: None,
         }
     }
 }

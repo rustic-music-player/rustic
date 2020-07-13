@@ -22,6 +22,7 @@ pub struct Track {
     pub explicit: Option<bool>,
     pub rating: Rating,
     pub position: Option<TrackPosition>,
+    pub share_url: Option<String>,
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]

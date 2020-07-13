@@ -28,6 +28,7 @@ pub struct TrackModel {
     pub explicit: Option<bool>,
     pub rating: RatingModel,
     pub position: Option<TrackPositionModel>,
+    pub share_url: Option<String>,
 }
 
 #[reflect_struct]

@@ -46,10 +46,11 @@ impl From<YoutubeSearchResult> for Track {
             ThumbnailState::None
         };
 
+        let id = result.id.into_inner();
         Track {
             id: None,
             title: result.snippet.title,
-            uri: format!("youtube://video/{}", result.id.into_inner()),
+            uri: format!("youtube://video/{}", &id),
             duration: None,
             thumbnail,
             provider: ProviderType::Youtube,
@@ -70,6 +71,7 @@ impl From<YoutubeSearchResult> for Track {
             explicit: None,
             rating: Rating::None,
             position: None,
+            share_url: Some(format!("https://youtube.com/watch?v={}", &id)),
         }
     }
 }

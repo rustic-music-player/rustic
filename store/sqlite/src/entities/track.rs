@@ -77,6 +77,7 @@ impl TrackEntity {
             explicit: None,
             rating: Rating::None,
             position: None,
+            share_url: None,
         }
     }
 }

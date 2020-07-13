@@ -39,6 +39,7 @@ impl From<SoundcloudTrack> for Track {
             explicit: None,
             rating: Rating::None,
             position: None,
+            share_url: Some(track.permalink_url),
         }
     }
 }

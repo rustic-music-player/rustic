@@ -29,13 +29,14 @@ impl From<YoutubePlaylistItem> for Track {
             ThumbnailState::None
         };
 
+        let id = resource.snippet.resource_id.into_inner();
         Track {
             id: None,
             provider: ProviderType::Youtube,
             title: resource.snippet.inner.title,
             uri: format!(
                 "youtube://video/{}",
-                &resource.snippet.resource_id.into_inner()
+                &id
             ),
             album_id: None,
             album: None,
@@ -57,6 +58,7 @@ impl From<YoutubePlaylistItem> for Track {
             explicit: None,
             rating: Rating::None,
             position: None,
+            share_url: Some(format!("https://youtube.com/watch?v={}", &id)),
         }
     }
 }

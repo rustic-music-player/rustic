@@ -30,6 +30,7 @@ impl From<PocketcastTrack> for Track {
             explicit: None,
             rating: Rating::None,
             position: None,
+            share_url: None,
         }
     }
 }

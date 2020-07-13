@@ -51,6 +51,7 @@ impl From<YoutubeVideoMetadata> for Track {
             explicit: None,
             rating: Rating::None,
             position: None,
+            share_url: Some(format!("https://youtube.com/watch?v={}", &video.video_details.video_id)),
         }
     }
 }
