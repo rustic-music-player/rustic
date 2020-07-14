@@ -93,6 +93,7 @@ async fn setup_instance(
     let app = Rustic::new(library, storage, providers)?;
     let extension_runtime = ExtensionRuntime::new(Arc::clone(&app.library), Arc::clone(&app.storage));
     extensions.setup(extension_runtime).await?;
+    extensions.on_enable().await?;
     let client = setup_client(&app, extensions, credential_store);
 
     for player_config in config.players.iter() {

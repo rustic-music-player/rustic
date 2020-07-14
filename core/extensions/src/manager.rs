@@ -36,6 +36,22 @@ impl From<(ExtensionMetadata, ExtensionHost)> for HostedExtension {
 
 #[async_trait]
 impl ExtensionApi for HostedExtension {
+    async fn on_enable(&self) -> Result<(), failure::Error> {
+        let (tx, mut rx) = mpsc::channel(1);
+        self.send(ExtensionCommand::Enable(tx)).await;
+        rx.recv()
+            .await
+            .ok_or_else(|| format_err!("Channel closed"))?
+    }
+
+    async fn on_disable(&self) -> Result<(), failure::Error> {
+        let (tx, mut rx) = mpsc::channel(1);
+        self.send(ExtensionCommand::Disable(tx)).await;
+        rx.recv()
+            .await
+            .ok_or_else(|| format_err!("Channel closed"))?
+    }
+
     async fn on_add_to_queue(&self, tracks: Vec<Track>) -> Result<Vec<Track>, failure::Error> {
         let (tx, mut rx) = mpsc::channel(1);
         self.send(ExtensionCommand::AddToQueue(tracks, tx)).await;
@@ -150,5 +166,19 @@ impl ExtensionApi for ExtensionManager {
         }
 
         Ok(tracks)
+    }
+
+    async fn on_enable(&self) -> Result<(), failure::Error> {
+        for extension in self.extensions.iter() {
+            extension.on_enable().await?;
+        }
+        Ok(())
+    }
+
+    async fn on_disable(&self) -> Result<(), failure::Error> {
+        for extension in self.extensions.iter() {
+            extension.on_disable().await?;
+        }
+        Ok(())
     }
 }

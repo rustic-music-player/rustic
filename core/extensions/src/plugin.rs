@@ -22,6 +22,14 @@ impl<T: ExtensionLibrary + 'static> ExtensionPlugin for T {
                 let tracks = self.on_add_to_queue(tracks).await;
                 response.send(tracks).await;
             }
+            ExtensionCommand::Enable(mut response) => {
+                let result = self.on_enable().await;
+                response.send(result).await;
+            }
+            ExtensionCommand::Disable(mut response) => {
+                let result = self.on_disable().await;
+                response.send(result).await;
+            }
         }
         None
     }
@@ -32,4 +40,6 @@ pub enum ExtensionCommand {
     Setup(ExtensionRuntime),
     GetMetadata(mpsc::Sender<ExtensionMetadata>),
     AddToQueue(Vec<Track>, mpsc::Sender<Result<Vec<Track>, failure::Error>>),
+    Enable(mpsc::Sender<Result<(), failure::Error>>),
+    Disable(mpsc::Sender<Result<(), failure::Error>>),
 }
