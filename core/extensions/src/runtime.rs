@@ -1,16 +1,50 @@
-use failure::Error;
-use rustic_core::{
-    Album, Artist, Library, MultiQuery, Playlist, SearchResults, SharedLibrary, SingleQuery, Track,
-};
+use failure::{Error, format_err};
+
+use rustic_core::{Album, Artist, Library, MultiQuery, Playlist, SearchResults, SharedLibrary, SharedStorageBackend, SingleQuery, StorageBackend, StorageCollection, Track};
+use rustic_core::library::MetaValue;
+
+use crate::ExtensionMetadata;
 
 #[derive(Debug, Clone)]
 pub struct ExtensionRuntime {
     library: SharedLibrary,
+    storage: SharedStorageBackend,
+    extension: Option<ExtensionMetadata>,
 }
 
 impl ExtensionRuntime {
-    pub fn new(library: SharedLibrary) -> Self {
-        ExtensionRuntime { library }
+    pub fn new(library: SharedLibrary, storage: SharedStorageBackend) -> Self {
+        ExtensionRuntime { library, storage, extension: None }
+    }
+
+    pub fn for_extension(&self, metadata: ExtensionMetadata) -> Self {
+        ExtensionRuntime {
+            library: self.library.clone(),
+            storage: self.storage.clone(),
+            extension: Some(metadata),
+        }
+    }
+
+    pub async fn read_metadata(&self, key: &str) -> Result<Option<MetaValue>, Error> {
+        if let Some(ref extension) = self.extension {
+            let collection = self.storage.open_collection(&extension.id).await?;
+            let value = collection.read(key).await?;
+
+            Ok(value)
+        } else {
+            Err(format_err!("ExtensionRuntime is not setup properly"))
+        }
+    }
+
+    pub async fn write_metadata(&self, key: &str, value: MetaValue) -> Result<(), Error> {
+        if let Some(ref extension) = self.extension {
+            let collection = self.storage.open_collection(&extension.id).await?;
+            let value = collection.write(key, value).await?;
+
+            Ok(value)
+        } else {
+            Err(format_err!("ExtensionRuntime is not setup properly"))
+        }
     }
 }
 

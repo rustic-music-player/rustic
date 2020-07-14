@@ -5,15 +5,18 @@ use failure::format_err;
 use log::{debug, trace};
 use url::Url;
 
-pub use crate::cred_store::{CredentialStore, Credentials};
+pub use crate::cred_store::{Credentials, CredentialStore};
 pub use crate::library::{
     Album, Artist, Library, LibraryQueryJoins, MultiQuery, Playlist, QueryJoins, SearchResults,
     SharedLibrary, SingleQuery, SingleQueryIdentifier, Track, Rating, TrackPosition,
 };
-use crate::player::Player;
 pub use crate::player::{PlayerBackend, PlayerEvent, PlayerState, QueuedTrack, RepeatMode};
+use crate::player::Player;
 pub use crate::provider::{Explorer, Provider, ProviderType};
 use crate::provider::{InternalUri, ProviderItemType, Thumbnail, ThumbnailState};
+pub use crate::storage_backend::{SharedStorageBackend, StorageBackend, StorageCollection};
+
+mod storage_backend;
 
 pub mod cache;
 mod cred_store;
@@ -25,6 +28,7 @@ pub mod sync;
 pub struct Rustic {
     player: Arc<Mutex<HashMap<String, Arc<Player>>>>,
     pub library: library::SharedLibrary,
+    pub storage: SharedStorageBackend,
     pub providers: Vec<Provider>,
     pub cache: cache::SharedCache,
     default_player: Arc<Mutex<Option<String>>>,
@@ -34,12 +38,14 @@ pub struct Rustic {
 impl Rustic {
     pub fn new(
         library: Box<dyn Library>,
+        storage: SharedStorageBackend,
         providers: Vec<Provider>,
     ) -> Result<Arc<Rustic>, failure::Error> {
         let library = Arc::new(library);
         Ok(Arc::new(Rustic {
             player: Arc::new(Mutex::new(HashMap::new())),
             library,
+            storage,
             providers,
             cache: Arc::new(cache::Cache::new()),
             default_player: Arc::new(Mutex::new(None)),

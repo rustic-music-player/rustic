@@ -133,7 +133,7 @@ impl ExtensionManager {
     pub async fn setup(&mut self, runtime: ExtensionRuntime) -> Result<(), failure::Error> {
         for extension in self.extensions.iter() {
             extension
-                .send(ExtensionCommand::Setup(runtime.clone()))
+                .send(ExtensionCommand::Setup(runtime.for_extension(extension.0.clone())))
                 .await;
         }
         Ok(())

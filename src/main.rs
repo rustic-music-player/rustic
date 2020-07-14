@@ -2,12 +2,12 @@ use std::sync::Arc;
 use std::thread::JoinHandle;
 
 use failure::Error;
-use log::{error, trace, LevelFilter};
+use log::{error, LevelFilter, trace};
 use structopt::StructOpt;
 
 use rustic_api::ApiClient;
-use rustic_core::{CredentialStore, Rustic};
-use rustic_extension_api::ExtensionRuntime;
+use rustic_core::{CredentialStore, Rustic, StorageBackend};
+use rustic_extension_api::{ExtensionApi, ExtensionRuntime};
 #[cfg(feature = "google-cast-backend")]
 use rustic_google_cast_backend::GoogleCastBackend;
 use rustic_memory_store::MemoryLibrary;
@@ -15,6 +15,8 @@ use rustic_memory_store::MemoryLibrary;
 use crate::config::*;
 use crate::credential_stores::*;
 use crate::setup::*;
+
+mod json_storage;
 
 mod config;
 mod credential_stores;
@@ -71,8 +73,10 @@ async fn setup_instance(
         }
     };
     let providers = setup_providers(&config, credential_store.as_ref()).await?;
+    let storage = json_storage::JsonStorage::new(".storage".into())?;
+    let storage: Arc<Box<dyn StorageBackend>> = Arc::new(Box::new(storage));
 
-    let store: Box<dyn rustic_core::Library> = match config.library {
+    let library: Box<dyn rustic_core::Library> = match config.library {
         LibraryConfig::Memory { persist } => Box::new(MemoryLibrary::new(persist)),
         #[cfg(feature = "sqlite-store")]
         LibraryConfig::SQLite { ref path } => {
@@ -86,8 +90,8 @@ async fn setup_instance(
         }
     };
 
-    let app = Rustic::new(store, providers)?;
-    let extension_runtime = ExtensionRuntime::new(Arc::clone(&app.library));
+    let app = Rustic::new(library, storage, providers)?;
+    let extension_runtime = ExtensionRuntime::new(Arc::clone(&app.library), Arc::clone(&app.storage));
     extensions.setup(extension_runtime).await?;
     let client = setup_client(&app, extensions, credential_store);
 
