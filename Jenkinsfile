@@ -34,10 +34,13 @@ pipeline {
                         stage('Build') {
                             steps {
                                 sh 'cargo build --workspace --release --message-format json > cargo-build.json'
-                                sh 'mv target/release/rustic rustic-linux-x86_64'
-                                archiveArtifacts artifacts: 'rustic-linux-x86_64', fingerprint: true
-                                archiveArtifacts artifacts: 'target/release/librustic_ffi_client.so', fingerprint: true
-                                archiveArtifacts artifacts: 'target/release/librustic_*_extension.so', fingerprint: true, allowEmptyArchive: true
+                                fileOperations([
+                                    folderCreateOperation('linux-x86_64'),
+                                    fileRenameOperation(destination: 'linux-x86_64/rustic', source: 'target/release/rustic'),
+                                    fileRenameOperation(destination: 'linux-x86_64/librustic_ffi_client.so', source: 'target/release/librustic_ffi_client.so'),
+                                    fileCopyOperation(targetLocation: 'linux-x86_64/extensions/', includes: 'target/release/*_extension.so', flattenFiles: true)
+                                ])
+                                archiveArtifacts artifacts: 'linux-x86_64/**/*', fingerprint: true
                                 //recordIssues failOnError: false, enabledForFailure: true, tool: cargo(pattern: 'cargo-build.json')
                             }
                         }
@@ -107,9 +110,14 @@ pipeline {
                         stage('Build') {
                             steps {
                                 bat 'cargo build --release --no-default-features --features "http-frontend rodio-backend local-files-provider pocketcasts-provider soundcloud-provider gmusic-provider youtube-provider"'
-                                bat 'move target\\release\\rustic.exe rustic-win32-x86_64.exe'
-                                archiveArtifacts artifacts: 'rustic-win32-x86_64.exe', fingerprint: true
-                                archiveArtifacts artifacts: 'target/release/librustic_*_extension.dll', fingerprint: true, allowEmptyArchive: true
+                                bat 'cargo build --release -p rustic-party-mode-extension'
+                                fileOperations([
+                                    folderCreateOperation('win32-x86_64'),
+                                    fileRenameOperation(destination: 'win32-x86_64/rustic.exe', source: 'target/release/rustic.exe'),
+//                                    fileRenameOperation(destination: 'win32-x86_64/librustic_ffi_client.dll', source: 'target/release/librustic_ffi_client.dll'),
+                                    fileCopyOperation(targetLocation: 'win32-x86_64/extensions/', includes: 'target/release/*_extension.dll', flattenFiles: true)
+                                ])
+                                archiveArtifacts artifacts: 'win32-x86_64/**/*', fingerprint: true
                             }
                         }
                     }
@@ -128,9 +136,13 @@ pipeline {
                         stage('Build') {
                             steps {
                                 sh 'cargo build --bins --workspace --release'
-                                sh 'mv target/release/rustic rustic-osx-x86_64'
-                                archiveArtifacts artifacts: 'rustic-osx-x86_64', fingerprint: true
-                                archiveArtifacts artifacts: 'target/release/librustic_*_extension.dylib', fingerprint: true, allowEmptyArchive: true
+                                fileOperations([
+                                    folderCreateOperation('osx-x86_64'),
+                                    fileRenameOperation(destination: 'osx-x86_64/rustic', source: 'target/release/rustic'),
+//                                    fileRenameOperation(destination: 'osx-x86_64/librustic_ffi_client.dylib', source: 'target/release/librustic_ffi_client.dylib'),
+//                                    fileCopyOperation(targetLocation: 'osx-x86_64/extensions/', includes: 'target/release/*_extension.dylib', flattenFiles: true)
+                                ])
+                                archiveArtifacts artifacts: 'osx-x86_64/**/*', fingerprint: true
                             }
                         }
                     }
