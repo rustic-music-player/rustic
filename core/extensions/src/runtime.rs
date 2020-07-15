@@ -8,7 +8,7 @@ use crate::ExtensionMetadata;
 #[derive(Debug, Clone)]
 pub struct ExtensionRuntime {
     library: SharedLibrary,
-    storage: SharedStorageBackend,
+    pub(crate) storage: SharedStorageBackend,
     extension: Option<ExtensionMetadata>,
 }
 

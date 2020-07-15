@@ -188,6 +188,14 @@ impl RusticApiClient for RusticNativeClient {
         Ok(aggregate_results(results))
     }
 
+    async fn enable_extension(&self, id: &str) -> Result<()> {
+        self.extensions.enable_extension(id).await
+    }
+
+    async fn disable_extension(&self, id: &str) -> Result<()> {
+        self.extensions.disable_extension(id).await
+    }
+
     async fn get_extensions(&self) -> Result<Vec<ExtensionModel>> {
         let extensions = self
             .extensions

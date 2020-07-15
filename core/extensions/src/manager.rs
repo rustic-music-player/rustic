@@ -1,26 +1,32 @@
 use std::collections::HashMap;
 use std::path::Path;
 use std::sync::Arc;
-use std::sync::atomic::AtomicBool;
+use std::sync::atomic::{AtomicBool, Ordering};
 
 use async_trait::async_trait;
-use failure::format_err;
+use failure::{bail, format_err, Error};
 use log::{info, trace};
 use tokio::sync::{mpsc, Mutex};
 
-use rustic_core::{Track, Artist, Album, Playlist};
+use rustic_core::{Track, Artist, Album, Playlist, StorageCollection};
 
 use crate::api::*;
 use crate::host::{construct_plugin, ExtensionHost};
 use crate::plugin::*;
 use crate::runtime::ExtensionRuntime;
 
+const EXTENSION_COLLECTION_KEY: &str = "extensions";
+
 #[derive(Clone)]
 pub struct HostedExtension(ExtensionMetadata, Arc<AtomicBool>, Arc<Mutex<ExtensionHost>>);
 
 impl HostedExtension {
-    pub fn get_metadata(&self) -> ExtensionMetadata {
-        self.0.clone()
+    pub fn get_metadata(&self) -> (ExtensionMetadata, bool) {
+        (self.0.clone(), self.1.load(Ordering::Relaxed))
+    }
+
+    pub fn is_enabled(&self) -> bool {
+        self.1.load(Ordering::Relaxed)
     }
 
     pub async fn send(&self, message: ExtensionCommand) {
@@ -28,7 +34,7 @@ impl HostedExtension {
         host.send(message).await;
     }
 
-    async fn rpc<T>(&self, message: ExtensionCommand, mut rx: mpsc::Receiver<Result<T, failure::Error>>) -> Result<T, failure::Error> {
+    async fn rpc<T>(&self, message: ExtensionCommand, mut rx: mpsc::Receiver<Result<T, Error>>) -> Result<T, Error> {
         self.send(message).await;
         rx.recv()
             .await
@@ -36,45 +42,51 @@ impl HostedExtension {
     }
 }
 
-impl From<(ExtensionMetadata, bool, ExtensionHost)> for HostedExtension {
-    fn from((metadata, enabled, host): (ExtensionMetadata, bool, ExtensionHost)) -> Self {
-        HostedExtension(metadata, Arc::new(AtomicBool::new(enabled)), Arc::new(Mutex::new(host)))
+impl From<(ExtensionMetadata, ExtensionHost)> for HostedExtension {
+    fn from((metadata, host): (ExtensionMetadata, ExtensionHost)) -> Self {
+        HostedExtension(metadata, Arc::new(AtomicBool::new(false)), Arc::new(Mutex::new(host)))
     }
 }
 
 #[async_trait]
 impl ExtensionApi for HostedExtension {
-    async fn on_enable(&self) -> Result<(), failure::Error> {
+    async fn on_enable(&self) -> Result<(), Error> {
         let (tx, rx) = mpsc::channel(1);
-        self.rpc(ExtensionCommand::Enable(tx), rx).await
+        self.rpc(ExtensionCommand::Enable(tx), rx).await?;
+        self.1.store(true, Ordering::Relaxed);
+        info!("Enabled {} extension", &self.0.name);
+        Ok(())
     }
 
-    async fn on_disable(&self) -> Result<(), failure::Error> {
+    async fn on_disable(&self) -> Result<(), Error> {
         let (tx, rx) = mpsc::channel(1);
-        self.rpc(ExtensionCommand::Disable(tx), rx).await
+        self.rpc(ExtensionCommand::Disable(tx), rx).await?;
+        self.1.store(false, Ordering::Relaxed);
+        info!("Disabled {} extension", &self.0.name);
+        Ok(())
     }
 
-    async fn on_add_to_queue(&self, tracks: Vec<Track>) -> Result<Vec<Track>, failure::Error> {
+    async fn on_add_to_queue(&self, tracks: Vec<Track>) -> Result<Vec<Track>, Error> {
         let (tx, rx) = mpsc::channel(1);
         self.rpc(ExtensionCommand::AddToQueue(tracks, tx), rx).await
     }
 
-    async fn resolve_track(&self, track: Track) -> Result<Track, failure::Error> {
+    async fn resolve_track(&self, track: Track) -> Result<Track, Error> {
         let (tx, rx) = mpsc::channel(1);
         self.rpc(ExtensionCommand::ResolveTrack(track, tx), rx).await
     }
 
-    async fn resolve_album(&self, album: Album) -> Result<Album, failure::Error> {
+    async fn resolve_album(&self, album: Album) -> Result<Album, Error> {
         let (tx, rx) = mpsc::channel(1);
         self.rpc(ExtensionCommand::ResolveAlbum(album, tx), rx).await
     }
 
-    async fn resolve_artist(&self, artist: Artist) -> Result<Artist, failure::Error> {
+    async fn resolve_artist(&self, artist: Artist) -> Result<Artist, Error> {
         let (tx, rx) = mpsc::channel(1);
         self.rpc(ExtensionCommand::ResolveArtist(artist, tx), rx).await
     }
 
-    async fn resolve_playlist(&self, playlist: Playlist) -> Result<Playlist, failure::Error> {
+    async fn resolve_playlist(&self, playlist: Playlist) -> Result<Playlist, Error> {
         let (tx, rx) = mpsc::channel(1);
         self.rpc(ExtensionCommand::ResolvePlaylist(playlist, tx), rx).await
     }
@@ -82,7 +94,7 @@ impl ExtensionApi for HostedExtension {
 
 #[derive(Default)]
 pub struct ExtensionManagerBuilder {
-    extensions: Vec<(ExtensionMetadata, bool, ExtensionHost)>,
+    extensions: Vec<(ExtensionMetadata, ExtensionHost)>,
 }
 
 impl ExtensionManagerBuilder {
@@ -90,7 +102,7 @@ impl ExtensionManagerBuilder {
         &mut self,
         dir: &Path,
         config: &HashMap<String, HashMap<String, ExtensionConfigValue>>,
-    ) -> Result<(), failure::Error> {
+    ) -> Result<(), Error> {
         let extensions: Vec<_> = dir
             .read_dir()?
             .filter_map(|file| file.ok())
@@ -118,7 +130,7 @@ impl ExtensionManagerBuilder {
         &mut self,
         path: &Path,
         config: &HashMap<String, HashMap<String, ExtensionConfigValue>>,
-    ) -> Result<(), failure::Error> {
+    ) -> Result<(), Error> {
         let plugin = construct_plugin(&path, config)?;
         let mut host = ExtensionHost::new(plugin);
         let (tx, mut rx) = mpsc::channel(1);
@@ -129,7 +141,7 @@ impl ExtensionManagerBuilder {
             .await
             .ok_or_else(|| format_err!("Channel closed"))?;
         info!("Loaded Extension: {} v{}", metadata.name, metadata.version);
-        self.extensions.push((metadata, true, host));
+        self.extensions.push((metadata, host));
         Ok(())
     }
 
@@ -140,6 +152,7 @@ impl ExtensionManagerBuilder {
                 .into_iter()
                 .map(HostedExtension::from)
                 .collect(),
+            runtime: None,
         }
     }
 }
@@ -147,6 +160,7 @@ impl ExtensionManagerBuilder {
 #[derive(Clone)]
 pub struct ExtensionManager {
     extensions: Vec<HostedExtension>,
+    runtime: Option<ExtensionRuntime>,
 }
 
 impl std::fmt::Debug for ExtensionManager {
@@ -158,72 +172,98 @@ impl std::fmt::Debug for ExtensionManager {
 }
 
 impl ExtensionManager {
-    pub fn get_extensions(&self) -> Vec<ExtensionMetadata> {
+    pub fn get_extensions(&self) -> Vec<(ExtensionMetadata, bool)> {
         self.extensions
             .iter()
             .map(HostedExtension::get_metadata)
             .collect()
     }
 
-    pub async fn setup(&mut self, runtime: ExtensionRuntime) -> Result<(), failure::Error> {
+    pub async fn setup(&mut self, runtime: ExtensionRuntime) -> Result<(), Error> {
+        let collection = runtime.storage.open_collection(EXTENSION_COLLECTION_KEY).await?;
         for extension in self.extensions.iter() {
-            extension
-                .send(ExtensionCommand::Setup(runtime.for_extension(extension.0.clone())))
-                .await;
+            let (tx, rx) = mpsc::channel(1);
+            extension.rpc(ExtensionCommand::Setup(runtime.for_extension(extension.0.clone()), tx), rx).await?;
+            match collection.read(&extension.0.id).await? {
+                Some(value) if value.bool().unwrap_or_default() => {
+                    extension.on_enable().await?;
+                },
+                _ => {}
+            }
+        }
+        self.runtime = Some(runtime);
+        Ok(())
+    }
+
+    pub async fn enable_extension(&self, id: &str) -> Result<(), Error> {
+        let collection = self.get_extensions_collection().await?;
+        if let Some(extension) = self.extensions.iter().find(|e| e.0.id == id) {
+            trace!("Enabling extension {}...", &extension.0.name);
+            extension.on_enable().await?;
+            collection.write(id, true.into()).await?;
         }
         Ok(())
+    }
+
+    pub async fn disable_extension(&self, id: &str) -> Result<(), Error> {
+        let collection = self.get_extensions_collection().await?;
+        if let Some(extension) = self.extensions.iter().find(|e| e.0.id == id) {
+            trace!("Disabling extension {}...", &extension.0.name);
+            extension.on_disable().await?;
+            collection.write(id, false.into()).await?;
+        }
+        Ok(())
+    }
+
+    async fn get_extensions_collection(&self) -> Result<Box<dyn StorageCollection>, Error> {
+        if self.runtime.is_none() {
+            bail!("Tried to store extension state before setup");
+        }
+        let runtime = self.runtime.as_ref().unwrap();
+        runtime.storage.open_collection("extensions").await
+    }
+
+    pub fn get_enabled_extensions(&self) -> impl Iterator<Item = &HostedExtension> {
+        self.extensions.iter()
+            .filter(|extension| extension.is_enabled())
     }
 }
 
 #[async_trait]
 impl ExtensionApi for ExtensionManager {
-    async fn on_enable(&self) -> Result<(), failure::Error> {
-        for extension in self.extensions.iter() {
-            extension.on_enable().await?;
-        }
-        Ok(())
-    }
-
-    async fn on_disable(&self) -> Result<(), failure::Error> {
-        for extension in self.extensions.iter() {
-            extension.on_disable().await?;
-        }
-        Ok(())
-    }
-
-    async fn on_add_to_queue(&self, tracks: Vec<Track>) -> Result<Vec<Track>, failure::Error> {
+    async fn on_add_to_queue(&self, tracks: Vec<Track>) -> Result<Vec<Track>, Error> {
         let mut tracks = tracks;
 
-        for extension in self.extensions.iter() {
+        for extension in self.get_enabled_extensions() {
             tracks = extension.on_add_to_queue(tracks).await?;
         }
 
         Ok(tracks)
     }
 
-    async fn resolve_track(&self, mut track: Track) -> Result<Track, failure::Error> {
-        for extension in self.extensions.iter() {
+    async fn resolve_track(&self, mut track: Track) -> Result<Track, Error> {
+        for extension in self.get_enabled_extensions() {
             track = extension.resolve_track(track).await?;
         }
         Ok(track)
     }
 
-    async fn resolve_album(&self, mut album: Album) -> Result<Album, failure::Error> {
-        for extension in self.extensions.iter() {
+    async fn resolve_album(&self, mut album: Album) -> Result<Album, Error> {
+        for extension in self.get_enabled_extensions() {
             album = extension.resolve_album(album).await?;
         }
         Ok(album)
     }
 
-    async fn resolve_artist(&self, mut artist: Artist) -> Result<Artist, failure::Error> {
-        for extension in self.extensions.iter() {
+    async fn resolve_artist(&self, mut artist: Artist) -> Result<Artist, Error> {
+        for extension in self.get_enabled_extensions() {
             artist = extension.resolve_artist(artist).await?;
         }
         Ok(artist)
     }
 
-    async fn resolve_playlist(&self, mut playlist: Playlist) -> Result<Playlist, failure::Error> {
-        for extension in self.extensions.iter() {
+    async fn resolve_playlist(&self, mut playlist: Playlist) -> Result<Playlist, Error> {
+        for extension in self.get_enabled_extensions() {
             playlist = extension.resolve_playlist(playlist).await?;
         }
         Ok(playlist)

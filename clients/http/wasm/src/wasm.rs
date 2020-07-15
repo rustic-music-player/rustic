@@ -32,6 +32,16 @@ pub async fn get_extensions() -> ApiResult {
     execute(CLIENT.get_extensions()).await
 }
 
+#[wasm_bindgen(js_name = "enableExtension")]
+pub async fn enable_extension(id: String) -> ApiResult {
+    execute(CLIENT.enable_extension(&id)).await
+}
+
+#[wasm_bindgen(js_name = "disableExtension")]
+pub async fn disable_extension(id: String) -> ApiResult {
+    execute(CLIENT.disable_extension(&id)).await
+}
+
 #[wasm_bindgen(js_name = "openShareUrl")]
 pub async fn open_share_url(url: String) -> ApiResult {
     execute(CLIENT.open_share_url(&url)).await

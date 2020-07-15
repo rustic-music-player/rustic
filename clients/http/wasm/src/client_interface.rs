@@ -11,6 +11,8 @@ export interface RusticApiClient {
     aggregatedSearch(query: string, providers: any): Promise<AggregatedSearchResults>;
     searchLibrary(query: string): Promise<SearchResults>;
     getExtensions(): Promise<ExtensionModel[]>;
+    enableExtension(id: string): Promise<void>;
+    disableExtension(id: string): Promise<void>;
     openShareUrl(url: string): Promise<OpenResultModel>;
     getProviders(): Promise<ProviderModel[]>;
     getAvailableProviders(): Promise<AvailableProviderModel[]>;

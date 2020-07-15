@@ -32,6 +32,9 @@ pub trait RusticApiClient:
         providers: Option<Vec<ProviderTypeModel>>,
     ) -> Result<AggregatedSearchResults>;
 
+    async fn enable_extension(&self, id: &str) -> Result<()>;
+    async fn disable_extension(&self, id: &str) -> Result<()>;
+
     async fn get_extensions(&self) -> Result<Vec<ExtensionModel>>;
 
     async fn open_share_url(&self, url: &str) -> Result<Option<OpenResultModel>>;

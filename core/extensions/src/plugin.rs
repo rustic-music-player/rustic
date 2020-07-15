@@ -11,8 +11,9 @@ use crate::runtime::ExtensionRuntime;
 impl<T: ExtensionLibrary + 'static> ExtensionPlugin for T {
     async fn handle_message(&mut self, message: ExtensionCommand) -> std::option::Option<u8> {
         match message {
-            ExtensionCommand::Setup(runtime) => {
-                self.setup(&runtime);
+            ExtensionCommand::Setup(runtime, mut tx) => {
+                let result = self.setup(&runtime);
+                tx.send(result).await;
             }
             ExtensionCommand::GetMetadata(mut tx) => {
                 let meta = T::metadata();
@@ -53,7 +54,7 @@ impl<T: ExtensionLibrary + 'static> ExtensionPlugin for T {
 
 #[derive(Debug)]
 pub enum ExtensionCommand {
-    Setup(ExtensionRuntime),
+    Setup(ExtensionRuntime, mpsc::Sender<Result<(), failure::Error>>),
     GetMetadata(mpsc::Sender<ExtensionMetadata>),
     Enable(mpsc::Sender<Result<(), failure::Error>>),
     Disable(mpsc::Sender<Result<(), failure::Error>>),

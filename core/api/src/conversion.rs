@@ -79,13 +79,13 @@ impl From<ProviderState> for ProviderStateModel {
     }
 }
 
-impl From<ExtensionMetadata> for ExtensionModel {
-    fn from(metadata: ExtensionMetadata) -> Self {
+impl From<(ExtensionMetadata, bool)> for ExtensionModel {
+    fn from((metadata, enabled): (ExtensionMetadata, bool)) -> Self {
         ExtensionModel {
             name: metadata.name,
             id: metadata.id,
             version: metadata.version,
-            enabled: true,
+            enabled,
         }
     }
 }

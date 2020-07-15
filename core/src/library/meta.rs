@@ -7,6 +7,16 @@ pub enum MetaValue {
     Int(u64),
 }
 
+impl MetaValue {
+    pub fn bool(&self) -> Option<bool> {
+        if let MetaValue::Bool(value) = self {
+            Some(*value)
+        }else {
+            None
+        }
+    }
+}
+
 impl From<bool> for MetaValue {
     fn from(value: bool) -> Self {
         MetaValue::Bool(value)

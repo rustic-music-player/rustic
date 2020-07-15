@@ -150,6 +150,16 @@ where
         Ok(res)
     }
 
+    async fn enable_extension(&self, id: &str) -> Result<()> {
+        let url = format!("/api/extensions/{}/enable", id);
+        self.post(&url, ()).await?.no_content()
+    }
+
+    async fn disable_extension(&self, id: &str) -> Result<()> {
+        let url = format!("/api/extensions/{}/disable", id);
+        self.post(&url, ()).await?.no_content()
+    }
+
     async fn get_extensions(&self) -> Result<Vec<ExtensionModel>> {
         let res = self.get("/api/extensions").await?;
 

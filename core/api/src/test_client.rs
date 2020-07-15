@@ -50,6 +50,14 @@ impl RusticApiClient for TestApiClient {
         unimplemented!()
     }
 
+    async fn enable_extension(&self, id: &str) -> Result<()> {
+        unimplemented!()
+    }
+
+    async fn disable_extension(&self, id: &str) -> Result<()> {
+        unimplemented!()
+    }
+
     async fn get_extensions(&self) -> Result<Vec<ExtensionModel>> {
         Ok(self.extensions.clone())
     }
