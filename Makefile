@@ -28,3 +28,11 @@ target/ffi/sync_http_interop: clients/ffi/tests/sync_http_interop.c
 target/ffi/cb_http_interop: clients/ffi/tests/cb_http_interop.c
 	mkdir -p target/ffi
 	$(CC) $(CCFLAGS) -o target/ffi/cb_http_interop clients/ffi/tests/cb_http_interop.c
+
+extensions: uwu party-mode
+
+uwu:
+	cargo build -p rustic-uwu-extension
+
+party-mode:
+	cargo build -p rustic-party-mode-extension

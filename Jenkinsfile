@@ -110,7 +110,7 @@ pipeline {
                         stage('Build') {
                             steps {
                                 bat 'cargo build --release --no-default-features --features "http-frontend rodio-backend local-files-provider pocketcasts-provider soundcloud-provider gmusic-provider youtube-provider"'
-                                bat 'cargo build --release -p rustic-party-mode-extension'
+                                bat 'make extensions'
                                 fileOperations([
                                     folderCreateOperation('win32-x86_64'),
                                     fileRenameOperation(destination: 'win32-x86_64/rustic.exe', source: 'target/release/rustic.exe'),
@@ -136,11 +136,13 @@ pipeline {
                         stage('Build') {
                             steps {
                                 sh 'cargo build --bins --workspace --release'
+                                sh 'make ffi-library'
+                                sh 'make extensions'
                                 fileOperations([
                                     folderCreateOperation('osx-x86_64'),
                                     fileRenameOperation(destination: 'osx-x86_64/rustic', source: 'target/release/rustic'),
-//                                    fileRenameOperation(destination: 'osx-x86_64/librustic_ffi_client.dylib', source: 'target/release/librustic_ffi_client.dylib'),
-//                                    fileCopyOperation(targetLocation: 'osx-x86_64/extensions/', includes: 'target/release/*_extension.dylib', flattenFiles: true)
+                                    fileRenameOperation(destination: 'osx-x86_64/librustic_ffi_client.dylib', source: 'target/release/librustic_ffi_client.dylib'),
+                                    fileCopyOperation(targetLocation: 'osx-x86_64/extensions/', includes: 'target/release/*_extension.dylib', flattenFiles: true)
                                 ])
                                 archiveArtifacts artifacts: 'osx-x86_64/**/*', fingerprint: true
                             }
