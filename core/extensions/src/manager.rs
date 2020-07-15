@@ -1,6 +1,7 @@
 use std::collections::HashMap;
 use std::path::Path;
 use std::sync::Arc;
+use std::sync::atomic::AtomicBool;
 
 use async_trait::async_trait;
 use failure::format_err;
@@ -15,7 +16,7 @@ use crate::plugin::*;
 use crate::runtime::ExtensionRuntime;
 
 #[derive(Clone)]
-pub struct HostedExtension(ExtensionMetadata, Arc<Mutex<ExtensionHost>>);
+pub struct HostedExtension(ExtensionMetadata, Arc<AtomicBool>, Arc<Mutex<ExtensionHost>>);
 
 impl HostedExtension {
     pub fn get_metadata(&self) -> ExtensionMetadata {
@@ -23,14 +24,14 @@ impl HostedExtension {
     }
 
     pub async fn send(&self, message: ExtensionCommand) {
-        let mut host = self.1.lock().await;
+        let mut host = self.2.lock().await;
         host.send(message).await;
     }
 }
 
-impl From<(ExtensionMetadata, ExtensionHost)> for HostedExtension {
-    fn from((metadata, host): (ExtensionMetadata, ExtensionHost)) -> Self {
-        HostedExtension(metadata, Arc::new(Mutex::new(host)))
+impl From<(ExtensionMetadata, bool, ExtensionHost)> for HostedExtension {
+    fn from((metadata, enabled, host): (ExtensionMetadata, bool, ExtensionHost)) -> Self {
+        HostedExtension(metadata, Arc::new(AtomicBool::new(enabled)), Arc::new(Mutex::new(host)))
     }
 }
 
@@ -63,7 +64,7 @@ impl ExtensionApi for HostedExtension {
 
 #[derive(Default)]
 pub struct ExtensionManagerBuilder {
-    extensions: Vec<(ExtensionMetadata, ExtensionHost)>,
+    extensions: Vec<(ExtensionMetadata, bool, ExtensionHost)>,
 }
 
 impl ExtensionManagerBuilder {
@@ -110,7 +111,7 @@ impl ExtensionManagerBuilder {
             .await
             .ok_or_else(|| format_err!("Channel closed"))?;
         info!("Loaded Extension: {} v{}", metadata.name, metadata.version);
-        self.extensions.push((metadata, host));
+        self.extensions.push((metadata, true, host));
         Ok(())
     }
 
