@@ -1,0 +1,23 @@
+[package]
+name = "rustic-uwu-extension"
+version = "0.1.0"
+authors = ["Max Jöhnk <maxjoehnk@gmail.com>"]
+edition = "2018"
+license = "GPL-3.0"
+readme = "README.md"
+repository = "https://github.com/rustic-music-player/rustic"
+homepage = "https://github.com/rustic-music-player/rustic"
+
+[lib]
+crate-type = ["cdylib"]
+
+[dependencies]
+owoify_rs = "0.1"
+async-trait = "0.1"
+failure = "0.1"
+
+[dependencies.rustic-extension-api]
+path = "../../core/extensions"
+
+[dependencies.rustic-core]
+path = "../../core"

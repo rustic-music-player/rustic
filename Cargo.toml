@@ -24,6 +24,7 @@ members = [
     "store/sled",
     "store/sqlite",
     "extensions/party-mode",
+    "extensions/uwu",
     "clients/http",
     "clients/http/native",
     "clients/http/wasm",
