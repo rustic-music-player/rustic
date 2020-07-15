@@ -154,35 +154,35 @@ pipeline {
                         }
                     }
                 }
-            }
-        }
 
-        stage('Docs') {
-            agent {
-                dockerfile {
-                    filename '.jenkins/Dockerfile'
-                    additionalBuildArgs '--pull'
-                    args '-v /usr/share/jenkins/cache:/build_cache'
-                }
-            }
-            environment {
-                CARGO_HOME = '/build_cache/cargo'
-            }
-            when {
-                branch 'master'
-            }
-            steps {
-                sh 'cargo doc --workspace --no-deps --exclude rustic-wasm-http-client'
-                publishHTML target: [
-                    reportDir  : 'target/doc',
-                    reportFiles: 'rustic/index.html',
-                    reportName : 'Documentation',
-                    keepAll    : false
-                ]
-            }
-            post {
-                always {
-                    cleanWs()
+                stage('Docs') {
+                    agent {
+                        dockerfile {
+                            filename '.jenkins/Dockerfile'
+                            additionalBuildArgs '--pull'
+                            args '-v /usr/share/jenkins/cache:/build_cache'
+                        }
+                    }
+                    environment {
+                        CARGO_HOME = '/build_cache/cargo'
+                    }
+                    when {
+                        branch 'master'
+                    }
+                    steps {
+                        sh 'cargo doc --workspace --no-deps --exclude rustic-wasm-http-client'
+                        publishHTML target: [
+                            reportDir  : 'target/doc',
+                            reportFiles: 'rustic/index.html',
+                            reportName : 'Documentation',
+                            keepAll    : false
+                        ]
+                    }
+                    post {
+                        always {
+                            cleanWs()
+                        }
+                    }
                 }
             }
         }
