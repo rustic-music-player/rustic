@@ -4,7 +4,7 @@ use serde::Deserialize;
 use crate::app::ApiClient;
 
 #[derive(Debug, Clone, Deserialize)]
-struct ExtensionQuery {
+pub struct ExtensionQuery {
     id: String
 }
 
