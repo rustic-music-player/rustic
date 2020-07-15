@@ -7,13 +7,54 @@ use rustic_core::{Track, Album, Artist, Playlist};
 
 pub use crate::ExtensionRuntime;
 
-#[derive(Debug, Clone, Deserialize, Serialize)]
+#[derive(Debug, Clone, Deserialize, Serialize, PartialEq)]
 #[serde(untagged)]
 pub enum ExtensionConfigValue {
     Bool(bool),
     String(String),
     Float(f64),
     Int(i64),
+}
+
+impl ExtensionConfigValue {
+    pub fn string(&self) -> Option<String> {
+        if let ExtensionConfigValue::String(value) = self {
+            Some(value.clone())
+        }else {
+            None
+        }
+    }
+
+    pub fn bool(&self) -> Option<bool> {
+        if let ExtensionConfigValue::Bool(value) = self {
+            Some(*value)
+        }else {
+            None
+        }
+    }
+
+    pub fn float(&self) -> Option<f64> {
+        if let ExtensionConfigValue::Float(value) = self {
+            Some(*value)
+        }else {
+            None
+        }
+    }
+
+    pub fn int(&self) -> Option<i64> {
+        if let ExtensionConfigValue::Int(value) = self {
+            Some(*value)
+        }else {
+            None
+        }
+    }
+
+    pub fn is_string<S: Into<String>>(&self, rhs: S) -> bool {
+        match self {
+            ExtensionConfigValue::String(ref lhs) => lhs == &rhs.into(),
+            _ => false
+        }
+    }
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
