@@ -1,15 +1,15 @@
 use std::sync::Arc;
 
 use log::{debug, error, trace};
-use rayon::prelude::*;
+use futures::future;
 
 use async_trait::async_trait;
 use rustic_api::client::*;
-use rustic_api::cursor::Cursor;
+use rustic_api::cursor::{Cursor};
 use rustic_api::models::*;
 use rustic_core::provider::{InternalUri, ProviderItem, ProviderItemType};
 use rustic_core::{Album, Artist, CredentialStore, Playlist, Provider, Rustic, SingleQuery, Track};
-use rustic_extension_api::ExtensionManager;
+use rustic_extension_api::{ExtensionManager, ExtensionApi};
 use std::convert::TryInto;
 
 mod library;
@@ -37,6 +37,50 @@ impl RusticNativeClient {
             extensions,
             credential_store: Arc::new(cred_store),
         }
+    }
+
+    async fn query_album(&self, query: SingleQuery) -> Result<Option<Album>> {
+        let album = self.app.query_album(query).await?;
+        let album = if let Some(album) = album {
+            Some(self.extensions.resolve_album(album).await?)
+        } else {
+            None
+        };
+
+        Ok(album)
+    }
+
+    async fn query_artist(&self, query: SingleQuery) -> Result<Option<Artist>> {
+        let artist = self.app.query_artist(query).await?;
+        let artist = if let Some(artist) = artist {
+            Some(self.extensions.resolve_artist(artist).await?)
+        } else {
+            None
+        };
+
+        Ok(artist)
+    }
+
+    async fn query_track(&self, query: SingleQuery) -> Result<Option<Track>> {
+        let track = self.app.query_track(query).await?;
+        let track = if let Some(track) = track {
+            Some(self.extensions.resolve_track(track).await?)
+        } else {
+            None
+        };
+
+        Ok(track)
+    }
+
+    async fn query_playlist(&self, query: SingleQuery) -> Result<Option<Playlist>> {
+        let playlist = self.app.query_playlist(query).await?;
+        let playlist = if let Some(playlist) = playlist {
+            Some(self.extensions.resolve_playlist(playlist).await?)
+        } else {
+            None
+        };
+
+        Ok(playlist)
     }
 }
 
@@ -82,35 +126,47 @@ impl RusticApiClient for RusticNativeClient {
         }
         debug!("Searching took {}ms", sw.elapsed_ms());
 
-        let tracks: Vec<TrackModel> = results
-            .par_iter()
+        let tracks = future::try_join_all(results
+            .iter()
             .cloned()
             .filter(|result| result.is_track())
             .map(Track::from)
+            .map(|track| self.extensions.resolve_track(track))).await?;
+        let tracks: Vec<_> = tracks
+            .into_iter()
             .map(TrackModel::from)
             .collect();
 
-        let albums: Vec<AlbumModel> = results
-            .par_iter()
+        let albums = future::try_join_all(results
+            .iter()
             .cloned()
             .filter(|result| result.is_album())
             .map(Album::from)
+            .map(|album| self.extensions.resolve_album(album))).await?;
+        let albums: Vec<_> = albums
+            .into_iter()
             .map(AlbumModel::from)
             .collect();
 
-        let artists: Vec<ArtistModel> = results
-            .par_iter()
+        let artists = future::try_join_all(results
+            .iter()
             .cloned()
             .filter(|result| result.is_artist())
             .map(Artist::from)
+            .map(|artist| self.extensions.resolve_artist(artist))).await?;
+        let artists: Vec<_> = artists
+            .into_iter()
             .map(ArtistModel::from)
             .collect();
 
-        let playlists: Vec<PlaylistModel> = results
-            .par_iter()
+        let playlists = future::try_join_all(results
+            .iter()
             .cloned()
             .filter(|result| result.is_playlist())
             .map(Playlist::from)
+            .map(|playlist| self.extensions.resolve_playlist(playlist))).await?;
+        let playlists: Vec<_> = playlists
+            .into_iter()
             .map(PlaylistModel::from)
             .collect();
 

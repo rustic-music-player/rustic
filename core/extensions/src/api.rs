@@ -3,7 +3,7 @@ use std::collections::HashMap;
 use async_trait::async_trait;
 use serde::{Deserialize, Serialize};
 
-use rustic_core::Track;
+use rustic_core::{Track, Album, Artist, Playlist};
 
 pub use crate::ExtensionRuntime;
 
@@ -46,5 +46,21 @@ pub trait ExtensionApi {
 
     async fn on_add_to_queue(&self, tracks: Vec<Track>) -> Result<Vec<Track>, failure::Error> {
         Ok(tracks)
+    }
+
+    async fn resolve_track(&self, track: Track) -> Result<Track, failure::Error> {
+        Ok(track)
+    }
+
+    async fn resolve_album(&self, album: Album) -> Result<Album, failure::Error> {
+        Ok(album)
+    }
+
+    async fn resolve_artist(&self, artist: Artist) -> Result<Artist, failure::Error> {
+        Ok(artist)
+    }
+
+    async fn resolve_playlist(&self, playlist: Playlist) -> Result<Playlist, failure::Error> {
+        Ok(playlist)
     }
 }

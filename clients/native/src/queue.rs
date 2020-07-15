@@ -11,7 +11,7 @@ use rustic_api::client::{QueueApiClient, Result};
 use rustic_api::cursor::from_cursor;
 use rustic_api::models::{QueueEventModel, QueuedTrackModel};
 use rustic_core::player::Player;
-use rustic_core::{Album, PlayerEvent, PlayerState, Playlist, QueryJoins, SingleQuery, Track};
+use rustic_core::{PlayerEvent, PlayerState, Playlist, QueryJoins, SingleQuery, Track};
 
 use crate::stream_util::from_channel;
 use crate::RusticNativeClient;
@@ -35,7 +35,7 @@ impl QueueApiClient for RusticNativeClient {
         let player = self.get_player_or_default(player_id)?;
         let uri = from_cursor(cursor)?;
         debug!("adding track to queue {}", uri);
-        let track: Option<Track> = self.app.query_track(SingleQuery::uri(uri)).await?;
+        let track = self.query_track(SingleQuery::uri(uri)).await?;
         match track {
             Some(track) => {
                 self.queue_multiple(player, &[track]).await?;
@@ -52,7 +52,7 @@ impl QueueApiClient for RusticNativeClient {
         debug!("adding album to queue {}", uri);
         let mut query = SingleQuery::uri(uri);
         query.join_tracks();
-        let album: Option<Album> = self.app.query_album(query).await?;
+        let album = self.query_album(query).await?;
         match album {
             Some(album) => {
                 self.queue_multiple(player, &album.tracks).await?;
@@ -67,7 +67,7 @@ impl QueueApiClient for RusticNativeClient {
         let player = self.get_player_or_default(player_id)?;
         let uri = from_cursor(cursor)?;
         debug!("adding playlist to queue {}", uri);
-        let playlist: Option<Playlist> = self.app.query_playlist(SingleQuery::uri(uri)).await?;
+        let playlist: Option<Playlist> = self.query_playlist(SingleQuery::uri(uri)).await?;
         match playlist {
             Some(playlist) => {
                 self.queue_multiple(player, &playlist.tracks).await?;

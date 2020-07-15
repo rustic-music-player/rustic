@@ -42,7 +42,6 @@ impl PlaylistApiClient for RusticNativeClient {
             .query_playlist(from_cursor(cursor)?.into())?
             .ok_or_else(|| format_err!("unknown playlist"))?;
         let track = self
-            .app
             .query_track(from_cursor(track)?.into())
             .await?
             .ok_or_else(|| format_err!("unknown track"))?;

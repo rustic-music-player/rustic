@@ -14,7 +14,6 @@ rustic-core = { path = "../../core" }
 rustic-extension-api = { path = "../../core/extensions" }
 failure = "0.1"
 stopwatch = "0.0.7"
-rayon = "1"
 log = "0.4"
 itertools = "0.9"
 futures = { version = "0.3", features = ["std", "async-await"], default-features = false }
