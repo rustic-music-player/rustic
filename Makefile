@@ -10,7 +10,7 @@ wasm-publish: wasm
 ffi: ffi-header ffi-library
 
 ffi-library:
-	cargo build -p rustic-ffi-client
+	cargo build -p rustic-ffi-client --release
 
 ffi-header:
 	cargo +nightly expand -p rustic-ffi-client > ffi-client.rs
@@ -32,7 +32,7 @@ target/ffi/cb_http_interop: clients/ffi/tests/cb_http_interop.c
 extensions: uwu party-mode
 
 uwu:
-	cargo build -p rustic-uwu-extension
+	cargo build -p rustic-uwu-extension --release
 
 party-mode:
-	cargo build -p rustic-party-mode-extension
+	cargo build -p rustic-party-mode-extension --release
