@@ -1,6 +1,6 @@
 use failure::{Error, format_err};
 
-use rustic_core::{Album, Artist, Library, MultiQuery, Playlist, SearchResults, SharedLibrary, SharedStorageBackend, SingleQuery, StorageBackend, StorageCollection, Track};
+use rustic_core::{Album, Artist, Library, MultiQuery, Playlist, SearchResults, SharedLibrary, SharedStorageBackend, SingleQuery, Track};
 use rustic_core::library::MetaValue;
 
 use crate::ExtensionMetadata;

@@ -14,6 +14,7 @@ use crate::api::*;
 use crate::host::{construct_plugin, ExtensionHost};
 use crate::plugin::*;
 use crate::runtime::ExtensionRuntime;
+use std::time::Instant;
 
 const EXTENSION_COLLECTION_KEY: &str = "extensions";
 
@@ -243,28 +244,36 @@ impl ExtensionApi for ExtensionManager {
 
     async fn resolve_track(&self, mut track: Track) -> Result<Track, Error> {
         for extension in self.get_enabled_extensions() {
+            let stopwatch = Instant::now();
             track = extension.resolve_track(track).await?;
+            trace!("Resolved track from extension {} in {}ms", extension.0.name, stopwatch.elapsed().as_millis());
         }
         Ok(track)
     }
 
     async fn resolve_album(&self, mut album: Album) -> Result<Album, Error> {
         for extension in self.get_enabled_extensions() {
+            let stopwatch = Instant::now();
             album = extension.resolve_album(album).await?;
+            trace!("Resolved album from extension {} in {}ms", extension.0.name, stopwatch.elapsed().as_millis());
         }
         Ok(album)
     }
 
     async fn resolve_artist(&self, mut artist: Artist) -> Result<Artist, Error> {
         for extension in self.get_enabled_extensions() {
+            let stopwatch = Instant::now();
             artist = extension.resolve_artist(artist).await?;
+            trace!("Resolved artist from extension {} in {}ms", extension.0.name, stopwatch.elapsed().as_millis());
         }
         Ok(artist)
     }
 
     async fn resolve_playlist(&self, mut playlist: Playlist) -> Result<Playlist, Error> {
         for extension in self.get_enabled_extensions() {
+            let stopwatch = Instant::now();
             playlist = extension.resolve_playlist(playlist).await?;
+            trace!("Resolved playlist from extension {} in {}ms", extension.0.name, stopwatch.elapsed().as_millis());
         }
         Ok(playlist)
     }
