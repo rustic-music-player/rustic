@@ -29,6 +29,7 @@ impl From<SpotifyFullAlbum> for Album {
             uri: format!("spotify://album/{}", album.id),
             meta: HashMap::new(),
             explicit: None,
+            description: None,
         }
     }
 }
@@ -51,6 +52,7 @@ impl From<SpotifySimplifiedAlbum> for Album {
                 .unwrap(),
             meta: HashMap::new(),
             explicit: None,
+            description: None,
         }
     }
 }

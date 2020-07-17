@@ -18,6 +18,7 @@ pub struct Album {
     pub uri: String,
     pub meta: HashMap<String, MetaValue>,
     pub explicit: Option<bool>,
+    pub description: Option<String>,
 }
 
 impl PartialEq for Album {

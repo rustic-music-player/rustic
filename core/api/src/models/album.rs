@@ -26,6 +26,7 @@ pub struct AlbumModel {
     pub in_library: bool,
     pub meta: HashMap<String, MetaValueModel>,
     pub explicit: Option<bool>,
+    pub description: Option<String>,
 }
 
 impl PartialOrd for AlbumModel {

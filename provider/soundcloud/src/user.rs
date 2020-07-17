@@ -27,6 +27,7 @@ impl From<SoundcloudUser> for Artist {
             provider: ProviderType::Soundcloud,
             albums: Vec::new(),
             playlists: Vec::new(),
+            description: user.description,
         }
     }
 }

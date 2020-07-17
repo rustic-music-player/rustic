@@ -3,6 +3,7 @@ use youtube_api::models::PlaylistItemResource;
 use rustic_core::provider::ThumbnailState;
 use rustic_core::{Artist, ProviderType, Track, Rating};
 use std::collections::HashMap;
+use rustic_core::library::Lyrics;
 
 #[derive(Clone)]
 pub struct YoutubePlaylistItem(PlaylistItemResource);
@@ -51,6 +52,7 @@ impl From<YoutubePlaylistItem> for Track {
                 provider: ProviderType::Youtube,
                 albums: vec![],
                 playlists: vec![],
+                description: None,
             }),
             thumbnail,
             duration: None,
@@ -59,6 +61,9 @@ impl From<YoutubePlaylistItem> for Track {
             rating: Rating::None,
             position: None,
             share_url: Some(format!("https://youtube.com/watch?v={}", &id)),
+            comments: Some(resource.snippet.inner.description),
+            lyrics: Lyrics::None,
+            chapters: Vec::new(),
         }
     }
 }

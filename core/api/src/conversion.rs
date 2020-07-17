@@ -12,7 +12,7 @@ use rustic_extension_api::ExtensionMetadata;
 
 use crate::cursor::{from_cursor, to_cursor, Cursor};
 use crate::models::*;
-use rustic_core::library::MetaValue;
+use rustic_core::library::{MetaValue, Lyrics, TimestampedLyric, Chapter};
 
 impl From<Album> for AlbumModel {
     fn from(album: Album) -> Self {
@@ -33,6 +33,7 @@ impl From<Album> for AlbumModel {
             },
             meta: album.meta.into_iter().map(|(k, v)| (k, v.into())).collect(),
             explicit: album.explicit,
+            description: album.description,
         }
     }
 }
@@ -61,6 +62,7 @@ impl From<Artist> for ArtistModel {
                 .into_iter()
                 .map(|(k, v)| (k, v.into()))
                 .collect(),
+            description: artist.description,
         }
     }
 }
@@ -134,6 +136,38 @@ impl From<Track> for TrackModel {
             rating: track.rating.into(),
             position: track.position.map(TrackPositionModel::from),
             share_url: track.share_url,
+            comments: track.comments,
+            lyrics: track.lyrics.into(),
+            chapters: track.chapters.into_iter().map(ChapterModel::from).collect(),
+        }
+    }
+}
+
+impl From<Lyrics> for LyricsModel {
+    fn from(lyrics: Lyrics) -> Self {
+        match lyrics {
+            Lyrics::None => LyricsModel::None,
+            Lyrics::Plain(lyrics) => LyricsModel::Plain(lyrics),
+            Lyrics::Timestamped(lyrics) => LyricsModel::Timestamped(lyrics.into_iter().map(TimestampedLyricModel::from).collect()),
+        }
+    }
+}
+
+impl From<TimestampedLyric> for TimestampedLyricModel {
+    fn from(lyric: TimestampedLyric) -> Self {
+        TimestampedLyricModel {
+            text: lyric.text,
+            timestamp: lyric.timestamp,
+        }
+    }
+}
+
+impl From<Chapter> for ChapterModel {
+    fn from(chapter: Chapter) -> Self {
+        ChapterModel {
+            label: chapter.label,
+            timestamp: chapter.timestamp,
+            description: chapter.description,
         }
     }
 }

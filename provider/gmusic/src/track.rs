@@ -7,6 +7,7 @@ use rustic_core::{Album, Artist, ProviderType, Track, Rating, TrackPosition};
 
 use crate::meta::*;
 use rustic_core::provider::ThumbnailState;
+use rustic_core::library::Lyrics;
 
 #[derive(Debug, Clone)]
 pub struct GmusicTrack(gmusic::Track);
@@ -50,6 +51,7 @@ impl From<GmusicTrack> for Track {
                 provider: ProviderType::GooglePlayMusic,
                 albums: vec![],
                 playlists: vec![],
+                description: None,
             }),
             artist_id: None,
             album: Some(Album {
@@ -67,6 +69,7 @@ impl From<GmusicTrack> for Track {
                 artist_id: None,
                 meta: HashMap::new(),
                 explicit: None,
+                description: None,
             }),
             album_id: None,
             uri: format!("gmusic:track:{}", track.store_id.unwrap_or(track.id)),
@@ -86,6 +89,9 @@ impl From<GmusicTrack> for Track {
             rating: convert_rating(track.rating),
             position: TrackPosition::new(Some(track.track_number), track.disc_number),
             share_url: None,
+            comments: track.comment,
+            lyrics: Lyrics::None,
+            chapters: Vec::new(),
         }
     }
 }

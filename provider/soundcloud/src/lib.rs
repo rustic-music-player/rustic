@@ -298,6 +298,7 @@ impl provider::ProviderInstance for SoundcloudProvider {
             meta: HashMap::new(),
             image_url: Some(user.avatar_url.replace("large", "t500x500")),
             uri: format!("soundcloud://user/{}", user.id),
+            description: user.description,
         }))
     }
 

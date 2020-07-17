@@ -29,6 +29,60 @@ pub struct TrackModel {
     pub rating: RatingModel,
     pub position: Option<TrackPositionModel>,
     pub share_url: Option<String>,
+    pub lyrics: LyricsModel,
+    pub comments: Option<String>,
+    pub chapters: Vec<ChapterModel>
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Eq)]
+#[cfg_attr(
+    target_arch = "wasm32",
+    derive(typescript_definitions::TypescriptDefinition)
+)]
+#[serde(rename_all = "camelCase", untagged)]
+pub enum LyricsModel {
+    None,
+    Plain(String),
+    Timestamped(Vec<TimestampedLyricModel>)
+}
+
+#[reflect_struct]
+#[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Eq, Ord)]
+#[cfg_attr(
+    target_arch = "wasm32",
+    derive(typescript_definitions::TypescriptDefinition)
+)]
+#[serde(rename_all = "camelCase")]
+pub struct TimestampedLyricModel {
+    pub text: String,
+    /// timestamp in seconds
+    pub timestamp: u64
+}
+
+impl PartialOrd for TimestampedLyricModel {
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        self.timestamp.partial_cmp(&other.timestamp)
+    }
+}
+
+#[reflect_struct]
+#[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Eq, Ord)]
+#[cfg_attr(
+    target_arch = "wasm32",
+    derive(typescript_definitions::TypescriptDefinition)
+)]
+#[serde(rename_all = "camelCase")]
+pub struct ChapterModel {
+    pub label: String,
+    pub description: Option<String>,
+    /// timestamp in seconds
+    pub timestamp: u64
+}
+
+impl PartialOrd for ChapterModel {
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        self.timestamp.partial_cmp(&other.timestamp)
+    }
 }
 
 #[reflect_struct]

@@ -42,5 +42,6 @@ pub fn artists_to_artist(artists: Vec<SimplifiedArtist>) -> Option<Artist> {
         provider: ProviderType::Spotify,
         albums: Vec::new(),
         playlists: Vec::new(),
+        description: None,
     })
 }

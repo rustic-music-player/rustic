@@ -41,6 +41,7 @@ impl From<GmusicArtist> for Artist {
                 id: None,
                 uri: format!("gmusic:artist:top:{}", artist.id),
             }],
+            description: artist.artist_bio,
         }
     }
 }

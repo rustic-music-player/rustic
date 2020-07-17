@@ -51,6 +51,7 @@ impl From<SoundcloudPlaylist> for Album {
             meta: HashMap::new(),
             artist_id: None,
             explicit: None,
+            description: None,
         }
     }
 }

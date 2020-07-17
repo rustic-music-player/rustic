@@ -27,6 +27,7 @@ pub struct ArtistModel {
     pub image: Option<String>,
     pub provider: ProviderTypeModel,
     pub meta: HashMap<String, MetaValueModel>,
+    pub description: Option<String>,
 }
 
 impl PartialOrd for ArtistModel {

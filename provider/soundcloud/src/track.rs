@@ -1,6 +1,6 @@
 use maplit::hashmap;
 
-use rustic_core::library::Track;
+use rustic_core::library::{Track, Lyrics};
 use rustic_core::{provider, Rating};
 
 use crate::meta::*;
@@ -40,6 +40,9 @@ impl From<SoundcloudTrack> for Track {
             rating: Rating::None,
             position: None,
             share_url: Some(track.permalink_url),
+            comments: track.description,
+            lyrics: Lyrics::None,
+            chapters: Vec::new(),
         }
     }
 }

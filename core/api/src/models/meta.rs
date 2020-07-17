@@ -7,6 +7,7 @@ use wasm_bindgen::prelude::*;
     target_arch = "wasm32",
     derive(typescript_definitions::TypescriptDefinition)
 )]
+#[serde(untagged)]
 pub enum MetaValueModel {
     Bool(bool),
     String(String),

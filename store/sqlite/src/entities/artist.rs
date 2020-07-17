@@ -78,6 +78,7 @@ impl ArtistEntity {
             albums: Vec::new(),
             // TODO: add mappings
             playlists: Vec::new(),
+            description: None,
         }
     }
 }

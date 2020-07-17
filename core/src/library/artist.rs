@@ -15,6 +15,7 @@ pub struct Artist {
     pub provider: ProviderType,
     pub albums: Vec<Album>,
     pub playlists: Vec<Playlist>,
+    pub description: Option<String>,
 }
 
 impl PartialEq for Artist {

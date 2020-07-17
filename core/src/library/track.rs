@@ -23,6 +23,43 @@ pub struct Track {
     pub rating: Rating,
     pub position: Option<TrackPosition>,
     pub share_url: Option<String>,
+    pub lyrics: Lyrics,
+    pub comments: Option<String>,
+    pub chapters: Vec<Chapter>
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub enum Lyrics {
+    None,
+    Plain(String),
+    Timestamped(Vec<TimestampedLyric>)
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Eq, Ord)]
+pub struct TimestampedLyric {
+    pub text: String,
+    /// timestamp in seconds
+    pub timestamp: u64
+}
+
+impl PartialOrd for TimestampedLyric {
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        self.timestamp.partial_cmp(&other.timestamp)
+    }
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Eq, Ord)]
+pub struct Chapter {
+    pub label: String,
+    pub description: Option<String>,
+    /// timestamp in seconds
+    pub timestamp: u64
+}
+
+impl PartialOrd for Chapter {
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        self.timestamp.partial_cmp(&other.timestamp)
+    }
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]

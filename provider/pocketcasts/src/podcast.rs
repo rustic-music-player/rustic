@@ -37,6 +37,7 @@ impl From<PocketcastAlbum> for Album {
                 provider: ProviderType::Pocketcasts,
                 albums: Vec::new(),
                 playlists: Vec::new(),
+                description: Some(podcast.description.clone()),
             }),
             tracks: vec![],
             provider: ProviderType::Pocketcasts,
@@ -47,6 +48,7 @@ impl From<PocketcastAlbum> for Album {
                 META_POCKETCASTS_COVER_ART_URL.into() => thumbnail_url.into()
             ),
             explicit: None,
+            description: Some(podcast.description),
         }
     }
 }
@@ -64,6 +66,7 @@ impl From<PocketcastAlbum> for Artist {
             provider: ProviderType::Pocketcasts,
             albums: vec![album.into()],
             playlists: Vec::new(),
+            description: Some(podcast.description),
         }
     }
 }
@@ -99,6 +102,7 @@ impl From<PocketcastSearchResult> for Album {
                 provider: ProviderType::Pocketcasts,
                 albums: vec![],
                 playlists: vec![],
+                description: Some(podcast.description.clone()),
             }),
             tracks: vec![],
             provider: ProviderType::Pocketcasts,
@@ -108,6 +112,7 @@ impl From<PocketcastSearchResult> for Album {
                 META_POCKETCASTS_COVER_ART_URL.into() => thumbnail_url.into()
             ),
             explicit: None,
+            description: Some(podcast.description),
         }
     }
 }

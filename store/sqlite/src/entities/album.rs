@@ -71,6 +71,7 @@ impl AlbumEntity {
             uri: self.uri,
             meta: AlbumMeta::to_meta_map(meta),
             explicit: None,
+            description: None,
         }
     }
 }

@@ -25,6 +25,7 @@ impl From<SpotifyFullArtist> for Artist {
             provider: ProviderType::Spotify,
             albums: Vec::new(),
             playlists: Vec::new(),
+            description: None,
         }
     }
 }
@@ -44,6 +45,7 @@ impl From<SpotifySimplifiedArtist> for Artist {
             provider: ProviderType::Spotify,
             albums: Vec::new(),
             playlists: Vec::new(),
+            description: None,
         }
     }
 }

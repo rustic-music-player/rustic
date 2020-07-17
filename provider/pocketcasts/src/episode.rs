@@ -2,7 +2,7 @@ use maplit::hashmap;
 use pocketcasts::Episode;
 use serde::{Deserialize, Serialize};
 
-use rustic_core::library::{Track, Rating};
+use rustic_core::library::{Track, Rating, Lyrics};
 use rustic_core::provider::{ProviderType, ThumbnailState};
 
 use crate::meta::*;
@@ -31,6 +31,9 @@ impl From<PocketcastTrack> for Track {
             rating: Rating::None,
             position: None,
             share_url: None,
+            comments: None,
+            lyrics: Lyrics::None,
+            chapters: Vec::new(),
         }
     }
 }

@@ -7,7 +7,7 @@ use rspotify::model::track::{FullTrack, SimplifiedTrack};
 use serde_derive::{Deserialize, Serialize};
 
 use rustic_core::{provider, Rating};
-use rustic_core::library::{Album, MetaValue, Track, TrackPosition};
+use rustic_core::library::{Album, MetaValue, Track, TrackPosition, Lyrics};
 use rustic_core::provider::ThumbnailState;
 
 use crate::meta::*;
@@ -59,6 +59,7 @@ impl From<SpotifyFullTrack> for Track {
                     }),
                 meta: HashMap::new(),
                 explicit: None,
+                description: None,
             }),
             provider: provider::ProviderType::Spotify,
             thumbnail: convert_images(&track.album.images),
@@ -75,6 +76,9 @@ impl From<SpotifyFullTrack> for Track {
             rating: Rating::None,
             position: TrackPosition::new(Some(track.track_number as u64), track.disc_number.try_into().ok()),
             share_url: None,
+            comments: None,
+            lyrics: Lyrics::None,
+            chapters: Vec::new(),
         }
     }
 }
@@ -115,6 +119,9 @@ impl From<SpotifySimplifiedTrack> for Track {
             rating: Rating::None,
             position: TrackPosition::new(Some(track.track_number as u64), track.disc_number.try_into().ok()),
             share_url: None,
+            comments: None,
+            lyrics: Lyrics::None,
+            chapters: Vec::new(),
         }
     }
 }

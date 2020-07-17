@@ -5,7 +5,7 @@ use maplit::hashmap;
 use serde_derive::Deserialize;
 
 use async_trait::async_trait;
-use rustic_core::library::{self, SharedLibrary};
+use rustic_core::library::{self, SharedLibrary, Lyrics};
 use rustic_core::provider::*;
 use rustic_core::{CredentialStore, Rating, TrackPosition};
 
@@ -190,6 +190,9 @@ impl From<scanner::Track> for library::Track {
             rating: Rating::None,
             position: TrackPosition::new(track.track.map(u64::from), track.disc.map(u64::from)),
             share_url: None,
+            comments: None,
+            lyrics: Lyrics::None,
+            chapters: Vec::new(),
         }
     }
 }
@@ -216,6 +219,7 @@ impl From<scanner::Track> for Option<library::Album> {
                 META_LOCAL_FILE_URL.into() => path.into()
             ),
             explicit: None,
+            description: None,
         })
     }
 }
@@ -234,6 +238,7 @@ impl From<scanner::Track> for Option<library::Artist> {
             provider: ProviderType::LocalMedia,
             albums: vec![],
             playlists: vec![],
+            description: None,
         })
     }
 }

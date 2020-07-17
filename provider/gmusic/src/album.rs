@@ -39,6 +39,7 @@ impl From<GmusicAlbum> for Album {
                 provider: ProviderType::GooglePlayMusic,
                 playlists: Vec::new(),
                 albums: Vec::new(),
+                description: None,
             }),
             artist_id: None,
             uri: format!("gmusic:album:{}", &album.id),
@@ -57,6 +58,7 @@ impl From<GmusicAlbum> for Album {
                 .map(ThumbnailState::Url)
                 .unwrap_or_default(),
             explicit: Some(album.explicit_type == "1"),
+            description: album.description,
         }
     }
 }

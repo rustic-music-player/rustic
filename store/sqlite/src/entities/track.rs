@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 
 use entities::provider::{int_to_provider, provider_to_int};
-use rustic_core::library::MetaValue;
+use rustic_core::library::{MetaValue, Lyrics};
 use rustic_core::provider::ThumbnailState;
 use rustic_core::{Track, Rating};
 use schema::{tracks, tracks_meta};
@@ -78,6 +78,9 @@ impl TrackEntity {
             rating: Rating::None,
             position: None,
             share_url: None,
+            comments: None,
+            chapters: Vec::new(),
+            lyrics: Lyrics::None,
         }
     }
 }
