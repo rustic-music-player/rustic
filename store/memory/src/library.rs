@@ -582,6 +582,7 @@ mod tests {
             provider: ProviderType::Internal,
             albums: Vec::new(),
             playlists: Vec::new(),
+            description: None,
         };
         let mut second = artist.clone();
         let store = MemoryLibrary::default();
