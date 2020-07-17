@@ -1,11 +1,27 @@
 use std::collections::HashMap;
 use owoify_rs::{Owoifiable, OwoifyLevel};
+use rayon::prelude::*;
 
 use rustic_extension_api::*;
 use rustic_core::{Track, Album, Artist, Playlist};
 
 pub struct UwuExtension {
     level: OwoifyLevel
+}
+
+impl UwuExtension {
+    fn owoify_tracks(&self, tracks: &mut [Track]) {
+        tracks.par_iter_mut()
+            .for_each(|track| {
+                track.title = track.title.owoify(&self.level);
+                if let Some(artist) = track.artist.as_mut() {
+                    artist.name = artist.name.owoify(&self.level);
+                }
+                if let Some(album) = track.album.as_mut() {
+                    album.title = album.title.owoify(&self.level);
+                }
+            });
+    }
 }
 
 impl std::fmt::Debug for UwuExtension {
@@ -59,15 +75,7 @@ impl ExtensionApi for UwuExtension {
         if let Some(artist) = album.artist.as_mut() {
             artist.name = artist.name.owoify(&self.level);
         }
-        for track in album.tracks.iter_mut() {
-            track.title = track.title.owoify(&self.level);
-            if let Some(artist) = track.artist.as_mut() {
-                artist.name = artist.name.owoify(&self.level);
-            }
-            if let Some(album) = track.album.as_mut() {
-                album.title = album.title.owoify(&self.level);
-            }
-        }
+        self.owoify_tracks(&mut album.tracks);
         Ok(album)
     }
 
@@ -78,15 +86,7 @@ impl ExtensionApi for UwuExtension {
 
     async fn resolve_playlist(&self, mut playlist: Playlist) -> Result<Playlist, failure::Error> {
         playlist.title = playlist.title.owoify(&self.level);
-        for track in playlist.tracks.iter_mut() {
-            track.title = track.title.owoify(&self.level);
-            if let Some(artist) = track.artist.as_mut() {
-                artist.name = artist.name.owoify(&self.level);
-            }
-            if let Some(album) = track.album.as_mut() {
-                album.title = album.title.owoify(&self.level);
-            }
-        }
+        self.owoify_tracks(&mut playlist.tracks);
         Ok(playlist)
     }
 }

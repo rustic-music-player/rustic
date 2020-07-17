@@ -183,3 +183,7 @@ optional = true
 [dependencies.rustic-youtube-provider]
 path = "provider/youtube"
 optional = true
+
+[patch.crates-io.owoify_rs]
+git = "https://github.com/maxjoehnk/owoify_rs"
+branch = "feature/lazy-regex"

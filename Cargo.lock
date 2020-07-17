@@ -4113,7 +4113,7 @@ dependencies = [
 [[package]]
 name = "owoify_rs"
 version = "0.1.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
+source = "git+https://github.com/maxjoehnk/owoify_rs?branch=feature/lazy-regex#2a1c465968fba32dddca19ecb9f5b6ee55f39534"
 dependencies = [
  "lazy_static 1.4.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "rand 0.7.3 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -5487,7 +5487,8 @@ version = "0.1.0"
 dependencies = [
  "async-trait 0.1.33 (registry+https://github.com/rust-lang/crates.io-index)",
  "failure 0.1.8 (registry+https://github.com/rust-lang/crates.io-index)",
- "owoify_rs 0.1.2 (registry+https://github.com/rust-lang/crates.io-index)",
+ "owoify_rs 0.1.2 (git+https://github.com/maxjoehnk/owoify_rs?branch=feature/lazy-regex)",
+ "rayon 1.3.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "rustic-core 0.1.0",
  "rustic-extension-api 0.1.0",
 ]
@@ -7808,7 +7809,7 @@ dependencies = [
 "checksum openssl-probe 0.1.2 (registry+https://github.com/rust-lang/crates.io-index)" = "77af24da69f9d9341038eba93a073b1fdaaa1b788221b00a69bce9e762cb32de"
 "checksum openssl-sys 0.9.58 (registry+https://github.com/rust-lang/crates.io-index)" = "a842db4709b604f0fe5d1170ae3565899be2ad3d9cbc72dedc789ac0511f78de"
 "checksum ordered-float 1.0.2 (registry+https://github.com/rust-lang/crates.io-index)" = "18869315e81473c951eb56ad5558bbc56978562d3ecfb87abb7a1e944cea4518"
-"checksum owoify_rs 0.1.2 (registry+https://github.com/rust-lang/crates.io-index)" = "94090c8a53a4a4f040180d292c2d867e8996f634dea90a7cf5c35548a48f825d"
+"checksum owoify_rs 0.1.2 (git+https://github.com/maxjoehnk/owoify_rs?branch=feature/lazy-regex)" = "<none>"
 "checksum pango 0.8.0 (registry+https://github.com/rust-lang/crates.io-index)" = "1e9c6b728f1be8edb5f9f981420b651d5ea30bdb9de89f1f1262d0084a020577"
 "checksum pango-sys 0.9.1 (registry+https://github.com/rust-lang/crates.io-index)" = "86b93d84907b3cf0819bff8f13598ba72843bee579d5ebc2502e4b0367b4be7d"
 "checksum parking_lot 0.10.2 (registry+https://github.com/rust-lang/crates.io-index)" = "d3a704eb390aafdc107b0e392f56a82b668e3a71366993b5340f5833fd62505e"
