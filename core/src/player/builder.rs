@@ -7,7 +7,7 @@ use crate::Rustic;
 
 pub struct PlayerBuilder {
     core: Arc<Rustic>,
-    name: Option<String>,
+    pub name: Option<String>,
     backend: Option<Box<dyn PlayerBackend>>,
     queue: Option<Box<dyn PlayerQueue>>,
     bus: PlayerBus,
@@ -33,7 +33,7 @@ impl PlayerBuilder {
 
     pub fn with_player<P>(&mut self, builder: P) -> Result<&mut Self, Error>
     where
-        P: Fn(Arc<Rustic>, PlayerBus) -> Result<Box<dyn PlayerBackend>, Error>,
+        P: FnOnce(Arc<Rustic>, PlayerBus) -> Result<Box<dyn PlayerBackend>, Error>,
     {
         let backend = builder(Arc::clone(&self.core), self.bus.clone())?;
         self.backend = Some(backend);

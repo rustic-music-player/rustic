@@ -1,5 +1,6 @@
-use crate::config::{PlayerBackend, PlayerBackendConfig};
-use rustic_core::player::{queue::MemoryQueueBuilder, PlayerBuilder};
+use std::sync::Arc;
+
+use rustic_core::player::{PlayerBuilder, queue::MemoryQueueBuilder};
 use rustic_core::Rustic;
 #[cfg(feature = "google-cast-backend")]
 use rustic_google_cast_backend::GoogleCastBuilder;
@@ -7,7 +8,10 @@ use rustic_google_cast_backend::GoogleCastBuilder;
 use rustic_gstreamer_backend::GstreamerPlayerBuilder;
 #[cfg(feature = "rodio-backend")]
 use rustic_rodio_backend::RodioPlayerBuilder;
-use std::sync::Arc;
+#[cfg(feature = "snapcast-backend")]
+use rustic_snapcast_backend::SnapcastPlayerBuilder;
+
+use crate::config::{PlayerBackend, PlayerBackendConfig};
 
 pub(crate) fn setup_player(
     app: &Arc<Rustic>,
@@ -33,6 +37,25 @@ pub(crate) fn setup_player(
             .with_memory_queue()
             .with_rodio()?
             .build(),
+        #[cfg(feature = "snapcast-backend")]
+        PlayerBackend::Snapcast { ref api_url, ref host, ref port, ref pipe } => {
+            let transport = if let Some(pipe) = pipe {
+                rustic_snapcast_backend::SnapcastAudioTransport::Pipe(pipe.clone())
+            }else {
+                let host = host.clone().unwrap_or_else(|| "127.0.0.1".to_string()); // TODO: get default from api url
+                let port = port.unwrap_or(4953);
+                rustic_snapcast_backend::SnapcastAudioTransport::Tcp {
+                    host,
+                    port
+                }
+            };
+            let api_url = api_url.clone().unwrap_or_else(|| "http://localhost:1780".to_string());
+            PlayerBuilder::new(Arc::clone(&app))
+                .with_name(&name)
+                .with_memory_queue()
+                .with_snapcast(api_url, transport)?
+                .build()
+        },
     };
     app.add_player(name.clone(), player);
     if player_config.default {

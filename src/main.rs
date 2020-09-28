@@ -136,6 +136,8 @@ fn run_instance(
         let _ = handle.join();
     }
 
+    app.close();
+
     Ok(())
 }
 

@@ -167,6 +167,13 @@ pub enum PlayerBackend {
     Rodio,
     #[cfg(feature = "google-cast-backend")]
     GoogleCast { ip: IpAddr },
+    #[cfg(feature = "snapcast-backend")]
+    Snapcast {
+        api_url: Option<String>,
+        pipe: Option<String>,
+        port: Option<u16>,
+        host: Option<String>,
+    },
 }
 
 #[derive(Deserialize, Clone, Debug, Serialize, Default)]

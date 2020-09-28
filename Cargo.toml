@@ -8,6 +8,8 @@ members = [
     "backends/google-cast",
     "backends/gstreamer",
     "backends/rodio",
+    "backends/snapcast",
+    "backends/snapcast/api",
     "frontends/dbus",
     "frontends/http",
     "frontends/mpd",
@@ -65,10 +67,11 @@ dbus-frontend = ["rustic-dbus-frontend"]
 qt-frontend = ["rustic-qt-frontend"]
 iced-frontend = ["rustic-iced-frontend"]
 systray-frontend = ["rustic-systray-frontend"]
-all-backends = ["gstreamer-backend", "rodio-backend", "google-cast-backend"]
+all-backends = ["gstreamer-backend", "rodio-backend", "google-cast-backend", "snapcast-backend"]
 gstreamer-backend = ["rustic-gstreamer-backend"]
 rodio-backend = ["rustic-rodio-backend"]
 google-cast-backend = ["rustic-google-cast-backend"]
+snapcast-backend = ["rustic-snapcast-backend"]
 all-providers = ["local-files-provider", "pocketcasts-provider", "soundcloud-provider", "spotify-provider", "gmusic-provider", "youtube-provider"]
 local-files-provider = ["rustic-local-provider"]
 pocketcasts-provider = ["rustic-pocketcasts-provider"]
@@ -154,6 +157,10 @@ optional = true
 
 [dependencies.rustic-rodio-backend]
 path = "backends/rodio"
+optional = true
+
+[dependencies.rustic-snapcast-backend]
+path = "backends/snapcast"
 optional = true
 
 [dependencies.rustic-google-cast-backend]

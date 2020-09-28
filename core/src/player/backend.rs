@@ -31,4 +31,8 @@ pub trait PlayerBackend: Send + Sync + Debug {
     fn seek(&self, duration: Duration) -> Result<(), Error>;
 
     fn as_any(&self) -> &dyn Any;
+
+    fn close(&self) -> Result<(), Error> {
+        Ok(())
+    }
 }

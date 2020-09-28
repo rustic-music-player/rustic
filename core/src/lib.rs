@@ -256,4 +256,12 @@ impl Rustic {
         }
         Ok(None)
     }
+
+    pub fn close(&self) {
+        for (name, player) in self.get_players() {
+            if let Err(e) = player.backend.close() {
+                log::error!("Error closing player {}: {:?}", name, e);
+            }
+        }
+    }
 }
