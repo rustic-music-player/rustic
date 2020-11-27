@@ -22,10 +22,10 @@ futures = { version = "0.3", features = ["std", "async-await"], default-features
 rayon = "1.0"
 uuid = { version = "0.8", features = ["v4"] }
 stopwatch = "0.0.7"
-crossbeam-channel = "0.4"
+crossbeam-channel = "0.5"
 itertools = "0.8"
 urlencoding = { git = "https://github.com/bt/rust_urlencoding" }
-serde_qs = { git = "https://github.com/Tarnadas/serde_qs", features = ["actix"] }
+serde_qs = { version = "0.7", features = ["actix"] }
 rustic-api = { path = "../../core/api", features = ["conversion"] }
 
 [dependencies.rustic-core]

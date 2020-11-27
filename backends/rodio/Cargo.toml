@@ -9,7 +9,7 @@ repository = "https://github.com/rustic-music-player/rustic"
 homepage = "https://github.com/rustic-music-player/rustic"
 
 [dependencies]
-crossbeam-channel = "0.4"
+crossbeam-channel = "0.5"
 log = "0.4"
 failure = "0.1"
 url = "2.1"

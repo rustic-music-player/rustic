@@ -281,8 +281,8 @@ impl iced::widget::button::StyleSheet for NavigationButtonStyle {
         iced::widget::button::Style {
             shadow_offset: Vector::new(0.0, 0.0),
             background: None,
-            border_radius: 0,
-            border_width: 0,
+            border_radius: 0f32,
+            border_width: 0f32,
             border_color: [0.7, 0.7, 0.7].into(),
             text_color: Color::BLACK,
         }
@@ -296,8 +296,8 @@ impl iced::widget::button::StyleSheet for ActiveNavigationButtonStyle {
         iced::widget::button::Style {
             shadow_offset: Vector::new(0.0, 0.0),
             background: Some(Background::Color([0.2, 0.2, 0.2].into())),
-            border_radius: 0,
-            border_width: 0,
+            border_radius: 0f32,
+            border_width: 0f32,
             border_color: [0.7, 0.7, 0.7].into(),
             text_color: Color::WHITE,
         }

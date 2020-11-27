@@ -18,7 +18,7 @@ reqwest_10 = { version = "0.10", package = "reqwest", features = ["stream"] }
 url = "2.1"
 failure = "0.1"
 md5 = "0.7"
-crossbeam-channel = "0.4"
+crossbeam-channel = "0.5"
 bitflags = "1"
 bincode = "1.2.1"
 pinboard = "2"

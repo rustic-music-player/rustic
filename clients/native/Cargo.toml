@@ -17,4 +17,4 @@ stopwatch = "0.0.7"
 log = "0.4"
 itertools = "0.9"
 futures = { version = "0.3", features = ["std", "async-await"], default-features = false }
-crossbeam-channel = "*"
+crossbeam-channel = "0.5"

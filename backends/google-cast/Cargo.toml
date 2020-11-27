@@ -9,7 +9,7 @@ log = "0.4"
 failure = "0.1"
 mdns = "0.3"
 rust_cast = "0.15"
-crossbeam-channel = "0.4"
+crossbeam-channel = "0.5"
 pinboard = "2.0.1"
 
 [dependencies.rustic-core]

@@ -85,10 +85,10 @@ sqlite-store = ["rustic-sqlite-store"]
 http-client = ["rustic-native-http-client"]
 
 [dependencies]
-env_logger = "0.7"
+env_logger = "0.8"
 log = "0.4"
 serde = { version = "1.0", features = ["derive"] }
-toml = "0.4"
+toml = "0.5"
 url = "2.1"
 failure = "0.1"
 ctrlc = { version = "3.1", features = ["termination"] }
@@ -97,7 +97,7 @@ futures = { version = "0.3", features = ["std", "async-await"], default-features
 tokio = { version = "0.2", features = ["rt-threaded", "macros", "sync", "fs"] }
 serde_json = "1"
 async-trait = "0.1"
-keyring = "0.9"
+keyring = "0.10"
 pinboard = "2"
 
 [dependencies.rustic-core]
@@ -190,7 +190,3 @@ optional = true
 [dependencies.rustic-youtube-provider]
 path = "provider/youtube"
 optional = true
-
-[patch.crates-io.owoify_rs]
-git = "https://github.com/maxjoehnk/owoify_rs"
-branch = "feature/lazy-regex"
