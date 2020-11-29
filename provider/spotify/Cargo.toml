@@ -6,7 +6,7 @@ edition = "2018"
 
 [dependencies]
 failure = "0.1"
-librespot = { git = "https://github.com/librespot-org/librespot.git", rev = "b63411" }
+librespot = { version = "0.1", default-features = false }
 rspotify = "0.9"
 serde = "1.0"
 serde_derive = "1.0"

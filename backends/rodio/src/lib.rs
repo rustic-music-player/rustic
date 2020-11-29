@@ -24,7 +24,6 @@ pub struct RodioBackend {
     state: NonEmptyPinboard<PlayerState>,
     blend_time: Duration,
     current_sink: Arc<Mutex<Option<rodio::Sink>>>,
-    device: rodio::Device,
     bus: PlayerBus,
     next_sender: Sender<()>,
 }
@@ -40,16 +39,12 @@ impl std::fmt::Debug for RodioBackend {
 
 impl RodioBackend {
     pub fn new(core: Arc<Rustic>, bus: PlayerBus) -> Result<Box<dyn PlayerBackend>, Error> {
-        let device = rodio::default_output_device()
-            .ok_or_else(|| format_err!("Unable to open output device"))?;
-        trace!("Got device {:?}", &device.name()?);
         let (next_sender, next_receiver) = crossbeam_channel::unbounded();
         let backend = RodioBackend {
             core,
             state: NonEmptyPinboard::new(PlayerState::Stop),
             blend_time: Duration::default(),
             current_sink: Arc::new(Mutex::new(None)),
-            device,
             bus: bus.clone(),
             next_sender,
         };
@@ -131,7 +126,8 @@ impl PlayerBackend for RodioBackend {
             self.bus
                 .emit_event(PlayerEvent::TrackChanged(track.clone()))?;
             let source = self.decode_stream(track, stream_url)?;
-            let sink = rodio::Sink::new(&self.device);
+            let (_, handle) = rodio::OutputStream::try_default()?;
+            let sink = rodio::Sink::try_new(&handle)?;
             sink.set_volume(volume);
             sink.append(source);
             if self.state() != PlayerState::Play {

@@ -13,7 +13,7 @@ crossbeam-channel = "0.5"
 log = "0.4"
 failure = "0.1"
 url = "2.1"
-rodio = "0.11"
+rodio = "0.13"
 pinboard = "2"
 
 [dependencies.rustic-core]
