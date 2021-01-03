@@ -11,6 +11,3 @@ failure = "0.1"
 
 [dependencies.rustic-api]
 path = "../../core/api"
-
-[target.'cfg(windows)'.dependencies]
-systray = "0.4"
