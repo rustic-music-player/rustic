@@ -4,6 +4,7 @@ use failure::{ensure, format_err, Error};
 use log::{trace, warn};
 use serde::Deserialize;
 
+use futures::prelude::*;
 use async_trait::async_trait;
 use lazy_static::lazy_static;
 use rustic_core::library::{Album, Artist, Playlist, SharedLibrary, Track};
@@ -13,6 +14,7 @@ use crate::playlist::SoundcloudPlaylist;
 use crate::track::SoundcloudTrack;
 use crate::user::SoundcloudUser;
 use std::collections::HashMap;
+use soundcloud::StreamingApiExt;
 
 mod error;
 mod meta;
@@ -281,6 +283,8 @@ impl provider::ProviderInstance for SoundcloudProvider {
         let (albums, playlists) = client
             .user(id)
             .playlists()
+            .iter(Default::default())
+            .try_collect::<Vec<_>>()
             .await?
             .into_iter()
             .map(SoundcloudPlaylist::from)

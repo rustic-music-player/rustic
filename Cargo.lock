@@ -662,6 +662,19 @@ dependencies = [
 ]
 
 [[package]]
+name = "async-compression"
+version = "0.3.7"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b72c1f1154e234325b50864a349b9c8e56939e266a4c307c0f159812df2f9537"
+dependencies = [
+ "bytes 0.5.6",
+ "flate2",
+ "futures-core",
+ "memchr",
+ "pin-project-lite 0.2.0",
+]
+
+[[package]]
 name = "async-executor"
 version = "1.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -4532,9 +4545,9 @@ dependencies = [
 
 [[package]]
 name = "librespot"
-version = "0.1.3"
+version = "0.1.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c9de5f3110cf89c5b9ac715a895a0b2274d8dc449a93998d548714dae9b7290e"
+checksum = "2a9318f20778c0f6b2862cc6eb0e9d8d3b5825dcad6b728d268e391254cf7c36"
 dependencies = [
  "base64 0.10.1",
  "env_logger 0.6.2",
@@ -4563,9 +4576,9 @@ dependencies = [
 
 [[package]]
 name = "librespot-audio"
-version = "0.1.3"
+version = "0.1.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1bb21228db5a87fdc2774cd4b3fe32e898a4a1f4957c82e9faa196cca71bf839"
+checksum = "2360549085c3456fe6d3929e74055923e3b2e1535aaf97140050d783c15854d5"
 dependencies = [
  "aes-ctr",
  "bit-set",
@@ -4582,9 +4595,9 @@ dependencies = [
 
 [[package]]
 name = "librespot-connect"
-version = "0.1.3"
+version = "0.1.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4f4bf51df1c33e4faa1cf558b075c175704b53362d90f819ed86e89463c34ed2"
+checksum = "552cea81308f4ece3b67502727815d897df6c440c73b2877ec35c1e7f1057b7d"
 dependencies = [
  "aes-ctr",
  "base64 0.10.1",
@@ -4610,9 +4623,9 @@ dependencies = [
 
 [[package]]
 name = "librespot-core"
-version = "0.1.3"
+version = "0.1.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2c8bd9161067ffcae878cd9224562b8c8d0ca254f15db255eabe58df4ba258d0"
+checksum = "9f1d5b789c672f72e1de35186dc9e441ea7c62d230eedd81ab54d452c9f36aad"
 dependencies = [
  "aes 0.3.2",
  "base64 0.10.1",
@@ -4648,9 +4661,9 @@ dependencies = [
 
 [[package]]
 name = "librespot-metadata"
-version = "0.1.3"
+version = "0.1.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0553a4be36640aba59cc40ce1f34c87f70203b87209beebebea4c5253c8dba13"
+checksum = "ed423878eb7d83cba1157ce1a87da057bb973bea54795985d21c6976a9f62860"
 dependencies = [
  "byteorder",
  "futures 0.1.30",
@@ -4663,9 +4676,9 @@ dependencies = [
 
 [[package]]
 name = "librespot-playback"
-version = "0.1.3"
+version = "0.1.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "56df0417db5f1b5932c2443d853fd79bdbd509f6dfb399af9c8ce57bb6065c76"
+checksum = "0dc72074a2d84529b2fdbfb936ba1eb40f14cd8bc5ee049ae1a9c20f80f7ad0d"
 dependencies = [
  "byteorder",
  "futures 0.1.30",
@@ -4678,11 +4691,10 @@ dependencies = [
 
 [[package]]
 name = "librespot-protocol"
-version = "0.1.3"
+version = "0.1.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "40c202de42b184e368250648602fddacddcc675bb2699aae1b59f07170157e01"
+checksum = "32699c309d05fd54c85f908f9a725a0fa401658e638117ce638478ff2252dc8d"
 dependencies = [
- "glob",
  "protobuf",
  "protobuf-codegen",
  "protobuf-codegen-pure",
@@ -5972,7 +5984,7 @@ dependencies = [
 [[package]]
 name = "pocketcasts"
 version = "0.2.0"
-source = "git+https://github.com/maxjoehnk/pocketcasts-rs?rev=8cb78c6#8cb78c6f911e174aeb21b2534f834ba4063d8111"
+source = "git+https://github.com/maxjoehnk/pocketcasts-rs?rev=4948e24#4948e247e9ff6abeb5039b2a6861daa80e8c9e0f"
 dependencies = [
  "failure",
  "reqwest 0.10.9",
@@ -6075,24 +6087,24 @@ dependencies = [
 
 [[package]]
 name = "protobuf"
-version = "2.14.0"
+version = "2.10.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8e86d370532557ae7573551a1ec8235a0f8d6cb276c7c9e6aa490b511c447485"
+checksum = "6686ddd96a8dbe2687b5f2a687b2cfb520854010ec480f2d74c32e7c9873d3c5"
 
 [[package]]
 name = "protobuf-codegen"
-version = "2.14.0"
+version = "2.10.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "de113bba758ccf2c1ef816b127c958001b7831136c9bc3f8e9ec695ac4e82b0c"
+checksum = "6456421eecf7fc72905868cd760c3e35848ded3552e480cfe67726ed4dbd8d23"
 dependencies = [
  "protobuf",
 ]
 
 [[package]]
 name = "protobuf-codegen-pure"
-version = "2.14.0"
+version = "2.10.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2d1a4febc73bf0cada1d77c459a0c8e5973179f1cfd5b0f1ab789d45b17b6440"
+checksum = "4a7cb42d5ab6073333be90208ab5ea6ab41c8f6803b35fd773a7572624cc15c9"
 dependencies = [
  "protobuf",
  "protobuf-codegen",
@@ -6100,18 +6112,18 @@ dependencies = [
 
 [[package]]
 name = "protoc"
-version = "2.14.0"
+version = "2.10.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "349d80967ee438cd03ccd236d548d4dcd5f2d9349acda206bef1490a826165d3"
+checksum = "9fd83d2547a9e2c8bc6016607281b3ec7ef4871c55be6930915481d80350ab88"
 dependencies = [
  "log 0.4.11",
 ]
 
 [[package]]
 name = "protoc-rust"
-version = "2.14.0"
+version = "2.10.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "58f2fb1de3a1355b1eb91108bf59d6221c1f565eee9983605be53846019fdf38"
+checksum = "30fe03ab363474c2f5d1062f5d169ba8defd1d30c161261d7c71afd8412727d8"
 dependencies = [
  "protobuf",
  "protobuf-codegen",
@@ -6538,6 +6550,7 @@ version = "0.10.9"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "fb15d6255c792356a0f578d8a645c677904dc02e862bebe2ecc18e0c01b9a0ce"
 dependencies = [
+ "async-compression",
  "base64 0.13.0",
  "bytes 0.5.6",
  "encoding_rs",
@@ -6698,9 +6711,9 @@ dependencies = [
 
 [[package]]
 name = "rust_cast"
-version = "0.15.0"
+version = "0.15.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9cd7d41912a2876e6f608bc0d2c81dc66f7d44edd9db50c4deec0970dece2241"
+checksum = "2c85a59a680c7d4f89a342e4ed5c60ae2dba40e9fa993024cb3b48e01ec67eec"
 dependencies = [
  "byteorder",
  "log 0.4.11",
@@ -7146,6 +7159,7 @@ version = "0.1.0"
 dependencies = [
  "async-trait",
  "failure",
+ "futures 0.3.8",
  "lazy_static",
  "log 0.4.11",
  "maplit",
@@ -7835,10 +7849,10 @@ dependencies = [
 [[package]]
 name = "soundcloud"
 version = "0.4.0"
-source = "git+https://github.com/maxjoehnk/soundcloud-rs?rev=e8a08efe#e8a08efe2d523496460f1112e3d1347485de85cc"
+source = "git+https://github.com/maxjoehnk/soundcloud-rs?rev=baac34d#baac34d978a681b36bb125a4712cff865a843429"
 dependencies = [
  "futures 0.3.8",
- "log 0.3.9",
+ "log 0.4.11",
  "reqwest 0.10.9",
  "serde",
  "serde_json",

@@ -18,4 +18,4 @@ path = "../../core"
 
 [dependencies.pocketcasts]
 git = "https://github.com/maxjoehnk/pocketcasts-rs"
-rev = "8cb78c6"
+rev = "4948e24"
