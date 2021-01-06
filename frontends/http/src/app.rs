@@ -10,20 +10,13 @@ use crate::controller::search::SearchQuery;
 use crate::socket::{create_socket_server, socket_service, SocketServer};
 use crate::HttpConfig;
 pub use rustic_api::ApiClient;
-use rustic_api::RusticApiClient;
 use rustic_core::Rustic;
 use serde_qs::actix::QsQuery;
 use serde_qs::Config;
 
-pub struct ApiState {
-    pub app: Arc<Rustic>,
-    pub client: ApiClient,
-}
-
-fn build_api(app: Arc<Rustic>, client: ApiClient, ws_server: Addr<SocketServer>) -> Scope {
+fn build_api(client: ApiClient, ws_server: Addr<SocketServer>) -> Scope {
     web::scope("/api")
         .data(Arc::clone(&client))
-        .data(ApiState { app, client })
         .data(QsQuery::<SearchQuery>::configure(|cfg| {
             cfg.qs_config(Config::new(2, false))
         }))
@@ -101,12 +94,12 @@ async fn index() -> Result<impl Responder> {
 pub fn start(
     config: &HttpConfig,
     app: Arc<Rustic>,
-    client: Arc<Box<dyn RusticApiClient>>,
+    client: ApiClient,
 ) -> Result<()> {
     create_dir_all(&config.static_files)?;
     let sys = System::new("rustic-http-frontend");
 
-    let ws_server = create_socket_server(Arc::clone(&app));
+    let ws_server = create_socket_server(Arc::clone(&app), Arc::clone(&client));
 
     let static_file_dir = config.static_files.clone();
 
@@ -114,7 +107,6 @@ pub fn start(
         App::new()
             .wrap(middleware::Logger::default())
             .service(build_api(
-                Arc::clone(&app),
                 client.clone(),
                 ws_server.clone(),
             ))

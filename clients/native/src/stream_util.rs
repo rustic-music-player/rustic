@@ -34,7 +34,7 @@ impl<T: Send + 'static + Debug> Stream for StreamingReceiver<T> {
             let result = receiver.recv();
             log::trace!("streaming receiver waker: {:?}", result);
             if let Ok(value) = result {
-                sender.send(value);
+                sender.send(value).unwrap();
                 waker.wake();
             }
         });

@@ -6,7 +6,7 @@ use std::thread;
 
 use serde::Deserialize;
 
-use rustic_api::RusticApiClient;
+use rustic_api::ApiClient;
 use rustic_core::Rustic;
 
 mod app;
@@ -36,7 +36,7 @@ impl Default for HttpConfig {
 pub fn start(
     config: Option<HttpConfig>,
     app: Arc<Rustic>,
-    client: Arc<Box<dyn RusticApiClient>>,
+    client: ApiClient,
 ) -> thread::JoinHandle<()> {
     let config = config.unwrap_or_default();
     thread::spawn(move || {

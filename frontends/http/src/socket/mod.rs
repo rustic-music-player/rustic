@@ -6,14 +6,15 @@ use actix_web_actors::ws;
 use log::debug;
 use rustic_core::Rustic;
 use std::sync::Arc;
+use rustic_api::ApiClient;
 
 mod events;
 mod messages;
 mod server;
 mod session;
 
-pub fn create_socket_server(rustic: Arc<Rustic>) -> Addr<SocketServer> {
-    let server = SocketServer::new(rustic).start();
+pub fn create_socket_server(app: Arc<Rustic>, client: ApiClient) -> Addr<SocketServer> {
+    let server = SocketServer::new(app, client).start();
     let _ = PlayerEventActor::new(server.clone()).start();
     server
 }
