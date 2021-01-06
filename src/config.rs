@@ -67,11 +67,18 @@ pub struct FrontendConfig {
     #[cfg(feature = "iced-frontend")]
     #[serde(default)]
     pub iced: Option<IcedConfig>,
+    #[cfg(feature = "druid-frontend")]
+    #[serde(default)]
+    pub druid: Option<DruidConfig>,
 }
 
 // TODO: fill with options and move to iced frontend crate
 #[derive(Deserialize, Debug, Clone)]
 pub struct IcedConfig {}
+
+// TODO: fill with options and move to druid frontend crate
+#[derive(Deserialize, Debug, Clone)]
+pub struct DruidConfig {}
 
 impl Default for FrontendConfig {
     fn default() -> Self {
@@ -82,6 +89,8 @@ impl Default for FrontendConfig {
             http: Some(rustic_http_frontend::HttpConfig::default()),
             #[cfg(feature = "iced-frontend")]
             iced: None,
+            #[cfg(feature = "druid-frontend")]
+            druid: None,
         }
     }
 }

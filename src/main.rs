@@ -151,6 +151,9 @@ fn connect_to_instance(
     #[cfg(feature = "iced-frontend")]
     rustic_iced_frontend::start(Arc::clone(&client));
 
+    #[cfg(feature = "druid-frontend")]
+    rustic_druid_frontend::start(Arc::clone(&client));
+
     Ok(())
 }
 
@@ -208,6 +211,11 @@ fn run_frontend(
     #[cfg(feature = "iced-frontend")]
     if config.frontend.iced.is_some() {
         rustic_iced_frontend::start(Arc::clone(&client));
+    }
+
+    #[cfg(feature = "druid-frontend")]
+    if config.frontend.druid.is_some() {
+        rustic_druid_frontend::start(Arc::clone(&client));
     }
 
     Ok(())

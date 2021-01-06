@@ -11,7 +11,9 @@ members = [
     "backends/snapcast",
     "backends/snapcast/api",
     "frontends/dbus",
+    "frontends/druid",
     "frontends/http",
+    "frontends/iced",
     "frontends/mpd",
     "frontends/qt",
     "frontends/systray",
@@ -60,10 +62,11 @@ default = [
 	"http-client"
 ]
 
-all-frontends = ["mpd-frontend", "http-frontend", "dbus-frontend", "qt-frontend", "iced-frontend", "systray-frontend"]
+all-frontends = ["mpd-frontend", "http-frontend", "dbus-frontend", "druid-frontend", "qt-frontend", "iced-frontend", "systray-frontend"]
 mpd-frontend = ["rustic-mpd-frontend"]
 http-frontend = ["rustic-http-frontend"]
 dbus-frontend = ["rustic-dbus-frontend"]
+druid-frontend = ["rustic-druid-frontend"]
 qt-frontend = ["rustic-qt-frontend"]
 iced-frontend = ["rustic-iced-frontend"]
 systray-frontend = ["rustic-systray-frontend"]
@@ -137,6 +140,10 @@ optional = true
 
 [dependencies.rustic-dbus-frontend]
 path = "frontends/dbus"
+optional = true
+
+[dependencies.rustic-druid-frontend]
+path = "frontends/druid"
 optional = true
 
 [dependencies.rustic-qt-frontend]
