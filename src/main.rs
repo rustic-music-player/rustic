@@ -32,7 +32,8 @@ fn main() -> Result<(), Error> {
     };
 
     env_logger::Builder::from_default_env()
-        .filter(None, log_level)
+        .filter(None, LevelFilter::Warn)
+        .filter(Some("rustic"), log_level)
         .init();
 
     trace!("Options {:?}", options);
