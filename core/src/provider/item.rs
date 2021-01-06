@@ -18,35 +18,19 @@ pub enum ProviderItemType {
 
 impl ProviderItem {
     pub fn is_track(&self) -> bool {
-        if let ProviderItemType::Track(_) = self.data {
-            true
-        } else {
-            false
-        }
+        matches!(self.data, ProviderItemType::Track(_))
     }
 
     pub fn is_album(&self) -> bool {
-        if let ProviderItemType::Album(_) = self.data {
-            true
-        } else {
-            false
-        }
+        matches!(self.data, ProviderItemType::Album(_))
     }
 
     pub fn is_artist(&self) -> bool {
-        if let ProviderItemType::Artist(_) = self.data {
-            true
-        } else {
-            false
-        }
+        matches!(self.data, ProviderItemType::Artist(_))
     }
 
     pub fn is_playlist(&self) -> bool {
-        if let ProviderItemType::Playlist(_) = self.data {
-            true
-        } else {
-            false
-        }
+        matches!(self.data, ProviderItemType::Playlist(_))
     }
 }
 
