@@ -5,9 +5,9 @@ authors = ["Max Jöhnk <maxjoehnk@gmail.com>"]
 edition = "2018"
 
 [dependencies]
-dbus = { git = "https://github.com/diwic/dbus-rs.git", features = ["futures"] }
-dbus-tokio = { git = "https://github.com/diwic/dbus-rs.git" }
-dbus-crossroads = { git = "https://github.com/diwic/dbus-rs.git" }
+dbus = { version = "0.9", features = ["futures"] }
+dbus-tokio = "0.6"
+dbus-crossroads = "0.3"
 failure = "0.1"
 tokio = { version = "0.2", features = ["rt-core"] }
 log = "0.4"

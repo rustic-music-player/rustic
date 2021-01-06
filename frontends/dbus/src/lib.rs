@@ -115,7 +115,7 @@ async fn add_player(cr: &mut Crossroads, client: &ApiClient) -> Result<(), Error
                 Arc::clone(&cr.data_mut::<PlayerState>(ctx.path()).unwrap().client);
             async move {
                 client.player_control_play(None).await.unwrap();
-                ctx.reply_ok(())
+                ctx.reply(Ok(()))
             }
         });
         b.method_with_cr_async("Pause", (), (), |mut ctx, cr, _: ()| {
@@ -123,7 +123,7 @@ async fn add_player(cr: &mut Crossroads, client: &ApiClient) -> Result<(), Error
                 Arc::clone(&cr.data_mut::<PlayerState>(ctx.path()).unwrap().client);
             async move {
                 client.player_control_pause(None).await.unwrap();
-                ctx.reply_ok(())
+                ctx.reply(Ok(()))
             }
         });
         b.method_with_cr_async("Next", (), (), |mut ctx, cr, _: ()| {
@@ -131,7 +131,7 @@ async fn add_player(cr: &mut Crossroads, client: &ApiClient) -> Result<(), Error
                 Arc::clone(&cr.data_mut::<PlayerState>(ctx.path()).unwrap().client);
             async move {
                 client.player_control_next(None).await.unwrap();
-                ctx.reply_ok(())
+                ctx.reply(Ok(()))
             }
         });
         b.method_with_cr_async("Previous", (), (), |mut ctx, cr, _: ()| {
@@ -139,7 +139,7 @@ async fn add_player(cr: &mut Crossroads, client: &ApiClient) -> Result<(), Error
                 Arc::clone(&cr.data_mut::<PlayerState>(ctx.path()).unwrap().client);
             async move {
                 client.player_control_prev(None).await.unwrap();
-                ctx.reply_ok(())
+                ctx.reply(Ok(()))
             }
         });
     });
