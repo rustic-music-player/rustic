@@ -35,7 +35,12 @@ fn main() -> Result<(), Error> {
         .filter(None, log_level)
         .init();
 
-    let config = read_config(&options.config)?;
+    trace!("Options {:?}", options);
+
+    let mut config = read_config(&options.config)?;
+
+    config.disable_modules(&options.disabled_modules);
+    config.set_headless(options.headless);
 
     trace!("Config {:?}", config);
 
@@ -206,16 +211,19 @@ fn run_frontend(
     #[cfg(feature = "qt-frontend")]
     {
         rustic_qt_frontend::start(Arc::clone(&client));
+        return Ok(());
+    }
+
+    #[cfg(feature = "druid-frontend")]
+    if config.frontend.druid.is_some() {
+        rustic_druid_frontend::start(Arc::clone(&client))?;
+        return Ok(());
     }
 
     #[cfg(feature = "iced-frontend")]
     if config.frontend.iced.is_some() {
         rustic_iced_frontend::start(Arc::clone(&client));
-    }
-
-    #[cfg(feature = "druid-frontend")]
-    if config.frontend.druid.is_some() {
-        rustic_druid_frontend::start(Arc::clone(&client));
+        return Ok(());
     }
 
     Ok(())

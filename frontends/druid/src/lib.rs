@@ -15,11 +15,7 @@ use crate::ui::main_window;
 
 type Result<T> = std::result::Result<T, failure::Error>;
 
-pub fn start(api: ApiClient) {
-    std::thread::spawn(move || setup(api).unwrap());
-}
-
-fn setup(client: ApiClient) -> Result<()> {
+pub fn start(client: ApiClient) -> Result<()> {
     let launcher = AppLauncher::with_window(main_window()).configure_env(self::theme::setup);
     let event_sink = launcher.get_external_handle();
     let delegate = RusticDelegate::new(event_sink, client)?;

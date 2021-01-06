@@ -10,6 +10,8 @@ use failure::Error;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
+use crate::options::Module;
+
 #[derive(Deserialize, Debug, Clone)]
 pub struct Config {
     #[serde(default, rename = "credentials")]
@@ -65,20 +67,28 @@ pub struct FrontendConfig {
     #[cfg(feature = "http-frontend")]
     pub http: Option<rustic_http_frontend::HttpConfig>,
     #[cfg(feature = "iced-frontend")]
-    #[serde(default)]
+    #[serde(default = "default_iced")]
     pub iced: Option<IcedConfig>,
     #[cfg(feature = "druid-frontend")]
-    #[serde(default)]
+    #[serde(default = "default_druid")]
     pub druid: Option<DruidConfig>,
 }
 
 // TODO: fill with options and move to iced frontend crate
-#[derive(Deserialize, Debug, Clone)]
+#[derive(Deserialize, Debug, Clone, Default)]
 pub struct IcedConfig {}
 
+fn default_iced() -> Option<IcedConfig> {
+    Some(Default::default())
+}
+
 // TODO: fill with options and move to druid frontend crate
-#[derive(Deserialize, Debug, Clone)]
+#[derive(Deserialize, Debug, Clone, Default)]
 pub struct DruidConfig {}
+
+fn default_druid() -> Option<DruidConfig> {
+    Some(Default::default())
+}
 
 impl Default for FrontendConfig {
     fn default() -> Self {
@@ -88,9 +98,9 @@ impl Default for FrontendConfig {
             #[cfg(feature = "http-frontend")]
             http: Some(rustic_http_frontend::HttpConfig::default()),
             #[cfg(feature = "iced-frontend")]
-            iced: None,
+            iced: Some(Default::default()),
             #[cfg(feature = "druid-frontend")]
-            druid: None,
+            druid: Some(Default::default()),
         }
     }
 }
@@ -260,5 +270,27 @@ pub fn read_config(path: &Path) -> Result<Config, Error> {
         Ok(config)
     } else {
         Ok(Config::default())
+    }
+}
+
+impl Config {
+    pub(crate) fn set_headless(&mut self, headless: bool) {
+        if !headless {
+            return;
+        }
+        #[cfg(feature = "iced-frontend")]
+        {
+            self.frontend.iced = None;
+        }
+        #[cfg(feature = "druid-frontend")]
+        {
+            self.frontend.druid = None;
+        }
+    }
+
+    pub(crate) fn disable_modules(&mut self, modules: &[Module]) {
+        for module in modules {
+            module.remove_disabled_module_config(self);
+        }
     }
 }
