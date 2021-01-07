@@ -58,7 +58,7 @@ default = [
 	"soundcloud-provider",
 	"gmusic-provider",
 	"youtube-provider",
-	"iced-frontend",
+	"druid-frontend",
 	"http-client"
 ]
 
