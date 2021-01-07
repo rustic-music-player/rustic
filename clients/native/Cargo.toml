@@ -4,8 +4,6 @@ version = "0.1.0"
 authors = ["Max Jöhnk <maxjoehnk@gmail.com>"]
 edition = "2018"
 
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
-
 [dependencies]
 rustic-api = { path = "../../core/api" }
 serde = { version = "1", features = ["derive"] }
@@ -17,4 +15,3 @@ stopwatch = "0.0.7"
 log = "0.4"
 itertools = "0.9"
 futures = { version = "0.3", features = ["std", "async-await"], default-features = false }
-crossbeam-channel = "0.5"

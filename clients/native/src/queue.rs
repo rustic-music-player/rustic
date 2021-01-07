@@ -13,7 +13,6 @@ use rustic_api::models::{QueueEventModel, QueuedTrackModel};
 use rustic_core::player::Player;
 use rustic_core::{PlayerEvent, PlayerState, Playlist, QueryJoins, SingleQuery, Track};
 
-use crate::stream_util::from_channel;
 use crate::RusticNativeClient;
 use rustic_extension_api::ExtensionApi;
 
@@ -114,7 +113,8 @@ impl QueueApiClient for RusticNativeClient {
     fn observe_queue(&self, player_id: Option<&str>) -> BoxStream<'static, QueueEventModel> {
         let player = self.get_player_or_default(player_id).unwrap();
 
-        from_channel(player.observe())
+        player.observe()
+            .into_stream()
             .filter(|e| match *e {
                 PlayerEvent::QueueUpdated(_) => future::ready(true),
                 _ => future::ready(false),

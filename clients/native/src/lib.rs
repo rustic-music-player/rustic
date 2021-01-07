@@ -17,7 +17,6 @@ mod player;
 mod playlist;
 mod provider;
 mod queue;
-mod stream_util;
 
 #[derive(Clone)]
 pub struct RusticNativeClient {

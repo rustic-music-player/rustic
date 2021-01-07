@@ -1,10 +1,9 @@
 use std::sync::Arc;
 use std::time::Duration;
 
-use crossbeam_channel::{unbounded, Receiver, Sender};
+use flume::{unbounded, Receiver, Sender};
 use failure::Error;
 use itertools::Itertools;
-use log::{error, info, trace};
 
 use crate::{ProviderType, Rustic};
 
@@ -42,7 +41,7 @@ impl SyncState {
     }
 
     fn next(&self, event: SyncEvent) {
-        trace!("{:?}", event);
+        log::trace!("{:?}", event);
         self.tx.send(event).unwrap();
     }
 }
@@ -50,7 +49,7 @@ impl SyncState {
 const SYNC_INTERVAL: u64 = 5 * 60;
 
 pub async fn start(app: Arc<Rustic>) -> Result<(), Error> {
-    info!("Starting Background Sync");
+    log::info!("Starting Background Sync");
     let mut interval = tokio::time::interval(Duration::from_secs(SYNC_INTERVAL));
     loop {
         interval.tick().await;
@@ -73,7 +72,7 @@ async fn synchronize(app: &Arc<Rustic>) {
         if !provider.state().is_authenticated() {
             continue;
         }
-        info!("Syncing {} library", provider.title());
+        log::info!("Syncing {} library", provider.title());
         let (position, _) = sync_items
             .iter()
             .find_position(|i| i.provider == provider.provider())
@@ -83,7 +82,7 @@ async fn synchronize(app: &Arc<Rustic>) {
         match provider.sync(Arc::clone(&app.library)).await {
             Ok(result) => {
                 sync_items.get_mut(position).unwrap().state = SyncItemState::Done;
-                info!(
+                log::info!(
                     "Synced {} tracks, {} albums, {} artist and {} playlists from {}",
                     result.tracks,
                     result.albums,
@@ -94,13 +93,13 @@ async fn synchronize(app: &Arc<Rustic>) {
             }
             Err(err) => {
                 sync_items.get_mut(position).unwrap().state = SyncItemState::Error;
-                error!("Error syncing {}: {:?}", provider.title(), err)
+                log::error!("Error syncing {}: {:?}", provider.title(), err)
             }
         }
         app.sync.next(SyncEvent::Synchronizing(sync_items.clone()));
     }
     if let Err(e) = app.library.flush() {
-        error!("Flushing of library failed {:?}", e);
+        log::error!("Flushing of library failed {:?}", e);
     }
     app.sync.next(SyncEvent::Idle);
 }

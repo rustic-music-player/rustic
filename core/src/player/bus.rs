@@ -3,15 +3,17 @@ use crate::PlayerEvent;
 use failure::{format_err, Error};
 use std::fmt;
 use std::fmt::Debug;
-use tokio::stream::StreamExt;
-use tokio::sync::broadcast;
+use flume::{Sender, Receiver, unbounded};
+use futures::stream::{StreamExt, select};
 
 #[derive(Clone)]
 pub struct PlayerBus {
-    event_tx: crossbeam_channel::Sender<PlayerEvent>,
-    event_rx: crossbeam_channel::Receiver<PlayerEvent>,
-    player_tx: broadcast::Sender<PlayerCommand>,
-    queue_tx: broadcast::Sender<QueueCommand>,
+    event_tx: Sender<PlayerEvent>,
+    event_rx: Receiver<PlayerEvent>,
+    player_tx: Sender<PlayerCommand>,
+    player_rx: Receiver<PlayerCommand>,
+    queue_tx: Sender<QueueCommand>,
+    queue_rx: Receiver<QueueCommand>,
 }
 
 #[derive(Debug, Clone)]
@@ -22,15 +24,17 @@ pub enum PlayerBusCommand {
 
 impl PlayerBus {
     pub fn new() -> Self {
-        let (event_tx, event_rx) = crossbeam_channel::unbounded();
-        let (player_tx, _) = broadcast::channel(1);
-        let (queue_tx, _) = broadcast::channel(1);
+        let (event_tx, event_rx) = unbounded();
+        let (player_tx, player_rx) = unbounded();
+        let (queue_tx, queue_rx) = unbounded();
 
         PlayerBus {
             event_rx,
             event_tx,
             player_tx,
+            player_rx,
             queue_tx,
+            queue_rx,
         }
     }
 
@@ -56,22 +60,22 @@ impl PlayerBus {
         Ok(())
     }
 
-    pub fn commands(&self) -> impl futures::Stream<Item = Result<PlayerBusCommand, Error>> {
+    pub fn commands(&self) -> impl futures::Stream<Item = PlayerBusCommand> {
         let player_rx = self
-            .player_tx
-            .subscribe()
+            .player_rx
+            .clone()
             .into_stream()
-            .map(|r| Ok(r.map(PlayerBusCommand::Player)?));
+            .map(PlayerBusCommand::Player);
         let queue_rx = self
-            .queue_tx
-            .subscribe()
+            .queue_rx
+            .clone()
             .into_stream()
-            .map(|r| Ok(r.map(PlayerBusCommand::Queue)?));
+            .map(PlayerBusCommand::Queue);
 
-        player_rx.merge(queue_rx)
+        select(player_rx, queue_rx)
     }
 
-    pub fn observe(&self) -> crossbeam_channel::Receiver<PlayerEvent> {
+    pub fn observe(&self) -> Receiver<PlayerEvent> {
         self.event_rx.clone()
     }
 }

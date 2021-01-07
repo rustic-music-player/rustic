@@ -3,20 +3,20 @@ use crate::ExtensionConfigValue;
 use failure::format_err;
 use std::collections::HashMap;
 use std::ffi::OsStr;
-use tokio::sync::mpsc;
+use flume::{Sender, unbounded};
 
 pub struct ExtensionHost {
-    extension: mpsc::Sender<ExtensionCommand>,
+    extension: Sender<ExtensionCommand>,
     task: tokio::task::JoinHandle<Option<u8>>,
 }
 
 impl ExtensionHost {
     pub fn new(mut plugin: Box<dyn ExtensionPlugin>) -> Self {
-        let (tx, mut rx) = mpsc::channel(10);
+        let (tx, rx) = unbounded();
         ExtensionHost {
             extension: tx,
             task: tokio::spawn(async move {
-                while let Some(message) = rx.recv().await {
+                while let Ok(message) = rx.recv_async().await {
                     if let Some(status) = plugin.handle_message(message).await {
                         return Some(status);
                     }
@@ -27,7 +27,7 @@ impl ExtensionHost {
     }
 
     pub async fn send(&mut self, message: ExtensionCommand) {
-        self.extension.send(message).await;
+        self.extension.send_async(message).await;
     }
 }
 

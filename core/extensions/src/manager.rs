@@ -4,9 +4,10 @@ use std::sync::Arc;
 use std::sync::atomic::{AtomicBool, Ordering};
 
 use async_trait::async_trait;
-use failure::{bail, format_err, Error};
+use failure::{bail, Error};
 use log::{info, trace};
-use tokio::sync::{mpsc, Mutex};
+use tokio::sync::{Mutex};
+use flume::{Receiver, bounded};
 
 use rustic_core::{Track, Artist, Album, Playlist, StorageCollection};
 
@@ -35,11 +36,9 @@ impl HostedExtension {
         host.send(message).await;
     }
 
-    async fn rpc<T>(&self, message: ExtensionCommand, mut rx: mpsc::Receiver<Result<T, Error>>) -> Result<T, Error> {
+    async fn rpc<T>(&self, message: ExtensionCommand, rx: Receiver<Result<T, Error>>) -> Result<T, Error> {
         self.send(message).await;
-        rx.recv()
-            .await
-            .ok_or_else(|| format_err!("Channel closed"))?
+        rx.recv_async().await?
     }
 }
 
@@ -52,7 +51,7 @@ impl From<(ExtensionMetadata, ExtensionHost)> for HostedExtension {
 #[async_trait]
 impl ExtensionApi for HostedExtension {
     async fn on_enable(&self) -> Result<(), Error> {
-        let (tx, rx) = mpsc::channel(1);
+        let (tx, rx) = bounded(1);
         self.rpc(ExtensionCommand::Enable(tx), rx).await?;
         self.1.store(true, Ordering::Relaxed);
         info!("Enabled {} extension", &self.0.name);
@@ -60,7 +59,7 @@ impl ExtensionApi for HostedExtension {
     }
 
     async fn on_disable(&self) -> Result<(), Error> {
-        let (tx, rx) = mpsc::channel(1);
+        let (tx, rx) = bounded(1);
         self.rpc(ExtensionCommand::Disable(tx), rx).await?;
         self.1.store(false, Ordering::Relaxed);
         info!("Disabled {} extension", &self.0.name);
@@ -68,27 +67,27 @@ impl ExtensionApi for HostedExtension {
     }
 
     async fn on_add_to_queue(&self, tracks: Vec<Track>) -> Result<Vec<Track>, Error> {
-        let (tx, rx) = mpsc::channel(1);
+        let (tx, rx) = bounded(1);
         self.rpc(ExtensionCommand::AddToQueue(tracks, tx), rx).await
     }
 
     async fn resolve_track(&self, track: Track) -> Result<Track, Error> {
-        let (tx, rx) = mpsc::channel(1);
+        let (tx, rx) = bounded(1);
         self.rpc(ExtensionCommand::ResolveTrack(track, tx), rx).await
     }
 
     async fn resolve_album(&self, album: Album) -> Result<Album, Error> {
-        let (tx, rx) = mpsc::channel(1);
+        let (tx, rx) = bounded(1);
         self.rpc(ExtensionCommand::ResolveAlbum(album, tx), rx).await
     }
 
     async fn resolve_artist(&self, artist: Artist) -> Result<Artist, Error> {
-        let (tx, rx) = mpsc::channel(1);
+        let (tx, rx) = bounded(1);
         self.rpc(ExtensionCommand::ResolveArtist(artist, tx), rx).await
     }
 
     async fn resolve_playlist(&self, playlist: Playlist) -> Result<Playlist, Error> {
-        let (tx, rx) = mpsc::channel(1);
+        let (tx, rx) = bounded(1);
         self.rpc(ExtensionCommand::ResolvePlaylist(playlist, tx), rx).await
     }
 }
@@ -134,13 +133,10 @@ impl ExtensionManagerBuilder {
     ) -> Result<(), Error> {
         let plugin = construct_plugin(&path, config)?;
         let mut host = ExtensionHost::new(plugin);
-        let (tx, mut rx) = mpsc::channel(1);
+        let (tx, rx) = bounded(1);
         host.send(ExtensionCommand::GetMetadata(tx)).await;
 
-        let metadata = rx
-            .recv()
-            .await
-            .ok_or_else(|| format_err!("Channel closed"))?;
+        let metadata = rx.recv_async().await?;
         info!("Loaded Extension: {} v{}", metadata.name, metadata.version);
         self.extensions.push((metadata, host));
         Ok(())
@@ -183,7 +179,7 @@ impl ExtensionManager {
     pub async fn setup(&mut self, runtime: ExtensionRuntime) -> Result<(), Error> {
         let collection = runtime.storage.open_collection(EXTENSION_COLLECTION_KEY).await?;
         for extension in self.extensions.iter() {
-            let (tx, rx) = mpsc::channel(1);
+            let (tx, rx) = bounded(1);
             extension.rpc(ExtensionCommand::Setup(runtime.for_extension(extension.0.clone()), tx), rx).await?;
             match collection.read(&extension.0.id).await? {
                 Some(value) if value.bool().unwrap_or_default() => {

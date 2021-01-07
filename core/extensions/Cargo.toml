@@ -13,6 +13,7 @@ failure = "0.1"
 log = "0.4"
 tokio = { version = "0.2", features = ["sync"] }
 libloading = "0.6"
+flume = "0.10"
 
 [dependencies.rustic-core]
 path = "../"

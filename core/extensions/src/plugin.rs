@@ -1,5 +1,5 @@
 use async_trait::async_trait;
-use tokio::sync::mpsc;
+use flume::Sender;
 
 use rustic_core::{Track, Album, Artist, Playlist};
 
@@ -11,41 +11,41 @@ use crate::runtime::ExtensionRuntime;
 impl<T: ExtensionLibrary + 'static> ExtensionPlugin for T {
     async fn handle_message(&mut self, message: ExtensionCommand) -> std::option::Option<u8> {
         match message {
-            ExtensionCommand::Setup(runtime, mut tx) => {
+            ExtensionCommand::Setup(runtime, tx) => {
                 let result = self.setup(&runtime);
-                tx.send(result).await;
+                tx.send_async(result).await;
             }
-            ExtensionCommand::GetMetadata(mut tx) => {
+            ExtensionCommand::GetMetadata(tx) => {
                 let meta = T::metadata();
-                tx.send(meta).await;
+                tx.send_async(meta).await;
             }
-            ExtensionCommand::Enable(mut response) => {
+            ExtensionCommand::Enable(response) => {
                 let result = self.on_enable().await;
-                response.send(result).await;
+                response.send_async(result).await;
             }
-            ExtensionCommand::Disable(mut response) => {
+            ExtensionCommand::Disable(response) => {
                 let result = self.on_disable().await;
-                response.send(result).await;
+                response.send_async(result).await;
             }
-            ExtensionCommand::AddToQueue(tracks, mut response) => {
+            ExtensionCommand::AddToQueue(tracks, response) => {
                 let result = self.on_add_to_queue(tracks).await;
-                response.send(result).await;
+                response.send_async(result).await;
             }
-            ExtensionCommand::ResolveTrack(track, mut response) => {
+            ExtensionCommand::ResolveTrack(track, response) => {
                 let result = self.resolve_track(track).await;
-                response.send(result).await;
+                response.send_async(result).await;
             }
-            ExtensionCommand::ResolveAlbum(album, mut response) => {
+            ExtensionCommand::ResolveAlbum(album, response) => {
                 let result = self.resolve_album(album).await;
-                response.send(result).await;
+                response.send_async(result).await;
             }
-            ExtensionCommand::ResolveArtist(artist, mut response) => {
+            ExtensionCommand::ResolveArtist(artist, response) => {
                 let result = self.resolve_artist(artist).await;
-                response.send(result).await;
+                response.send_async(result).await;
             }
-            ExtensionCommand::ResolvePlaylist(playlist, mut response) => {
+            ExtensionCommand::ResolvePlaylist(playlist, response) => {
                 let result = self.resolve_playlist(playlist).await;
-                response.send(result).await;
+                response.send_async(result).await;
             }
         }
         None
@@ -54,13 +54,13 @@ impl<T: ExtensionLibrary + 'static> ExtensionPlugin for T {
 
 #[derive(Debug)]
 pub enum ExtensionCommand {
-    Setup(ExtensionRuntime, mpsc::Sender<Result<(), failure::Error>>),
-    GetMetadata(mpsc::Sender<ExtensionMetadata>),
-    Enable(mpsc::Sender<Result<(), failure::Error>>),
-    Disable(mpsc::Sender<Result<(), failure::Error>>),
-    AddToQueue(Vec<Track>, mpsc::Sender<Result<Vec<Track>, failure::Error>>),
-    ResolveTrack(Track, mpsc::Sender<Result<Track, failure::Error>>),
-    ResolveAlbum(Album, mpsc::Sender<Result<Album, failure::Error>>),
-    ResolveArtist(Artist, mpsc::Sender<Result<Artist, failure::Error>>),
-    ResolvePlaylist(Playlist, mpsc::Sender<Result<Playlist, failure::Error>>),
+    Setup(ExtensionRuntime, Sender<Result<(), failure::Error>>),
+    GetMetadata(Sender<ExtensionMetadata>),
+    Enable(Sender<Result<(), failure::Error>>),
+    Disable(Sender<Result<(), failure::Error>>),
+    AddToQueue(Vec<Track>, Sender<Result<Vec<Track>, failure::Error>>),
+    ResolveTrack(Track, Sender<Result<Track, failure::Error>>),
+    ResolveAlbum(Album, Sender<Result<Album, failure::Error>>),
+    ResolveArtist(Artist, Sender<Result<Artist, failure::Error>>),
+    ResolvePlaylist(Playlist, Sender<Result<Playlist, failure::Error>>),
 }

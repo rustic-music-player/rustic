@@ -1,7 +1,7 @@
 use std::fmt;
 use std::sync::Arc;
 
-use crossbeam_channel::Receiver;
+use flume::Receiver;
 use failure::Error;
 use log::error;
 
@@ -55,15 +55,14 @@ impl Player {
             let mut stream = Box::pin(player.bus.commands());
             loop {
                 let result = {
-                    match stream.try_next().await {
-                        Ok(Some(PlayerBusCommand::Player(cmd))) => {
+                    match stream.next().await {
+                        Some(PlayerBusCommand::Player(cmd)) => {
                             player.handle_player_msg(cmd).await
                         }
-                        Ok(Some(PlayerBusCommand::Queue(cmd))) => {
+                        Some(PlayerBusCommand::Queue(cmd)) => {
                             player.handle_queue_msg(cmd).await
                         }
-                        Ok(None) => Ok(()),
-                        Err(e) => Err(e),
+                        None => Ok(()),
                     }
                 };
                 if let Err(e) = result {

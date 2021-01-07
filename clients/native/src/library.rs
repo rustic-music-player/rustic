@@ -14,7 +14,6 @@ use rustic_core::provider::InternalUri;
 use rustic_extension_api::ExtensionApi;
 
 use crate::RusticNativeClient;
-use crate::stream_util::from_channel;
 
 #[async_trait]
 impl LibraryApiClient for RusticNativeClient {
@@ -214,7 +213,8 @@ impl LibraryApiClient for RusticNativeClient {
     }
 
     fn sync_state(&self) -> BoxStream<'static, SyncStateModel> {
-        from_channel(self.app.sync.events.clone())
+        self.app.sync.events.clone()
+            .into_stream()
             .map(SyncStateModel::from)
             .boxed()
     }
