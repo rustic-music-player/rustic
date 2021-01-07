@@ -7,7 +7,7 @@ use structopt::StructOpt;
 
 use rustic_api::ApiClient;
 use rustic_core::{CredentialStore, Rustic, StorageBackend};
-use rustic_extension_api::{ExtensionApi, ExtensionRuntime};
+use rustic_extension_api::ExtensionRuntime;
 #[cfg(feature = "google-cast-backend")]
 use rustic_google_cast_backend::GoogleCastBackend;
 use rustic_memory_store::MemoryLibrary;

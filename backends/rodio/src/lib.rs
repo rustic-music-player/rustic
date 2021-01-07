@@ -6,10 +6,9 @@ use std::thread;
 use std::time::Duration;
 
 use crossbeam_channel::Sender;
-use failure::{bail, format_err, Error};
+use failure::{bail, Error};
 use log::{debug, trace};
 use pinboard::NonEmptyPinboard;
-use rodio::DeviceTrait;
 use url::Url;
 
 use rustic_core::player::{PlayerBackend, PlayerBuilder, PlayerBus, QueueCommand};
