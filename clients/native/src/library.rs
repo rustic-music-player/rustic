@@ -49,7 +49,7 @@ impl LibraryApiClient for RusticNativeClient {
         let mut albums = Vec::new();
         for cursor in cursors {
             let uri = from_cursor(cursor)?;
-            let mut query = SingleQuery::uri(uri);
+            let mut query: SingleQuery = uri.into();
             query.join_all();
             if let Some(album) = self.query_album(query).await? {
                 albums.push(album.into());
@@ -81,7 +81,7 @@ impl LibraryApiClient for RusticNativeClient {
         let mut artists = Vec::new();
         for cursor in cursors {
             let uri = from_cursor(cursor)?;
-            let mut query = SingleQuery::uri(uri);
+            let mut query: SingleQuery = uri.into();
             query.join_all();
             if let Some(artist) = self.query_artist(query).await? {
                 artists.push(artist.into());
@@ -123,7 +123,7 @@ impl LibraryApiClient for RusticNativeClient {
         let sw = stopwatch::Stopwatch::start_new();
 
         let uri = from_cursor(cursor)?;
-        let mut query = SingleQuery::uri(uri);
+        let mut query: SingleQuery = uri.into();
         query.join_all();
         let playlist = self.query_playlist(query).await?;
         let playlist = playlist.map(PlaylistModel::from);
@@ -161,7 +161,7 @@ impl LibraryApiClient for RusticNativeClient {
         let mut tracks = Vec::new();
         for cursor in cursors {
             let uri = from_cursor(cursor)?;
-            if let Some(track) = self.query_track(SingleQuery::uri(uri)).await? {
+            if let Some(track) = self.query_track(uri.into()).await? {
                 tracks.push(track.into());
             }
         }
@@ -216,6 +216,12 @@ impl LibraryApiClient for RusticNativeClient {
         self.app.sync.events.clone()
             .into_stream()
             .map(SyncStateModel::from)
+            .boxed()
+    }
+
+    fn observe_library(&self) -> BoxStream<'static, LibraryEventModel> {
+        self.app.library.observe()
+            .map(LibraryEventModel::from)
             .boxed()
     }
 }

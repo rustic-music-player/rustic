@@ -99,6 +99,8 @@ pub trait LibraryApiClient: Sync + Send {
     async fn search_library(&self, query: &str) -> Result<SearchResults>;
 
     fn sync_state(&self) -> BoxStream<'static, SyncStateModel>;
+
+    fn observe_library(&self) -> BoxStream<'static, LibraryEventModel>;
 }
 
 #[reflect_trait]

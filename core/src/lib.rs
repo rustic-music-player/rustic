@@ -5,10 +5,12 @@ use failure::format_err;
 use log::{debug, trace};
 use url::Url;
 
+pub use library::LibraryItemIdentifier;
+
 pub use crate::cred_store::{Credentials, CredentialStore};
 pub use crate::library::{
-    Album, Artist, Library, LibraryQueryJoins, MultiQuery, Playlist, QueryJoins, SearchResults,
-    SharedLibrary, SingleQuery, SingleQueryIdentifier, Track, Rating, TrackPosition,
+    Album, Artist, Library, LibraryEvent, LibraryQueryJoins, MultiQuery, Playlist, QueryJoins,
+    Rating, SearchResults, SharedLibrary, SingleQuery, Track, TrackPosition,
 };
 pub use crate::player::{PlayerBackend, PlayerEvent, PlayerState, QueuedTrack, RepeatMode};
 use crate::player::Player;
@@ -95,7 +97,7 @@ impl Rustic {
         let track = self.library.query_track(query.clone())?;
         if let Some(track) = track {
             Ok(Some(track))
-        } else if let SingleQueryIdentifier::Uri(ref uri) = query.identifier {
+        } else if let LibraryItemIdentifier::Uri(ref uri) = query.identifier {
             trace!("Track is not in library, asking provider");
             let provider = self.get_provider_for_url(uri)?;
             let track = match provider {
@@ -114,7 +116,7 @@ impl Rustic {
         let album = self.library.query_album(query.clone())?;
         if let Some(album) = album {
             Ok(Some(album))
-        } else if let SingleQueryIdentifier::Uri(ref uri) = query.identifier {
+        } else if let LibraryItemIdentifier::Uri(ref uri) = query.identifier {
             trace!("Album is not in library, asking provider");
             let provider = self.get_provider_for_url(uri)?;
             let album = match provider {
@@ -131,7 +133,7 @@ impl Rustic {
     pub async fn query_artist(&self, query: SingleQuery) -> Result<Option<Artist>, failure::Error> {
         debug!("Executing artist query: {:?}", query);
         // As an artist may have more data in the provider (e.g. more albums, new playlists etc) we always ask the provider first
-        if let SingleQueryIdentifier::Uri(ref uri) = query.identifier {
+        if let LibraryItemIdentifier::Uri(ref uri) = query.identifier {
             trace!("Artist is not in library, asking provider");
             let provider = self.get_provider_for_url(uri)?;
             let artist = match provider {
@@ -153,7 +155,7 @@ impl Rustic {
         let playlist = self.library.query_playlist(query.clone())?;
         if let Some(playlist) = playlist {
             Ok(Some(playlist))
-        } else if let SingleQueryIdentifier::Uri(ref uri) = query.identifier {
+        } else if let LibraryItemIdentifier::Uri(ref uri) = query.identifier {
             trace!("Playlist is not in library, asking provider");
             let provider = self.get_provider_for_url(uri)?;
             let playlist = match provider {

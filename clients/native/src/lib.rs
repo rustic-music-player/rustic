@@ -217,18 +217,15 @@ impl RusticApiClient for RusticNativeClient {
         let uri = cursor.try_into()?;
         let provider_item = match uri {
             InternalUri::Track(uri) => {
-                let query = SingleQuery::uri(uri);
-                let track = self.app.query_track(query).await?;
+                let track = self.app.query_track(uri.into()).await?;
                 track.map(ProviderItemType::Track)
             }
             InternalUri::Album(uri) => {
-                let query = SingleQuery::uri(uri);
-                let album = self.app.query_album(query).await?;
+                let album = self.app.query_album(uri.into()).await?;
                 album.map(ProviderItemType::Album)
             }
             InternalUri::Artist(uri) => {
-                let query = SingleQuery::uri(uri);
-                let artist = self.app.query_artist(query).await?;
+                let artist = self.app.query_artist(uri.into()).await?;
                 artist.map(ProviderItemType::Artist)
             }
             _ => None,

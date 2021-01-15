@@ -341,6 +341,10 @@ where
     fn sync_state(&self) -> BoxStream<'static, SyncStateModel> {
         unimplemented!("requires socket api")
     }
+
+    fn observe_library(&self) -> BoxStream<'static, LibraryEventModel> {
+        unimplemented!("requires socket api")
+    }
 }
 
 #[cfg_attr(target_arch = "wasm32", async_trait(? Send))]

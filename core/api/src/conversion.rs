@@ -7,7 +7,7 @@ use rustic_core::provider::{
     Thumbnail,
 };
 use rustic_core::sync::{SyncEvent, SyncItem, SyncItemState};
-use rustic_core::{Album, Artist, PlayerEvent, PlayerState, Playlist, ProviderType, QueuedTrack, RepeatMode, Track, Rating, TrackPosition};
+use rustic_core::{Album, Artist, PlayerEvent, PlayerState, Playlist, ProviderType, QueuedTrack, RepeatMode, Track, Rating, TrackPosition, LibraryEvent};
 use rustic_extension_api::ExtensionMetadata;
 
 use crate::cursor::{from_cursor, to_cursor, Cursor};
@@ -417,6 +417,21 @@ impl From<Rating> for RatingModel {
             Rating::Like => RatingModel::Like,
             Rating::Dislike => RatingModel::Dislike,
             Rating::Stars(stars) => RatingModel::Stars(stars)
+        }
+    }
+}
+
+impl From<LibraryEvent> for LibraryEventModel {
+    fn from(library_event: LibraryEvent) -> Self {
+        match library_event {
+            LibraryEvent::TrackAdded(track) => LibraryEventModel::TrackAdded(track.into()),
+            LibraryEvent::TrackRemoved(uri) => LibraryEventModel::TrackRemoved(to_cursor(&uri)),
+            LibraryEvent::AlbumAdded(album) => LibraryEventModel::AlbumAdded(album.into()),
+            LibraryEvent::AlbumRemoved(uri) => LibraryEventModel::AlbumRemoved(to_cursor(&uri)),
+            LibraryEvent::ArtistAdded(artist) => LibraryEventModel::ArtistAdded(artist.into()),
+            LibraryEvent::ArtistRemoved(uri) => LibraryEventModel::ArtistRemoved(to_cursor(&uri)),
+            LibraryEvent::PlaylistAdded(playlist) => LibraryEventModel::PlaylistAdded(playlist.into()),
+            LibraryEvent::PlaylistRemoved(uri) => LibraryEventModel::PlaylistRemoved(to_cursor(&uri)),
         }
     }
 }

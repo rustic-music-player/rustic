@@ -1,7 +1,9 @@
 use failure::{Error, format_err};
 
-use rustic_core::{Album, Artist, Library, MultiQuery, Playlist, SearchResults, SharedLibrary, SharedStorageBackend, SingleQuery, Track};
+use rustic_core::{Album, Artist, Library, MultiQuery, Playlist, SearchResults, SharedLibrary, SharedStorageBackend, SingleQuery, Track, LibraryEvent};
 use rustic_core::library::MetaValue;
+
+use futures::stream::BoxStream;
 
 use crate::ExtensionMetadata;
 
@@ -151,5 +153,9 @@ impl Library for ExtensionRuntime {
 
     fn flush(&self) -> Result<(), Error> {
         self.library.flush()
+    }
+
+    fn observe(&self) -> BoxStream<'static, LibraryEvent> {
+        self.library.observe()
     }
 }

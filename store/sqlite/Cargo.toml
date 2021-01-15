@@ -10,6 +10,7 @@ homepage = "https://github.com/rustic-music-player/rustic"
 [dependencies]
 log = "0.4"
 failure = "0.1"
+futures = "0.3"
 diesel = { version = "1.4", features = ["sqlite"] }
 diesel_migrations = { version = "1.4", features = ["sqlite"] }
 

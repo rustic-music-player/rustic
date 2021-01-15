@@ -4,16 +4,18 @@ use std::path::Path;
 use std::sync::atomic::{AtomicUsize, Ordering};
 
 use failure::Error;
+use flume::{Receiver, Sender, unbounded};
+use futures::stream::{BoxStream, StreamExt};
 use log::trace;
 use pinboard::NonEmptyPinboard;
 use serde::{Deserialize, Serialize};
 use serde_json::from_reader;
 
-use rustic_core::library::Identifiable;
 use rustic_core::{
-    Album, Artist, Library, MultiQuery, Playlist, SearchResults, SingleQuery,
-    SingleQueryIdentifier, Track,
+    Album, Artist, Library, LibraryEvent, MultiQuery, Playlist, SearchResults,
+    SingleQuery, Track,
 };
+use rustic_core::library::{Identifiable, LibraryItemIdentifier};
 use rustic_store_helpers::{join_album, join_albums, join_artist, join_track};
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -30,6 +32,7 @@ struct LibrarySnapshot {
 
 impl From<LibrarySnapshot> for MemoryLibrary {
     fn from(snapshot: LibrarySnapshot) -> Self {
+        let (tx, rx) = unbounded();
         MemoryLibrary {
             persist: true,
             album_id: AtomicUsize::new(snapshot.album_id),
@@ -40,6 +43,8 @@ impl From<LibrarySnapshot> for MemoryLibrary {
             artists: NonEmptyPinboard::new(snapshot.artists),
             tracks: NonEmptyPinboard::new(snapshot.tracks),
             playlists: NonEmptyPinboard::new(snapshot.playlists),
+            event_sender: tx,
+            event_receiver: rx,
         }
     }
 }
@@ -55,10 +60,13 @@ pub struct MemoryLibrary {
     artists: NonEmptyPinboard<Vec<Artist>>,
     tracks: NonEmptyPinboard<Vec<Track>>,
     playlists: NonEmptyPinboard<Vec<Playlist>>,
+    event_sender: Sender<LibraryEvent>,
+    event_receiver: Receiver<LibraryEvent>,
 }
 
 impl Default for MemoryLibrary {
     fn default() -> Self {
+        let (tx, rx) = unbounded();
         MemoryLibrary {
             persist: false,
             album_id: AtomicUsize::new(1),
@@ -69,6 +77,8 @@ impl Default for MemoryLibrary {
             artists: NonEmptyPinboard::new(Vec::new()),
             tracks: NonEmptyPinboard::new(Vec::new()),
             playlists: NonEmptyPinboard::new(Vec::new()),
+            event_sender: tx,
+            event_receiver: rx,
         }
     }
 }
@@ -132,8 +142,8 @@ impl MemoryLibrary {
         T: Identifiable,
     {
         match query.identifier {
-            SingleQueryIdentifier::Id(id) => iter.find(|entity| entity.get_id() == Some(id)),
-            SingleQueryIdentifier::Uri(ref uri) => iter.find(|entity| &entity.get_uri() == uri),
+            LibraryItemIdentifier::Id(id) => iter.find(|entity| entity.get_id() == Some(id)),
+            LibraryItemIdentifier::Uri(ref uri) => iter.find(|entity| &entity.get_uri() == uri),
         }
     }
 
@@ -272,6 +282,8 @@ impl Library for MemoryLibrary {
         let mut tracks = self.tracks.read();
         tracks.push(track.clone());
         self.tracks.set(tracks);
+        self.event_sender.send(LibraryEvent::TrackAdded(track.clone()));
+
         Ok(())
     }
 
@@ -295,6 +307,7 @@ impl Library for MemoryLibrary {
         let mut albums = self.albums.read();
         albums.push(album.clone());
         self.albums.set(albums);
+        self.event_sender.send(LibraryEvent::AlbumAdded(album.clone()));
 
         Ok(())
     }
@@ -308,6 +321,7 @@ impl Library for MemoryLibrary {
             let mut artists = self.artists.read();
             artists.push(artist.clone());
             self.artists.set(artists);
+            self.event_sender.send(LibraryEvent::ArtistAdded(artist.clone()));
         }
         Ok(())
     }
@@ -317,6 +331,7 @@ impl Library for MemoryLibrary {
         let mut playlists = self.playlists.read();
         playlists.push(playlist.clone());
         self.playlists.set(playlists);
+        self.event_sender.send(LibraryEvent::PlaylistAdded(playlist.clone()));
         Ok(())
     }
 
@@ -363,6 +378,7 @@ impl Library for MemoryLibrary {
             let mut tracks = self.tracks.read();
             tracks.push(track.clone());
             self.tracks.set(tracks);
+            self.event_sender.send(LibraryEvent::TrackAdded(track.clone()));
         }
         Ok(())
     }
@@ -382,6 +398,7 @@ impl Library for MemoryLibrary {
             let mut albums = self.albums.read();
             albums.push(album.clone());
             self.albums.set(albums);
+            self.event_sender.send(LibraryEvent::AlbumAdded(album.clone()));
         }
         Ok(())
     }
@@ -400,6 +417,7 @@ impl Library for MemoryLibrary {
         let mut artists = self.artists.read();
         if has_artist.is_none() {
             artists.push(artist.clone());
+            self.event_sender.send(LibraryEvent::ArtistAdded(artist.clone()));
         } else {
             let index = artists
                 .iter()
@@ -430,6 +448,7 @@ impl Library for MemoryLibrary {
             *target_playlist = playlist.clone();
         } else {
             playlists.push(playlist.clone());
+            self.event_sender.send(LibraryEvent::PlaylistAdded(playlist.clone()));
         }
         self.playlists.set(playlists);
         Ok(())
@@ -497,6 +516,7 @@ impl Library for MemoryLibrary {
         if let Some(position) = tracks.iter().position(|t| t.id == track.id) {
             tracks.remove(position);
             self.tracks.set(tracks);
+            self.event_sender.send(LibraryEvent::TrackRemoved(track.uri.clone()));
             Ok(())
         } else {
             Ok(())
@@ -508,6 +528,7 @@ impl Library for MemoryLibrary {
         if let Some(position) = albums.iter().position(|t| t.id == album.id) {
             albums.remove(position);
             self.albums.set(albums);
+            self.event_sender.send(LibraryEvent::AlbumRemoved(album.uri.clone()));
             Ok(())
         } else {
             Ok(())
@@ -519,6 +540,7 @@ impl Library for MemoryLibrary {
         if let Some(position) = artists.iter().position(|t| t.id == artist.id) {
             artists.remove(position);
             self.artists.set(artists);
+            self.event_sender.send(LibraryEvent::ArtistRemoved(artist.uri.clone()));
             Ok(())
         } else {
             Ok(())
@@ -530,6 +552,7 @@ impl Library for MemoryLibrary {
         if let Some(position) = playlists.iter().position(|t| t.id == playlist.id) {
             playlists.remove(position);
             self.playlists.set(playlists);
+            self.event_sender.send(LibraryEvent::PlaylistRemoved(playlist.uri.clone()));
             Ok(())
         } else {
             Ok(())
@@ -560,6 +583,13 @@ impl Library for MemoryLibrary {
             log::error!("Storing memory library failed {}", e);
         }
         Ok(())
+    }
+
+    fn observe(&self) -> BoxStream<'static, LibraryEvent> {
+        self.event_receiver
+            .clone()
+            .into_stream()
+            .boxed()
     }
 }
 

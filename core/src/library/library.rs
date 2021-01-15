@@ -1,8 +1,9 @@
 use std::sync::Arc;
 
 use failure::Error;
+use futures::stream::BoxStream;
 
-use crate::library::{Album, Artist, Playlist, Track};
+use crate::library::{Album, Artist, Playlist, Track, LibraryEvent};
 use crate::{MultiQuery, SingleQuery};
 
 pub type SharedLibrary = Arc<Box<dyn Library>>;
@@ -108,19 +109,16 @@ pub trait Library: Sync + Send + std::fmt::Debug {
     fn sync_playlist(&self, playlist: &mut Playlist) -> Result<(), Error>;
 
     fn sync_tracks(&self, tracks: &mut Vec<Track>) -> Result<(), Error> {
-        tracks.iter_mut().map(|t| self.sync_track(t)).collect()
+        tracks.iter_mut().try_for_each(|t| self.sync_track(t))
     }
     fn sync_albums(&self, albums: &mut Vec<Album>) -> Result<(), Error> {
-        albums.iter_mut().map(|a| self.sync_album(a)).collect()
+        albums.iter_mut().try_for_each(|a| self.sync_album(a))
     }
     fn sync_artists(&self, artists: &mut Vec<Artist>) -> Result<(), Error> {
-        artists.iter_mut().map(|a| self.sync_artist(a)).collect()
+        artists.iter_mut().try_for_each(|a| self.sync_artist(a))
     }
     fn sync_playlists(&self, playlists: &mut Vec<Playlist>) -> Result<(), Error> {
-        playlists
-            .iter_mut()
-            .map(|p| self.sync_playlist(p))
-            .collect()
+        playlists.iter_mut().try_for_each(|p| self.sync_playlist(p))
     }
 
     fn remove_track(&self, track: &Track) -> Result<(), Error>;
@@ -135,4 +133,6 @@ pub trait Library: Sync + Send + std::fmt::Debug {
 
     // TODO: this should happen on an interval on a background thread
     fn flush(&self) -> Result<(), Error>;
+
+    fn observe(&self) -> BoxStream<'static, LibraryEvent>;
 }

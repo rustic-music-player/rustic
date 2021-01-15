@@ -13,8 +13,9 @@ use std::sync::{Arc, Mutex};
 use diesel::prelude::*;
 use diesel::sqlite::SqliteConnection;
 use failure::Error;
+use futures::stream::BoxStream;
 
-use rustic_core::{Album, Artist, MultiQuery, Playlist, SearchResults, SingleQuery, Track};
+use rustic_core::{Album, Artist, MultiQuery, Playlist, SearchResults, SingleQuery, Track, LibraryEvent};
 
 use crate::repositories::*;
 
@@ -182,5 +183,9 @@ impl rustic_core::Library for SqliteLibrary {
 
     fn flush(&self) -> Result<(), Error> {
         Ok(())
+    }
+
+    fn observe(&self) -> BoxStream<'static, LibraryEvent> {
+        unimplemented!()
     }
 }

@@ -1,11 +1,15 @@
 use std::path::Path;
 
-use bincode::serialize;
+use bimap::BiMap;
+use bincode::{deserialize, serialize};
 use failure::{err_msg, Error};
+use futures::{FutureExt, stream, StreamExt};
+use futures::stream::BoxStream;
+use serde::de::DeserializeOwned;
+use sled::Tree;
 
-use rustic_core::{
-    Album, Artist, MultiQuery, Playlist, SearchResults, SingleQuery, SingleQueryIdentifier, Track,
-};
+use rustic_core::{Album, Artist, LibraryEvent, MultiQuery, Playlist, SearchResults, SingleQuery, Track};
+use rustic_core::library::LibraryItemIdentifier;
 use rustic_store_helpers::{join_album, join_albums, join_track};
 
 use crate::util::*;
@@ -53,6 +57,22 @@ impl SledLibrary {
             tracks_tree,
             playlists_tree,
         })
+    }
+
+    fn get_ids<T: DeserializeOwned, U: Fn(T) -> String>(tree: &Tree, uri_accessor: U) -> BiMap<usize, String> {
+        let mut artist_ids = BiMap::new();
+
+        tree.iter().for_each(|item| {
+            if let Ok((key, value)) = item {
+                let id = deserialize_id(&key).unwrap();
+                let model = deserialize::<T>(&value).unwrap();
+                let uri = uri_accessor(model);
+
+                artist_ids.insert(id, uri);
+            }
+        });
+
+        artist_ids
     }
 
     fn next_id(&self) -> Result<usize, Error> {
@@ -109,7 +129,7 @@ impl SledLibrary {
 impl rustic_core::Library for SledLibrary {
     fn query_track(&self, query: SingleQuery) -> Result<Option<Track>, Error> {
         let entity = match query.identifier {
-            SingleQueryIdentifier::Id(id) => fetch_entity(&self.tracks_tree, id),
+            LibraryItemIdentifier::Id(id) => fetch_entity(&self.tracks_tree, id),
             _ => Ok(None),
         }?;
         match entity {
@@ -124,7 +144,7 @@ impl rustic_core::Library for SledLibrary {
 
     fn query_album(&self, query: SingleQuery) -> Result<Option<Album>, Error> {
         let entity = match query.identifier {
-            SingleQueryIdentifier::Id(id) => fetch_entity(&self.albums_tree, id),
+            LibraryItemIdentifier::Id(id) => fetch_entity(&self.albums_tree, id),
             _ => Ok(None),
         }?;
         match entity {
@@ -140,7 +160,7 @@ impl rustic_core::Library for SledLibrary {
 
     fn query_artist(&self, query: SingleQuery) -> Result<Option<Artist>, Error> {
         match query.identifier {
-            SingleQueryIdentifier::Id(id) => fetch_entity(&self.artists_tree, id),
+            LibraryItemIdentifier::Id(id) => fetch_entity(&self.artists_tree, id),
             _ => Ok(None),
         }
     }
@@ -151,7 +171,7 @@ impl rustic_core::Library for SledLibrary {
 
     fn query_playlist(&self, query: SingleQuery) -> Result<Option<Playlist>, Error> {
         match query.identifier {
-            SingleQueryIdentifier::Id(id) => fetch_entity(&self.playlists_tree, id),
+            LibraryItemIdentifier::Id(id) => fetch_entity(&self.playlists_tree, id),
             _ => Ok(None),
         }
     }
@@ -313,5 +333,18 @@ impl rustic_core::Library for SledLibrary {
     fn flush(&self) -> Result<(), Error> {
         self.db.flush()?;
         Ok(())
+    }
+
+    fn observe(&self) -> BoxStream<'static, LibraryEvent> {
+        let mut album_subscription = self.albums_tree.watch_prefix(vec![]);
+        let album_stream = stream::poll_fn(move |cx| album_subscription.poll_unpin(cx));
+
+        album_stream.map(|event| match event {
+            sled::Event::Insert { value, .. } => LibraryEvent::AlbumAdded(bincode::deserialize(&value).unwrap()),
+            sled::Event::Remove { key } => {
+                unimplemented!("removing of items is not implemented yet")
+            },
+        })
+            .boxed()
     }
 }

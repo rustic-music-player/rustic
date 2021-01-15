@@ -1,10 +1,11 @@
 use std::sync::{Arc, Mutex};
 
-use diesel::prelude::*;
 use diesel::{insert_into, SqliteConnection};
+use diesel::prelude::*;
 use failure::Error;
 
-use rustic_core::{MultiQuery, Playlist, SingleQuery, SingleQueryIdentifier};
+use rustic_core::{MultiQuery, Playlist, SingleQuery};
+use rustic_core::library::LibraryItemIdentifier;
 
 use crate::entities::playlist::*;
 use crate::repositories::Repository;
@@ -27,10 +28,10 @@ impl Repository<Playlist> for PlaylistRepository {
         let connection = self.connection.lock().unwrap();
 
         let playlist = match query.identifier {
-            SingleQueryIdentifier::Id(playlist_id) => playlists
+            LibraryItemIdentifier::Id(playlist_id) => playlists
                 .find(playlist_id as i32)
                 .first::<PlaylistEntity>(&*connection),
-            SingleQueryIdentifier::Uri(query_uri) => playlists
+            LibraryItemIdentifier::Uri(query_uri) => playlists
                 .filter(uri.eq(query_uri))
                 .first::<PlaylistEntity>(&*connection),
         }

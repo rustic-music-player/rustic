@@ -43,6 +43,11 @@ impl Actor for SocketServer {
     type Context = Context<Self>;
 
     fn started(&mut self, ctx: &mut Self::Context) {
+        let stream = self.client.observe_library()
+            .map(|event| messages::Message::LibraryMessage(event.into()));
+
+        ctx.add_message_stream(stream);
+
         let players = self.app.get_players();
         for (id, _) in players {
             let id2 = id.clone();
