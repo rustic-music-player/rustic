@@ -4,10 +4,10 @@ use std::path::Path;
 use std::sync::atomic::{AtomicUsize, Ordering};
 
 use failure::Error;
-use flume::{unbounded, Receiver, Sender};
 use futures::stream::{BoxStream, StreamExt};
 use log::trace;
 use pinboard::NonEmptyPinboard;
+use rustic_queue::{broadcast, Receiver, Sender};
 use serde::{Deserialize, Serialize};
 use serde_json::from_reader;
 
@@ -31,7 +31,7 @@ struct LibrarySnapshot {
 
 impl From<LibrarySnapshot> for MemoryLibrary {
     fn from(snapshot: LibrarySnapshot) -> Self {
-        let (tx, rx) = unbounded();
+        let (tx, rx) = broadcast();
         MemoryLibrary {
             persist: true,
             album_id: AtomicUsize::new(snapshot.album_id),
@@ -65,7 +65,7 @@ pub struct MemoryLibrary {
 
 impl Default for MemoryLibrary {
     fn default() -> Self {
-        let (tx, rx) = unbounded();
+        let (tx, rx) = broadcast();
         MemoryLibrary {
             persist: false,
             album_id: AtomicUsize::new(1),
@@ -597,7 +597,7 @@ impl Library for MemoryLibrary {
     }
 
     fn observe(&self) -> BoxStream<'static, LibraryEvent> {
-        self.event_receiver.clone().into_stream().boxed()
+        self.event_receiver.stream().boxed()
     }
 }
 

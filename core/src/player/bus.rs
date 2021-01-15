@@ -1,8 +1,8 @@
 use crate::player::{PlayerCommand, QueueCommand};
 use crate::PlayerEvent;
 use failure::{format_err, Error};
-use flume::{unbounded, Receiver, Sender};
 use futures::stream::{select, StreamExt};
+use rustic_queue::{broadcast, Receiver, Sender};
 use std::fmt;
 use std::fmt::Debug;
 
@@ -24,9 +24,9 @@ pub enum PlayerBusCommand {
 
 impl PlayerBus {
     pub fn new() -> Self {
-        let (event_tx, event_rx) = unbounded();
-        let (player_tx, player_rx) = unbounded();
-        let (queue_tx, queue_rx) = unbounded();
+        let (event_tx, event_rx) = broadcast();
+        let (player_tx, player_rx) = broadcast();
+        let (queue_tx, queue_rx) = broadcast();
 
         PlayerBus {
             event_rx,
@@ -61,16 +61,8 @@ impl PlayerBus {
     }
 
     pub fn commands(&self) -> impl futures::Stream<Item = PlayerBusCommand> {
-        let player_rx = self
-            .player_rx
-            .clone()
-            .into_stream()
-            .map(PlayerBusCommand::Player);
-        let queue_rx = self
-            .queue_rx
-            .clone()
-            .into_stream()
-            .map(PlayerBusCommand::Queue);
+        let player_rx = self.player_rx.stream().map(PlayerBusCommand::Player);
+        let queue_rx = self.queue_rx.stream().map(PlayerBusCommand::Queue);
 
         select(player_rx, queue_rx)
     }

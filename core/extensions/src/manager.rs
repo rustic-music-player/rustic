@@ -5,8 +5,8 @@ use std::sync::Arc;
 
 use async_trait::async_trait;
 use failure::{bail, Error};
-use flume::{bounded, Receiver};
 use log::{info, trace};
+use rustic_queue::{one_shot, Receiver};
 use tokio::sync::Mutex;
 
 use rustic_core::{Album, Artist, Playlist, StorageCollection, Track};
@@ -40,7 +40,7 @@ impl HostedExtension {
         host.send(message).await;
     }
 
-    async fn rpc<T>(
+    async fn rpc<T: 'static>(
         &self,
         message: ExtensionCommand,
         rx: Receiver<Result<T, Error>>,
@@ -63,7 +63,7 @@ impl From<(ExtensionMetadata, ExtensionHost)> for HostedExtension {
 #[async_trait]
 impl ExtensionApi for HostedExtension {
     async fn on_enable(&self) -> Result<(), Error> {
-        let (tx, rx) = bounded(1);
+        let (tx, rx) = one_shot();
         self.rpc(ExtensionCommand::Enable(tx), rx).await?;
         self.1.store(true, Ordering::Relaxed);
         info!("Enabled {} extension", &self.0.name);
@@ -71,7 +71,7 @@ impl ExtensionApi for HostedExtension {
     }
 
     async fn on_disable(&self) -> Result<(), Error> {
-        let (tx, rx) = bounded(1);
+        let (tx, rx) = one_shot();
         self.rpc(ExtensionCommand::Disable(tx), rx).await?;
         self.1.store(false, Ordering::Relaxed);
         info!("Disabled {} extension", &self.0.name);
@@ -79,30 +79,30 @@ impl ExtensionApi for HostedExtension {
     }
 
     async fn on_add_to_queue(&self, tracks: Vec<Track>) -> Result<Vec<Track>, Error> {
-        let (tx, rx) = bounded(1);
+        let (tx, rx) = one_shot();
         self.rpc(ExtensionCommand::AddToQueue(tracks, tx), rx).await
     }
 
     async fn resolve_track(&self, track: Track) -> Result<Track, Error> {
-        let (tx, rx) = bounded(1);
+        let (tx, rx) = one_shot();
         self.rpc(ExtensionCommand::ResolveTrack(track, tx), rx)
             .await
     }
 
     async fn resolve_album(&self, album: Album) -> Result<Album, Error> {
-        let (tx, rx) = bounded(1);
+        let (tx, rx) = one_shot();
         self.rpc(ExtensionCommand::ResolveAlbum(album, tx), rx)
             .await
     }
 
     async fn resolve_artist(&self, artist: Artist) -> Result<Artist, Error> {
-        let (tx, rx) = bounded(1);
+        let (tx, rx) = one_shot();
         self.rpc(ExtensionCommand::ResolveArtist(artist, tx), rx)
             .await
     }
 
     async fn resolve_playlist(&self, playlist: Playlist) -> Result<Playlist, Error> {
-        let (tx, rx) = bounded(1);
+        let (tx, rx) = one_shot();
         self.rpc(ExtensionCommand::ResolvePlaylist(playlist, tx), rx)
             .await
     }
@@ -149,7 +149,7 @@ impl ExtensionManagerBuilder {
     ) -> Result<(), Error> {
         let plugin = construct_plugin(&path, config)?;
         let mut host = ExtensionHost::new(plugin);
-        let (tx, rx) = bounded(1);
+        let (tx, rx) = one_shot();
         host.send(ExtensionCommand::GetMetadata(tx)).await;
 
         let metadata = rx.recv_async().await?;
@@ -198,7 +198,7 @@ impl ExtensionManager {
             .open_collection(EXTENSION_COLLECTION_KEY)
             .await?;
         for extension in self.extensions.iter() {
-            let (tx, rx) = bounded(1);
+            let (tx, rx) = one_shot();
             extension
                 .rpc(
                     ExtensionCommand::Setup(runtime.for_extension(extension.0.clone()), tx),

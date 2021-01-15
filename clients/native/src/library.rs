@@ -253,8 +253,7 @@ impl LibraryApiClient for RusticNativeClient {
         self.app
             .sync
             .events
-            .clone()
-            .into_stream()
+            .stream()
             .map(SyncStateModel::from)
             .boxed()
     }

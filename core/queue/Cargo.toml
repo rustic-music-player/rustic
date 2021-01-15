@@ -1,0 +1,9 @@
+[package]
+name = "rustic-queue"
+version = "0.1.0"
+authors = ["Max Jöhnk <maxjoehnk@gmail.com>"]
+edition = "2018"
+
+[dependencies]
+flume = "0.10"
+futures = "0.3"

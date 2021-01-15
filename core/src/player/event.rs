@@ -3,7 +3,7 @@ use crate::library::Track;
 use crate::player::{QueuedTrack, RepeatMode};
 use std::time::Duration;
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum PlayerEvent {
     /// Emitted when the player state changes
     StateChanged(PlayerState),

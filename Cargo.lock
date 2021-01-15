@@ -7138,7 +7138,6 @@ dependencies = [
  "bincode",
  "bitflags",
  "failure",
- "flume 0.10.1",
  "futures 0.3.8",
  "itertools 0.8.2",
  "log 0.4.11",
@@ -7146,6 +7145,7 @@ dependencies = [
  "pinboard",
  "reqwest 0.10.9",
  "reqwest 0.9.24",
+ "rustic-queue",
  "serde",
  "serde_derive",
  "serde_json",
@@ -7188,11 +7188,11 @@ version = "0.1.0"
 dependencies = [
  "async-trait",
  "failure",
- "flume 0.10.1",
  "futures 0.3.8",
  "libloading 0.6.5",
  "log 0.4.11",
  "rustic-core",
+ "rustic-queue",
  "serde",
  "tokio 0.2.23",
 ]
@@ -7339,11 +7339,11 @@ name = "rustic-memory-store"
 version = "0.1.0"
 dependencies = [
  "failure",
- "flume 0.10.1",
  "futures 0.3.8",
  "log 0.4.11",
  "pinboard",
  "rustic-core",
+ "rustic-queue",
  "rustic-store-helpers",
  "serde",
  "serde_json",
@@ -7422,6 +7422,14 @@ version = "0.1.0"
 dependencies = [
  "qmetaobject",
  "rustic-api",
+]
+
+[[package]]
+name = "rustic-queue"
+version = "0.1.0"
+dependencies = [
+ "flume 0.10.1",
+ "futures 0.3.8",
 ]
 
 [[package]]

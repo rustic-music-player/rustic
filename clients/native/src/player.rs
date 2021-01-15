@@ -83,7 +83,7 @@ impl PlayerApiClient for RusticNativeClient {
 
         player
             .observe()
-            .into_stream()
+            .stream()
             .filter(|e| match *e {
                 PlayerEvent::QueueUpdated(_) => future::ready(false),
                 _ => future::ready(true),

@@ -2,8 +2,8 @@ use std::sync::Arc;
 use std::time::Duration;
 
 use failure::Error;
-use flume::{unbounded, Receiver, Sender};
 use itertools::Itertools;
+use rustic_queue::{broadcast, Receiver, Sender};
 
 use crate::{ProviderType, Rustic};
 
@@ -35,7 +35,7 @@ pub struct SyncState {
 
 impl SyncState {
     pub(crate) fn new() -> SyncState {
-        let (tx, rx) = unbounded();
+        let (tx, rx) = broadcast();
 
         SyncState { events: rx, tx }
     }

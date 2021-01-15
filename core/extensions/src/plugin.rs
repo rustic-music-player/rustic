@@ -1,5 +1,5 @@
 use async_trait::async_trait;
-use flume::Sender;
+use rustic_queue::Sender;
 
 use rustic_core::{Album, Artist, Playlist, Track};
 

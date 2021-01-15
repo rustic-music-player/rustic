@@ -1,7 +1,7 @@
 use crate::plugin::ExtensionCommand;
 use crate::ExtensionConfigValue;
 use failure::format_err;
-use flume::{unbounded, Sender};
+use rustic_queue::{broadcast, Sender};
 use std::collections::HashMap;
 use std::ffi::OsStr;
 
@@ -12,7 +12,7 @@ pub struct ExtensionHost {
 
 impl ExtensionHost {
     pub fn new(mut plugin: Box<dyn ExtensionPlugin>) -> Self {
-        let (tx, rx) = unbounded();
+        let (tx, rx) = broadcast();
         ExtensionHost {
             extension: tx,
             task: tokio::spawn(async move {

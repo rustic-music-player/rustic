@@ -2,8 +2,8 @@ use std::fmt;
 use std::sync::Arc;
 
 use failure::Error;
-use flume::Receiver;
 use log::error;
+use rustic_queue::Receiver;
 
 pub use self::bus::PlayerBus;
 use crate::library::Track;

@@ -14,11 +14,13 @@ log = "0.4"
 pinboard = "2"
 serde = "1"
 serde_json = "1"
-flume = "0.10"
 futures = "0.3"
 
 [dependencies.rustic-core]
 path = "../../core"
+
+[dependencies.rustic-queue]
+path = "../../core/queue"
 
 [dependencies.rustic-store-helpers]
 path = "../helpers"

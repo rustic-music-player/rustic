@@ -3,6 +3,7 @@ members = [
     "core",
     "core/api",
     "core/extensions",
+    "core/queue",
     "core/reflect",
     "core/reflect/macros",
     "backends/google-cast",
