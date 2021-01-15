@@ -41,6 +41,22 @@ impl PartialDelegate for AlbumDelegate {
             let albums = albums.iter().map(|album| Arc::new(album.clone())).collect();
             data.albums = AsyncData::Resolved(albums);
             Some(future::ready(()).boxed())
+        } else if let Some(album) = cmd.get(commands::events::ALBUM_ADDED) {
+            match &mut data.albums {
+                AsyncData::Resolved(ref mut albums) => albums.push_back(Arc::new(album.clone())),
+                _ => {}
+            }
+            Some(future::ready(()).boxed())
+        } else if let Some(cursor) = cmd.get(commands::events::ALBUM_REMOVED) {
+            match &mut data.albums {
+                AsyncData::Resolved(ref mut albums) => {
+                    if let Some(index) = albums.iter().position(|album| &album.cursor == cursor) {
+                        albums.remove(index);
+                    }
+                }
+                _ => {}
+            }
+            Some(future::ready(()).boxed())
         } else {
             None
         }

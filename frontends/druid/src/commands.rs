@@ -40,7 +40,7 @@ pub mod events {
     use crate::commands::PlayerCommand;
     use crate::state::Link;
     use druid::Selector;
-    use rustic_api::models::{AlbumModel, PlaylistModel, TrackModel};
+    use rustic_api::models::{AlbumModel, ArtistModel, PlaylistModel, TrackModel};
     use std::sync::Arc;
 
     pub const PLAYBACK_CHANGED: Selector<PlayerCommand<bool>> =
@@ -54,4 +54,13 @@ pub mod events {
 
     pub const PLAYLIST_LOADED: Selector<(Link, Arc<PlaylistModel>)> =
         Selector::new("library.playlist-loaded");
+
+    pub const ALBUM_ADDED: Selector<AlbumModel> = Selector::new("library.album-added");
+    pub const ALBUM_REMOVED: Selector<String> = Selector::new("library.album-removed");
+    pub const TRACK_ADDED: Selector<TrackModel> = Selector::new("library.track-added");
+    pub const TRACK_REMOVED: Selector<String> = Selector::new("library.track-removed");
+    pub const PLAYLIST_ADDED: Selector<PlaylistModel> = Selector::new("library.playlist-added");
+    pub const PLAYLIST_REMOVED: Selector<String> = Selector::new("library.playlist-removed");
+    pub const ARTIST_ADDED: Selector<ArtistModel> = Selector::new("library.artist-added");
+    pub const ARTIST_REMOVED: Selector<String> = Selector::new("library.artist-removed");
 }
