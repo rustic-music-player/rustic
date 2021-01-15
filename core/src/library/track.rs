@@ -25,21 +25,21 @@ pub struct Track {
     pub share_url: Option<String>,
     pub lyrics: Lyrics,
     pub comments: Option<String>,
-    pub chapters: Vec<Chapter>
+    pub chapters: Vec<Chapter>,
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub enum Lyrics {
     None,
     Plain(String),
-    Timestamped(Vec<TimestampedLyric>)
+    Timestamped(Vec<TimestampedLyric>),
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Eq, Ord)]
 pub struct TimestampedLyric {
     pub text: String,
     /// timestamp in seconds
-    pub timestamp: u64
+    pub timestamp: u64,
 }
 
 impl PartialOrd for TimestampedLyric {
@@ -53,7 +53,7 @@ pub struct Chapter {
     pub label: String,
     pub description: Option<String>,
     /// timestamp in seconds
-    pub timestamp: u64
+    pub timestamp: u64,
 }
 
 impl PartialOrd for Chapter {
@@ -72,10 +72,7 @@ impl TrackPosition {
     pub fn new(track: Option<u64>, disc: Option<u64>) -> Option<Self> {
         match (track, disc) {
             (None, None) => None,
-            (track, disc) => Some(TrackPosition {
-                track,
-                disc
-            })
+            (track, disc) => Some(TrackPosition { track, disc }),
         }
     }
 }

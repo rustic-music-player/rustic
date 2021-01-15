@@ -1,11 +1,11 @@
 use std::sync::{Arc, Mutex};
 
-use diesel::{insert_into, SqliteConnection};
 use diesel::prelude::*;
+use diesel::{insert_into, SqliteConnection};
 use failure::Error;
 
-use rustic_core::{MultiQuery, Playlist, SingleQuery};
 use rustic_core::library::LibraryItemIdentifier;
+use rustic_core::{MultiQuery, Playlist, SingleQuery};
 
 use crate::entities::playlist::*;
 use crate::repositories::Repository;

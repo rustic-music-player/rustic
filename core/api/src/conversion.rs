@@ -7,17 +7,24 @@ use rustic_core::provider::{
     Thumbnail,
 };
 use rustic_core::sync::{SyncEvent, SyncItem, SyncItemState};
-use rustic_core::{Album, Artist, PlayerEvent, PlayerState, Playlist, ProviderType, QueuedTrack, RepeatMode, Track, Rating, TrackPosition, LibraryEvent};
+use rustic_core::{
+    Album, Artist, LibraryEvent, PlayerEvent, PlayerState, Playlist, ProviderType, QueuedTrack,
+    Rating, RepeatMode, Track, TrackPosition,
+};
 use rustic_extension_api::ExtensionMetadata;
 
 use crate::cursor::{from_cursor, to_cursor, Cursor};
 use crate::models::*;
-use rustic_core::library::{MetaValue, Lyrics, TimestampedLyric, Chapter};
+use rustic_core::library::{Chapter, Lyrics, MetaValue, TimestampedLyric};
 
 impl From<Album> for AlbumModel {
     fn from(album: Album) -> Self {
         let cursor = to_cursor(&album.uri);
-        let mut tracks = album.tracks.into_iter().map(TrackModel::from).collect::<Vec<_>>();
+        let mut tracks = album
+            .tracks
+            .into_iter()
+            .map(TrackModel::from)
+            .collect::<Vec<_>>();
         tracks.sort_by_key(|track| track.position);
         AlbumModel {
             cursor: cursor.clone(),
@@ -148,7 +155,12 @@ impl From<Lyrics> for LyricsModel {
         match lyrics {
             Lyrics::None => LyricsModel::None,
             Lyrics::Plain(lyrics) => LyricsModel::Plain(lyrics),
-            Lyrics::Timestamped(lyrics) => LyricsModel::Timestamped(lyrics.into_iter().map(TimestampedLyricModel::from).collect()),
+            Lyrics::Timestamped(lyrics) => LyricsModel::Timestamped(
+                lyrics
+                    .into_iter()
+                    .map(TimestampedLyricModel::from)
+                    .collect(),
+            ),
         }
     }
 }
@@ -416,7 +428,7 @@ impl From<Rating> for RatingModel {
             Rating::None => RatingModel::None,
             Rating::Like => RatingModel::Like,
             Rating::Dislike => RatingModel::Dislike,
-            Rating::Stars(stars) => RatingModel::Stars(stars)
+            Rating::Stars(stars) => RatingModel::Stars(stars),
         }
     }
 }
@@ -430,8 +442,12 @@ impl From<LibraryEvent> for LibraryEventModel {
             LibraryEvent::AlbumRemoved(uri) => LibraryEventModel::AlbumRemoved(to_cursor(&uri)),
             LibraryEvent::ArtistAdded(artist) => LibraryEventModel::ArtistAdded(artist.into()),
             LibraryEvent::ArtistRemoved(uri) => LibraryEventModel::ArtistRemoved(to_cursor(&uri)),
-            LibraryEvent::PlaylistAdded(playlist) => LibraryEventModel::PlaylistAdded(playlist.into()),
-            LibraryEvent::PlaylistRemoved(uri) => LibraryEventModel::PlaylistRemoved(to_cursor(&uri)),
+            LibraryEvent::PlaylistAdded(playlist) => {
+                LibraryEventModel::PlaylistAdded(playlist.into())
+            }
+            LibraryEvent::PlaylistRemoved(uri) => {
+                LibraryEventModel::PlaylistRemoved(to_cursor(&uri))
+            }
         }
     }
 }

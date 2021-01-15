@@ -5,7 +5,7 @@ use crate::app::ApiClient;
 
 #[derive(Debug, Clone, Deserialize)]
 pub struct ExtensionQuery {
-    id: String
+    id: String,
 }
 
 #[get("/extensions")]
@@ -16,14 +16,20 @@ pub async fn get_extensions(client: web::Data<ApiClient>) -> Result<impl Respond
 }
 
 #[post("/extensions/{id}/enable")]
-pub async fn enable_extension(client: web::Data<ApiClient>, params: web::Path<ExtensionQuery>) -> Result<impl Responder> {
+pub async fn enable_extension(
+    client: web::Data<ApiClient>,
+    params: web::Path<ExtensionQuery>,
+) -> Result<impl Responder> {
     client.enable_extension(&params.id).await?;
 
     Ok(web::HttpResponse::NoContent())
 }
 
 #[post("/extensions/{id}/disable")]
-pub async fn disable_extension(client: web::Data<ApiClient>, params: web::Path<ExtensionQuery>) -> Result<impl Responder> {
+pub async fn disable_extension(
+    client: web::Data<ApiClient>,
+    params: web::Path<ExtensionQuery>,
+) -> Result<impl Responder> {
     client.disable_extension(&params.id).await?;
 
     Ok(web::HttpResponse::NoContent())

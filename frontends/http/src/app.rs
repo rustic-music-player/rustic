@@ -91,11 +91,7 @@ async fn index() -> Result<impl Responder> {
     Ok(file)
 }
 
-pub fn start(
-    config: &HttpConfig,
-    app: Arc<Rustic>,
-    client: ApiClient,
-) -> Result<()> {
+pub fn start(config: &HttpConfig, app: Arc<Rustic>, client: ApiClient) -> Result<()> {
     create_dir_all(&config.static_files)?;
     let sys = System::new("rustic-http-frontend");
 
@@ -106,10 +102,7 @@ pub fn start(
     HttpServer::new(move || {
         App::new()
             .wrap(middleware::Logger::default())
-            .service(build_api(
-                client.clone(),
-                ws_server.clone(),
-            ))
+            .service(build_api(client.clone(), ws_server.clone()))
             .service(Files::new("/cache", ".cache"))
             .service(
                 Files::new("", &static_file_dir)

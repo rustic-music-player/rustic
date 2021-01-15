@@ -11,7 +11,7 @@ impl MetaValue {
     pub fn bool(&self) -> Option<bool> {
         if let MetaValue::Bool(value) = self {
             Some(*value)
-        }else {
+        } else {
             None
         }
     }

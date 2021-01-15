@@ -2,7 +2,7 @@ use maplit::hashmap;
 use pocketcasts::Episode;
 use serde::{Deserialize, Serialize};
 
-use rustic_core::library::{Track, Rating, Lyrics};
+use rustic_core::library::{Lyrics, Rating, Track};
 use rustic_core::provider::{ProviderType, ThumbnailState};
 
 use crate::meta::*;

@@ -1,8 +1,8 @@
 use std::sync::Arc;
 use std::time::Duration;
 
-use flume::{unbounded, Receiver, Sender};
 use failure::Error;
+use flume::{unbounded, Receiver, Sender};
 use itertools::Itertools;
 
 use crate::{ProviderType, Rustic};

@@ -1,4 +1,4 @@
-use crate::library::{Track, Album, Artist, Playlist};
+use crate::library::{Album, Artist, Playlist, Track};
 
 #[derive(Debug, Clone)]
 pub enum LibraryEvent {

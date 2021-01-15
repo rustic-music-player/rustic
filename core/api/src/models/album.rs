@@ -1,6 +1,6 @@
 use crate::models::aggregations::Aggregate;
 use crate::models::{
-    ArtistCollection, ArtistModel, ProviderTypeModel, TrackCollection, TrackModel, MetaValueModel,
+    ArtistCollection, ArtistModel, MetaValueModel, ProviderTypeModel, TrackCollection, TrackModel,
 };
 use rustic_reflect_macros::reflect_struct;
 use serde::{Deserialize, Serialize};

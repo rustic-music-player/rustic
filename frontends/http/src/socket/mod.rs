@@ -4,9 +4,9 @@ use actix::{Actor, Addr};
 use actix_web::{web, Error, HttpRequest, HttpResponse, Resource};
 use actix_web_actors::ws;
 use log::debug;
+use rustic_api::ApiClient;
 use rustic_core::Rustic;
 use std::sync::Arc;
-use rustic_api::ApiClient;
 
 mod events;
 mod messages;

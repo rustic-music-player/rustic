@@ -1,26 +1,25 @@
-use std::collections::HashMap;
 use owoify_rs::{Owoifiable, OwoifyLevel};
 use rayon::prelude::*;
+use std::collections::HashMap;
 
+use rustic_core::{Album, Artist, Playlist, Track};
 use rustic_extension_api::*;
-use rustic_core::{Track, Album, Artist, Playlist};
 
 pub struct UwuExtension {
-    level: OwoifyLevel
+    level: OwoifyLevel,
 }
 
 impl UwuExtension {
     fn owoify_tracks(&self, tracks: &mut [Track]) {
-        tracks.par_iter_mut()
-            .for_each(|track| {
-                track.title = track.title.owoify(&self.level);
-                if let Some(artist) = track.artist.as_mut() {
-                    artist.name = artist.name.owoify(&self.level);
-                }
-                if let Some(album) = track.album.as_mut() {
-                    album.title = album.title.owoify(&self.level);
-                }
-            });
+        tracks.par_iter_mut().for_each(|track| {
+            track.title = track.title.owoify(&self.level);
+            if let Some(artist) = track.artist.as_mut() {
+                artist.name = artist.name.owoify(&self.level);
+            }
+            if let Some(album) = track.album.as_mut() {
+                album.title = album.title.owoify(&self.level);
+            }
+        });
     }
 }
 
@@ -39,7 +38,10 @@ impl ExtensionLibrary for UwuExtension {
             None => OwoifyLevel::Uwu,
             Some(value) => {
                 // TODO: warn
-                println!("invalid level value {:?}. Allowed values are: owo, uwu, uvu", value);
+                println!(
+                    "invalid level value {:?}. Allowed values are: owo, uwu, uvu",
+                    value
+                );
                 OwoifyLevel::Uwu
             }
         };

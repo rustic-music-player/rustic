@@ -1,7 +1,7 @@
 use async_trait::async_trait;
 use flume::Sender;
 
-use rustic_core::{Track, Album, Artist, Playlist};
+use rustic_core::{Album, Artist, Playlist, Track};
 
 use crate::api::*;
 use crate::host::ExtensionPlugin;

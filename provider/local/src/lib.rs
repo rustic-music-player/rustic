@@ -5,7 +5,7 @@ use maplit::hashmap;
 use serde_derive::Deserialize;
 
 use async_trait::async_trait;
-use rustic_core::library::{self, SharedLibrary, Lyrics};
+use rustic_core::library::{self, Lyrics, SharedLibrary};
 use rustic_core::provider::*;
 use rustic_core::{CredentialStore, Rating, TrackPosition};
 

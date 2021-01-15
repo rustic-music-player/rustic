@@ -1,9 +1,9 @@
 use youtube_api::models::PlaylistItemResource;
 
-use rustic_core::provider::ThumbnailState;
-use rustic_core::{Artist, ProviderType, Track, Rating};
-use std::collections::HashMap;
 use rustic_core::library::Lyrics;
+use rustic_core::provider::ThumbnailState;
+use rustic_core::{Artist, ProviderType, Rating, Track};
+use std::collections::HashMap;
 
 #[derive(Clone)]
 pub struct YoutubePlaylistItem(PlaylistItemResource);
@@ -35,10 +35,7 @@ impl From<YoutubePlaylistItem> for Track {
             id: None,
             provider: ProviderType::Youtube,
             title: resource.snippet.inner.title,
-            uri: format!(
-                "youtube://video/{}",
-                &id
-            ),
+            uri: format!("youtube://video/{}", &id),
             album_id: None,
             album: None,
             artist_id: None,

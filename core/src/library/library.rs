@@ -3,7 +3,7 @@ use std::sync::Arc;
 use failure::Error;
 use futures::stream::BoxStream;
 
-use crate::library::{Album, Artist, Playlist, Track, LibraryEvent};
+use crate::library::{Album, Artist, LibraryEvent, Playlist, Track};
 use crate::{MultiQuery, SingleQuery};
 
 pub type SharedLibrary = Arc<Box<dyn Library>>;

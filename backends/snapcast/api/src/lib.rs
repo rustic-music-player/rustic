@@ -1,12 +1,12 @@
-pub use crate::error::*;
-use crate::rpc::{SnapcastTransport, HttpTransport, TcpTransport};
 use self::models::*;
-use std::sync::atomic::{AtomicU64, Ordering};
-use serde::Serialize;
+pub use crate::error::*;
+use crate::rpc::{HttpTransport, SnapcastTransport, TcpTransport};
 use serde::de::DeserializeOwned;
+use serde::Serialize;
+use std::sync::atomic::{AtomicU64, Ordering};
 
-mod rpc;
 mod error;
+mod rpc;
 
 #[derive(Debug)]
 pub struct SnapcastClient {
@@ -32,30 +32,43 @@ impl SnapcastClient {
     }
 
     pub async fn get_client_status(&self, id: String) -> Result<Client> {
-        let response = self.request("Client.GetStatus", &GetClientStatusRequest { id }).await?;
+        let response = self
+            .request("Client.GetStatus", &GetClientStatusRequest { id })
+            .await?;
 
         Ok(response)
     }
 
     /// Returns Stream ID
     pub async fn add_stream(&self, stream_uri: String) -> Result<String> {
-        let response = self.request::<_, StreamId>("Stream.AddStream", &AddStreamRequest { stream_uri }).await?;
+        let response = self
+            .request::<_, StreamId>("Stream.AddStream", &AddStreamRequest { stream_uri })
+            .await?;
 
         Ok(response.id)
     }
 
     /// Returns Stream ID
     pub async fn remove_stream(&self, stream_id: String) -> Result<String> {
-        let response = self.request::<_, StreamId>("Stream.RemoveStream", &StreamId { id: stream_id }).await?;
+        let response = self
+            .request::<_, StreamId>("Stream.RemoveStream", &StreamId { id: stream_id })
+            .await?;
 
         Ok(response.id)
     }
 
     async fn request<TReq, TRes>(&self, method: &str, params: &TReq) -> Result<TRes>
-        where
+    where
         TReq: Serialize + std::fmt::Debug,
-        TRes: DeserializeOwned {
-        self.transport.request(method, params, self.request_id.fetch_add(1, Ordering::Relaxed)).await
+        TRes: DeserializeOwned,
+    {
+        self.transport
+            .request(
+                method,
+                params,
+                self.request_id.fetch_add(1, Ordering::Relaxed),
+            )
+            .await
     }
 }
 
@@ -65,22 +78,22 @@ pub mod models {
     #[derive(Debug, Clone, Serialize, Deserialize)]
     #[serde(rename_all = "camelCase")]
     pub(crate) struct AddStreamRequest {
-        pub stream_uri: String
+        pub stream_uri: String,
     }
 
     #[derive(Debug, Clone, Serialize, Deserialize)]
     pub(crate) struct StreamId {
-        pub id: String
+        pub id: String,
     }
 
     #[derive(Debug, Clone, Serialize, Deserialize)]
     pub(crate) struct GetClientStatusRequest {
-        pub id: String
+        pub id: String,
     }
 
     #[derive(Debug, Clone, Serialize, Deserialize)]
     pub(crate) struct GetStatusResponse {
-        pub client: Client
+        pub client: Client,
     }
 
     #[derive(Debug, Clone, Serialize, Deserialize)]

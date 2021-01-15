@@ -1,8 +1,8 @@
 use std::fmt;
 use std::sync::Arc;
 
-use flume::Receiver;
 use failure::Error;
+use flume::Receiver;
 use log::error;
 
 pub use self::bus::PlayerBus;
@@ -56,12 +56,8 @@ impl Player {
             loop {
                 let result = {
                     match stream.next().await {
-                        Some(PlayerBusCommand::Player(cmd)) => {
-                            player.handle_player_msg(cmd).await
-                        }
-                        Some(PlayerBusCommand::Queue(cmd)) => {
-                            player.handle_queue_msg(cmd).await
-                        }
+                        Some(PlayerBusCommand::Player(cmd)) => player.handle_player_msg(cmd).await,
+                        Some(PlayerBusCommand::Queue(cmd)) => player.handle_queue_msg(cmd).await,
                         None => Ok(()),
                     }
                 };

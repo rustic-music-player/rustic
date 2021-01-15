@@ -1,7 +1,10 @@
-use failure::{Error, format_err};
+use failure::{format_err, Error};
 
-use rustic_core::{Album, Artist, Library, MultiQuery, Playlist, SearchResults, SharedLibrary, SharedStorageBackend, SingleQuery, Track, LibraryEvent};
 use rustic_core::library::MetaValue;
+use rustic_core::{
+    Album, Artist, Library, LibraryEvent, MultiQuery, Playlist, SearchResults, SharedLibrary,
+    SharedStorageBackend, SingleQuery, Track,
+};
 
 use futures::stream::BoxStream;
 
@@ -16,7 +19,11 @@ pub struct ExtensionRuntime {
 
 impl ExtensionRuntime {
     pub fn new(library: SharedLibrary, storage: SharedStorageBackend) -> Self {
-        ExtensionRuntime { library, storage, extension: None }
+        ExtensionRuntime {
+            library,
+            storage,
+            extension: None,
+        }
     }
 
     pub fn for_extension(&self, metadata: ExtensionMetadata) -> Self {

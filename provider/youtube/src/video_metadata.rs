@@ -1,9 +1,9 @@
+use rustic_core::library::Lyrics;
 use rustic_core::provider::ThumbnailState;
-use rustic_core::{Artist, ProviderType, Track, Rating};
+use rustic_core::{Artist, ProviderType, Rating, Track};
 use std::collections::HashMap;
 use std::str::FromStr;
 use youtube_api::models;
-use rustic_core::library::Lyrics;
 
 pub(crate) struct YoutubeVideoMetadata(models::VideoMetadata);
 
@@ -53,7 +53,10 @@ impl From<YoutubeVideoMetadata> for Track {
             explicit: None,
             rating: Rating::None,
             position: None,
-            share_url: Some(format!("https://youtube.com/watch?v={}", &video.video_details.video_id)),
+            share_url: Some(format!(
+                "https://youtube.com/watch?v={}",
+                &video.video_details.video_id
+            )),
             comments: Some(video.video_details.short_description),
             lyrics: Lyrics::None,
             chapters: Vec::new(),

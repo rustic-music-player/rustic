@@ -3,7 +3,7 @@ use std::collections::HashMap;
 use async_trait::async_trait;
 use serde::{Deserialize, Serialize};
 
-use rustic_core::{Track, Album, Artist, Playlist};
+use rustic_core::{Album, Artist, Playlist, Track};
 
 pub use crate::ExtensionRuntime;
 
@@ -20,7 +20,7 @@ impl ExtensionConfigValue {
     pub fn string(&self) -> Option<String> {
         if let ExtensionConfigValue::String(value) = self {
             Some(value.clone())
-        }else {
+        } else {
             None
         }
     }
@@ -28,7 +28,7 @@ impl ExtensionConfigValue {
     pub fn bool(&self) -> Option<bool> {
         if let ExtensionConfigValue::Bool(value) = self {
             Some(*value)
-        }else {
+        } else {
             None
         }
     }
@@ -36,7 +36,7 @@ impl ExtensionConfigValue {
     pub fn float(&self) -> Option<f64> {
         if let ExtensionConfigValue::Float(value) = self {
             Some(*value)
-        }else {
+        } else {
             None
         }
     }
@@ -44,7 +44,7 @@ impl ExtensionConfigValue {
     pub fn int(&self) -> Option<i64> {
         if let ExtensionConfigValue::Int(value) = self {
             Some(*value)
-        }else {
+        } else {
             None
         }
     }
@@ -52,7 +52,7 @@ impl ExtensionConfigValue {
     pub fn is_string<S: Into<String>>(&self, rhs: S) -> bool {
         match self {
             ExtensionConfigValue::String(ref lhs) => lhs == &rhs.into(),
-            _ => false
+            _ => false,
         }
     }
 }

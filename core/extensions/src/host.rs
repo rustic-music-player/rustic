@@ -1,9 +1,9 @@
 use crate::plugin::ExtensionCommand;
 use crate::ExtensionConfigValue;
 use failure::format_err;
+use flume::{unbounded, Sender};
 use std::collections::HashMap;
 use std::ffi::OsStr;
-use flume::{Sender, unbounded};
 
 pub struct ExtensionHost {
     extension: Sender<ExtensionCommand>,

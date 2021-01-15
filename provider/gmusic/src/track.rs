@@ -1,13 +1,13 @@
-use std::collections::HashMap;
 use gmusic::TrackRating;
+use std::collections::HashMap;
 
 use maplit::hashmap;
 
-use rustic_core::{Album, Artist, ProviderType, Track, Rating, TrackPosition};
+use rustic_core::{Album, Artist, ProviderType, Rating, Track, TrackPosition};
 
 use crate::meta::*;
-use rustic_core::provider::ThumbnailState;
 use rustic_core::library::Lyrics;
+use rustic_core::provider::ThumbnailState;
 
 #[derive(Debug, Clone)]
 pub struct GmusicTrack(gmusic::Track);
@@ -100,6 +100,6 @@ fn convert_rating(rating: Option<TrackRating>) -> Rating {
     match rating {
         None | Some(TrackRating::None) => Rating::None,
         Some(TrackRating::Like) => Rating::Like,
-        Some(TrackRating::Dislike) => Rating::Dislike
+        Some(TrackRating::Dislike) => Rating::Dislike,
     }
 }

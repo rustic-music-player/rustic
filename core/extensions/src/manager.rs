@@ -1,15 +1,15 @@
 use std::collections::HashMap;
 use std::path::Path;
-use std::sync::Arc;
 use std::sync::atomic::{AtomicBool, Ordering};
+use std::sync::Arc;
 
 use async_trait::async_trait;
 use failure::{bail, Error};
+use flume::{bounded, Receiver};
 use log::{info, trace};
-use tokio::sync::{Mutex};
-use flume::{Receiver, bounded};
+use tokio::sync::Mutex;
 
-use rustic_core::{Track, Artist, Album, Playlist, StorageCollection};
+use rustic_core::{Album, Artist, Playlist, StorageCollection, Track};
 
 use crate::api::*;
 use crate::host::{construct_plugin, ExtensionHost};
@@ -20,7 +20,11 @@ use std::time::Instant;
 const EXTENSION_COLLECTION_KEY: &str = "extensions";
 
 #[derive(Clone)]
-pub struct HostedExtension(ExtensionMetadata, Arc<AtomicBool>, Arc<Mutex<ExtensionHost>>);
+pub struct HostedExtension(
+    ExtensionMetadata,
+    Arc<AtomicBool>,
+    Arc<Mutex<ExtensionHost>>,
+);
 
 impl HostedExtension {
     pub fn get_metadata(&self) -> (ExtensionMetadata, bool) {
@@ -36,7 +40,11 @@ impl HostedExtension {
         host.send(message).await;
     }
 
-    async fn rpc<T>(&self, message: ExtensionCommand, rx: Receiver<Result<T, Error>>) -> Result<T, Error> {
+    async fn rpc<T>(
+        &self,
+        message: ExtensionCommand,
+        rx: Receiver<Result<T, Error>>,
+    ) -> Result<T, Error> {
         self.send(message).await;
         rx.recv_async().await?
     }
@@ -44,7 +52,11 @@ impl HostedExtension {
 
 impl From<(ExtensionMetadata, ExtensionHost)> for HostedExtension {
     fn from((metadata, host): (ExtensionMetadata, ExtensionHost)) -> Self {
-        HostedExtension(metadata, Arc::new(AtomicBool::new(false)), Arc::new(Mutex::new(host)))
+        HostedExtension(
+            metadata,
+            Arc::new(AtomicBool::new(false)),
+            Arc::new(Mutex::new(host)),
+        )
     }
 }
 
@@ -73,22 +85,26 @@ impl ExtensionApi for HostedExtension {
 
     async fn resolve_track(&self, track: Track) -> Result<Track, Error> {
         let (tx, rx) = bounded(1);
-        self.rpc(ExtensionCommand::ResolveTrack(track, tx), rx).await
+        self.rpc(ExtensionCommand::ResolveTrack(track, tx), rx)
+            .await
     }
 
     async fn resolve_album(&self, album: Album) -> Result<Album, Error> {
         let (tx, rx) = bounded(1);
-        self.rpc(ExtensionCommand::ResolveAlbum(album, tx), rx).await
+        self.rpc(ExtensionCommand::ResolveAlbum(album, tx), rx)
+            .await
     }
 
     async fn resolve_artist(&self, artist: Artist) -> Result<Artist, Error> {
         let (tx, rx) = bounded(1);
-        self.rpc(ExtensionCommand::ResolveArtist(artist, tx), rx).await
+        self.rpc(ExtensionCommand::ResolveArtist(artist, tx), rx)
+            .await
     }
 
     async fn resolve_playlist(&self, playlist: Playlist) -> Result<Playlist, Error> {
         let (tx, rx) = bounded(1);
-        self.rpc(ExtensionCommand::ResolvePlaylist(playlist, tx), rx).await
+        self.rpc(ExtensionCommand::ResolvePlaylist(playlist, tx), rx)
+            .await
     }
 }
 
@@ -177,14 +193,22 @@ impl ExtensionManager {
     }
 
     pub async fn setup(&mut self, runtime: ExtensionRuntime) -> Result<(), Error> {
-        let collection = runtime.storage.open_collection(EXTENSION_COLLECTION_KEY).await?;
+        let collection = runtime
+            .storage
+            .open_collection(EXTENSION_COLLECTION_KEY)
+            .await?;
         for extension in self.extensions.iter() {
             let (tx, rx) = bounded(1);
-            extension.rpc(ExtensionCommand::Setup(runtime.for_extension(extension.0.clone()), tx), rx).await?;
+            extension
+                .rpc(
+                    ExtensionCommand::Setup(runtime.for_extension(extension.0.clone()), tx),
+                    rx,
+                )
+                .await?;
             match collection.read(&extension.0.id).await? {
                 Some(value) if value.bool().unwrap_or_default() => {
                     extension.on_enable().await?;
-                },
+                }
                 _ => {}
             }
         }
@@ -221,7 +245,8 @@ impl ExtensionManager {
     }
 
     pub fn get_enabled_extensions(&self) -> impl Iterator<Item = &HostedExtension> {
-        self.extensions.iter()
+        self.extensions
+            .iter()
             .filter(|extension| extension.is_enabled())
     }
 }
@@ -242,7 +267,11 @@ impl ExtensionApi for ExtensionManager {
         for extension in self.get_enabled_extensions() {
             let stopwatch = Instant::now();
             track = extension.resolve_track(track).await?;
-            trace!("Resolved track from extension {} in {}ms", extension.0.name, stopwatch.elapsed().as_millis());
+            trace!(
+                "Resolved track from extension {} in {}ms",
+                extension.0.name,
+                stopwatch.elapsed().as_millis()
+            );
         }
         Ok(track)
     }
@@ -251,7 +280,11 @@ impl ExtensionApi for ExtensionManager {
         for extension in self.get_enabled_extensions() {
             let stopwatch = Instant::now();
             album = extension.resolve_album(album).await?;
-            trace!("Resolved album from extension {} in {}ms", extension.0.name, stopwatch.elapsed().as_millis());
+            trace!(
+                "Resolved album from extension {} in {}ms",
+                extension.0.name,
+                stopwatch.elapsed().as_millis()
+            );
         }
         Ok(album)
     }
@@ -260,7 +293,11 @@ impl ExtensionApi for ExtensionManager {
         for extension in self.get_enabled_extensions() {
             let stopwatch = Instant::now();
             artist = extension.resolve_artist(artist).await?;
-            trace!("Resolved artist from extension {} in {}ms", extension.0.name, stopwatch.elapsed().as_millis());
+            trace!(
+                "Resolved artist from extension {} in {}ms",
+                extension.0.name,
+                stopwatch.elapsed().as_millis()
+            );
         }
         Ok(artist)
     }
@@ -269,7 +306,11 @@ impl ExtensionApi for ExtensionManager {
         for extension in self.get_enabled_extensions() {
             let stopwatch = Instant::now();
             playlist = extension.resolve_playlist(playlist).await?;
-            trace!("Resolved playlist from extension {} in {}ms", extension.0.name, stopwatch.elapsed().as_millis());
+            trace!(
+                "Resolved playlist from extension {} in {}ms",
+                extension.0.name,
+                stopwatch.elapsed().as_millis()
+            );
         }
         Ok(playlist)
     }

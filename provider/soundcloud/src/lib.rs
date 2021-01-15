@@ -4,8 +4,8 @@ use failure::{ensure, format_err, Error};
 use log::{trace, warn};
 use serde::Deserialize;
 
-use futures::prelude::*;
 use async_trait::async_trait;
+use futures::prelude::*;
 use lazy_static::lazy_static;
 use rustic_core::library::{Album, Artist, Playlist, SharedLibrary, Track};
 use rustic_core::{provider, CredentialStore, Credentials, ProviderType};
@@ -13,8 +13,8 @@ use rustic_core::{provider, CredentialStore, Credentials, ProviderType};
 use crate::playlist::SoundcloudPlaylist;
 use crate::track::SoundcloudTrack;
 use crate::user::SoundcloudUser;
-use std::collections::HashMap;
 use soundcloud::StreamingApiExt;
+use std::collections::HashMap;
 
 mod error;
 mod meta;

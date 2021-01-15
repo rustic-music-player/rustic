@@ -69,7 +69,7 @@ impl Scanner {
                                 has_coverart,
                                 duration,
                                 disc,
-                                track
+                                track,
                             })
                         }
                         Err(id3::Error {

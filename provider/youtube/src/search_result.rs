@@ -1,8 +1,8 @@
+use rustic_core::library::Lyrics;
 use rustic_core::provider::{ProviderItem, ProviderItemType, ThumbnailState};
-use rustic_core::{Artist, Playlist, ProviderType, Track, Rating};
+use rustic_core::{Artist, Playlist, ProviderType, Rating, Track};
 use std::collections::HashMap;
 use youtube_api::models::{Id, SearchResult};
-use rustic_core::library::Lyrics;
 
 #[derive(Clone)]
 pub struct YoutubeSearchResult(SearchResult);

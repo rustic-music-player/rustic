@@ -1,7 +1,9 @@
 use actix::Recipient;
 use serde::Serialize;
 
-use rustic_api::models::{QueuedTrackModel, TrackModel, AlbumModel, ArtistModel, PlaylistModel, LibraryEventModel};
+use rustic_api::models::{
+    AlbumModel, ArtistModel, LibraryEventModel, PlaylistModel, QueuedTrackModel, TrackModel,
+};
 
 #[derive(Message, Clone, Debug, Serialize)]
 #[rtype(result = "()")]

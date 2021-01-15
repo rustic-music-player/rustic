@@ -6,13 +6,13 @@ use failure::Error;
 use serde_json;
 use tokio::fs;
 
-use rustic_core::{StorageBackend, StorageCollection};
 use rustic_core::library::MetaValue;
+use rustic_core::{StorageBackend, StorageCollection};
 
 // TODO: track open files
 #[derive(Debug, Clone)]
 pub struct JsonStorage {
-    folder_path: String
+    folder_path: String,
 }
 
 impl JsonStorage {
@@ -60,7 +60,7 @@ impl StorageBackend for JsonStorage {
 
 #[derive(Debug, Clone)]
 struct JsonFile {
-    path: String
+    path: String,
 }
 
 impl JsonFile {

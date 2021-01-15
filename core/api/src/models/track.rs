@@ -1,6 +1,6 @@
 use crate::models::aggregations::Aggregate;
 use crate::models::{
-    AlbumCollection, AlbumModel, ArtistCollection, ArtistModel, ProviderTypeModel, MetaValueModel,
+    AlbumCollection, AlbumModel, ArtistCollection, ArtistModel, MetaValueModel, ProviderTypeModel,
 };
 use rustic_reflect_macros::reflect_struct;
 use serde::{Deserialize, Serialize};
@@ -31,7 +31,7 @@ pub struct TrackModel {
     pub share_url: Option<String>,
     pub lyrics: LyricsModel,
     pub comments: Option<String>,
-    pub chapters: Vec<ChapterModel>
+    pub chapters: Vec<ChapterModel>,
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Eq)]
@@ -43,7 +43,7 @@ pub struct TrackModel {
 pub enum LyricsModel {
     None,
     Plain(String),
-    Timestamped(Vec<TimestampedLyricModel>)
+    Timestamped(Vec<TimestampedLyricModel>),
 }
 
 #[reflect_struct]
@@ -56,7 +56,7 @@ pub enum LyricsModel {
 pub struct TimestampedLyricModel {
     pub text: String,
     /// timestamp in seconds
-    pub timestamp: u64
+    pub timestamp: u64,
 }
 
 impl PartialOrd for TimestampedLyricModel {
@@ -76,7 +76,7 @@ pub struct ChapterModel {
     pub label: String,
     pub description: Option<String>,
     /// timestamp in seconds
-    pub timestamp: u64
+    pub timestamp: u64,
 }
 
 impl PartialOrd for ChapterModel {
@@ -101,7 +101,7 @@ impl PartialOrd for TrackPositionModel {
     fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
         match self.disc.partial_cmp(&other.disc) {
             None | Some(Ordering::Equal) => self.track.partial_cmp(&other.track),
-            ordering => ordering
+            ordering => ordering,
         }
     }
 }

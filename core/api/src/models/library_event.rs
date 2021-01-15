@@ -4,7 +4,7 @@ use serde::{Deserialize, Serialize};
 #[cfg(target_arch = "wasm32")]
 use wasm_bindgen::prelude::*;
 
-use crate::models::{TrackModel, ArtistModel, AlbumModel, PlaylistModel};
+use crate::models::{AlbumModel, ArtistModel, PlaylistModel, TrackModel};
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
 #[cfg_attr(

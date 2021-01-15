@@ -1,9 +1,9 @@
 use std::collections::HashMap;
 
 use entities::provider::{int_to_provider, provider_to_int};
-use rustic_core::library::{MetaValue, Lyrics};
+use rustic_core::library::{Lyrics, MetaValue};
 use rustic_core::provider::ThumbnailState;
-use rustic_core::{Track, Rating};
+use rustic_core::{Rating, Track};
 use schema::{tracks, tracks_meta};
 use std::convert::TryInto;
 

@@ -1,3 +1,6 @@
+use crate::audio_transport::SnapcastAudioTransport;
+use crate::background_job::BackgroundJob;
+use failure::Error;
 use std::fs::File;
 use std::io::Write;
 use std::net::TcpStream;
@@ -7,9 +10,6 @@ use symphonia::core::formats::FormatOptions;
 use symphonia::core::io::MediaSourceStream;
 use symphonia::core::meta::MetadataOptions;
 use symphonia::core::probe::Hint;
-use failure::Error;
-use crate::background_job::BackgroundJob;
-use crate::audio_transport::SnapcastAudioTransport;
 
 impl BackgroundJob {
     pub fn _decode_file(&self, path: &str) -> Result<(), Error> {
@@ -47,7 +47,8 @@ impl BackgroundJob {
 
         let mut reader = probe.format;
         let stream = reader.default_stream().unwrap();
-        let mut decoder = symphonia::default::get_codecs().make(&stream.codec_params, &Default::default())?;
+        let mut decoder =
+            symphonia::default::get_codecs().make(&stream.codec_params, &Default::default())?;
 
         log::trace!("got decoder");
         let mut buffer = loop {
@@ -66,7 +67,12 @@ impl BackgroundJob {
                     let spec = *decoded.spec();
                     let duration = decoded.capacity() as symphonia::core::units::Duration;
 
-                    log::debug!("channels: {:?}, bit rate: {}, capacity: {}", spec.channels, spec.rate, duration);
+                    log::debug!(
+                        "channels: {:?}, bit rate: {}, capacity: {}",
+                        spec.channels,
+                        spec.rate,
+                        duration
+                    );
                     let mut buffer = RawSampleBuffer::<f32>::new(duration, spec);
                     buffer.copy_interleaved_ref(decoded);
                     target.write_all(buffer.as_bytes())?;

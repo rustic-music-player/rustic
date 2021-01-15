@@ -15,7 +15,9 @@ use diesel::sqlite::SqliteConnection;
 use failure::Error;
 use futures::stream::BoxStream;
 
-use rustic_core::{Album, Artist, MultiQuery, Playlist, SearchResults, SingleQuery, Track, LibraryEvent};
+use rustic_core::{
+    Album, Artist, LibraryEvent, MultiQuery, Playlist, SearchResults, SingleQuery, Track,
+};
 
 use crate::repositories::*;
 

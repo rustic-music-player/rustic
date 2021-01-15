@@ -1,15 +1,15 @@
 use std::sync::Arc;
 
-use log::{debug, error, trace};
 use futures::future;
+use log::{debug, error, trace};
 
 use async_trait::async_trait;
 use rustic_api::client::*;
-use rustic_api::cursor::{Cursor};
+use rustic_api::cursor::Cursor;
 use rustic_api::models::*;
 use rustic_core::provider::{InternalUri, ProviderItem, ProviderItemType};
 use rustic_core::{Album, Artist, CredentialStore, Playlist, Provider, Rustic, SingleQuery, Track};
-use rustic_extension_api::{ExtensionManager, ExtensionApi};
+use rustic_extension_api::{ExtensionApi, ExtensionManager};
 use std::convert::TryInto;
 
 mod library;
@@ -125,49 +125,49 @@ impl RusticApiClient for RusticNativeClient {
         }
         debug!("Searching took {}ms", sw.elapsed_ms());
 
-        let tracks = future::try_join_all(results
-            .iter()
-            .cloned()
-            .filter(|result| result.is_track())
-            .map(Track::from)
-            .map(|track| self.extensions.resolve_track(track))).await?;
-        let tracks: Vec<_> = tracks
-            .into_iter()
-            .map(TrackModel::from)
-            .collect();
+        let tracks = future::try_join_all(
+            results
+                .iter()
+                .cloned()
+                .filter(|result| result.is_track())
+                .map(Track::from)
+                .map(|track| self.extensions.resolve_track(track)),
+        )
+        .await?;
+        let tracks: Vec<_> = tracks.into_iter().map(TrackModel::from).collect();
 
-        let albums = future::try_join_all(results
-            .iter()
-            .cloned()
-            .filter(|result| result.is_album())
-            .map(Album::from)
-            .map(|album| self.extensions.resolve_album(album))).await?;
-        let albums: Vec<_> = albums
-            .into_iter()
-            .map(AlbumModel::from)
-            .collect();
+        let albums = future::try_join_all(
+            results
+                .iter()
+                .cloned()
+                .filter(|result| result.is_album())
+                .map(Album::from)
+                .map(|album| self.extensions.resolve_album(album)),
+        )
+        .await?;
+        let albums: Vec<_> = albums.into_iter().map(AlbumModel::from).collect();
 
-        let artists = future::try_join_all(results
-            .iter()
-            .cloned()
-            .filter(|result| result.is_artist())
-            .map(Artist::from)
-            .map(|artist| self.extensions.resolve_artist(artist))).await?;
-        let artists: Vec<_> = artists
-            .into_iter()
-            .map(ArtistModel::from)
-            .collect();
+        let artists = future::try_join_all(
+            results
+                .iter()
+                .cloned()
+                .filter(|result| result.is_artist())
+                .map(Artist::from)
+                .map(|artist| self.extensions.resolve_artist(artist)),
+        )
+        .await?;
+        let artists: Vec<_> = artists.into_iter().map(ArtistModel::from).collect();
 
-        let playlists = future::try_join_all(results
-            .iter()
-            .cloned()
-            .filter(|result| result.is_playlist())
-            .map(Playlist::from)
-            .map(|playlist| self.extensions.resolve_playlist(playlist))).await?;
-        let playlists: Vec<_> = playlists
-            .into_iter()
-            .map(PlaylistModel::from)
-            .collect();
+        let playlists = future::try_join_all(
+            results
+                .iter()
+                .cloned()
+                .filter(|result| result.is_playlist())
+                .map(Playlist::from)
+                .map(|playlist| self.extensions.resolve_playlist(playlist)),
+        )
+        .await?;
+        let playlists: Vec<_> = playlists.into_iter().map(PlaylistModel::from).collect();
 
         Ok(SearchResults {
             tracks,

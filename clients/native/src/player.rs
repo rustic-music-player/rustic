@@ -81,7 +81,8 @@ impl PlayerApiClient for RusticNativeClient {
     fn observe_player(&self, player_id: Option<&str>) -> BoxStream<'static, PlayerEventModel> {
         let player = self.get_player_or_default(player_id).unwrap();
 
-        player.observe()
+        player
+            .observe()
             .into_stream()
             .filter(|e| match *e {
                 PlayerEvent::QueueUpdated(_) => future::ready(false),

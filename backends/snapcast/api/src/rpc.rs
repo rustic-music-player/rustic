@@ -1,8 +1,8 @@
-use serde::{Deserialize, Serialize};
-use serde::de::DeserializeOwned;
 pub(crate) use self::http::HttpTransport;
 pub(crate) use self::tcp::TcpTransport;
 use crate::Result;
+use serde::de::DeserializeOwned;
+use serde::{Deserialize, Serialize};
 
 #[derive(Debug)]
 pub(crate) enum SnapcastTransport {
@@ -13,10 +13,16 @@ pub(crate) enum SnapcastTransport {
 }
 
 impl SnapcastTransport {
-    pub async fn request<TReq, TRes>(&self, method: &str, params: &TReq, request_id: u64) -> Result<TRes>
-        where
-            TReq: Serialize + std::fmt::Debug,
-            TRes: DeserializeOwned {
+    pub async fn request<TReq, TRes>(
+        &self,
+        method: &str,
+        params: &TReq,
+        request_id: u64,
+    ) -> Result<TRes>
+    where
+        TReq: Serialize + std::fmt::Debug,
+        TRes: DeserializeOwned,
+    {
         let request = RpcRequest::new(request_id, method.to_string(), params);
         let res = match self {
             SnapcastTransport::Http(http) => http.request(request).await?,
@@ -54,7 +60,7 @@ struct RpcResponse<R> {
     id: u64,
     jsonrpc: String,
     result: Option<R>,
-    error: Option<RpcError>
+    error: Option<RpcError>,
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize, thiserror::Error)]
@@ -62,35 +68,40 @@ struct RpcResponse<R> {
 pub struct RpcError {
     pub code: i64,
     pub data: String,
-    pub message: String
+    pub message: String,
 }
 
 mod http {
-    use serde::Serialize;
-    use serde::de::DeserializeOwned;
-    use surf::Body;
     use super::{RpcRequest, RpcResponse};
     use crate::Result;
+    use serde::de::DeserializeOwned;
+    use serde::Serialize;
+    use surf::Body;
 
     #[derive(Debug)]
     pub(crate) struct HttpTransport {
-        host: String
+        host: String,
     }
 
     impl HttpTransport {
         pub fn new(host: String) -> Self {
-            HttpTransport {
-                host,
-            }
+            HttpTransport { host }
         }
 
-        pub(super) async fn request<TReq, TRes>(&self, req: RpcRequest<TReq>) -> Result<RpcResponse<TRes>>
-            where
-                TReq: Serialize + std::fmt::Debug,
-                TRes: DeserializeOwned {
+        pub(super) async fn request<TReq, TRes>(
+            &self,
+            req: RpcRequest<TReq>,
+        ) -> Result<RpcResponse<TRes>>
+        where
+            TReq: Serialize + std::fmt::Debug,
+            TRes: DeserializeOwned,
+        {
             let url = format!("{}/jsonrpc", self.host);
             println!("POST {} {:?}", url, &req);
-            let res = surf::post(url).body(Body::from_json(&req)?).recv_json().await?;
+            let res = surf::post(url)
+                .body(Body::from_json(&req)?)
+                .recv_json()
+                .await?;
 
             Ok(res)
         }
@@ -98,10 +109,10 @@ mod http {
 }
 
 mod tcp {
-    use serde::Serialize;
-    use serde::de::DeserializeOwned;
     use super::{RpcRequest, RpcResponse};
     use crate::Result;
+    use serde::de::DeserializeOwned;
+    use serde::Serialize;
 
     #[derive(Debug)]
     pub(crate) struct TcpTransport {}
@@ -111,10 +122,14 @@ mod tcp {
             TcpTransport {}
         }
 
-        pub(super) async fn request<TReq, TRes>(&self, req: RpcRequest<TReq>) -> Result<RpcResponse<TRes>>
-            where
-                TReq: Serialize,
-                TRes: DeserializeOwned {
+        pub(super) async fn request<TReq, TRes>(
+            &self,
+            req: RpcRequest<TReq>,
+        ) -> Result<RpcResponse<TRes>>
+        where
+            TReq: Serialize,
+            TRes: DeserializeOwned,
+        {
             unimplemented!()
         }
     }

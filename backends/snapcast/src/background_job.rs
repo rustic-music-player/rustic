@@ -1,10 +1,10 @@
-use url::Url;
-use std::sync::Arc;
-use rustic_core::{Rustic, PlayerState, Track};
-use smol::process::Child;
-use failure::Error;
 use crate::audio_transport::SnapcastAudioTransport;
 use crate::BackgroundCommand;
+use failure::Error;
+use rustic_core::{PlayerState, Rustic, Track};
+use smol::process::Child;
+use std::sync::Arc;
+use url::Url;
 
 pub struct BackgroundJob {
     pub core: Arc<Rustic>,
@@ -22,7 +22,11 @@ impl BackgroundJob {
     }
 
     pub fn has_child_exited(&mut self) -> bool {
-        self.child.as_mut().and_then(|child| child.try_status().ok()).flatten().is_some()
+        self.child
+            .as_mut()
+            .and_then(|child| child.try_status().ok())
+            .flatten()
+            .is_some()
     }
 
     async fn get_child(&mut self) -> Result<(), Error> {
@@ -31,7 +35,7 @@ impl BackgroundJob {
                 child.status().await?;
 
                 Ok(())
-            },
+            }
             None => {
                 futures::future::pending::<()>().await;
 
@@ -44,7 +48,7 @@ impl BackgroundJob {
         match cmd {
             BackgroundCommand::Play(track, url) => {
                 self.decode_stream(&track, url)?;
-            },
+            }
             BackgroundCommand::SetState(PlayerState::Stop) => {
                 if let Some(mut child) = self.child.take() {
                     child.kill()?;
@@ -55,11 +59,7 @@ impl BackgroundJob {
         Ok(())
     }
 
-    pub fn decode_stream(
-        &mut self,
-        track: &Track,
-        stream_url: String,
-    ) -> Result<(), Error> {
+    pub fn decode_stream(&mut self, track: &Track, stream_url: String) -> Result<(), Error> {
         log::trace!("Decoding stream {} for track {}", &stream_url, track);
         let url = Url::parse(&stream_url)?;
         match url.scheme() {
@@ -84,6 +84,4 @@ impl BackgroundJob {
 
         Ok(())
     }
-
-
 }

@@ -7,13 +7,13 @@ use url::Url;
 
 pub use library::LibraryItemIdentifier;
 
-pub use crate::cred_store::{Credentials, CredentialStore};
+pub use crate::cred_store::{CredentialStore, Credentials};
 pub use crate::library::{
     Album, Artist, Library, LibraryEvent, LibraryQueryJoins, MultiQuery, Playlist, QueryJoins,
     Rating, SearchResults, SharedLibrary, SingleQuery, Track, TrackPosition,
 };
-pub use crate::player::{PlayerBackend, PlayerEvent, PlayerState, QueuedTrack, RepeatMode};
 use crate::player::Player;
+pub use crate::player::{PlayerBackend, PlayerEvent, PlayerState, QueuedTrack, RepeatMode};
 pub use crate::provider::{Explorer, Provider, ProviderType};
 use crate::provider::{InternalUri, ProviderItemType, Thumbnail, ThumbnailState};
 pub use crate::storage_backend::{SharedStorageBackend, StorageBackend, StorageCollection};

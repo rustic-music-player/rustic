@@ -1,12 +1,12 @@
-use thiserror::Error;
 use crate::rpc::RpcError;
+use thiserror::Error;
 
 #[derive(Error, Debug)]
 pub enum SnapcastError {
     #[error("http error {0}")]
     HttpError(String),
     #[error("rpc error {0}")]
-    RpcError(#[from] RpcError)
+    RpcError(#[from] RpcError),
 }
 
 pub type Result<T> = std::result::Result<T, SnapcastError>;

@@ -6,9 +6,9 @@ use maplit::hashmap;
 use rspotify::model::track::{FullTrack, SimplifiedTrack};
 use serde_derive::{Deserialize, Serialize};
 
-use rustic_core::{provider, Rating};
-use rustic_core::library::{Album, MetaValue, Track, TrackPosition, Lyrics};
+use rustic_core::library::{Album, Lyrics, MetaValue, Track, TrackPosition};
 use rustic_core::provider::ThumbnailState;
+use rustic_core::{provider, Rating};
 
 use crate::meta::*;
 use crate::util::*;
@@ -74,7 +74,10 @@ impl From<SpotifyFullTrack> for Track {
             meta,
             explicit: Some(track.explicit),
             rating: Rating::None,
-            position: TrackPosition::new(Some(track.track_number as u64), track.disc_number.try_into().ok()),
+            position: TrackPosition::new(
+                Some(track.track_number as u64),
+                track.disc_number.try_into().ok(),
+            ),
             share_url: None,
             comments: None,
             lyrics: Lyrics::None,
@@ -117,7 +120,10 @@ impl From<SpotifySimplifiedTrack> for Track {
             meta,
             explicit: Some(track.explicit),
             rating: Rating::None,
-            position: TrackPosition::new(Some(track.track_number as u64), track.disc_number.try_into().ok()),
+            position: TrackPosition::new(
+                Some(track.track_number as u64),
+                track.disc_number.try_into().ok(),
+            ),
             share_url: None,
             comments: None,
             lyrics: Lyrics::None,

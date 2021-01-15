@@ -3,13 +3,15 @@ use std::path::Path;
 use bimap::BiMap;
 use bincode::{deserialize, serialize};
 use failure::{err_msg, Error};
-use futures::{FutureExt, stream, StreamExt};
 use futures::stream::BoxStream;
+use futures::{stream, FutureExt, StreamExt};
 use serde::de::DeserializeOwned;
 use sled::Tree;
 
-use rustic_core::{Album, Artist, LibraryEvent, MultiQuery, Playlist, SearchResults, SingleQuery, Track};
 use rustic_core::library::LibraryItemIdentifier;
+use rustic_core::{
+    Album, Artist, LibraryEvent, MultiQuery, Playlist, SearchResults, SingleQuery, Track,
+};
 use rustic_store_helpers::{join_album, join_albums, join_track};
 
 use crate::util::*;
@@ -59,7 +61,10 @@ impl SledLibrary {
         })
     }
 
-    fn get_ids<T: DeserializeOwned, U: Fn(T) -> String>(tree: &Tree, uri_accessor: U) -> BiMap<usize, String> {
+    fn get_ids<T: DeserializeOwned, U: Fn(T) -> String>(
+        tree: &Tree,
+        uri_accessor: U,
+    ) -> BiMap<usize, String> {
         let mut artist_ids = BiMap::new();
 
         tree.iter().for_each(|item| {
@@ -339,12 +344,15 @@ impl rustic_core::Library for SledLibrary {
         let mut album_subscription = self.albums_tree.watch_prefix(vec![]);
         let album_stream = stream::poll_fn(move |cx| album_subscription.poll_unpin(cx));
 
-        album_stream.map(|event| match event {
-            sled::Event::Insert { value, .. } => LibraryEvent::AlbumAdded(bincode::deserialize(&value).unwrap()),
-            sled::Event::Remove { key } => {
-                unimplemented!("removing of items is not implemented yet")
-            },
-        })
+        album_stream
+            .map(|event| match event {
+                sled::Event::Insert { value, .. } => {
+                    LibraryEvent::AlbumAdded(bincode::deserialize(&value).unwrap())
+                }
+                sled::Event::Remove { key } => {
+                    unimplemented!("removing of items is not implemented yet")
+                }
+            })
             .boxed()
     }
 }

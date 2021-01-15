@@ -1,16 +1,16 @@
 use std::convert::TryInto;
 
 use async_trait::async_trait;
-use futures::stream::{BoxStream, StreamExt};
 use futures::future;
+use futures::stream::{BoxStream, StreamExt};
 use itertools::Itertools;
 use log::debug;
 
 use rustic_api::client::{LibraryApiClient, Result};
-use rustic_api::cursor::{Cursor, from_cursor};
+use rustic_api::cursor::{from_cursor, Cursor};
 use rustic_api::models::*;
-use rustic_core::{MultiQuery, ProviderType, QueryJoins, SingleQuery};
 use rustic_core::provider::InternalUri;
+use rustic_core::{MultiQuery, ProviderType, QueryJoins, SingleQuery};
 use rustic_extension_api::ExtensionApi;
 
 use crate::RusticNativeClient;
@@ -33,8 +33,12 @@ impl LibraryApiClient for RusticNativeClient {
         let albums = self.app.library.query_albums(query)?;
         debug!("Fetching albums took {}ms", sw.elapsed_ms());
 
-        let albums = future::try_join_all(albums.into_iter()
-            .map(|album| self.extensions.resolve_album(album))).await?;
+        let albums = future::try_join_all(
+            albums
+                .into_iter()
+                .map(|album| self.extensions.resolve_album(album)),
+        )
+        .await?;
 
         let albums = albums.into_iter().map(AlbumModel::from).collect();
 
@@ -66,8 +70,12 @@ impl LibraryApiClient for RusticNativeClient {
         let artists = self.app.library.query_artists(MultiQuery::new())?;
         debug!("Fetching artists took {}ms", sw.elapsed_ms());
 
-        let artists = future::try_join_all(artists.into_iter()
-            .map(|artist| self.extensions.resolve_artist(artist))).await?;
+        let artists = future::try_join_all(
+            artists
+                .into_iter()
+                .map(|artist| self.extensions.resolve_artist(artist)),
+        )
+        .await?;
 
         let artists = artists.into_iter().map(ArtistModel::from).collect();
         Ok(artists)
@@ -108,8 +116,12 @@ impl LibraryApiClient for RusticNativeClient {
         query.with_providers(providers);
         let playlists = self.app.library.query_playlists(query)?;
         debug!("Fetching playlists took {}ms", sw.elapsed_ms());
-        let playlists = future::try_join_all(playlists.into_iter()
-            .map(|playlist| self.extensions.resolve_playlist(playlist))).await?;
+        let playlists = future::try_join_all(
+            playlists
+                .into_iter()
+                .map(|playlist| self.extensions.resolve_playlist(playlist)),
+        )
+        .await?;
         let playlists = playlists
             .into_iter()
             .map(PlaylistModel::from)
@@ -147,8 +159,12 @@ impl LibraryApiClient for RusticNativeClient {
         query.with_providers(providers);
         let tracks = self.app.library.query_tracks(query)?;
         debug!("Fetching tracks took {}ms", sw.elapsed_ms());
-        let tracks = future::try_join_all(tracks.into_iter()
-            .map(|track| self.extensions.resolve_track(track))).await?;
+        let tracks = future::try_join_all(
+            tracks
+                .into_iter()
+                .map(|track| self.extensions.resolve_track(track)),
+        )
+        .await?;
         let tracks = tracks.into_iter().map(TrackModel::from).collect();
         Ok(tracks)
     }
@@ -196,31 +212,57 @@ impl LibraryApiClient for RusticNativeClient {
     async fn search_library(&self, query: &str) -> Result<SearchResults> {
         let results = self.app.library.search(query.into())?;
 
-        let tracks = future::try_join_all(results.tracks.into_iter().map(|track| self.extensions.resolve_track(track))).await?;
-        let albums = future::try_join_all(results.albums.into_iter().map(|album| self.extensions.resolve_album(album))).await?;
-        let artists = future::try_join_all(results.artists.into_iter().map(|artist| self.extensions.resolve_artist(artist))).await?;
-        let playlists = future::try_join_all(results.playlists.into_iter().map(|playlist| self.extensions.resolve_playlist(playlist))).await?;
+        let tracks = future::try_join_all(
+            results
+                .tracks
+                .into_iter()
+                .map(|track| self.extensions.resolve_track(track)),
+        )
+        .await?;
+        let albums = future::try_join_all(
+            results
+                .albums
+                .into_iter()
+                .map(|album| self.extensions.resolve_album(album)),
+        )
+        .await?;
+        let artists = future::try_join_all(
+            results
+                .artists
+                .into_iter()
+                .map(|artist| self.extensions.resolve_artist(artist)),
+        )
+        .await?;
+        let playlists = future::try_join_all(
+            results
+                .playlists
+                .into_iter()
+                .map(|playlist| self.extensions.resolve_playlist(playlist)),
+        )
+        .await?;
 
         Ok(SearchResults {
             tracks: tracks.into_iter().map(TrackModel::from).collect(),
             albums: albums.into_iter().map(AlbumModel::from).collect(),
             artists: artists.into_iter().map(ArtistModel::from).collect(),
-            playlists: playlists
-                .into_iter()
-                .map(PlaylistModel::from)
-                .collect(),
+            playlists: playlists.into_iter().map(PlaylistModel::from).collect(),
         })
     }
 
     fn sync_state(&self) -> BoxStream<'static, SyncStateModel> {
-        self.app.sync.events.clone()
+        self.app
+            .sync
+            .events
+            .clone()
             .into_stream()
             .map(SyncStateModel::from)
             .boxed()
     }
 
     fn observe_library(&self) -> BoxStream<'static, LibraryEventModel> {
-        self.app.library.observe()
+        self.app
+            .library
+            .observe()
             .map(LibraryEventModel::from)
             .boxed()
     }

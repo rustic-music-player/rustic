@@ -10,7 +10,6 @@ pub use self::track::*;
 
 use serde::{Deserialize, Serialize};
 
-mod rating;
 mod album;
 mod artist;
 mod event;
@@ -18,6 +17,7 @@ mod library;
 mod meta;
 mod playlist;
 pub mod queries;
+mod rating;
 mod track;
 
 pub trait Identifiable {

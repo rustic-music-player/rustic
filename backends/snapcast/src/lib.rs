@@ -1,6 +1,6 @@
-mod symphonia_decoder;
-mod background_job;
 mod audio_transport;
+mod background_job;
+mod symphonia_decoder;
 
 use std::any::Any;
 use std::sync::Arc;
@@ -9,13 +9,16 @@ use std::time::Duration;
 use failure::Error;
 use smol::channel::{Sender, TryRecvError};
 
-use rustic_core::{PlayerBackend, PlayerState, Track};
-use rustic_core::{player::{PlayerBuilder, PlayerBus}, Rustic};
-use rustic_core::player::{QueueCommand};
-use snapcast_api::SnapcastClient;
-use pinboard::NonEmptyPinboard;
 pub use crate::audio_transport::SnapcastAudioTransport;
 use crate::background_job::BackgroundJob;
+use pinboard::NonEmptyPinboard;
+use rustic_core::player::QueueCommand;
+use rustic_core::{
+    player::{PlayerBuilder, PlayerBus},
+    Rustic,
+};
+use rustic_core::{PlayerBackend, PlayerState, Track};
+use snapcast_api::SnapcastClient;
 
 struct SnapcastBackend {
     stream_id: String,
@@ -40,7 +43,13 @@ impl std::fmt::Debug for SnapcastBackend {
 }
 
 impl SnapcastBackend {
-    fn new(core: Arc<Rustic>, bus: PlayerBus, api_url: String, transport: SnapcastAudioTransport, name: String) -> Result<Self, Error> {
+    fn new(
+        core: Arc<Rustic>,
+        bus: PlayerBus,
+        api_url: String,
+        transport: SnapcastAudioTransport,
+        name: String,
+    ) -> Result<Self, Error> {
         let client = SnapcastClient::http(api_url);
         let stream_id = smol::block_on(transport.add_stream(&name, &client))?;
 
@@ -63,7 +72,8 @@ impl SnapcastBackend {
                     }
                 }
             }
-        }).detach();
+        })
+        .detach();
 
         Ok(SnapcastBackend {
             stream_id,
@@ -75,10 +85,12 @@ impl SnapcastBackend {
     }
 }
 
-
 impl PlayerBackend for SnapcastBackend {
     fn set_track(&self, track: &Track, stream_url: String) -> Result<(), Error> {
-        smol::block_on(self.cmd_tx.send(BackgroundCommand::Play(track.clone(), stream_url)))?;
+        smol::block_on(
+            self.cmd_tx
+                .send(BackgroundCommand::Play(track.clone(), stream_url)),
+        )?;
 
         Ok(())
     }
@@ -119,7 +131,8 @@ impl PlayerBackend for SnapcastBackend {
     }
 
     fn close(&self) -> Result<(), Error> {
-        self.cmd_tx.try_send(BackgroundCommand::SetState(PlayerState::Stop))?;
+        self.cmd_tx
+            .try_send(BackgroundCommand::SetState(PlayerState::Stop))?;
         smol::block_on(async {
             self.client.remove_stream(self.stream_id.clone()).await?;
             self.transport.close().await?;
@@ -131,11 +144,19 @@ impl PlayerBackend for SnapcastBackend {
 }
 
 pub trait SnapcastPlayerBuilder {
-    fn with_snapcast(&mut self, api_url: String, transport: SnapcastAudioTransport) -> Result<&mut Self, Error>;
+    fn with_snapcast(
+        &mut self,
+        api_url: String,
+        transport: SnapcastAudioTransport,
+    ) -> Result<&mut Self, Error>;
 }
 
 impl SnapcastPlayerBuilder for PlayerBuilder {
-    fn with_snapcast(&mut self, api_url: String, transport: SnapcastAudioTransport) -> Result<&mut Self, Error> {
+    fn with_snapcast(
+        &mut self,
+        api_url: String,
+        transport: SnapcastAudioTransport,
+    ) -> Result<&mut Self, Error> {
         let name = self.name.clone().expect("name should already be set"); // TODO: generate default name?
         self.with_player(move |rustic, bus| {
             let backend = SnapcastBackend::new(rustic, bus, api_url, transport, name)?;

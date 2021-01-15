@@ -1,6 +1,6 @@
 use maplit::hashmap;
 
-use rustic_core::library::{Track, Lyrics};
+use rustic_core::library::{Lyrics, Track};
 use rustic_core::{provider, Rating};
 
 use crate::meta::*;

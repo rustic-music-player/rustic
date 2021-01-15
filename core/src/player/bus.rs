@@ -1,10 +1,10 @@
 use crate::player::{PlayerCommand, QueueCommand};
 use crate::PlayerEvent;
 use failure::{format_err, Error};
+use flume::{unbounded, Receiver, Sender};
+use futures::stream::{select, StreamExt};
 use std::fmt;
 use std::fmt::Debug;
-use flume::{Sender, Receiver, unbounded};
-use futures::stream::{StreamExt, select};
 
 #[derive(Clone)]
 pub struct PlayerBus {

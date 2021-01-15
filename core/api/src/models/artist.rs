@@ -8,7 +8,8 @@ use rustic_reflect_macros::reflect_struct;
 
 use crate::models::aggregations::Aggregate;
 use crate::models::{
-    AlbumCollection, AlbumModel, PlaylistModel, ProviderTypeModel, TrackCollection, TrackModel, MetaValueModel,
+    AlbumCollection, AlbumModel, MetaValueModel, PlaylistModel, ProviderTypeModel, TrackCollection,
+    TrackModel,
 };
 use std::collections::HashMap;
 

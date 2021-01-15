@@ -1,7 +1,7 @@
 use std::path::PathBuf;
 
-use structopt::StructOpt;
 use std::str::FromStr;
+use structopt::StructOpt;
 
 use crate::config::Config;
 
@@ -29,7 +29,7 @@ pub(crate) struct CliOptions {
     pub(crate) headless: bool,
 
     #[structopt(long = "disable", short)]
-    pub(crate) disabled_modules: Vec<Module>
+    pub(crate) disabled_modules: Vec<Module>,
 }
 
 #[derive(Debug, Copy, Clone)]
@@ -83,7 +83,7 @@ impl FromStr for Module {
             "local" => Ok(LocalProvider),
             #[cfg(feature = "youtube-provider")]
             "youtube" => Ok(YoutubeProvider),
-            _ => Err(format!("unknown module {}", s))
+            _ => Err(format!("unknown module {}", s)),
         }
     }
 }
@@ -94,25 +94,25 @@ impl Module {
 
         match self {
             #[cfg(feature = "iced-frontend")]
-            IcedFrontend => { config.frontend.iced = None },
+            IcedFrontend => config.frontend.iced = None,
             #[cfg(feature = "druid-frontend")]
-            DruidFrontend => { config.frontend.druid = None },
+            DruidFrontend => config.frontend.druid = None,
             #[cfg(feature = "http-frontend")]
-            HttpFrontend => { config.frontend.http = None },
+            HttpFrontend => config.frontend.http = None,
             #[cfg(feature = "mpd-frontend")]
-            MpdFrontend => { config.frontend.mpd = None },
+            MpdFrontend => config.frontend.mpd = None,
             #[cfg(feature = "pocketcasts-provider")]
-            PocketcastsProvider => { config.provider.pocketcasts = None },
+            PocketcastsProvider => config.provider.pocketcasts = None,
             #[cfg(feature = "soundcloud-provider")]
-            SoundcloudProvider => { config.provider.soundcloud = None },
+            SoundcloudProvider => config.provider.soundcloud = None,
             #[cfg(feature = "spotify-provider")]
-            SpotifyProvider => { config.provider.spotify = None },
+            SpotifyProvider => config.provider.spotify = None,
             #[cfg(feature = "gmusic-provider")]
-            GmusicProvider => { config.provider.gmusic = None },
+            GmusicProvider => config.provider.gmusic = None,
             #[cfg(feature = "local-provider")]
-            LocalProvider => { config.provider.local = None },
+            LocalProvider => config.provider.local = None,
             #[cfg(feature = "youtube-provider")]
-            YoutubeProvider => { config.provider.youtube = None },
+            YoutubeProvider => config.provider.youtube = None,
         }
     }
 }
