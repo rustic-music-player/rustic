@@ -7,6 +7,7 @@ extern crate failure;
 #[macro_use]
 extern crate log;
 extern crate rustic_core;
+extern crate futures;
 
 use std::sync::{Arc, Mutex};
 
