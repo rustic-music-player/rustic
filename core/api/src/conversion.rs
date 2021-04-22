@@ -78,7 +78,7 @@ impl From<ProviderState> for ProviderStateModel {
     fn from(state: ProviderState) -> Self {
         match state {
             ProviderState::InvalidConfiguration(msg) => {
-                ProviderStateModel::InvalidConfiguration(msg)
+                ProviderStateModel::InvalidConfiguration { message: msg }
             }
             ProviderState::NoAuthentication => ProviderStateModel::NoAuthentication,
             ProviderState::RequiresOAuth(url) => ProviderStateModel::OAuthAuthentication { url },

@@ -25,7 +25,7 @@ pub struct AvailableProviderModel {
 )]
 #[serde(rename_all = "kebab-case", tag = "state")]
 pub enum ProviderStateModel {
-    InvalidConfiguration(Option<String>),
+    InvalidConfiguration { message: Option<String> },
     NoAuthentication,
     OAuthAuthentication { url: String },
     PasswordAuthentication,
