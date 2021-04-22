@@ -48,8 +48,6 @@ pub enum Module {
     SoundcloudProvider,
     #[cfg(feature = "spotify-provider")]
     SpotifyProvider,
-    #[cfg(feature = "gmusic-provider")]
-    GmusicProvider,
     #[cfg(feature = "local-provider")]
     LocalProvider,
     #[cfg(feature = "youtube-provider")]
@@ -77,8 +75,6 @@ impl FromStr for Module {
             "soundcloud" => Ok(SoundcloudProvider),
             #[cfg(feature = "spotify-provider")]
             "spotify" => Ok(SpotifyProvider),
-            #[cfg(feature = "gmusic-provider")]
-            "gmusic" => Ok(GmusicProvider),
             #[cfg(feature = "local-provider")]
             "local" => Ok(LocalProvider),
             #[cfg(feature = "youtube-provider")]
@@ -107,8 +103,6 @@ impl Module {
             SoundcloudProvider => config.provider.soundcloud = None,
             #[cfg(feature = "spotify-provider")]
             SpotifyProvider => config.provider.spotify = None,
-            #[cfg(feature = "gmusic-provider")]
-            GmusicProvider => config.provider.gmusic = None,
             #[cfg(feature = "local-provider")]
             LocalProvider => config.provider.local = None,
             #[cfg(feature = "youtube-provider")]

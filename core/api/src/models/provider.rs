@@ -72,6 +72,7 @@ pub enum ProviderTypeModel {
     Pocketcasts,
     Soundcloud,
     #[serde(rename = "gmusic")]
+    #[deprecated]
     GooglePlayMusic,
     Spotify,
     #[serde(rename = "local")]

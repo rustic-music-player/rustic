@@ -3570,25 +3570,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "gmusic"
-version = "0.3.1"
-source = "git+https://github.com/maxjoehnk/gmusic-rs?rev=b4121d0d#b4121d0d0854e44d9449acf0d0e47cf4186f7f51"
-dependencies = [
- "base64 0.12.3",
- "failure",
- "hmac 0.7.1",
- "log 0.4.11",
- "mac_address",
- "oauth2",
- "reqwest 0.10.9",
- "serde",
- "serde_json",
- "sha-1",
- "tokio 0.2.23",
- "url 2.2.0",
-]
-
-[[package]]
 name = "gobject-sys"
 version = "0.10.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -5007,16 +4988,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "mac_address"
-version = "1.1.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6d9bb26482176bddeea173ceaa2acec85146d20cdcc631eafaf9d605d3d4fc23"
-dependencies = [
- "nix 0.19.0",
- "winapi 0.3.9",
-]
-
-[[package]]
 name = "mach"
 version = "0.3.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -5458,18 +5429,6 @@ name = "nix"
 version = "0.18.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "83450fe6a6142ddd95fb064b746083fc4ef1705fe81f64a64e1d4b39f54a1055"
-dependencies = [
- "bitflags",
- "cc",
- "cfg-if 0.1.10",
- "libc",
-]
-
-[[package]]
-name = "nix"
-version = "0.19.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "85db2feff6bf70ebc3a4793191517d5f0331100a2f10f9bf93b5e5214f32b7b7"
 dependencies = [
  "bitflags",
  "cc",
@@ -7084,7 +7043,6 @@ dependencies = [
  "rustic-dbus-frontend",
  "rustic-druid-frontend",
  "rustic-extension-api",
- "rustic-gmusic-provider",
  "rustic-google-cast-backend",
  "rustic-gstreamer-backend",
  "rustic-http-frontend",
@@ -7221,24 +7179,6 @@ dependencies = [
  "rustic-api",
  "rustic-reflect",
  "syn 1.0.51",
-]
-
-[[package]]
-name = "rustic-gmusic-provider"
-version = "0.1.0"
-dependencies = [
- "async-trait",
- "failure",
- "gmusic",
- "lazy_static",
- "log 0.4.11",
- "maplit",
- "regex",
- "rustic-core",
- "serde",
- "serde_derive",
- "tokio 0.2.23",
- "url 2.2.0",
 ]
 
 [[package]]

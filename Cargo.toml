@@ -22,7 +22,6 @@ members = [
     "provider/pocketcasts",
     "provider/soundcloud",
     "provider/spotify",
-    "provider/gmusic",
     "provider/youtube",
     "store/helpers",
     "store/memory",
@@ -57,7 +56,6 @@ default = [
 	"local-files-provider",
 	"pocketcasts-provider",
 	"soundcloud-provider",
-	"gmusic-provider",
 	"youtube-provider",
 	"druid-frontend",
 	"http-client"
@@ -76,12 +74,11 @@ gstreamer-backend = ["rustic-gstreamer-backend"]
 rodio-backend = ["rustic-rodio-backend"]
 google-cast-backend = ["rustic-google-cast-backend"]
 snapcast-backend = ["rustic-snapcast-backend"]
-all-providers = ["local-files-provider", "pocketcasts-provider", "soundcloud-provider", "spotify-provider", "gmusic-provider", "youtube-provider"]
+all-providers = ["local-files-provider", "pocketcasts-provider", "soundcloud-provider", "spotify-provider", "youtube-provider"]
 local-files-provider = ["rustic-local-provider"]
 pocketcasts-provider = ["rustic-pocketcasts-provider"]
 soundcloud-provider = ["rustic-soundcloud-provider"]
 spotify-provider = ["rustic-spotify-provider"]
-gmusic-provider = ["rustic-gmusic-provider"]
 youtube-provider = ["rustic-youtube-provider"]
 all-stores = ["sled-store", "sqlite-store"]
 sled-store = ["rustic-sled-store"]
@@ -189,10 +186,6 @@ optional = true
 
 [dependencies.rustic-soundcloud-provider]
 path = "provider/soundcloud"
-optional = true
-
-[dependencies.rustic-gmusic-provider]
-path = "provider/gmusic"
 optional = true
 
 [dependencies.rustic-youtube-provider]

@@ -5,8 +5,6 @@ pipeline {
         SOUNDCLOUD_CLIENT_ID = credentials('rustic-soundcloud-client-id')
         SPOTIFY_CLIENT_ID = credentials('rustic-spotify-client-id')
         SPOTIFY_CLIENT_SECRET = credentials('rustic-spotify-client-secret')
-        GMUSIC_CLIENT_ID = credentials('rustic-gmusic-client-id')
-        GMUSIC_CLIENT_SECRET = credentials('rustic-gmusic-client-secret')
     }
 
     stages {
@@ -109,7 +107,7 @@ pipeline {
                     stages {
                         stage('Build') {
                             steps {
-                                bat 'cargo build --release --no-default-features --features "http-frontend rodio-backend local-files-provider pocketcasts-provider soundcloud-provider gmusic-provider youtube-provider"'
+                                bat 'cargo build --release --no-default-features --features "http-frontend rodio-backend local-files-provider pocketcasts-provider soundcloud-provider youtube-provider"'
                                 bat 'make extensions'
                                 fileOperations([
                                     folderCreateOperation('win32-x86_64'),

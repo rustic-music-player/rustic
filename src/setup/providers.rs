@@ -39,13 +39,6 @@ pub(crate) async fn setup_providers(
             providers.push(Box::new(local));
         }
     }
-    #[cfg(feature = "gmusic-provider")]
-    {
-        if let Some(gmusic) = config.provider.gmusic.clone() {
-            info!("Loading Google Play Music Provider");
-            providers.push(Box::new(gmusic));
-        }
-    }
     #[cfg(feature = "youtube-provider")]
     {
         if let Some(youtube) = config.provider.youtube.clone() {

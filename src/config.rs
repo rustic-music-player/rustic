@@ -116,9 +116,6 @@ pub struct ProviderConfig {
     #[cfg(feature = "spotify-provider")]
     #[serde(default = "rustic_spotify_provider::SpotifyProvider::new")]
     pub spotify: Option<rustic_spotify_provider::SpotifyProvider>,
-    #[cfg(feature = "gmusic-provider")]
-    #[serde(default = "rustic_gmusic_provider::GooglePlayMusicProvider::new")]
-    pub gmusic: Option<rustic_gmusic_provider::GooglePlayMusicProvider>,
     #[cfg(feature = "local-files-provider")]
     #[serde(default = "rustic_local_provider::LocalProvider::new")]
     pub local: Option<rustic_local_provider::LocalProvider>,
@@ -136,8 +133,6 @@ impl Default for ProviderConfig {
             soundcloud: rustic_soundcloud_provider::SoundcloudProvider::new(),
             #[cfg(feature = "spotify-provider")]
             spotify: rustic_spotify_provider::SpotifyProvider::new(),
-            #[cfg(feature = "gmusic-provider")]
-            gmusic: rustic_gmusic_provider::GooglePlayMusicProvider::new(),
             #[cfg(feature = "local-files-provider")]
             local: rustic_local_provider::LocalProvider::new(),
             #[cfg(feature = "youtube-provider")]
