@@ -159,7 +159,7 @@ fn connect_to_instance(
     rustic_iced_frontend::start(Arc::clone(&client));
 
     #[cfg(feature = "druid-frontend")]
-    rustic_druid_frontend::start(Arc::clone(&client));
+    rustic_druid_frontend::start(Arc::clone(&client))?;
 
     Ok(())
 }
