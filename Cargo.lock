@@ -7335,13 +7335,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "rustic-party-mode-extension"
-version = "0.1.0"
-dependencies = [
- "rustic-extension-api",
-]
-
-[[package]]
 name = "rustic-pocketcasts-provider"
 version = "0.1.0"
 dependencies = [
