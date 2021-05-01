@@ -241,6 +241,10 @@ impl LibraryApiClient for TestApiClient {
     fn sync_state(&self) -> BoxStream<'static, SyncStateModel> {
         unimplemented!()
     }
+
+    fn observe_library(&self) -> BoxStream<'static, LibraryEventModel> {
+        unimplemented!()
+    }
 }
 
 #[cfg_attr(target_arch = "wasm32", async_trait(?Send))]
