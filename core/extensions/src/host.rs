@@ -8,12 +8,14 @@ use std::ffi::OsStr;
 pub struct ExtensionHost {
     extension: Sender<ExtensionCommand>,
     task: tokio::task::JoinHandle<Option<u8>>,
+    library: libloading::Library,
 }
 
 impl ExtensionHost {
-    pub fn new(mut plugin: Box<dyn ExtensionPlugin>) -> Self {
+    pub fn new((library, mut plugin): (libloading::Library, Box<dyn ExtensionPlugin>)) -> Self {
         let (tx, rx) = broadcast();
         ExtensionHost {
+            library,
             extension: tx,
             task: tokio::spawn(async move {
                 while let Ok(message) = rx.recv_async().await {
@@ -39,7 +41,7 @@ pub trait ExtensionPlugin: Sync + Send + 'static {
 pub fn construct_plugin(
     path: impl AsRef<OsStr>,
     args: &HashMap<String, HashMap<String, ExtensionConfigValue>>,
-) -> Result<Box<dyn ExtensionPlugin>, failure::Error> {
+) -> Result<(libloading::Library, Box<dyn ExtensionPlugin>), failure::Error> {
     let lib = libloading::Library::new(path)?;
     let mut instance = std::mem::MaybeUninit::zeroed();
     Ok(unsafe {
@@ -50,7 +52,7 @@ pub fn construct_plugin(
         if ((*instance.as_ptr()).as_ref() as *const dyn ExtensionPlugin).is_null() {
             return Err(format_err!("Can't construct extension"));
         }
-        instance.assume_init()
+        (lib, instance.assume_init())
     })
 }
 
