@@ -56,6 +56,7 @@ impl LibraryApiClient for RusticNativeClient {
             let mut query: SingleQuery = uri.into();
             query.join_all();
             if let Some(album) = self.query_album(query).await? {
+                let album = self.extensions.resolve_album(album).await?;
                 albums.push(album.into());
             }
         }
@@ -92,6 +93,7 @@ impl LibraryApiClient for RusticNativeClient {
             let mut query: SingleQuery = uri.into();
             query.join_all();
             if let Some(artist) = self.query_artist(query).await? {
+                let artist = self.extensions.resolve_artist(artist).await?;
                 artists.push(artist.into());
             }
         }
@@ -138,7 +140,10 @@ impl LibraryApiClient for RusticNativeClient {
         let mut query: SingleQuery = uri.into();
         query.join_all();
         let playlist = self.query_playlist(query).await?;
-        let playlist = playlist.map(PlaylistModel::from);
+        let playlist =  if let Some(playlist) = playlist {
+            let playlist = self.extensions.resolve_playlist(playlist).await?;
+            Some(PlaylistModel::from(playlist))
+        }else { None };
         debug!("Fetching playlist took {}ms", sw.elapsed_ms());
 
         Ok(playlist)
@@ -178,6 +183,7 @@ impl LibraryApiClient for RusticNativeClient {
         for cursor in cursors {
             let uri = from_cursor(cursor)?;
             if let Some(track) = self.query_track(uri.into()).await? {
+                let track = self.extensions.resolve_track(track).await?;
                 tracks.push(track.into());
             }
         }
