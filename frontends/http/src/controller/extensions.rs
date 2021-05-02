@@ -40,7 +40,7 @@ mod test {
     use actix_web::dev::*;
     use actix_web::{http, test, App};
 
-    use rustic_api::models::ExtensionModel;
+    use rustic_api::models::*;
     use rustic_api::TestApiClient;
 
     use crate::test::build_app;
@@ -64,6 +64,7 @@ mod test {
             name: String::new(),
             version: String::new(),
             enabled: true,
+            controls: ExtensionControlsModel::default()
         }];
         let mut client = TestApiClient::new();
         client.extensions = extensions.clone();

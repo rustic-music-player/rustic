@@ -18,7 +18,7 @@ pub struct ExtensionModel {
 }
 
 #[reflect_struct]
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[derive(Debug, Default, Clone, Serialize, Deserialize, PartialEq)]
 #[cfg_attr(
     target_arch = "wasm32",
     derive(typescript_definitions::TypescriptDefinition)
