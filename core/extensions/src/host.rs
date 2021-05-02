@@ -19,6 +19,7 @@ impl ExtensionHost {
             extension: tx,
             task: tokio::spawn(async move {
                 while let Ok(message) = rx.recv_async().await {
+                    log::trace!("delegating message to plugin handler {:?}", message);
                     if let Some(status) = plugin.handle_message(message).await {
                         return Some(status);
                     }

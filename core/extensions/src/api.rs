@@ -6,6 +6,7 @@ use serde::{Deserialize, Serialize};
 use rustic_core::{Album, Artist, Playlist, Track};
 
 pub use crate::ExtensionRuntime;
+pub use crate::controls::*;
 
 #[derive(Debug, Clone, Deserialize, Serialize, PartialEq)]
 #[serde(untagged)]
@@ -83,6 +84,10 @@ pub trait ExtensionApi {
     }
     async fn on_disable(&self) -> Result<(), failure::Error> {
         Ok(())
+    }
+
+    async fn get_controls(&self) -> Result<ExtensionControls, failure::Error> {
+        Ok(Default::default())
     }
 
     async fn on_add_to_queue(&self, tracks: Vec<Track>) -> Result<Vec<Track>, failure::Error> {

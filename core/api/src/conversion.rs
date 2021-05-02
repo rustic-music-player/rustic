@@ -11,7 +11,7 @@ use rustic_core::{
     Album, Artist, LibraryEvent, PlayerEvent, PlayerState, Playlist, ProviderType, QueuedTrack,
     Rating, RepeatMode, Track, TrackPosition,
 };
-use rustic_extension_api::ExtensionMetadata;
+use rustic_extension_api::{ExtensionMetadata, ExtensionControls, ExtensionInfo, ExtensionAction};
 
 use crate::cursor::{from_cursor, to_cursor, Cursor};
 use crate::models::*;
@@ -88,13 +88,40 @@ impl From<ProviderState> for ProviderStateModel {
     }
 }
 
-impl From<(ExtensionMetadata, bool)> for ExtensionModel {
-    fn from((metadata, enabled): (ExtensionMetadata, bool)) -> Self {
+impl From<(ExtensionMetadata, bool, ExtensionControls)> for ExtensionModel {
+    fn from((metadata, enabled, controls): (ExtensionMetadata, bool, ExtensionControls)) -> Self {
         ExtensionModel {
             name: metadata.name,
             id: metadata.id,
             version: metadata.version,
             enabled,
+            controls: controls.into(),
+        }
+    }
+}
+
+impl From<ExtensionControls> for ExtensionControlsModel {
+    fn from(controls: ExtensionControls) -> Self {
+        Self {
+            actions: controls.actions.into_iter().map(ExtensionActionModel::from).collect(),
+            infos: controls.infos.into_iter().map(ExtensionInfoModel::from).collect(),
+        }
+    }
+}
+
+impl From<ExtensionAction> for ExtensionActionModel {
+    fn from(action: ExtensionAction) -> Self {
+        Self {
+            key: action.key,
+            label: action.label,
+        }
+    }
+}
+
+impl From<ExtensionInfo> for ExtensionInfoModel {
+    fn from(info: ExtensionInfo) -> Self {
+        match info {
+            ExtensionInfo::Link(link) => Self::Link(link)
         }
     }
 }

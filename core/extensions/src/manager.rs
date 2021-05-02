@@ -15,6 +15,7 @@ use crate::api::*;
 use crate::host::{construct_plugin, ExtensionHost};
 use crate::plugin::*;
 use crate::runtime::ExtensionRuntime;
+use crate::controls::*;
 use std::time::Instant;
 
 const EXTENSION_COLLECTION_KEY: &str = "extensions";
@@ -77,6 +78,12 @@ impl ExtensionApi for HostedExtension {
         info!("Disabled {} extension", &self.0.name);
         Ok(())
     }
+
+    async fn get_controls(&self) -> Result<ExtensionControls, Error> {
+        let (tx, rx) = one_shot();
+        self.rpc(ExtensionCommand::GetControls(tx), rx).await
+    }
+
 
     async fn on_add_to_queue(&self, tracks: Vec<Track>) -> Result<Vec<Track>, Error> {
         let (tx, rx) = one_shot();
@@ -190,6 +197,17 @@ impl ExtensionManager {
             .iter()
             .map(HostedExtension::get_metadata)
             .collect()
+    }
+
+    pub async fn get_extensions_with_controls(&self) -> Result<Vec<(ExtensionMetadata, bool, ExtensionControls)>, Error> {
+        let mut extensions = Vec::with_capacity(self.extensions.len());
+        for extension in self.extensions.iter() {
+            let (metadata, enabled) = extension.get_metadata();
+            let controls = extension.get_controls().await?;
+            extensions.push((metadata, enabled, controls));
+        }
+
+        Ok(extensions)
     }
 
     pub async fn setup(&mut self, runtime: ExtensionRuntime) -> Result<(), Error> {

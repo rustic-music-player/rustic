@@ -198,7 +198,8 @@ impl RusticApiClient for RusticNativeClient {
     async fn get_extensions(&self) -> Result<Vec<ExtensionModel>> {
         let extensions = self
             .extensions
-            .get_extensions()
+            .get_extensions_with_controls()
+            .await?
             .into_iter()
             .map(ExtensionModel::from)
             .collect();

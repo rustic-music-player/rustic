@@ -15,6 +15,14 @@ impl MetaValue {
             None
         }
     }
+
+    pub fn string(&self) -> Option<String> {
+        if let MetaValue::String(value) = self {
+            Some(value.clone())
+        } else {
+            None
+        }
+    }
 }
 
 impl From<bool> for MetaValue {

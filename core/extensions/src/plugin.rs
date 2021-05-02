@@ -6,6 +6,7 @@ use rustic_core::{Album, Artist, Playlist, Track};
 use crate::api::*;
 use crate::host::ExtensionPlugin;
 use crate::runtime::ExtensionRuntime;
+use crate::controls::ExtensionControls;
 
 #[async_trait]
 impl<T: ExtensionLibrary + 'static> ExtensionPlugin for T {
@@ -47,6 +48,10 @@ impl<T: ExtensionLibrary + 'static> ExtensionPlugin for T {
                 let result = self.resolve_playlist(playlist).await;
                 response.send_async(result).await;
             }
+            ExtensionCommand::GetControls(response) => {
+                let result = self.get_controls().await;
+                response.send_async(result).await;
+            }
         }
         None
     }
@@ -56,6 +61,7 @@ impl<T: ExtensionLibrary + 'static> ExtensionPlugin for T {
 pub enum ExtensionCommand {
     Setup(ExtensionRuntime, Sender<Result<(), failure::Error>>),
     GetMetadata(Sender<ExtensionMetadata>),
+    GetControls(Sender<Result<ExtensionControls, failure::Error>>),
     Enable(Sender<Result<(), failure::Error>>),
     Disable(Sender<Result<(), failure::Error>>),
     AddToQueue(Vec<Track>, Sender<Result<Vec<Track>, failure::Error>>),
