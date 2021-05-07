@@ -90,7 +90,7 @@ pub trait ExtensionApi {
         Ok(Default::default())
     }
 
-    async fn on_add_to_queue(&self, tracks: Vec<Track>) -> Result<Vec<Track>, failure::Error> {
+    async fn on_add_to_queue(&self, player_id: String, tracks: Vec<Track>) -> Result<Vec<Track>, failure::Error> {
         Ok(tracks)
     }
 
@@ -108,5 +108,21 @@ pub trait ExtensionApi {
 
     async fn resolve_playlist(&self, playlist: Playlist) -> Result<Playlist, failure::Error> {
         Ok(playlist)
+    }
+
+    async fn player_control_next(&self, player_id: Option<&str>) -> Result<bool, failure::Error> {
+        Ok(true)
+    }
+
+    async fn player_control_prev(&self, player_id: Option<&str>) -> Result<bool, failure::Error> {
+        Ok(true)
+    }
+
+    async fn player_control_play(&self, player_id: Option<&str>) -> Result<bool, failure::Error> {
+        Ok(true)
+    }
+
+    async fn player_control_pause(&self, player_id: Option<&str>) -> Result<bool, failure::Error> {
+        Ok(true)
     }
 }

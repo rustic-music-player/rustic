@@ -28,8 +28,8 @@ impl<T: ExtensionLibrary + 'static> ExtensionPlugin for T {
                 let result = self.on_disable().await;
                 response.send_async(result).await;
             }
-            ExtensionCommand::AddToQueue(tracks, response) => {
-                let result = self.on_add_to_queue(tracks).await;
+            ExtensionCommand::AddToQueue(player_id, tracks, response) => {
+                let result = self.on_add_to_queue(player_id, tracks).await;
                 response.send_async(result).await;
             }
             ExtensionCommand::ResolveTrack(track, response) => {
@@ -64,7 +64,7 @@ pub enum ExtensionCommand {
     GetControls(Sender<Result<ExtensionControls, failure::Error>>),
     Enable(Sender<Result<(), failure::Error>>),
     Disable(Sender<Result<(), failure::Error>>),
-    AddToQueue(Vec<Track>, Sender<Result<Vec<Track>, failure::Error>>),
+    AddToQueue(String, Vec<Track>, Sender<Result<Vec<Track>, failure::Error>>),
     ResolveTrack(Track, Sender<Result<Track, failure::Error>>),
     ResolveAlbum(Album, Sender<Result<Album, failure::Error>>),
     ResolveArtist(Artist, Sender<Result<Artist, failure::Error>>),

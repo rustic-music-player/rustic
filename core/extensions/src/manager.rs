@@ -85,9 +85,9 @@ impl ExtensionApi for HostedExtension {
     }
 
 
-    async fn on_add_to_queue(&self, tracks: Vec<Track>) -> Result<Vec<Track>, Error> {
+    async fn on_add_to_queue(&self, player_id: String, tracks: Vec<Track>) -> Result<Vec<Track>, Error> {
         let (tx, rx) = one_shot();
-        self.rpc(ExtensionCommand::AddToQueue(tracks, tx), rx).await
+        self.rpc(ExtensionCommand::AddToQueue(player_id, tracks, tx), rx).await
     }
 
     async fn resolve_track(&self, track: Track) -> Result<Track, Error> {
@@ -271,11 +271,11 @@ impl ExtensionManager {
 
 #[async_trait]
 impl ExtensionApi for ExtensionManager {
-    async fn on_add_to_queue(&self, tracks: Vec<Track>) -> Result<Vec<Track>, Error> {
+    async fn on_add_to_queue(&self, player_id: String, tracks: Vec<Track>) -> Result<Vec<Track>, Error> {
         let mut tracks = tracks;
 
         for extension in self.get_enabled_extensions() {
-            tracks = extension.on_add_to_queue(tracks).await?;
+            tracks = extension.on_add_to_queue(player_id.clone(), tracks).await?;
         }
 
         Ok(tracks)

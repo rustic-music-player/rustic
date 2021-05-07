@@ -12,6 +12,7 @@ use rustic_core::player::Player;
 use rustic_core::{PlayerEvent, PlayerState};
 
 use crate::RusticNativeClient;
+use rustic_extension_api::ExtensionApi;
 
 #[async_trait]
 impl PlayerApiClient for RusticNativeClient {
@@ -37,24 +38,36 @@ impl PlayerApiClient for RusticNativeClient {
     }
 
     async fn player_control_next(&self, player_id: Option<&str>) -> Result<Option<()>> {
+        if !self.extensions.player_control_next(player_id).await? {
+            return Ok(None);
+        }
         let player = self.get_player_or_default(player_id)?;
 
         player.queue.next().await
     }
 
     async fn player_control_prev(&self, player_id: Option<&str>) -> Result<Option<()>> {
+        if !self.extensions.player_control_prev(player_id).await? {
+            return Ok(None);
+        }
         let player = self.get_player_or_default(player_id)?;
 
         player.queue.prev().await
     }
 
     async fn player_control_play(&self, player_id: Option<&str>) -> Result<()> {
+        if !self.extensions.player_control_play(player_id).await? {
+            return Ok(());
+        }
         let player = self.get_player_or_default(player_id)?;
 
         player.backend.set_state(PlayerState::Play)
     }
 
     async fn player_control_pause(&self, player_id: Option<&str>) -> Result<()> {
+        if !self.extensions.player_control_pause(player_id).await? {
+            return Ok(());
+        }
         let player = self.get_player_or_default(player_id)?;
 
         player.backend.set_state(PlayerState::Pause)

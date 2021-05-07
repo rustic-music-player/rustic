@@ -12,10 +12,9 @@ pub use crate::library::{
     Album, Artist, Library, LibraryEvent, LibraryQueryJoins, MultiQuery, Playlist, QueryJoins,
     Rating, SearchResults, SharedLibrary, SingleQuery, Track, TrackPosition,
 };
-use crate::player::Player;
-pub use crate::player::{PlayerBackend, PlayerEvent, PlayerState, QueuedTrack, RepeatMode};
-pub use crate::provider::{Explorer, Provider, ProviderType};
-use crate::provider::{InternalUri, ProviderItemType, Thumbnail, ThumbnailState};
+pub use crate::player::{PlayerBackend, PlayerEvent, PlayerState, QueuedTrack, RepeatMode, Player};
+pub use crate::provider::{Explorer, Provider, ProviderType, InternalUri};
+use crate::provider::{ProviderItemType, Thumbnail, ThumbnailState};
 pub use crate::storage_backend::{SharedStorageBackend, StorageBackend, StorageCollection};
 
 mod storage_backend;
