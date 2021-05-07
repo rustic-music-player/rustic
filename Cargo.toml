@@ -44,7 +44,7 @@ license = "GPL-3.0"
 readme = "README.md"
 edition = "2018"
 repository = "https://github.com/rustic-music-player/rustic"
-homepage = "https://github.com/rustic-music-player/rustic"
+homepage = "https://rustic.cloud"
 
 [features]
 default = [
