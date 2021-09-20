@@ -16,8 +16,8 @@ use serde_qs::Config;
 
 fn build_api(client: ApiClient, ws_server: Addr<SocketServer>) -> Scope {
     web::scope("/api")
-        .data(Arc::clone(&client))
-        .data(QsQuery::<SearchQuery>::configure(|cfg| {
+        .app_data(web::Data::new(Arc::clone(&client)))
+        .app_data(QsQuery::<SearchQuery>::configure(|cfg| {
             cfg.qs_config(Config::new(2, false))
         }))
         .service(controller::library::get_albums)
@@ -91,9 +91,9 @@ async fn index() -> Result<impl Responder> {
     Ok(file)
 }
 
-pub fn start(config: &HttpConfig, app: Arc<Rustic>, client: ApiClient) -> Result<()> {
+pub async fn start(config: &HttpConfig, app: Arc<Rustic>, client: ApiClient) -> Result<()> {
     create_dir_all(&config.static_files)?;
-    let sys = System::new("rustic-http-frontend");
+    let sys = System::new();
 
     let ws_server = create_socket_server(Arc::clone(&app), Arc::clone(&client));
 
@@ -111,7 +111,8 @@ pub fn start(config: &HttpConfig, app: Arc<Rustic>, client: ApiClient) -> Result
             )
     })
     .bind(format!("{}:{}", config.ip, config.port))?
-    .run();
+    .run()
+    .await?;
 
     sys.run()?;
     Ok(())

@@ -9,7 +9,7 @@ async-trait = "0.1"
 serde = { version = "1", features = ["derive"] }
 failure = "0.1"
 log = "0.4"
-tokio = { version = "0.2", features = ["sync"] }
+tokio = { version = "1", features = ["sync"] }
 libloading = "0.6"
 futures = "0.3"
 

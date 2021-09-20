@@ -18,7 +18,7 @@ async_tokio = ["tokio"]
 futures =  { version = "0.3", optional = true, features = ["std", "async-await"], default-features = false }
 libc = "0.2"
 failure = "0.1"
-tokio = { version = "0.2", features = ["rt-core"], optional = true }
+tokio = { version = "1", features = ["rt"], optional = true }
 lazy_static = "1.4"
 rustic-api = { path = "../../core/api", default-features = false }
 rustic-native-client = { path = "../native", optional = true }

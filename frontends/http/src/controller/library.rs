@@ -8,6 +8,8 @@ use rustic_api::models::{CoverArtModel, ProviderTypeModel};
 use crate::app::ApiClient;
 use rustic_api::cursor::Cursor;
 
+use super::failure_to_response;
+
 #[derive(Deserialize)]
 pub struct EntityQuery {
     cursor: String,
@@ -23,7 +25,7 @@ pub async fn get_album(
     client: web::Data<ApiClient>,
     params: web::Path<EntityQuery>,
 ) -> Result<impl Responder> {
-    let album = client.get_album(&params.cursor).await?;
+    let album = client.get_album(&params.cursor).await.map_err(failure_to_response)?;
 
     match album {
         Some(album) => Ok(web::Json(album)),
@@ -37,7 +39,7 @@ pub async fn get_albums(
     params: QsQuery<GetEntitiesQuery>,
 ) -> Result<impl Responder> {
     let params = params.into_inner();
-    let albums = client.get_albums(params.providers).await?;
+    let albums = client.get_albums(params.providers).await.map_err(failure_to_response)?;
 
     Ok(web::Json(albums))
 }
@@ -48,7 +50,7 @@ pub async fn add_album(
     params: web::Path<EntityQuery>,
 ) -> Result<impl Responder> {
     let cursor = params.into_inner().cursor;
-    client.add_to_library(Cursor::Album(cursor)).await?;
+    client.add_to_library(Cursor::Album(cursor)).await.map_err(failure_to_response)?;
 
     Ok(web::HttpResponse::NoContent())
 }
@@ -59,14 +61,14 @@ pub async fn remove_album(
     params: web::Path<EntityQuery>,
 ) -> Result<impl Responder> {
     let cursor = params.into_inner().cursor;
-    client.remove_from_library(Cursor::Album(cursor)).await?;
+    client.remove_from_library(Cursor::Album(cursor)).await.map_err(failure_to_response)?;
 
     Ok(web::HttpResponse::NoContent())
 }
 
 #[get("/library/artists")]
 pub async fn get_artists(client: web::Data<ApiClient>) -> Result<impl Responder> {
-    let artists = client.get_artists().await?;
+    let artists = client.get_artists().await.map_err(failure_to_response)?;
 
     Ok(web::Json(artists))
 }
@@ -76,7 +78,7 @@ pub async fn get_artist(
     client: web::Data<ApiClient>,
     params: web::Path<EntityQuery>,
 ) -> Result<impl Responder> {
-    let artist = client.get_artist(&params.cursor).await?;
+    let artist = client.get_artist(&params.cursor).await.map_err(failure_to_response)?;
 
     match artist {
         Some(artist) => Ok(web::Json(artist)),
@@ -90,7 +92,7 @@ pub async fn add_artist(
     params: web::Path<EntityQuery>,
 ) -> Result<impl Responder> {
     let cursor = params.into_inner().cursor;
-    client.add_to_library(Cursor::Artist(cursor)).await?;
+    client.add_to_library(Cursor::Artist(cursor)).await.map_err(failure_to_response)?;
 
     Ok(web::HttpResponse::NoContent())
 }
@@ -101,7 +103,7 @@ pub async fn get_playlists(
     params: QsQuery<GetEntitiesQuery>,
 ) -> Result<impl Responder> {
     let params = params.into_inner();
-    let playlists = client.get_playlists(params.providers).await?;
+    let playlists = client.get_playlists(params.providers).await.map_err(failure_to_response)?;
 
     Ok(web::Json(playlists))
 }
@@ -111,7 +113,7 @@ pub async fn get_playlist(
     client: web::Data<ApiClient>,
     params: web::Path<EntityQuery>,
 ) -> Result<impl Responder> {
-    let playlist = client.get_playlist(&params.cursor).await?;
+    let playlist = client.get_playlist(&params.cursor).await.map_err(failure_to_response)?;
 
     match playlist {
         Some(playlist) => Ok(web::Json(playlist)),
@@ -125,7 +127,7 @@ pub async fn add_playlist(
     params: web::Path<EntityQuery>,
 ) -> Result<impl Responder> {
     let cursor = params.into_inner().cursor;
-    client.add_to_library(Cursor::Playlist(cursor)).await?;
+    client.add_to_library(Cursor::Playlist(cursor)).await.map_err(failure_to_response)?;
 
     Ok(web::HttpResponse::NoContent())
 }
@@ -136,7 +138,7 @@ pub async fn get_tracks(
     params: QsQuery<GetEntitiesQuery>,
 ) -> Result<impl Responder> {
     let params = params.into_inner();
-    let tracks = client.get_tracks(params.providers).await?;
+    let tracks = client.get_tracks(params.providers).await.map_err(failure_to_response)?;
 
     Ok(web::Json(tracks))
 }
@@ -146,7 +148,7 @@ pub async fn get_track(
     client: web::Data<ApiClient>,
     params: web::Path<EntityQuery>,
 ) -> Result<impl Responder> {
-    let track = client.get_track(&params.cursor).await?;
+    let track = client.get_track(&params.cursor).await.map_err(failure_to_response)?;
 
     match track {
         Some(track) => Ok(web::Json(track)),
@@ -160,7 +162,7 @@ pub async fn add_track(
     params: web::Path<EntityQuery>,
 ) -> Result<impl Responder> {
     let cursor = params.into_inner().cursor;
-    client.add_to_library(Cursor::Track(cursor)).await?;
+    client.add_to_library(Cursor::Track(cursor)).await.map_err(failure_to_response)?;
 
     Ok(web::HttpResponse::NoContent())
 }
@@ -171,11 +173,11 @@ fn get_cover_art(cover_art: Option<CoverArtModel>) -> Result<impl Responder> {
             let stream = data.map(|d| Ok(d.into()));
             let response = HttpResponse::Ok()
                 .content_type(mime_type)
-                .streaming::<_, failure::Error>(stream);
+                .streaming::<_, actix_web::Error>(stream);
             Ok(response)
         }
         Some(CoverArtModel::Url(url)) => {
-            let response = HttpResponse::Found().header("Location", url).finish();
+            let response = HttpResponse::Found().append_header(("Location", url)).finish();
             Ok(response)
         }
         None => Err(error::ErrorNotFound("Not Found")),
@@ -189,7 +191,7 @@ pub async fn get_album_cover_art(
 ) -> Result<impl Responder> {
     let cover_art = client
         .get_thumbnail(Cursor::Album(params.cursor.clone()))
-        .await?;
+        .await.map_err(failure_to_response)?;
     get_cover_art(cover_art)
 }
 
@@ -200,7 +202,7 @@ pub async fn get_artist_cover_art(
 ) -> Result<impl Responder> {
     let cover_art = client
         .get_thumbnail(Cursor::Artist(params.cursor.clone()))
-        .await?;
+        .await.map_err(failure_to_response)?;
     get_cover_art(cover_art)
 }
 
@@ -211,6 +213,6 @@ pub async fn get_track_cover_art(
 ) -> Result<impl Responder> {
     let cover_art = client
         .get_thumbnail(Cursor::Track(params.cursor.clone()))
-        .await?;
+        .await.map_err(failure_to_response)?;
     get_cover_art(cover_art)
 }

@@ -8,7 +8,7 @@ edition = "2018"
 log = "0.4"
 failure = "0.1"
 mdns = "0.3"
-rust_cast = "0.15"
+rust_cast = "0.15.1"
 crossbeam-channel = "0.5"
 pinboard = "2.0.1"
 

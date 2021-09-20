@@ -1,6 +1,6 @@
 use iced::{
     button, scrollable, text_input, Align, Application, Background, Color, Column, Command,
-    Element, Length, Row, Scrollable, Settings, Subscription, Text, TextInput, Vector,
+    Element, Length, Row, Scrollable, Settings, Subscription, Text, TextInput, Vector, Clipboard
 };
 
 use rustic_api::models::{
@@ -79,7 +79,7 @@ impl Application for IcedApplication {
         "Rustic".to_string()
     }
 
-    fn update(&mut self, message: Self::Message) -> Command<Self::Message> {
+    fn update(&mut self, message: Self::Message, _: &mut Clipboard) -> Command<Self::Message> {
         match message {
             Message::Loaded(state) => {
                 self.state = state;

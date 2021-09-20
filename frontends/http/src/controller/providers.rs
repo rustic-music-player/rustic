@@ -4,6 +4,7 @@ use serde::Deserialize;
 use rustic_api::models::{ProviderAuthModel, ProviderTypeModel};
 
 use crate::app::ApiClient;
+use super::failure_to_response;
 
 #[derive(Deserialize)]
 pub struct NavigateQuery {
@@ -17,7 +18,7 @@ pub struct ProviderParams {
 
 #[get("/providers")]
 pub async fn get_providers(client: web::Data<ApiClient>) -> Result<impl Responder> {
-    let providers = client.get_providers().await?;
+    let providers = client.get_providers().await.map_err(failure_to_response)?;
 
     Ok(web::Json(providers))
 }
@@ -30,14 +31,14 @@ pub async fn navigate(
 ) -> Result<impl Responder> {
     let folder = client
         .navigate_provider(params.provider, &query.path)
-        .await?;
+        .await.map_err(failure_to_response)?;
 
     Ok(web::Json(folder))
 }
 
 #[get("/providers/available")]
 pub async fn get_available_providers(client: web::Data<ApiClient>) -> Result<impl Responder> {
-    let providers = client.get_available_providers().await?;
+    let providers = client.get_available_providers().await.map_err(failure_to_response)?;
 
     Ok(web::Json(providers))
 }
@@ -50,7 +51,7 @@ pub async fn provider_basic_auth(
 ) -> Result<impl Responder> {
     client
         .authenticate_provider(params.provider, body.into_inner())
-        .await?;
+        .await.map_err(failure_to_response)?;
 
     Ok(web::HttpResponse::NoContent().finish())
 }
@@ -63,7 +64,7 @@ pub async fn provider_token_auth(
 ) -> Result<impl Responder> {
     client
         .authenticate_provider(params.provider, query.into_inner())
-        .await?;
+        .await.map_err(failure_to_response)?;
 
     Ok(web::HttpResponse::Ok().body(
         "<html><body>You can close this window now<script>window.close()</script></body></html>",

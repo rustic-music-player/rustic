@@ -70,7 +70,7 @@ impl From<SpotifyFullTrack> for Track {
                     warn!("track {:?} is missing track id", debug_track);
                     format!("spotify://track/{}", &debug_track.uri)
                 }),
-            duration: Some(u64::from(track.duration_ms / 1000)),
+            duration: Some(track.duration.as_secs()),
             meta,
             explicit: Some(track.explicit),
             rating: Rating::None,
@@ -116,7 +116,7 @@ impl From<SpotifySimplifiedTrack> for Track {
                     warn!("track {:?} is missing track id", debug_track);
                     format!("spotify://track/{}", &debug_track.uri)
                 }),
-            duration: Some(u64::from(track.duration_ms / 1000)),
+            duration: Some(track.duration.as_secs()),
             meta,
             explicit: Some(track.explicit),
             rating: Rating::None,

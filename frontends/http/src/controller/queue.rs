@@ -4,6 +4,7 @@ use serde::Deserialize;
 use rustic_api::cursor::from_cursor;
 
 use crate::app::ApiClient;
+use super::failure_to_response;
 
 #[derive(Deserialize)]
 pub struct PlayerParams {
@@ -28,7 +29,7 @@ pub struct ReorderQueueItemParams {
 
 #[get("/queue")]
 pub async fn fetch_default(client: web::Data<ApiClient>) -> Result<impl Responder> {
-    let tracks = client.get_queue(None).await?;
+    let tracks = client.get_queue(None).await.map_err(failure_to_response)?;
 
     Ok(web::Json(tracks))
 }
@@ -38,8 +39,8 @@ pub async fn fetch(
     client: web::Data<ApiClient>,
     params: web::Path<PlayerParams>,
 ) -> Result<impl Responder> {
-    let player_id = from_cursor(&params.player_cursor)?;
-    let tracks = client.get_queue(Some(&player_id)).await?;
+    let player_id = from_cursor(&params.player_cursor).map_err(failure_to_response)?;
+    let tracks = client.get_queue(Some(&player_id)).await.map_err(failure_to_response)?;
 
     Ok(web::Json(tracks))
 }
@@ -49,7 +50,7 @@ pub async fn queue_track_default(
     client: web::Data<ApiClient>,
     params: web::Path<AddToQueueQuery>,
 ) -> Result<impl Responder> {
-    let result = client.queue_track(None, &params.cursor).await?;
+    let result = client.queue_track(None, &params.cursor).await.map_err(failure_to_response)?;
 
     match result {
         Some(_) => Ok(HttpResponse::NoContent().finish()),
@@ -63,8 +64,8 @@ pub async fn queue_track(
     params: web::Path<AddToQueueQuery>,
     player: web::Path<PlayerParams>,
 ) -> Result<impl Responder> {
-    let player_id = from_cursor(&player.player_cursor)?;
-    let result = client.queue_track(Some(&player_id), &params.cursor).await?;
+    let player_id = from_cursor(&player.player_cursor).map_err(failure_to_response)?;
+    let result = client.queue_track(Some(&player_id), &params.cursor).await.map_err(failure_to_response)?;
 
     match result {
         Some(_) => Ok(HttpResponse::NoContent().finish()),
@@ -77,7 +78,7 @@ pub async fn queue_album_default(
     client: web::Data<ApiClient>,
     params: web::Path<AddToQueueQuery>,
 ) -> Result<impl Responder> {
-    let result = client.queue_album(None, &params.cursor).await?;
+    let result = client.queue_album(None, &params.cursor).await.map_err(failure_to_response)?;
 
     match result {
         Some(_) => Ok(HttpResponse::NoContent().finish()),
@@ -91,8 +92,8 @@ pub async fn queue_album(
     params: web::Path<AddToQueueQuery>,
     player: web::Path<PlayerParams>,
 ) -> Result<impl Responder> {
-    let player_id = from_cursor(&player.player_cursor)?;
-    let result = client.queue_album(Some(&player_id), &params.cursor).await?;
+    let player_id = from_cursor(&player.player_cursor).map_err(failure_to_response)?;
+    let result = client.queue_album(Some(&player_id), &params.cursor).await.map_err(failure_to_response)?;
 
     match result {
         Some(_) => Ok(HttpResponse::NoContent().finish()),
@@ -105,7 +106,7 @@ pub async fn queue_playlist_default(
     client: web::Data<ApiClient>,
     params: web::Path<AddToQueueQuery>,
 ) -> Result<impl Responder> {
-    let result = client.queue_playlist(None, &params.cursor).await?;
+    let result = client.queue_playlist(None, &params.cursor).await.map_err(failure_to_response)?;
 
     match result {
         Some(_) => Ok(HttpResponse::NoContent().finish()),
@@ -119,10 +120,10 @@ pub async fn queue_playlist(
     params: web::Path<AddToQueueQuery>,
     player: web::Path<PlayerParams>,
 ) -> Result<impl Responder> {
-    let player_id = from_cursor(&player.player_cursor)?;
+    let player_id = from_cursor(&player.player_cursor).map_err(failure_to_response)?;
     let result = client
         .queue_playlist(Some(&player_id), &params.cursor)
-        .await?;
+        .await.map_err(failure_to_response)?;
 
     match result {
         Some(_) => Ok(HttpResponse::NoContent().finish()),
@@ -132,7 +133,7 @@ pub async fn queue_playlist(
 
 #[post("/queue/clear")]
 pub async fn clear_default(client: web::Data<ApiClient>) -> Result<impl Responder> {
-    client.clear_queue(None).await?;
+    client.clear_queue(None).await.map_err(failure_to_response)?;
 
     Ok(HttpResponse::NoContent().finish())
 }
@@ -142,8 +143,8 @@ pub async fn clear(
     client: web::Data<ApiClient>,
     player: web::Path<PlayerParams>,
 ) -> Result<impl Responder> {
-    let player_id = from_cursor(&player.player_cursor)?;
-    client.clear_queue(Some(&player_id)).await?;
+    let player_id = from_cursor(&player.player_cursor).map_err(failure_to_response)?;
+    client.clear_queue(Some(&player_id)).await.map_err(failure_to_response)?;
 
     Ok(HttpResponse::NoContent().finish())
 }
@@ -153,7 +154,7 @@ pub async fn select_item_default(
     client: web::Data<ApiClient>,
     params: web::Path<QueueItemParams>,
 ) -> Result<impl Responder> {
-    client.select_queue_item(None, params.index).await?;
+    client.select_queue_item(None, params.index).await.map_err(failure_to_response)?;
 
     Ok(HttpResponse::NoContent().finish())
 }
@@ -164,10 +165,10 @@ pub async fn select_item(
     params: web::Path<QueueItemParams>,
     player: web::Path<PlayerParams>,
 ) -> Result<impl Responder> {
-    let player_id = from_cursor(&player.player_cursor)?;
+    let player_id = from_cursor(&player.player_cursor).map_err(failure_to_response)?;
     client
         .select_queue_item(Some(&player_id), params.index)
-        .await?;
+        .await.map_err(failure_to_response)?;
 
     Ok(HttpResponse::NoContent().finish())
 }
@@ -177,7 +178,7 @@ pub async fn remove_item_default(
     client: web::Data<ApiClient>,
     params: web::Path<QueueItemParams>,
 ) -> Result<impl Responder> {
-    client.remove_queue_item(None, params.index).await?;
+    client.remove_queue_item(None, params.index).await.map_err(failure_to_response)?;
 
     Ok(HttpResponse::NoContent().finish())
 }
@@ -188,10 +189,10 @@ pub async fn remove_item(
     params: web::Path<QueueItemParams>,
     player: web::Path<PlayerParams>,
 ) -> Result<impl Responder> {
-    let player_id = from_cursor(&player.player_cursor)?;
+    let player_id = from_cursor(&player.player_cursor).map_err(failure_to_response)?;
     client
         .remove_queue_item(Some(&player_id), params.index)
-        .await?;
+        .await.map_err(failure_to_response)?;
 
     Ok(HttpResponse::NoContent().finish())
 }
@@ -203,7 +204,7 @@ pub async fn reorder_item_default(
 ) -> Result<impl Responder> {
     client
         .reorder_queue_item(None, params.before, params.after)
-        .await?;
+        .await.map_err(failure_to_response)?;
 
     Ok(HttpResponse::NoContent().finish())
 }
@@ -214,10 +215,10 @@ pub async fn reorder_item(
     params: web::Path<ReorderQueueItemParams>,
     player: web::Path<PlayerParams>,
 ) -> Result<impl Responder> {
-    let player_id = from_cursor(&player.player_cursor)?;
+    let player_id = from_cursor(&player.player_cursor).map_err(failure_to_response)?;
     client
         .reorder_queue_item(Some(&player_id), params.before, params.after)
-        .await?;
+        .await.map_err(failure_to_response)?;
 
     Ok(HttpResponse::NoContent().finish())
 }

@@ -8,7 +8,7 @@ license = "GPL-3.0"
 [dependencies]
 failure = "0.1"
 log = "0.4"
-url = "2.1"
+url = "2.2"
 unix-named-pipe = "0.2"
 smol = "1"
 symphonia = { version = "0.1", features = ["mp3"] }

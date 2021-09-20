@@ -96,13 +96,13 @@ impl Cache {
     async fn download_coverart(&self, url: &str) -> Result<Thumbnail, Error> {
         use futures::prelude::*;
         use tokio::fs::File;
-        use tokio_util::compat::Tokio02AsyncWriteCompatExt;
+        use tokio_util::compat::TokioAsyncWriteCompatExt;
 
         debug!("downloading thumbnail {}", url);
 
         let file_path = self.get_coverart_path(url);
         let mut file = File::create(&file_path).await?.compat_write();
-        let res = reqwest_10::get(url).await?;
+        let res = get(url).await?;
         let stream = res
             .bytes_stream()
             .map_err(|e| futures::io::Error::new(futures::io::ErrorKind::Other, e))
@@ -140,7 +140,7 @@ fn cache_track(track: &Track, stream_url: &str) -> Result<CachedEntry, Error> {
     debug!("{} -> {}", &track.uri, &filename);
 
     let mut file = OpenOptions::new().create(true).write(true).open(&path)?;
-    let mut res = get(stream_url)?;
+    let mut res = reqwest::blocking::get(stream_url)?;
     res.copy_to(&mut file)?;
 
     Ok(CachedEntry {

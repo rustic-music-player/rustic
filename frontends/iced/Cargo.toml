@@ -8,8 +8,8 @@ repository = "https://github.com/rustic-music-player/rustic"
 homepage = "https://github.com/rustic-music-player/rustic"
 
 [dependencies]
-iced = { version = "0.2", features = ["tokio", "image", "svg"] }
-iced_native = "0.3"
+iced = { version = "0.3", features = ["tokio", "image", "svg"] }
+iced_native = "0.4"
 log = "0.4"
 
 [dependencies.rustic-api]

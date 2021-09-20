@@ -7,6 +7,7 @@ use rustic_api::cursor::from_cursor;
 use rustic_api::models::ProviderTypeModel;
 
 use crate::app::ApiClient;
+use super::failure_to_response;
 
 #[derive(Deserialize)]
 pub struct SearchQuery {
@@ -26,7 +27,7 @@ pub async fn search(
 ) -> Result<impl Responder, error::Error> {
     trace!("search {}", &params.query);
     let query = params.into_inner();
-    let result = client.search(&query.query, query.providers).await?;
+    let result = client.search(&query.query, query.providers).await.map_err(failure_to_response)?;
     Ok(web::Json(result))
 }
 
@@ -39,7 +40,7 @@ pub async fn search_aggregated(
     let query = params.into_inner();
     let result = client
         .aggregated_search(&query.query, query.providers)
-        .await?;
+        .await.map_err(failure_to_response)?;
 
     Ok(web::Json(result))
 }
@@ -51,7 +52,7 @@ pub async fn search_library(
 ) -> Result<impl Responder, error::Error> {
     trace!("search {}", &params.query);
     let query = params.into_inner();
-    let result = client.search_library(&query.query).await?;
+    let result = client.search_library(&query.query).await.map_err(failure_to_response)?;
     Ok(web::Json(result))
 }
 
@@ -60,9 +61,9 @@ pub async fn open(
     client: web::Data<ApiClient>,
     params: web::Path<OpenParams>,
 ) -> Result<impl Responder, error::Error> {
-    let url = from_cursor(&params.url)?;
+    let url = from_cursor(&params.url).map_err(failure_to_response)?;
 
-    match client.open_share_url(&url).await? {
+    match client.open_share_url(&url).await.map_err(failure_to_response)? {
         Some(result) => Ok(web::Json(result)),
         None => Err(error::ErrorNotFound("no results")),
     }
@@ -78,14 +79,14 @@ mod test {
 
     use crate::test::build_app;
 
-    #[actix_rt::test]
+    #[tokio::test]
     async fn search_should_return_success() {
         let mut client = TestApiClient::new();
         client
             .expect_search()
             .called_once()
             .returning(|_| Ok(SearchResults::default()));
-        let mut app = test::init_service(build_app(App::new(), client)).await;
+        let app = test::init_service(build_app(App::new(), client)).await;
         let req = test::TestRequest::get()
             .uri("/search?query=test")
             .to_request();
@@ -96,7 +97,7 @@ mod test {
         assert_eq!(res.status(), http::StatusCode::OK);
     }
 
-    #[actix_rt::test]
+    #[tokio::test]
     async fn search_should_perform_search() {
         let mut client = TestApiClient::new();
         client
@@ -114,7 +115,7 @@ mod test {
         assert_eq!(res, SearchResults::default());
     }
 
-    #[actix_rt::test]
+    #[tokio::test]
     async fn search_should_perform_search_with_providers() {
         let mut client = TestApiClient::new();
         let providers = vec![ProviderTypeModel::Soundcloud, ProviderTypeModel::Spotify];

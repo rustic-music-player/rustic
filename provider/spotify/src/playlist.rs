@@ -1,3 +1,4 @@
+use rspotify::model::PlayableItem;
 use rspotify::model::playlist::*;
 use serde_derive::{Deserialize, Serialize};
 
@@ -27,8 +28,13 @@ impl From<SpotifyPlaylist> for Playlist {
                 .tracks
                 .items
                 .into_iter()
-                .map(|track| track.track.map(SpotifyFullTrack::from))
-                .filter_map(|t| t)
+                .filter_map(|track| track.track
+                    .and_then(|item| if let PlayableItem::Track(track) = item {
+                        Some(track)
+                    } else {
+                        None
+                    })
+                    .map(SpotifyFullTrack::from))
                 .map(Track::from)
                 .collect(),
         }

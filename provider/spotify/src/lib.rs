@@ -1,13 +1,13 @@
-use failure::{format_err, Error};
+use async_trait::async_trait;
+use failure::{Error, format_err};
 use log::trace;
-use rspotify::client::Spotify;
-use rspotify::oauth2::{SpotifyClientCredentials, SpotifyOAuth, TokenInfo};
-use rspotify::util::generate_random_string;
+use rspotify::{AuthCodeSpotify, OAuth, Token};
+use rspotify::model::{AlbumId, ArtistId, PlaylistId, SearchResult, SearchType, TrackId};
+use rspotify::prelude::*;
 use serde_derive::Deserialize;
 
-use async_trait::async_trait;
+use rustic_core::{CredentialStore, provider};
 use rustic_core::library::{Album, Artist, MetaValue, Playlist, SharedLibrary, Track};
-use rustic_core::{provider, CredentialStore};
 
 use crate::album::*;
 use crate::artist::*;
@@ -30,12 +30,12 @@ const SPOTIFY_REDIRECT_URI: &str = "http://localhost:8080/api/providers/spotify/
 pub struct SpotifyProvider {
     client_id: String,
     client_secret: String,
-    //    username: String,
-    //    password: String,
+    // username: String,
+    // password: String,
     #[serde(skip)]
-    client: Option<Spotify>,
-    //    #[serde(skip)]
-    //    player: SpotifyPlayer,
+    client: Option<AuthCodeSpotify>,
+    // #[serde(skip)]
+    // player: SpotifyPlayer,
 }
 
 impl SpotifyProvider {
@@ -44,7 +44,7 @@ impl SpotifyProvider {
         let client_secret = option_env!("SPOTIFY_CLIENT_SECRET").map(String::from);
 
         client_id
-            .and_then(|client_id| client_secret.map(|secret| (client_id, secret)))
+            .zip(client_secret)
             .map(|(client_id, client_secret)| SpotifyProvider {
                 client_id,
                 client_secret,
@@ -55,7 +55,7 @@ impl SpotifyProvider {
     async fn sync_tracks(&self, library: &SharedLibrary) -> Result<(usize, usize), Error> {
         let spotify = self.client.as_ref().unwrap();
 
-        let albums = spotify.current_user_saved_albums(None, None).await?.items;
+        let albums = spotify.current_user_saved_albums_manual(None, None).await?.items;
 
         let albums_len = albums.len();
 
@@ -90,12 +90,13 @@ impl SpotifyProvider {
     async fn sync_playlists(&self, library: &SharedLibrary) -> Result<usize, Error> {
         let spotify = self.client.as_ref().unwrap();
 
-        let user_playlists = spotify.current_user_playlists(None, None).await?;
-        let mut playlists = Vec::with_capacity(user_playlists.items.len());
-        for playlist in user_playlists.items {
+        let user_playlists = spotify.current_user_playlists_manual(None, None).await?.items;
+        let mut playlists = Vec::with_capacity(user_playlists.len());
+        for playlist in user_playlists {
+            let id = PlaylistId::from_id(&playlist.id)?;
             // TODO: this should await all playlists at once
             let p = spotify
-                .playlist(&playlist.id, None, None)
+                .playlist(&id, None, None)
                 .await
                 .map(SpotifyPlaylist::from)
                 .map(Playlist::from)?;
@@ -109,55 +110,52 @@ impl SpotifyProvider {
         Ok(playlist_count)
     }
 
-    fn get_oauth_client(&self) -> SpotifyOAuth {
-        SpotifyOAuth::default()
-            .client_id(&self.client_id)
-            .client_secret(&self.client_secret)
-            .scope(
-                &[
-                    "user-library-read",
-                    "playlist-read-private",
-                    "user-top-read",
-                    "user-read-recently-played",
-                    "playlist-read-collaborative",
-                ]
-                .join(" "),
-            )
-            .redirect_uri(SPOTIFY_REDIRECT_URI)
-    }
+    fn get_oauth_client(&self) -> Result<AuthCodeSpotify, Error> {
+        let oauth = OAuth {
+            redirect_uri: SPOTIFY_REDIRECT_URI.to_string(),
+            scopes: rspotify::scopes!(
+                "user-library-read",
+                "playlist-read-private",
+                "user-top-read",
+                "user-read-recently-played",
+                "playlist-read-collaborative"
+            ),
+            ..Default::default()
+        };
+        let credentials = rspotify::Credentials::new(&self.client_id, &self.client_secret);
 
-    fn setup_client(&mut self, token: TokenInfo) {
-        let client_credential = SpotifyClientCredentials::default()
-            .token_info(token)
-            .build();
-        let spotify = Spotify::default()
-            .client_credentials_manager(client_credential)
-            .build();
-
-        self.client = Some(spotify);
+        let mut spotify = AuthCodeSpotify::new(credentials, oauth);
+        spotify.config.token_cached = true;
+        spotify.token = match Token::from_cache(&spotify.config.cache_path) {
+            Ok(token) => {
+                Some(token)
+            }
+            Err(err) => {
+                log::warn!("Loading spotify token failed {:?}", err);
+                None
+            }
+        };
+        Ok(spotify)
     }
 }
 
 #[async_trait]
 impl rustic_core::provider::ProviderInstance for SpotifyProvider {
     async fn setup(&mut self, cred_store: &dyn CredentialStore) -> Result<(), Error> {
-        let mut oauth = self.get_oauth_client();
-
-        if let Some(token) = oauth.get_cached_token().await {
-            self.setup_client(token);
-        }
+        let client = self.get_oauth_client()?;
+        self.client = Some(client);
 
         Ok(())
     }
 
     fn state(&self) -> provider::ProviderState {
-        if self.client.is_some() {
+        if let Some(_) = self.client.as_ref().and_then(|client| client.get_token()) {
             provider::ProviderState::Authenticated(None)
-        } else {
-            let oauth = self.get_oauth_client().build();
-            let state = generate_random_string(16);
-            let auth_url = oauth.get_authorize_url(Some(&state), None);
+        } else if let Some(ref client) = self.client {
+            let auth_url = client.get_authorize_url(false).unwrap();
             provider::ProviderState::RequiresOAuth(auth_url)
+        } else {
+            provider::ProviderState::InvalidConfiguration(None)
         }
     }
 
@@ -169,21 +167,22 @@ impl rustic_core::provider::ProviderInstance for SpotifyProvider {
         use provider::Authentication::*;
         match auth {
             Token(token) => {
-                let oauth = self.get_oauth_client();
-                if let Some(token) = oauth.get_access_token(&token).await {
-                    self.setup_client(token);
+                if let Some(ref mut client) = self.client {
+                    client.request_token(&token).await?;
                     Ok(())
                 } else {
-                    Err(format_err!("Can't get access token"))
+                    unreachable!()
                 }
             }
             TokenWithState(token, state) => {
-                let oauth = self.get_oauth_client().state(&state);
-                if let Some(token) = oauth.get_access_token(&token).await {
-                    self.setup_client(token);
+                if let Some(ref mut client) = self.client {
+                    if client.oauth.state != state {
+                        return Err(format_err!("Invalid token state"));
+                    }
+                    client.request_token(&token).await?;
                     Ok(())
                 } else {
-                    Err(format_err!("Can't get access token"))
+                    unreachable!()
                 }
             }
             _ => Err(format_err!("Invalid authentication method")),
@@ -230,27 +229,33 @@ impl rustic_core::provider::ProviderInstance for SpotifyProvider {
         trace!("search {}", query);
         let spotify = self.client.clone().unwrap();
 
-        let albums = spotify.search_album(&query, None, None, None).await?;
-        let artists = spotify.search_artist(&query, None, None, None).await?;
-        let tracks = spotify.search_track(&query, None, None, None).await?;
+        let albums = if let SearchResult::Albums(albums) = spotify.search(&query, &SearchType::Album, None, None, None, None).await? {
+            albums.items
+        } else {
+            Default::default()
+        };
+        let artists = if let SearchResult::Artists(artists) = spotify.search(&query, &SearchType::Artist, None, None, None, None).await? {
+            artists.items
+        } else {
+            Default::default()
+        };
+        let tracks = if let SearchResult::Tracks(tracks) = spotify.search(&query, &SearchType::Track, None, None, None, None).await? {
+            tracks.items
+        } else {
+            Default::default()
+        };
 
         let albums = albums
-            .albums
-            .items
             .into_iter()
             .map(SpotifySimplifiedAlbum::from)
             .map(Album::from)
             .map(provider::ProviderItem::from);
         let artists = artists
-            .artists
-            .items
             .into_iter()
             .map(SpotifyFullArtist::from)
             .map(Artist::from)
             .map(provider::ProviderItem::from);
         let tracks = tracks
-            .tracks
-            .items
             .into_iter()
             .map(SpotifyFullTrack::from)
             .map(Track::from)
@@ -262,7 +267,7 @@ impl rustic_core::provider::ProviderInstance for SpotifyProvider {
     async fn resolve_track(&self, uri: &str) -> Result<Option<Track>, Error> {
         let spotify = self.client.as_ref().unwrap();
         let id = &uri["spotify://track/".len()..];
-        let track = spotify.track(id).await?;
+        let track = spotify.track(&TrackId::from_id(id)?).await?;
         let track = SpotifyFullTrack::from(track);
         let track = track.into();
 
@@ -272,7 +277,7 @@ impl rustic_core::provider::ProviderInstance for SpotifyProvider {
     async fn resolve_album(&self, uri: &str) -> Result<Option<Album>, Error> {
         let spotify = self.client.as_ref().unwrap();
         let id = &uri["spotify://album/".len()..];
-        let album = spotify.album(id).await?;
+        let album = spotify.album(&AlbumId::from_id(id)?).await?;
         let album = SpotifyFullAlbum::from(album);
         let album = album.into();
 
@@ -282,7 +287,7 @@ impl rustic_core::provider::ProviderInstance for SpotifyProvider {
     async fn resolve_artist(&self, uri: &str) -> Result<Option<Artist>, Error> {
         let spotify = self.client.as_ref().unwrap();
         let id = &uri["spotify://artist/".len()..];
-        let artist = spotify.artist(id).await?;
+        let artist = spotify.artist(&ArtistId::from_id(id)?).await?;
         let artist = SpotifyFullArtist::from(artist);
         let artist = artist.into();
 
@@ -292,7 +297,7 @@ impl rustic_core::provider::ProviderInstance for SpotifyProvider {
     async fn resolve_playlist(&self, uri: &str) -> Result<Option<Playlist>, Error> {
         let spotify = self.client.clone().unwrap();
         let id = &uri["spotify://playlists/".len()..];
-        let playlist = spotify.playlist(id, None, None).await?;
+        let playlist = spotify.playlist(&PlaylistId::from_id(id)?, None, None).await?;
         let playlist = SpotifyPlaylist::from(playlist);
         let playlist = Playlist::from(playlist);
 
@@ -304,13 +309,11 @@ impl rustic_core::provider::ProviderInstance for SpotifyProvider {
             .meta
             .get(META_SPOTIFY_URI)
             .ok_or_else(|| format_err!("Missing spotify uri"))?;
-        if let MetaValue::String(_uri) = uri {
-            //            let uri = uri.clone();
-            //            let player = self.player.clone();
-            //            let t = thread::spawn(move || player.get_audio_file(&uri))
-            //                .join()
-            //                .unwrap()
-            //                .unwrap();
+        if let MetaValue::String(uri) = uri {
+            // let player = self.player.clone();
+            // let file_path = player.get_audio_file(&uri).await?;
+
+            // Ok(format!("file://{}", file_path))
 
             unimplemented!()
         } else {

@@ -34,12 +34,20 @@ impl Default for HttpConfig {
 }
 
 pub fn start(
+    handle: tokio::runtime::Handle,
     config: Option<HttpConfig>,
     app: Arc<Rustic>,
     client: ApiClient,
 ) -> thread::JoinHandle<()> {
     let config = config.unwrap_or_default();
     thread::spawn(move || {
-        app::start(&config, app, client).unwrap();
+        handle.block_on(async {
+            let local = tokio::task::LocalSet::new();
+            local.run_until(async {
+                local.spawn_local(async move {
+                    app::start(&config, app, client).await.unwrap();
+                }).await
+            }).await
+        }).unwrap();
     })
 }

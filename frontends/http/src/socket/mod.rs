@@ -20,7 +20,7 @@ pub fn create_socket_server(app: Arc<Rustic>, client: ApiClient) -> Addr<SocketS
 }
 
 pub fn socket_service(server: Addr<SocketServer>) -> Resource {
-    web::resource("/socket").data(server).to(open)
+    web::resource("/socket").app_data(web::Data::new(server)).to(open)
 }
 
 pub async fn open(

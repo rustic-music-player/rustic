@@ -1,5 +1,5 @@
 use actix_web::dev::*;
-use actix_web::{App, Error, FromRequest};
+use actix_web::{web, App, Error, FromRequest};
 
 use rustic_api::TestApiClient;
 
@@ -15,16 +15,16 @@ pub fn build_app<T, B>(app: App<T, B>, client: TestApiClient) -> App<T, B>
 where
     B: MessageBody,
     T: ServiceFactory<
+        ServiceRequest,
         Config = (),
-        Request = ServiceRequest,
         Response = ServiceResponse<B>,
         Error = Error,
         InitError = (),
     >,
 {
     let client: ApiClient = Arc::new(Box::new(client));
-    app.data(client)
-        .data(QsQuery::<SearchQuery>::configure(|cfg| {
+    app.app_data(web::Data::new(client))
+        .app_data(QsQuery::<SearchQuery>::configure(|cfg| {
             cfg.qs_config(Config::new(2, false))
         }))
         .service(controller::library::get_albums)

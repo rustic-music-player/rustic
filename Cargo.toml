@@ -6,7 +6,7 @@ members = [
     "core/queue",
     "core/reflect",
     "core/reflect/macros",
-    "backends/google-cast",
+#    "backends/google-cast",
     "backends/gstreamer",
     "backends/rodio",
     "backends/snapcast",
@@ -68,10 +68,11 @@ druid-frontend = ["rustic-druid-frontend"]
 qt-frontend = ["rustic-qt-frontend"]
 iced-frontend = ["rustic-iced-frontend"]
 systray-frontend = ["rustic-systray-frontend"]
-all-backends = ["gstreamer-backend", "rodio-backend", "google-cast-backend", "snapcast-backend"]
+all-backends = ["gstreamer-backend", "rodio-backend", "snapcast-backend"]
 gstreamer-backend = ["rustic-gstreamer-backend"]
 rodio-backend = ["rustic-rodio-backend"]
-google-cast-backend = ["rustic-google-cast-backend"]
+#Disabled until protobuf version missmatch between rust-cast and librespot is resolved
+#google-cast-backend = ["rustic-google-cast-backend"]
 snapcast-backend = ["rustic-snapcast-backend"]
 all-providers = ["local-files-provider", "pocketcasts-provider", "soundcloud-provider", "spotify-provider", "youtube-provider"]
 local-files-provider = ["rustic-local-provider"]
@@ -89,12 +90,12 @@ env_logger = "0.8"
 log = "0.4"
 serde = { version = "1.0", features = ["derive"] }
 toml = "0.5"
-url = "2.1"
+url = "2.2"
 failure = "0.1"
 ctrlc = { version = "3.1", features = ["termination"] }
 structopt = "0.3"
 futures = { version = "0.3", features = ["std", "async-await"], default-features = false }
-tokio = { version = "0.2", features = ["rt-threaded", "macros", "sync", "fs"] }
+tokio = { version = "1", features = ["rt-multi-thread", "macros", "sync", "fs"] }
 serde_json = "1"
 async-trait = "0.1"
 keyring = "0.10"
@@ -167,9 +168,9 @@ optional = true
 path = "backends/snapcast"
 optional = true
 
-[dependencies.rustic-google-cast-backend]
-path = "backends/google-cast"
-optional = true
+#[dependencies.rustic-google-cast-backend]
+#path = "backends/google-cast"
+#optional = true
 
 [dependencies.rustic-local-provider]
 path = "provider/local"

@@ -6,14 +6,13 @@ edition = "2018"
 
 [dependencies]
 failure = "0.1"
-librespot = { version = "0.1", default-features = false }
-rspotify = "0.9"
+librespot = { version = "0.2", default-features = false }
+rspotify = { git = "https://github.com/ramsayleung/rspotify", rev = "b3439c9" }
 serde = "1.0"
 serde_derive = "1.0"
 log = "0.4"
-tokio-core = "0.1"
 maplit = "^1"
-url = "2.1"
+url = "2.2"
 async-trait = "0.1"
 futures = { version = "0.3", features = ["std", "async-await"], default-features = false }
 

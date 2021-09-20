@@ -11,7 +11,7 @@ homepage = "https://github.com/rustic-music-player/rustic"
 druid = { version = "0.7", features = ["im", "image", "jpeg", "jpeg_rayon", "png", "webp"] }
 failure = "0.1"
 log = "0.4"
-tokio = "0.2"
+tokio = "1"
 surf = "2.1"
 futures = "0.3"
 lru-cache = "0.1"

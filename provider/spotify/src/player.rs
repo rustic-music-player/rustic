@@ -4,8 +4,7 @@ use std::path::PathBuf;
 
 use failure::{format_err, Error};
 use librespot::audio::{AudioDecrypt, AudioFile};
-use librespot::core::audio_key::AudioKey;
-use librespot::core::authentication::{get_credentials, Credentials};
+use librespot::core::authentication::{Credentials};
 use librespot::core::cache::Cache;
 use librespot::core::config::SessionConfig;
 use librespot::core::session::Session;
@@ -13,7 +12,6 @@ use librespot::core::spotify_id::SpotifyId;
 use librespot::metadata::AudioItem;
 use librespot::protocol::metadata::AudioFile_Format;
 use log::trace;
-use tokio_core::reactor::Core;
 
 #[derive(Clone)]
 pub struct SpotifyPlayer {
@@ -23,7 +21,11 @@ pub struct SpotifyPlayer {
 
 impl SpotifyPlayer {
     pub fn new() -> SpotifyPlayer {
-        let cache = Cache::new(PathBuf::from(".cache/spotify"), true);
+        let cache = Cache::new(
+            Some(PathBuf::from(".cache/spotify/data")),
+            Some(PathBuf::from(".cache/spotify/audio")),
+            None
+        ).unwrap();
 
         SpotifyPlayer {
             cache,
@@ -31,34 +33,20 @@ impl SpotifyPlayer {
         }
     }
 
-    pub fn setup(&mut self, username: &str, password: &str) -> Result<(), failure::Error> {
-        let credentials = {
-            let cached_credentials = self.cache.credentials();
-
-            get_credentials(
-                Some(username.to_string()),
-                Some(password.to_string()),
-                cached_credentials,
-                |_| password.to_string(),
-            )
-        }
-        .ok_or_else(|| format_err!("Missing spotify credentials"))?;
+    pub fn setup(&mut self, username: &str, password: &str) {
+        let credentials = self.cache.credentials().unwrap_or_else(|| Credentials::with_password(username, password));
 
         self.credentials = Some(credentials);
-        Ok(())
     }
 
-    pub fn get_audio_file(&self, uri: &str) -> Result<(), Error> {
+    pub async fn get_audio_file(&self, uri: &str) -> Result<&str, Error> {
         trace!("get_audio_file {}", uri);
-        let (session, mut core) = self.connect()?;
+        let session = self.connect().await?;
         trace!("connected");
         let id =
             SpotifyId::from_uri(uri).map_err(|err| format_err!("spotify id error {:?}", err))?;
         trace!("id {:?}", id);
-        let audio = AudioItem::get_audio_item(&session, id);
-        let audio: AudioItem = core
-            .run(audio)
-            .map_err(|err| format_err!("audio file err {:?}", err))?;
+        let audio = AudioItem::get_audio_item(&session, id).await.map_err(|err| failure::format_err!("fetching audio item failed {:?}", err))?;
 
         trace!("AudioItem {:#?}", audio);
 
@@ -67,25 +55,23 @@ impl SpotifyPlayer {
         let file_id = *audio
             .files
             .get(&format)
-            .ok_or_else(|| format_err!("no mp3 available"))?;
+            .ok_or_else(|| format_err!("no ogg available"))?;
         trace!("FileId {:?}", file_id);
 
-        let key = session.audio_key().request(id, file_id);
+        let encrypted_file = AudioFile::open(&session, file_id, data_rate, true).await.map_err(|err| failure::format_err!("opening audio file failed {:?}", err))?;
 
-        let encrypted_file = AudioFile::open(&session, file_id, data_rate, true);
-        let encrypted_file: AudioFile = core
-            .run(encrypted_file)
-            .map_err(|err| format_err!("encrypted file err {:?}", err))?;
-
-        let mut stream_loader_controller = encrypted_file.get_stream_loader_controller();
+        trace!("is_cached: {}", encrypted_file.is_cached());
+        let stream_loader_controller = encrypted_file.get_stream_loader_controller();
         stream_loader_controller.set_stream_mode();
+        trace!("file_size: {}", stream_loader_controller.len());
+
+        trace!("fetching file");
+        stream_loader_controller.fetch_next_blocking(stream_loader_controller.len());
+
+        let key = session.audio_key().request(id, file_id).await.map_err(|err| failure::format_err!("fetching audio key failed {:?}", err))?;
 
         trace!("decrypting file");
-        let key: AudioKey = core
-            .run(key)
-            .map_err(|err| format_err!("key err {:?}", err))?;
         let decrypted_file = AudioDecrypt::new(key, encrypted_file);
-
         let mut audio_file = Subfile::new(decrypted_file, 0xa7);
 
         trace!("reading file");
@@ -94,30 +80,29 @@ impl SpotifyPlayer {
         trace!("read {} bytes", bytes);
 
         trace!("storing file");
-        let mut tmp_file = fs::File::create("/tmp/rustic_spotify_test.ogg")?;
+        let file_path = "/tmp/rustic_spotify_test.ogg";
+        let mut tmp_file = fs::File::create(&file_path)?;
         tmp_file.write(&buffer)?;
 
         trace!("file is written");
 
         session.shutdown();
 
-        Ok(())
+        Ok(file_path)
     }
 
-    fn connect(&self) -> Result<(Session, Core), failure::Error> {
+    async fn connect(&self) -> Result<Session, failure::Error> {
         let credentials = self.credentials.clone().unwrap();
 
         let session_config = SessionConfig::default();
 
-        let mut core = Core::new()?;
-        let session = core.run(Session::connect(
+        let session = Session::connect(
             session_config,
             credentials,
             Some(self.cache.clone()),
-            core.handle(),
-        ))?;
+        ).await?;
 
-        Ok((session, core))
+        Ok(session)
     }
 }
 

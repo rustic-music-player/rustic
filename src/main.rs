@@ -124,7 +124,7 @@ fn run_instance(
     options: options::CliOptions,
     config: config::Config,
 ) -> Result<(), failure::Error> {
-    let mut rt = tokio::runtime::Runtime::new()?;
+    let rt = tokio::runtime::Runtime::new()?;
     let (app, client) = rt.block_on(setup_instance(&options, &config))?;
 
     let sync_app = Arc::clone(&app);
@@ -133,7 +133,9 @@ fn run_instance(
 
     let mut threads = vec![];
 
-    if let Err(e) = rt.block_on(setup_apis(&config, &app, &client, &mut threads)) {
+    let handle = rt.handle();
+
+    if let Err(e) = rt.block_on(setup_apis(handle, &config, &app, &client, &mut threads)) {
         error!("frontend setup failed {:?}", e)
     }
 
@@ -165,6 +167,7 @@ fn connect_to_instance(
 }
 
 async fn setup_apis(
+    handle: &tokio::runtime::Handle,
     config: &config::Config,
     app: &Arc<Rustic>,
     client: &ApiClient,
@@ -183,6 +186,7 @@ async fn setup_apis(
     {
         if config.frontend.http.is_some() {
             let http_thread = rustic_http_frontend::start(
+                handle.clone(),
                 config.frontend.http.clone(),
                 Arc::clone(&app),
                 Arc::clone(&client),
