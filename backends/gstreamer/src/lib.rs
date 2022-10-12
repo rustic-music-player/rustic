@@ -77,7 +77,7 @@ impl PlayerBackend for GstBackend {
     fn set_track(&self, track: &Track, stream_url: String) -> Result<(), Error> {
         debug!("Selecting {:?}", track);
 
-        self.player.set_uri(stream_url.as_str());
+        self.player.set_uri(Some(stream_url.as_str()));
 
         match self.state.read() {
             PlayerState::Play => self.player.play(),
@@ -123,7 +123,7 @@ impl PlayerBackend for GstBackend {
     }
 
     fn volume(&self) -> f32 {
-        self.player.get_volume() as f32
+        self.player.volume() as f32
     }
 
     fn set_blend_time(&self, _duration: Duration) -> Result<(), Error> {
