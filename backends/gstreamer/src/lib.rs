@@ -33,6 +33,8 @@ impl std::fmt::Debug for GstBackend {
 
 impl GstBackend {
     pub fn new(core: Arc<Rustic>, bus: PlayerBus) -> Result<Box<dyn PlayerBackend>, Error> {
+        // TODO: only run once
+        std::thread::spawn(|| glib::MainLoop::new(None, false).run());
         gstreamer::init()?;
         let player = gstreamer_player::Player::new(None, None);
         let backend = GstBackend {
@@ -45,9 +47,13 @@ impl GstBackend {
         };
 
         backend.player.connect_end_of_stream(move |_| {
+            log::debug!("reached end of stream");
             if let Err(e) = bus.send_queue_msg(QueueCommand::Next) {
                 error!("Failed loading next track: {:?}", e)
             }
+        });
+        backend.player.connect_state_changed(|p, state| {
+            log::debug!("state changed to {} for player: {:?}", state, p);
         });
         backend.player.connect_error(|_, err| {
             error!("{:?}", err);
