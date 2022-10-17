@@ -2,14 +2,14 @@ use crate::player::{PlayerCommand, QueueCommand};
 use crate::PlayerEvent;
 use failure::{format_err, Error};
 use futures::stream::{select, StreamExt};
-use rustic_queue::{broadcast, Receiver, Sender};
+use rustic_queue::{broadcast, bus, Receiver, Sender, BusReceiver, BusSender};
 use std::fmt;
 use std::fmt::Debug;
 
 #[derive(Clone)]
 pub struct PlayerBus {
-    event_tx: Sender<PlayerEvent>,
-    event_rx: Receiver<PlayerEvent>,
+    event_tx: BusSender<PlayerEvent>,
+    event_rx: BusReceiver<PlayerEvent>,
     player_tx: Sender<PlayerCommand>,
     player_rx: Receiver<PlayerCommand>,
     queue_tx: Sender<QueueCommand>,
@@ -24,7 +24,7 @@ pub enum PlayerBusCommand {
 
 impl PlayerBus {
     pub fn new() -> Self {
-        let (event_tx, event_rx) = broadcast();
+        let (event_tx, event_rx) = bus();
         let (player_tx, player_rx) = broadcast();
         let (queue_tx, queue_rx) = broadcast();
 
@@ -55,6 +55,7 @@ impl PlayerBus {
     }
 
     pub fn emit_event(&self, event: PlayerEvent) -> Result<(), Error> {
+        log::debug!("emit_event {:?}", event);
         self.event_tx.send(event)?;
 
         Ok(())
@@ -67,7 +68,7 @@ impl PlayerBus {
         select(player_rx, queue_rx)
     }
 
-    pub fn observe(&self) -> Receiver<PlayerEvent> {
+    pub fn observe(&self) -> BusReceiver<PlayerEvent> {
         self.event_rx.clone()
     }
 }

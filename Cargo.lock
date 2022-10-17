@@ -2696,6 +2696,21 @@ dependencies = [
 ]
 
 [[package]]
+name = "futures-signals"
+version = "0.3.29"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "0ef3fac1b9c84bda2273ceb52645d7d9bbecebcba9aa664b6e4d6775235b5e9e"
+dependencies = [
+ "discard",
+ "futures-channel",
+ "futures-core",
+ "futures-util",
+ "log 0.4.14",
+ "pin-project 1.0.2",
+ "serde",
+]
+
+[[package]]
 name = "futures-sink"
 version = "0.3.17"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -6916,6 +6931,7 @@ version = "0.1.0"
 dependencies = [
  "flume 0.10.9",
  "futures 0.3.17",
+ "futures-signals",
 ]
 
 [[package]]

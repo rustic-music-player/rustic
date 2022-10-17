@@ -44,8 +44,9 @@ impl MemoryQueue {
     }
 
     async fn queue_changed(&self) -> Result<(), Error> {
+        let queue = self.get_queue().await?;
         self.bus
-            .emit_event(PlayerEvent::QueueUpdated(self.get_queue().await?))?;
+            .emit_event(PlayerEvent::QueueUpdated(queue))?;
         Ok(())
     }
 

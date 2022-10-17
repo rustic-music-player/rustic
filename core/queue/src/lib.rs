@@ -1,4 +1,6 @@
 use futures::stream::Stream;
+use futures::stream::StreamExt;
+use futures_signals::signal::{Mutable, MutableSignalCloned, SignalExt};
 
 type SenderImplementation<T> = flume::Sender<T>;
 type ReceiverImplementation<T> = flume::Receiver<T>;
@@ -16,6 +18,12 @@ pub fn one_shot<T>() -> (Sender<T>, Receiver<T>) {
     let (tx, rx) = flume::bounded(1);
 
     (tx.into(), rx.into())
+}
+
+pub fn bus<T>() -> (BusSender<T>, BusReceiver<T>) {
+    let mutable = Mutable::new(None);
+
+    (mutable.clone().into(), mutable.into())
 }
 
 #[derive(Debug, Clone)]
@@ -57,5 +65,44 @@ impl<T> From<SenderImplementation<T>> for Sender<T> {
 impl<T> From<ReceiverImplementation<T>> for Receiver<T> {
     fn from(receiver: ReceiverImplementation<T>) -> Receiver<T> {
         Receiver { rx: receiver }
+    }
+}
+
+#[derive(Debug, Clone)]
+pub struct BusSender<T> {
+    mutable: Mutable<Option<T>>
+}
+
+impl<T> BusSender<T> {
+    pub fn send(&self, msg: T) -> Result<(), SendError<T>> {
+        self.mutable.set(Some(msg));
+
+        Ok(())
+    }
+}
+
+#[derive(Debug, Clone)]
+pub struct BusReceiver<T> {
+    mutable: Mutable<Option<T>>
+}
+
+impl<T: 'static + Clone> BusReceiver<T> {
+    pub fn stream(&self) -> impl Stream<Item = T> {
+        self.mutable
+            .signal_cloned()
+            .to_stream()
+            .filter_map(|item| async { item })
+    }
+}
+
+impl<T> From<Mutable<Option<T>>> for BusSender<T> {
+    fn from(mutable: Mutable<Option<T>>) -> Self {
+        Self { mutable }
+    }
+}
+
+impl<T> From<Mutable<Option<T>>> for BusReceiver<T> {
+    fn from(mutable: Mutable<Option<T>>) -> Self {
+        Self { mutable }
     }
 }

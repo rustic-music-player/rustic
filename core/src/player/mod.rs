@@ -3,7 +3,7 @@ use std::sync::Arc;
 
 use failure::Error;
 use log::error;
-use rustic_queue::Receiver;
+use rustic_queue::{BusReceiver, Receiver};
 
 pub use self::bus::PlayerBus;
 use crate::library::Track;
@@ -100,7 +100,7 @@ impl Player {
         Ok(())
     }
 
-    pub fn observe(&self) -> Receiver<PlayerEvent> {
+    pub fn observe(&self) -> BusReceiver<PlayerEvent> {
         self.bus.observe()
     }
 }
