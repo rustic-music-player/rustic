@@ -1,4 +1,4 @@
-use actix_web::{get, post, web, Responder, Result};
+use actix_web::{get, post, web, HttpResponse, Responder, Result};
 use serde::Deserialize;
 
 use crate::app::ApiClient;
@@ -23,7 +23,7 @@ pub async fn enable_extension(
 ) -> Result<impl Responder> {
     client.enable_extension(&params.id).await.map_err(failure_to_response)?;
 
-    Ok(web::HttpResponse::NoContent())
+    Ok(HttpResponse::NoContent())
 }
 
 #[post("/extensions/{id}/disable")]
@@ -33,7 +33,7 @@ pub async fn disable_extension(
 ) -> Result<impl Responder> {
     client.disable_extension(&params.id).await.map_err(failure_to_response)?;
 
-    Ok(web::HttpResponse::NoContent())
+    Ok(HttpResponse::NoContent())
 }
 
 #[cfg(test)]

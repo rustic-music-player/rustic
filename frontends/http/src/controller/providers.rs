@@ -1,4 +1,4 @@
-use actix_web::{get, post, web, Responder, Result};
+use actix_web::{get, post, web, Responder, Result, HttpResponse};
 use serde::Deserialize;
 
 use rustic_api::models::{ProviderAuthModel, ProviderTypeModel};
@@ -53,7 +53,7 @@ pub async fn provider_basic_auth(
         .authenticate_provider(params.provider, body.into_inner())
         .await.map_err(failure_to_response)?;
 
-    Ok(web::HttpResponse::NoContent().finish())
+    Ok(HttpResponse::NoContent().finish())
 }
 
 #[get("/providers/{provider}/auth/redirect")]
@@ -66,7 +66,7 @@ pub async fn provider_token_auth(
         .authenticate_provider(params.provider, query.into_inner())
         .await.map_err(failure_to_response)?;
 
-    Ok(web::HttpResponse::Ok().body(
+    Ok(HttpResponse::Ok().body(
         "<html><body>You can close this window now<script>window.close()</script></body></html>",
     ))
 }

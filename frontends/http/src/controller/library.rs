@@ -52,7 +52,7 @@ pub async fn add_album(
     let cursor = params.into_inner().cursor;
     client.add_to_library(Cursor::Album(cursor)).await.map_err(failure_to_response)?;
 
-    Ok(web::HttpResponse::NoContent())
+    Ok(HttpResponse::NoContent())
 }
 
 #[delete("/library/albums/{cursor}")]
@@ -63,7 +63,7 @@ pub async fn remove_album(
     let cursor = params.into_inner().cursor;
     client.remove_from_library(Cursor::Album(cursor)).await.map_err(failure_to_response)?;
 
-    Ok(web::HttpResponse::NoContent())
+    Ok(HttpResponse::NoContent())
 }
 
 #[get("/library/artists")]
@@ -94,7 +94,7 @@ pub async fn add_artist(
     let cursor = params.into_inner().cursor;
     client.add_to_library(Cursor::Artist(cursor)).await.map_err(failure_to_response)?;
 
-    Ok(web::HttpResponse::NoContent())
+    Ok(HttpResponse::NoContent())
 }
 
 #[get("/library/playlists")]
@@ -129,7 +129,7 @@ pub async fn add_playlist(
     let cursor = params.into_inner().cursor;
     client.add_to_library(Cursor::Playlist(cursor)).await.map_err(failure_to_response)?;
 
-    Ok(web::HttpResponse::NoContent())
+    Ok(HttpResponse::NoContent())
 }
 
 #[get("/library/tracks")]
@@ -164,7 +164,7 @@ pub async fn add_track(
     let cursor = params.into_inner().cursor;
     client.add_to_library(Cursor::Track(cursor)).await.map_err(failure_to_response)?;
 
-    Ok(web::HttpResponse::NoContent())
+    Ok(HttpResponse::NoContent())
 }
 
 fn get_cover_art(cover_art: Option<CoverArtModel>) -> Result<impl Responder> {

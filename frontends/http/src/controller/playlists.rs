@@ -1,4 +1,4 @@
-use actix_web::{delete, post, put, web, Responder, Result};
+use actix_web::{delete, post, put, web, Responder, Result, HttpResponse};
 use serde::Deserialize;
 
 use rustic_api::ApiClient;
@@ -38,7 +38,7 @@ pub async fn remove_playlist(
 ) -> Result<impl Responder> {
     client.remove_playlist(&params.cursor).await.map_err(failure_to_response)?;
 
-    Ok(web::HttpResponse::NoContent())
+    Ok(HttpResponse::NoContent())
 }
 
 #[put("/library/playlists/{playlist}/{track}")]
@@ -51,7 +51,7 @@ pub async fn add_track_to_playlist(
         .add_track_to_playlist(&playlist.cursor, &track.cursor)
         .await.map_err(failure_to_response)?;
 
-    Ok(web::HttpResponse::NoContent())
+    Ok(HttpResponse::NoContent())
 }
 
 #[delete("/library/playlists/{playlist}/{track}")]
@@ -64,5 +64,5 @@ pub async fn remove_track_from_playlist(
         .remove_track_from_playlist(&playlist.cursor, &track.cursor)
         .await.map_err(failure_to_response)?;
 
-    Ok(web::HttpResponse::NoContent())
+    Ok(HttpResponse::NoContent())
 }

@@ -1,25 +1,22 @@
 use std::fs::create_dir_all;
 use std::sync::Arc;
 
-use actix::{Addr, System};
+use actix::Addr;
 use actix_files::{Files, NamedFile};
-use actix_web::{middleware, web, App, FromRequest, HttpServer, Responder, Result, Scope};
+use actix_web::{middleware, web, App, HttpServer, Responder, Result, Scope};
 
 use crate::controller;
-use crate::controller::search::SearchQuery;
 use crate::socket::{create_socket_server, socket_service, SocketServer};
 use crate::HttpConfig;
 pub use rustic_api::ApiClient;
 use rustic_core::Rustic;
-use serde_qs::actix::QsQuery;
+use serde_qs::actix::QsQueryConfig;
 use serde_qs::Config;
 
 fn build_api(client: ApiClient, ws_server: Addr<SocketServer>) -> Scope {
     web::scope("/api")
         .app_data(web::Data::new(Arc::clone(&client)))
-        .app_data(QsQuery::<SearchQuery>::configure(|cfg| {
-            cfg.qs_config(Config::new(2, false))
-        }))
+        .app_data(QsQueryConfig::default().qs_config(Config::new(2, false)))
         .service(controller::library::get_albums)
         .service(controller::library::get_album)
         .service(controller::library::add_album)
@@ -93,7 +90,6 @@ async fn index() -> Result<impl Responder> {
 
 pub async fn start(config: &HttpConfig, app: Arc<Rustic>, client: ApiClient) -> Result<()> {
     create_dir_all(&config.static_files)?;
-    let sys = System::new();
 
     let ws_server = create_socket_server(Arc::clone(&app), Arc::clone(&client));
 
@@ -114,6 +110,5 @@ pub async fn start(config: &HttpConfig, app: Arc<Rustic>, client: ApiClient) -> 
     .run()
     .await?;
 
-    sys.run()?;
     Ok(())
 }
