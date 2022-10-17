@@ -1,5 +1,3 @@
-use log::{debug, error};
-
 use std::any::Any;
 use std::sync::Arc;
 use std::time::Duration;
@@ -46,20 +44,26 @@ impl GstBackend {
             bus: bus.clone(),
         };
 
+        let eos_bus = bus.clone();
+        let error_bus = bus;
         backend.player.connect_end_of_stream(move |_| {
             log::debug!("reached end of stream");
-            if let Err(e) = bus.send_queue_msg(QueueCommand::Next) {
-                error!("Failed loading next track: {:?}", e)
+            if let Err(e) = eos_bus.send_queue_msg(QueueCommand::Next) {
+                log::error!("Failed loading next track: {:?}", e)
             }
         });
         backend.player.connect_state_changed(|p, state| {
             log::debug!("state changed to {} for player: {:?}", state, p);
         });
-        backend.player.connect_error(|_, err| {
-            error!("{:?}", err);
+        backend.player.connect_error(move |_, err| {
+            log::debug!("skipping track because of playback error");
+            log::error!("{:?}", err);
+            if let Err(e) = error_bus.send_queue_msg(QueueCommand::Next) {
+                log::error!("Failed loading next track: {:?}", e)
+            }
         });
         backend.player.connect_buffering(|_, p| {
-            debug!("buffering {}", p);
+            log::debug!("buffering {}", p);
         });
 
         Ok(Box::new(backend))
@@ -75,7 +79,7 @@ impl GstBackend {
 
 impl PlayerBackend for GstBackend {
     fn set_track(&self, track: &Track, stream_url: String) -> Result<(), Error> {
-        debug!("Selecting {:?}", track);
+        log::debug!("Selecting {:?}", track);
 
         self.player.set_uri(Some(stream_url.as_str()));
 
@@ -92,7 +96,7 @@ impl PlayerBackend for GstBackend {
     }
 
     fn set_state(&self, new_state: PlayerState) -> Result<(), Error> {
-        debug!("set_state, {:?}", &new_state);
+        log::debug!("set_state, {:?}", &new_state);
         match new_state {
             PlayerState::Play => {
                 self.player.play();
