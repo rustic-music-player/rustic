@@ -105,7 +105,7 @@ dependencies = [
  "h2",
  "http",
  "httparse",
- "httpdate 1.0.2",
+ "httpdate",
  "itoa 1.0.4",
  "language-tags",
  "local-channel",
@@ -3745,12 +3745,6 @@ checksum = "acd94fdbe1d4ff688b67b04eee2e17bd50995534a61539e45adfefb45e5e5503"
 
 [[package]]
 name = "httpdate"
-version = "0.3.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "494b4d60369511e7dea41cf646832512a94e542f68bb9c49e54518e0f468eb47"
-
-[[package]]
-name = "httpdate"
 version = "1.0.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c4a1e36c821dbe04574f602848a19f742f4fb3c98d40449f11bcad18d6b17421"
@@ -3763,9 +3757,9 @@ checksum = "3c1ad908cc71012b7bea4d0c53ba96a8cba9962f048fa68d143376143d863b7a"
 
 [[package]]
 name = "hyper"
-version = "0.14.4"
+version = "0.14.16"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e8e946c2b1349055e0b72ae281b238baf1a3ea7307c7e9f9d64673bdd9c26ac7"
+checksum = "b7ec3e62bdc98a2f0393a5048e4c30ef659440ea6e0e572965103e72bd836f55"
 dependencies = [
  "bytes 1.1.0",
  "futures-channel",
@@ -3775,10 +3769,10 @@ dependencies = [
  "http",
  "http-body",
  "httparse",
- "httpdate 0.3.2",
+ "httpdate",
  "itoa 0.4.6",
- "pin-project 1.0.2",
- "socket2 0.3.17",
+ "pin-project-lite 0.2.7",
+ "socket2 0.4.7",
  "tokio",
  "tower-service",
  "tracing",
