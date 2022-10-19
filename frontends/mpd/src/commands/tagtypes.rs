@@ -1,7 +1,10 @@
-use commands::MpdCommand;
+use serde::Serialize;
+use crate::commands::MpdCommand;
 use failure::Error;
 use rustic_core::Rustic;
 use std::sync::Arc;
+use futures::future::{BoxFuture, FutureExt};
+use rustic_api::ApiClient;
 
 pub struct TagTypesCommand {}
 
@@ -25,7 +28,9 @@ impl TagTypesCommand {
 }
 
 impl MpdCommand<Vec<TagType>> for TagTypesCommand {
-    fn handle(&self, _app: &Arc<Rustic>) -> Result<Vec<TagType>, Error> {
-        Ok(vec![TagType::new("Track")])
+    fn handle(&self, _: Arc<Rustic>, _client: ApiClient) -> BoxFuture<Result<Vec<TagType>, Error>> {
+        async move {
+            Ok(vec![TagType::new("Track")])
+        }.boxed()
     }
 }

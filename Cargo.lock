@@ -4761,6 +4761,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "minimal-lexical"
+version = "0.2.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "68354c5c6bd36d73ff3feceb05efa59b6acb7626617f4962be322a825e61f79a"
+
+[[package]]
 name = "minimp3"
 version = "0.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -4869,6 +4875,14 @@ dependencies = [
  "regex",
  "serde_json",
  "serde_urlencoded 0.6.1",
+]
+
+[[package]]
+name = "mpd-protocol"
+version = "0.1.0"
+source = "git+https://github.com/rustic-music-player/mpd-protocol#f7903aacdc5103a69ef329c54a1445e7c43f9d29"
+dependencies = [
+ "nom 7.1.1",
 ]
 
 [[package]]
@@ -5097,6 +5111,16 @@ checksum = "88034cfd6b4a0d54dd14f4a507eceee36c0b70e5a02236c4e4df571102be17f0"
 dependencies = [
  "memchr",
  "version_check 0.9.4",
+]
+
+[[package]]
+name = "nom"
+version = "7.1.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "a8903e5a29a317527874d0402f867152a3d21c908bb0b933e416c65e301d4c36"
+dependencies = [
+ "memchr",
+ "minimal-lexical",
 ]
 
 [[package]]
@@ -6892,11 +6916,14 @@ name = "rustic-mpd-frontend"
 version = "0.1.0"
 dependencies = [
  "failure",
+ "futures 0.3.17",
  "log",
+ "mpd-protocol",
+ "rustic-api",
  "rustic-core",
  "serde",
- "serde_derive",
  "serde_mpd",
+ "tokio",
 ]
 
 [[package]]

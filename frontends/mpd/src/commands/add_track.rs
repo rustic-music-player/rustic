@@ -7,22 +7,20 @@ use rustic_api::ApiClient;
 use futures::FutureExt;
 use crate::client_ext::ClientExt;
 
-pub struct LoadPlaylistCommand {
-    name: String,
+pub struct AddTrackCommand {
+    cursor: String,
 }
 
-impl LoadPlaylistCommand {
-    pub fn new(name: String) -> LoadPlaylistCommand {
-        LoadPlaylistCommand { name }
+impl AddTrackCommand {
+    pub fn new(cursor: String) -> AddTrackCommand {
+        AddTrackCommand { cursor }
     }
 }
 
-impl MpdCommand<()> for LoadPlaylistCommand {
+impl MpdCommand<()> for AddTrackCommand {
     fn handle(&self, _: Arc<Rustic>, client: ApiClient) -> BoxFuture<Result<(), Error>> {
         async move {
-            let playlist = client.get_playlist_by_name(&self.name).await?.unwrap();
-
-            client.queue_playlist(None, &playlist.cursor).await?;
+            client.queue_track(None, &self.cursor).await?;
 
             Ok(())
         }.boxed()

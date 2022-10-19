@@ -62,8 +62,7 @@ impl Explorer {
         }
     }
 
-    pub fn items(&self) -> Result<ProviderFolder, Error> {
-        let mut rt = tokio::runtime::Runtime::new()?;
+    pub async fn items(&self) -> Result<ProviderFolder, Error> {
         let root = self.get_root();
         match self.path.len() {
             0 => Ok(root),
@@ -73,9 +72,10 @@ impl Explorer {
                     .providers
                     .iter()
                     .find(|provider| &provider.title() == path);
-                provider
-                    .ok_or_else(|| Error::from(NavigationError::PathNotFound))
-                    .map(|provider| rt.block_on(async { provider.get().await.root() }))
+                match provider {
+                    Some(provider) => Ok(provider.get().await.root()),
+                    None => Err(Error::from(NavigationError::PathNotFound))
+                }
             }
             _ => {
                 let path = &self.path[0];
@@ -84,11 +84,10 @@ impl Explorer {
                     .iter()
                     .find(|provider| &provider.title() == path);
                 let path = &self.path[1..];
-                provider
-                    .ok_or_else(|| Error::from(NavigationError::PathNotFound))
-                    .and_then(|provider| {
-                        rt.block_on(async { provider.get().await.navigate(path.to_vec()).await })
-                    })
+                match provider {
+                    Some(provider) => provider.get().await.navigate(path.to_vec()).await,
+                    None => Err(Error::from(NavigationError::PathNotFound))
+                }
             }
         }
     }

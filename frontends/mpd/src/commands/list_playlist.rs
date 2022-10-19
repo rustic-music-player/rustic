@@ -1,16 +1,22 @@
-use commands::MpdCommand;
+use serde::Serialize;
+use crate::commands::MpdCommand;
 use failure::Error;
-use rustic_core::{MultiQuery, Rustic, Track};
+use rustic_core::{Rustic};
 use std::sync::Arc;
+use futures::future::BoxFuture;
+use futures::FutureExt;
+use rustic_api::ApiClient;
+use rustic_api::models::TrackModel;
+use crate::client_ext::ClientExt;
 
 #[derive(Debug, Serialize)]
 pub struct PlaylistItem {
     file: String,
 }
 
-impl From<Track> for PlaylistItem {
-    fn from(track: Track) -> PlaylistItem {
-        PlaylistItem { file: track.uri }
+impl From<TrackModel> for PlaylistItem {
+    fn from(track: TrackModel) -> Self {
+        Self { file: track.cursor }
     }
 }
 
@@ -25,22 +31,21 @@ impl ListPlaylistCommand {
 }
 
 impl MpdCommand<Vec<PlaylistItem>> for ListPlaylistCommand {
-    fn handle(&self, app: &Arc<Rustic>) -> Result<Vec<PlaylistItem>, Error> {
-        let playlists = app.library.query_playlists(MultiQuery::new())?;
-        let playlist = playlists
-            .iter()
-            .find(|playlist| playlist.title == self.name);
-        match playlist {
-            Some(playlist) => {
-                let tracks = playlist
-                    .tracks
-                    .iter()
-                    .cloned()
-                    .map(PlaylistItem::from)
-                    .collect();
-                Ok(tracks)
+    fn handle(&self, _: Arc<Rustic>, client: ApiClient) -> BoxFuture<Result<Vec<PlaylistItem>, Error>> {
+        async move {
+            let playlist = client.get_playlist_by_name(&self.name).await?;
+
+            match playlist {
+                Some(playlist) => {
+                    let tracks = playlist
+                        .tracks
+                        .into_iter()
+                        .map(PlaylistItem::from)
+                        .collect();
+                    Ok(tracks)
+                }
+                None => Ok(vec![]),
             }
-            None => Ok(vec![]),
-        }
+        }.boxed()
     }
 }

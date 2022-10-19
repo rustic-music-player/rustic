@@ -1,9 +1,12 @@
-use commands::list_playlists::PlaylistEntry;
-use commands::MpdCommand;
+use serde::Serialize;
+use crate::commands::list_playlists::PlaylistEntry;
+use crate::commands::MpdCommand;
 use failure::Error;
 use rustic_core::{Explorer, MultiQuery, Playlist, Rustic, SharedLibrary, Track};
-use song::MpdSong;
+use crate::song::MpdSong;
 use std::sync::Arc;
+use rustic_api::ApiClient;
+use futures::future::{BoxFuture, FutureExt};
 
 #[derive(Serialize)]
 pub struct PathItem {
@@ -15,9 +18,9 @@ pub struct ListInfoCommand {
 }
 
 impl ListInfoCommand {
-    pub fn new(path: String) -> ListInfoCommand {
+    pub fn new(path: Option<String>) -> ListInfoCommand {
         ListInfoCommand {
-            path: if path == "" { None } else { Some(path) },
+            path: path.and_then(|path| if path == "" { None } else { Some(path) }),
         }
     }
 
@@ -34,52 +37,55 @@ impl ListInfoCommand {
 type ListInfoResponse = (Vec<PathItem>, Vec<PlaylistEntry>, Vec<MpdSong>);
 
 impl MpdCommand<ListInfoResponse> for ListInfoCommand {
-    fn handle(&self, app: &Arc<Rustic>) -> Result<ListInfoResponse, Error> {
-        match self.path {
-            None => {
-                let explorer = Explorer::new(app.providers.to_vec());
-                let folders = explorer
-                    .items()
-                    .unwrap()
-                    .folders
-                    .iter()
-                    .map(|folder| PathItem {
-                        directory: folder.clone(),
-                    })
-                    .collect();
-                let playlists = self.get_playlists(&app.library)?;
-                Ok((folders, playlists, vec![]))
+    fn handle(&self, app: Arc<Rustic>, client: ApiClient) -> BoxFuture<Result<ListInfoResponse, Error>> {
+        async move {
+            match self.path {
+                None => {
+                    let explorer = Explorer::new(app.providers.to_vec());
+                    let folders = explorer
+                        .items()
+                        .await
+                        .unwrap()
+                        .folders
+                        .iter()
+                        .map(|folder| PathItem {
+                            directory: folder.clone(),
+                        })
+                        .collect();
+                    let playlists = self.get_playlists(&app.library)?;
+                    Ok((folders, playlists, vec![]))
+                }
+                Some(ref path) => {
+                    let mut explorer = Explorer::new(app.providers.to_vec());
+                    explorer.navigate_absolute(path);
+                    let path = explorer.path();
+                    let folder = explorer.items().await.unwrap();
+                    let folders = folder
+                        .folders
+                        .iter()
+                        .map(|folder| PathItem {
+                            directory: format!("{}{}", path, folder),
+                        })
+                        .collect();
+                    let items = folder
+                        .items
+                        .iter()
+                        .filter(|item| item.is_track())
+                        .cloned()
+                        .map(Track::from)
+                        .map(MpdSong::from)
+                        .collect();
+                    let playlists = folder
+                        .items
+                        .iter()
+                        .filter(|item| item.is_track())
+                        .cloned()
+                        .map(Playlist::from)
+                        .map(PlaylistEntry::from)
+                        .collect();
+                    Ok((folders, playlists, items))
+                }
             }
-            Some(ref path) => {
-                let mut explorer = Explorer::new(app.providers.to_vec());
-                explorer.navigate_absolute(path);
-                let path = explorer.path();
-                let folder = explorer.items().unwrap();
-                let folders = folder
-                    .folders
-                    .iter()
-                    .map(|folder| PathItem {
-                        directory: format!("{}{}", path, folder),
-                    })
-                    .collect();
-                let items = folder
-                    .items
-                    .iter()
-                    .filter(|item| item.is_track())
-                    .cloned()
-                    .map(Track::from)
-                    .map(MpdSong::from)
-                    .collect();
-                let playlists = folder
-                    .items
-                    .iter()
-                    .filter(|item| item.is_track())
-                    .cloned()
-                    .map(Playlist::from)
-                    .map(PlaylistEntry::from)
-                    .collect();
-                Ok((folders, playlists, items))
-            }
-        }
+        }.boxed()
     }
 }

@@ -1,7 +1,9 @@
-use commands::MpdCommand;
+use crate::commands::MpdCommand;
 use failure::Error;
 use rustic_core::Rustic;
 use std::sync::Arc;
+use futures::future::{BoxFuture, FutureExt};
+use rustic_api::ApiClient;
 
 pub struct PreviousCommand {}
 
@@ -12,11 +14,11 @@ impl PreviousCommand {
 }
 
 impl MpdCommand<()> for PreviousCommand {
-    fn handle(&self, app: &Arc<Rustic>) -> Result<(), Error> {
-        let player = app
-            .get_default_player()
-            .ok_or(format_err!("Missing default player"))?;
-        unimplemented!()
-        // player.queue.prev().map(|_| ())
+    fn handle(&self, _: Arc<Rustic>, client: ApiClient) -> BoxFuture<Result<(), Error>> {
+        async move {
+            client.player_control_prev(None).await?;
+
+            Ok(())
+        }.boxed()
     }
 }

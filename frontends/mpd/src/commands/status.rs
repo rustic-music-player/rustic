@@ -1,8 +1,12 @@
-use commands::MpdCommand;
+use serde::Serialize;
+use crate::commands::MpdCommand;
 use failure::Error;
 use rustic_core::player::PlayerState;
 use rustic_core::Rustic;
 use std::sync::Arc;
+use futures::future::{BoxFuture, FutureExt};
+use rustic_api::ApiClient;
+use rustic_api::models::RepeatModeModel;
 
 #[derive(Debug, Serialize)]
 pub struct AudioFormat {
@@ -46,21 +50,27 @@ impl StatusCommand {
 }
 
 impl MpdCommand<StatusResponse> for StatusCommand {
-    fn handle(&self, app: &Arc<Rustic>) -> Result<StatusResponse, Error> {
-        let player = app
-            .get_default_player()
-            .ok_or(format_err!("Missing default player"))?;
-        unimplemented!()
-        // Ok(StatusResponse {
-        //     volume: (player.backend.volume() * 100f32) as u32,
-        //     repeat: false,
-        //     random: false,
-        //     single: false,
-        //     consume: false,
-        //     playlist: 0,
-        //     playlistlength: player.get_queue().len(),
-        //     state: player.backend.state(),
-        //     xfade: 0,
-        // })
+    fn handle(&self, _: Arc<Rustic>, client: ApiClient) -> BoxFuture<Result<StatusResponse, Error>> {
+        async move {
+            let status = client.get_player(None).await?
+                .ok_or(failure::format_err!("Missing default player"))?;
+            let queue = client.get_queue(None).await?;
+
+            Ok(StatusResponse {
+                volume: (status.volume * 100f32) as u32,
+                repeat: status.repeat == RepeatModeModel::All,
+                single: status.repeat == RepeatModeModel::Single,
+                random: false,
+                consume: false,
+                playlist: 0,
+                playlistlength: queue.len(),
+                state: if status.playing {
+                    PlayerState::Play
+                }else {
+                    PlayerState::Pause
+                },
+                xfade: 0,
+            })
+        }.boxed()
     }
 }

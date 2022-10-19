@@ -50,6 +50,7 @@ homepage = "https://rustic.cloud"
 default = [
 	"sled-store",
 	"http-frontend",
+    "mpd-frontend",
 	"gstreamer-backend",
 	"rodio-backend",
 	"local-files-provider",

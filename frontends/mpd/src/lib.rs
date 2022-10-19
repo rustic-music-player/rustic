@@ -1,24 +1,22 @@
-extern crate serde;
-#[macro_use]
-extern crate serde_derive;
-extern crate rustic_core;
-extern crate serde_mpd;
-#[macro_use]
-extern crate log;
 #[macro_use]
 extern crate failure;
 
 mod commands;
 mod song;
+pub(crate) mod client_ext;
+
+use serde::Deserialize;
 
 use rustic_core::Rustic;
+use rustic_api::ApiClient;
 
-use std::io::{BufRead, BufReader, Read, Write};
-use std::net::{TcpListener, TcpStream};
 use std::sync::Arc;
-use std::thread;
+use futures::FutureExt;
 
-use commands::MpdCommand;
+use tokio::net::{TcpListener, TcpStream};
+use tokio::io::{BufReader, AsyncWriteExt, AsyncBufReadExt};
+
+use crate::commands::MpdCommand;
 
 #[derive(Deserialize, Clone, Debug)]
 pub struct MpdConfig {
@@ -26,201 +24,228 @@ pub struct MpdConfig {
     pub port: i32,
 }
 
-fn open(config: &MpdConfig, app: Arc<Rustic>) -> Result<(), failure::Error> {
-    let listener = TcpListener::bind(format!("{}:{}", config.ip, config.port))?;
-    info!("Listening on Port {}", config.port);
+async fn open(config: MpdConfig, app: Arc<Rustic>, client: ApiClient) -> Result<(), failure::Error> {
+    let listener = TcpListener::bind(format!("{}:{}", config.ip, config.port)).await?;
+    log::info!("Listening on Port {}", config.port);
 
-    for stream in listener.incoming() {
-        debug!("Connection opened");
-
-        let app = app.clone();
-
-        thread::spawn(move || handle_client(stream.unwrap(), &app));
+    loop {
+        match listener.accept().await {
+            Ok((socket, addr)) => {
+                log::debug!("Connection opened");
+                tokio::task::spawn(handle_client(socket, app.clone(), client.clone()));
+            },
+            Err(err) => log::error!("{:?}", err),
+        }
     }
-
-    Ok(())
 }
 
-pub fn start(config: Option<MpdConfig>, app: Arc<Rustic>) -> thread::JoinHandle<()> {
+pub fn start(config: Option<MpdConfig>, app: Arc<Rustic>, client: ApiClient) -> tokio::task::JoinHandle<Result<(), failure::Error>> {
     let config = config.unwrap_or(MpdConfig {
         ip: "0.0.0.0".to_owned(),
         port: 6600,
     });
-    thread::spawn(move || {
-        open(&config, app).unwrap();
-    })
+    tokio::task::spawn(open(config, app, client))
 }
 
-fn handle_client(stream: TcpStream, app: &Arc<Rustic>) {
+async fn handle_client(stream: TcpStream, app: Arc<Rustic>, client: ApiClient) {
     let mut reader = BufReader::new(stream);
     let header = "OK MPD 0.16.0\n";
-    let result = reader.get_ref().write(header.as_bytes());
+    let result = reader.get_mut().write(header.as_bytes()).await;
     match result {
-        Ok(_) => trace!("< {:?}", &header),
-        Err(e) => error!("{:?}", &e),
+        Ok(_) => log::trace!("< {:?}", &header),
+        Err(e) => log::error!("{:?}", &e),
     }
 
     loop {
-        let line = reader.by_ref().lines().next();
-        match line {
-            Some(line) => {
-                let res: Result<Option<()>, failure::Error> =
-                    line.map_err(failure::Error::from).and_then(|line| {
-                        trace!("> {:?}", &line);
-                        let cmd: Result<MpdCommands, failure::Error> = if line
-                            == "command_list_ok_begin"
-                        {
-                            let mut current =
-                                reader.by_ref().lines().next().expect("line").expect("line");
-                            trace!("> {:?}", &current);
-                            let mut cmds: Vec<MpdCommands> = vec![];
-                            while current.as_str() != "command_list_end" {
-                                if let Ok(cmd) = parse_single(&current) {
-                                    cmds.push(cmd)
-                                }
-                                current =
-                                    reader.by_ref().lines().next().expect("line").expect("line");
-                                trace!("> {:?}", &current);
-                            }
-                            Ok(MpdCommands::CommandList(cmds))
-                        } else {
-                            parse_single(&line)
-                        };
-                        cmd.and_then(|cmd| match cmd {
-                            MpdCommands::Idle => Ok(Some(())),
-                            MpdCommands::Close => Ok(None),
-                            cmd => {
-                                let mut result = handle_mpd_command(cmd, &app)?;
-                                result += "OK\n";
-                                trace!("< {:?}", &result);
-                                reader.get_ref().write_all(result.as_bytes())?;
-                                Ok(Some(()))
-                            }
-                        })
-                    });
+        let res: Result<Option<()>, failure::Error> = handle_line(&mut reader, &app, &client).await;
 
-                match res {
-                    Ok(None) => break,
-                    Err(err) => {
-                        error!("{:?}", &err);
-                        break;
-                    }
-                    Ok(Some(())) => {}
-                }
+        match res {
+            Ok(None) => break,
+            Err(err) => {
+                log::error!("{:?}", &err);
+                break;
             }
-            None => break,
+            Ok(Some(())) => {}
         }
     }
 
-    debug!("Connection closed");
+    log::debug!("Connection closed");
 }
 
-#[derive(Debug, Deserialize)]
-#[serde(rename_all = "lowercase")]
-enum MpdCommands {
-    Status,
-    CurrentSong,
-    CommandList(Vec<MpdCommands>),
-    #[serde(rename = "plchanges")]
-    PlaylistChanges(String),
-    Outputs,
-    Decoders,
-    Idle,
-    NoIdle,
-    ListPlaylists,
-    ListPlaylist(String),
-    ListPlaylistInfo(String),
-    LoadPlaylist(String),
-    #[serde(rename = "lsinfo")]
-    ListInfo(String),
-    Next,
-    Pause,
-    // Pause(bool), Spec says bool argument exists, ncmpcpp doesn't send it
-    Play(u64),
-    Previous,
-    Stop,
-    List(String),
-    Add(String),
-    AddId(String),
-    #[serde(rename = "volume")]
-    ChangeVolumeBy(i32),
-    #[serde(rename = "setvol")]
-    ChangeVolume(u32),
-    Commands,
-    TagTypes,
-    Close,
-}
+async fn handle_line(reader: &mut BufReader<TcpStream>, app: &Arc<Rustic>, client: &ApiClient) -> Result<Option<()>, failure::Error> {
+    let mut line = String::new();
+    reader.read_line(&mut line).await?;
+    let line = line.trim();
+    if line.is_empty() {
+        return Ok(None);
+    }
+    log::trace!("> {:?}", line);
+    let cmd: mpd_protocol::Request = if line
+        == "command_list_ok_begin" || line == "command_list_begin"
+    {
+        let mut current = String::new();
+        reader.read_line(&mut current).await?;
+        log::trace!("> {:?}", &current);
+        let mut cmds: Vec<mpd_protocol::Command> = vec![];
+        while current.trim() != "command_list_end" {
+            if let Ok((_, cmd)) = mpd_protocol::parse_command(&current.trim()) {
+                cmds.push(cmd)
+            }
+            current.clear();
+            reader.read_line(&mut current).await?;
+            log::trace!("> {:?}", &current);
+        }
+        mpd_protocol::Request::CommandList(cmds, line == "command_list_ok_begin")
+    } else {
+        parse_single(&line)?
+    };
 
-fn parse_single(line: &str) -> Result<MpdCommands, failure::Error> {
-    Ok(serde_mpd::from_str(line)?)
-}
-
-fn handle_mpd_command(cmd: MpdCommands, app: &Arc<Rustic>) -> Result<String, failure::Error> {
-    debug!("Command: {:?}", &cmd);
     match cmd {
-        MpdCommands::Status => commands::StatusCommand::new()
-            .handle(app)
-            .and_then(|res| serde_mpd::to_string(&res).map_err(failure::Error::from)),
-        MpdCommands::CurrentSong => commands::CurrentSongCommand::new()
-            .handle(app)
-            .and_then(|res| serde_mpd::to_string(&res).map_err(failure::Error::from)),
-        // MpdCommands::Pause(true) => commands::PauseCommand::new().handle(app)
-        MpdCommands::Pause => commands::PauseCommand::new()
-            .handle(app)
-            .and_then(|res| serde_mpd::to_string(&res).map_err(failure::Error::from)),
-        MpdCommands::Play(_) => commands::PlayCommand::new()
-            .handle(app)
-            .and_then(|res| serde_mpd::to_string(&res).map_err(failure::Error::from)),
-        MpdCommands::Stop => commands::StopCommand::new()
-            .handle(app)
-            .and_then(|res| serde_mpd::to_string(&res).map_err(failure::Error::from)),
-        MpdCommands::ListInfo(path) => commands::ListInfoCommand::new(path)
-            .handle(app)
-            .and_then(|res| serde_mpd::to_string(&res).map_err(failure::Error::from)),
-        MpdCommands::ListPlaylists => commands::ListPlaylistsCommand::new()
-            .handle(app)
-            .and_then(|res| serde_mpd::to_string(&res).map_err(failure::Error::from)),
-        MpdCommands::ListPlaylist(name) => commands::ListPlaylistCommand::new(name)
-            .handle(app)
-            .and_then(|res| serde_mpd::to_string(&res).map_err(failure::Error::from)),
-        MpdCommands::ListPlaylistInfo(name) => commands::ListPlaylistInfoCommand::new(name)
-            .handle(app)
-            .and_then(|res| serde_mpd::to_string(&res).map_err(failure::Error::from)),
-        MpdCommands::LoadPlaylist(name) => commands::LoadPlaylistCommand::new(name)
-            .handle(app)
-            .and_then(|res| serde_mpd::to_string(&res).map_err(failure::Error::from)),
-        MpdCommands::Previous => commands::PreviousCommand::new()
-            .handle(app)
-            .and_then(|res| serde_mpd::to_string(&res).map_err(failure::Error::from)),
-        MpdCommands::Next => commands::NextCommand::new()
-            .handle(app)
-            .and_then(|res| serde_mpd::to_string(&res).map_err(failure::Error::from)),
-        MpdCommands::Outputs => commands::OutputsCommand::new()
-            .handle(app)
-            .and_then(|res| serde_mpd::to_string(&res).map_err(failure::Error::from)),
-        MpdCommands::List(ref t) if t == "Artist" => commands::ListArtistCommand::new()
-            .handle(app)
-            .and_then(|res| serde_mpd::to_string(&res).map_err(failure::Error::from)),
-        MpdCommands::ChangeVolumeBy(volume) => commands::ChangeVolumeCommand::new(volume)
-            .handle(app)
-            .and_then(|res| serde_mpd::to_string(&res).map_err(failure::Error::from)),
-        MpdCommands::ChangeVolume(volume) => commands::SetVolumeCommand::new(volume)
-            .handle(app)
-            .and_then(|res| serde_mpd::to_string(&res).map_err(failure::Error::from)),
-        MpdCommands::Commands => commands::CommandsCommand::new()
-            .handle(app)
-            .and_then(|res| serde_mpd::to_string(&res).map_err(failure::Error::from)),
-        MpdCommands::TagTypes => commands::TagTypesCommand::new()
-            .handle(app)
-            .and_then(|res| serde_mpd::to_string(&res).map_err(failure::Error::from)),
-        MpdCommands::CommandList(commands) => {
+        mpd_protocol::Request::Command(mpd_protocol::Command::Idle(_)) => Ok(Some(())),
+        mpd_protocol::Request::Command(mpd_protocol::Command::Close) => Ok(None),
+        mpd_protocol::Request::Command(mpd_protocol::Command::AlbumArt(uri, offset)) => {
+            let album_art = commands::AlbumArtCommand::new(uri, offset)
+                .handle(app.clone(), client.clone())
+                .await?;
+
+            let byte_count = album_art.bytes.len();
+            let bytes = album_art.bytes.as_slice();
+            let writer = reader.get_mut();
+            let result = format!("size: {}\ntype: {}\nbinary: {}\n", album_art.total_size, album_art.mime_type, byte_count);
+            writer.write_all(result.as_bytes()).await?;
+            writer.write_all(bytes).await?;
+            writer.write_all("\nOK\n".as_bytes()).await?;
+
+            Ok(Some(()))
+        },
+        mpd_protocol::Request::Command(cmd) => {
+            let mut result = handle_mpd_command(cmd, app.clone(), client.clone()).await?;
+            result += "OK\n";
+            log::trace!("< {:?}", &result);
+            reader.get_mut().write_all(result.as_bytes()).await?;
+
+            Ok(Some(()))
+        }
+        mpd_protocol::Request::CommandList(commands, list_ok) => {
             let mut result = String::new();
             for command in commands {
-                result += handle_mpd_command(command, app)?.as_str();
-                result += "list_OK\n";
+                result += handle_mpd_command(command, app.clone(), client.clone()).await?.as_str();
+                if list_ok {
+                    result += "list_OK\n";
+                }
             }
-            Ok(result)
+            result += "OK\n";
+            log::trace!("< {:?}", &result);
+            reader.get_mut().write_all(result.as_bytes()).await?;
+
+            Ok(Some(()))
         }
+    }
+}
+
+fn parse_single(line: &str) -> Result<mpd_protocol::Request, failure::Error> {
+    match mpd_protocol::parse_command(line) {
+        Ok((_, command)) => {
+            Ok(mpd_protocol::Request::Command(command))
+        }
+        Err(err) => {
+            failure::bail!("MPD Parse error: {}", err)
+        }
+    }
+}
+
+async fn handle_mpd_command(cmd: mpd_protocol::Command, app: Arc<Rustic>, client: ApiClient) -> Result<String, failure::Error> {
+    use mpd_protocol::Command::*;
+    log::debug!("Command: {:?}", &cmd);
+    match cmd {
+        Status => commands::StatusCommand::new()
+            .handle(app, client)
+            .await
+            .and_then(|res| serde_mpd::to_string(&res).map_err(failure::Error::from)),
+        CurrentSong => commands::CurrentSongCommand::new()
+            .handle(app, client)
+            .await
+            .and_then(|res| serde_mpd::to_string(&res).map_err(failure::Error::from)),
+        Pause(Some(true)) => commands::PauseCommand::new()
+            .handle(app, client)
+            .await
+            .and_then(|res| serde_mpd::to_string(&res).map_err(failure::Error::from)),
+        Pause(Some(false)) | Play(_) => commands::PlayCommand::new()
+            .handle(app, client)
+            .await
+            .and_then(|res| serde_mpd::to_string(&res).map_err(failure::Error::from)),
+        Pause(None) => commands::TogglePauseCommand::new()
+            .handle(app, client)
+            .await
+            .and_then(|res| serde_mpd::to_string(&res).map_err(failure::Error::from)),
+        Stop => commands::StopCommand::new()
+            .handle(app, client)
+            .await
+            .and_then(|res| serde_mpd::to_string(&res).map_err(failure::Error::from)),
+        ListInfo(path) => commands::ListInfoCommand::new(path)
+            .handle(app, client)
+            .await
+            .and_then(|res| serde_mpd::to_string(&res).map_err(failure::Error::from)),
+        ListPlaylists => commands::ListPlaylistsCommand::new()
+            .handle(app, client)
+            .await
+            .and_then(|res| serde_mpd::to_string(&res).map_err(failure::Error::from)),
+        ListPlaylist(name) => commands::ListPlaylistCommand::new(name)
+            .handle(app, client)
+            .await
+            .and_then(|res| serde_mpd::to_string(&res).map_err(failure::Error::from)),
+        ListPlaylistInfo(name) => commands::ListPlaylistInfoCommand::new(name)
+            .handle(app, client)
+            .await
+            .and_then(|res| serde_mpd::to_string(&res).map_err(failure::Error::from)),
+        PlaylistInfo => commands::PlaylistInfoCommand::new()
+            .handle(app, client)
+            .await
+            .and_then(|res| serde_mpd::to_string(&res).map_err(failure::Error::from)),
+        LoadPlaylist(name) => commands::LoadPlaylistCommand::new(name)
+            .handle(app, client)
+            .await
+            .and_then(|res| serde_mpd::to_string(&res).map_err(failure::Error::from)),
+        Previous => commands::PreviousCommand::new()
+            .handle(app, client)
+            .await
+            .and_then(|res| serde_mpd::to_string(&res).map_err(failure::Error::from)),
+        Next => commands::NextCommand::new()
+            .handle(app, client)
+            .await
+            .and_then(|res| serde_mpd::to_string(&res).map_err(failure::Error::from)),
+        Outputs => commands::OutputsCommand::new()
+            .handle(app, client)
+            .await
+            .and_then(|res| serde_mpd::to_string(&res).map_err(failure::Error::from)),
+        List(ref t) if t == "Artist" => commands::ListArtistCommand::new()
+            .handle(app, client)
+            .await
+            .and_then(|res| serde_mpd::to_string(&res).map_err(failure::Error::from)),
+        ChangeVolumeBy(volume) => commands::ChangeVolumeCommand::new(volume)
+            .handle(app, client)
+            .await
+            .and_then(|res| serde_mpd::to_string(&res).map_err(failure::Error::from)),
+        SetVolume(volume) => commands::SetVolumeCommand::new(volume)
+            .handle(app, client)
+            .await
+            .and_then(|res| serde_mpd::to_string(&res).map_err(failure::Error::from)),
+        Commands => commands::CommandsCommand::new()
+            .handle(app, client)
+            .await
+            .and_then(|res| serde_mpd::to_string(&res).map_err(failure::Error::from)),
+        TagTypes => commands::TagTypesCommand::new()
+            .handle(app, client)
+            .await
+            .and_then(|res| serde_mpd::to_string(&res).map_err(failure::Error::from)),
+        AddId(cursor) => commands::AddTrackCommand::new(cursor)
+            .handle(app, client)
+            .await
+            .and_then(|res| serde_mpd::to_string(&res).map_err(failure::Error::from)),
+        Clear => commands::ClearQueueCommand::new()
+            .handle(app, client)
+            .await
+            .and_then(|res| serde_mpd::to_string(&res).map_err(failure::Error::from)),
         _ => Ok(String::new()),
     }
 }

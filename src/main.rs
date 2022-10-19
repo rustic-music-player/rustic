@@ -176,9 +176,7 @@ async fn setup_apis(
     #[cfg(feature = "mpd-frontend")]
     {
         if config.frontend.mpd.is_some() {
-            let mpd_thread =
-                rustic_mpd_frontend::start(config.frontend.mpd.clone(), Arc::clone(&app));
-            threads.push(mpd_thread);
+            rustic_mpd_frontend::start(config.frontend.mpd.clone(), Arc::clone(&app), Arc::clone(&client));
         }
     }
 

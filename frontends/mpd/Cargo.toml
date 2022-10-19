@@ -6,15 +6,23 @@ license = "GPL-3.0"
 readme = "README.md"
 repository = "https://github.com/rustic-music-player/rustic"
 homepage = "https://github.com/rustic-music-player/rustic"
+edition = "2018"
 
 [dependencies]
-serde = "1.0"
-serde_derive = "1.0"
+serde = { version = "1.0", features = ["derive"] }
 failure = "0.1"
 log = "0.4"
+futures = "0.3"
+tokio = { version = "1", features = ["rt", "net", "io-util"] }
 
 [dependencies.rustic-core]
 path = "../../core"
 
+[dependencies.rustic-api]
+path = "../../core/api"
+
 [dependencies.serde_mpd]
 git = "https://github.com/rustic-music-player/serde_mpd"
+
+[dependencies.mpd-protocol]
+git = "https://github.com/rustic-music-player/mpd-protocol"

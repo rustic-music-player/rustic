@@ -1,8 +1,11 @@
-use commands::MpdCommand;
+use crate::commands::MpdCommand;
 use failure::Error;
 use rustic_core::Rustic;
-use song::MpdSong;
+use crate::song::MpdSong;
 use std::sync::Arc;
+use futures::future::BoxFuture;
+use rustic_api::ApiClient;
+use crate::FutureExt;
 
 pub struct CurrentSongCommand {}
 
@@ -13,12 +16,12 @@ impl CurrentSongCommand {
 }
 
 impl MpdCommand<Option<MpdSong>> for CurrentSongCommand {
-    fn handle(&self, app: &Arc<Rustic>) -> Result<Option<MpdSong>, Error> {
-        let player = app
-            .get_default_player()
-            .ok_or(format_err!("Missing default player"))?;
-        unimplemented!()
-        // let track = player.queue.current().map(MpdSong::from);
-        // Ok(track)
+    fn handle(&self, _: Arc<Rustic>, client: ApiClient) -> BoxFuture<Result<Option<MpdSong>, Error>> {
+        async move {
+            let player = client.get_player(None).await?
+                .ok_or(format_err!("Missing default player"))?;
+
+            Ok(player.current.map(MpdSong::from))
+        }.boxed()
     }
 }

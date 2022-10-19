@@ -1,8 +1,12 @@
-use commands::MpdCommand;
+use crate::commands::MpdCommand;
 use failure::Error;
-use rustic_core::{MultiQuery, Rustic};
-use song::MpdSong;
+use rustic_core::{Rustic};
+use crate::song::MpdSong;
 use std::sync::Arc;
+use futures::future::BoxFuture;
+use rustic_api::ApiClient;
+use futures::FutureExt;
+use crate::client_ext::ClientExt;
 
 pub struct ListPlaylistInfoCommand {
     name: String,
@@ -15,17 +19,16 @@ impl ListPlaylistInfoCommand {
 }
 
 impl MpdCommand<Vec<MpdSong>> for ListPlaylistInfoCommand {
-    fn handle(&self, app: &Arc<Rustic>) -> Result<Vec<MpdSong>, Error> {
-        let playlists = app.library.query_playlists(MultiQuery::new())?;
-        let playlist = playlists
-            .iter()
-            .find(|playlist| playlist.title == self.name);
-        match playlist {
-            Some(playlist) => {
-                let tracks = playlist.tracks.iter().cloned().map(MpdSong::from).collect();
-                Ok(tracks)
+    fn handle(&self, _: Arc<Rustic>, client: ApiClient) -> BoxFuture<Result<Vec<MpdSong>, Error>> {
+        async move {
+            let playlist = client.get_playlist_by_name(&self.name).await?;
+            match playlist {
+                Some(playlist) => {
+                    let tracks = playlist.tracks.into_iter().map(MpdSong::from).collect();
+                    Ok(tracks)
+                }
+                None => Ok(vec![]),
             }
-            None => Ok(vec![]),
-        }
+        }.boxed()
     }
 }

@@ -1,7 +1,11 @@
-use commands::MpdCommand;
+use serde::Serialize;
+use crate::commands::MpdCommand;
 use failure::Error;
 use rustic_core::Rustic;
 use std::sync::Arc;
+use futures::future::BoxFuture;
+use rustic_api::ApiClient;
+use crate::FutureExt;
 
 #[derive(Debug, Serialize)]
 pub struct OutputEntry {
@@ -22,11 +26,13 @@ impl OutputsCommand {
 }
 
 impl MpdCommand<Vec<OutputEntry>> for OutputsCommand {
-    fn handle(&self, _app: &Arc<Rustic>) -> Result<Vec<OutputEntry>, Error> {
-        Ok(vec![OutputEntry {
-            id: 0,
-            name: String::from("Default"),
-            enabled: true,
-        }])
+    fn handle(&self, _: Arc<Rustic>, _client: ApiClient) -> BoxFuture<Result<Vec<OutputEntry>, Error>> {
+        async move {
+            Ok(vec![OutputEntry {
+                id: 0,
+                name: String::from("Default"),
+                enabled: true,
+            }])
+        }.boxed()
     }
 }
