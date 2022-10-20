@@ -5,12 +5,10 @@ authors = ["Max Jöhnk <maxjoehnk@gmail.com>"]
 edition = "2018"
 
 [dependencies]
-dbus = { version = "0.9", features = ["futures"] }
-dbus-tokio = "0.7"
-dbus-crossroads = "0.4"
 failure = "0.1"
 tokio = { version = "1", features = ["rt"] }
 log = "0.4"
+zbus = { version = "3.2", default-features = false, features = ["tokio"] }
 
 [dependencies.rustic-api]
 path = "../../core/api"

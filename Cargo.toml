@@ -51,6 +51,7 @@ default = [
 	"sled-store",
 	"http-frontend",
     "mpd-frontend",
+    "dbus-frontend",
 	"gstreamer-backend",
 	"rodio-backend",
 	"local-files-provider",
