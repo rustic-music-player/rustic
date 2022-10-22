@@ -252,6 +252,9 @@ impl ProviderInstance for YoutubeProvider {
     }
 
     async fn resolve_share_url(&self, url: Url) -> Result<Option<InternalUri>, Error> {
+        if url.host_str() == Some("music.youtube.com") {
+            return Ok(None);
+        }
         let url = url.as_str();
         if let Some(captures) = YOUTUBE_VIDEO_REGEX.captures(url) {
             let id = &captures[1];

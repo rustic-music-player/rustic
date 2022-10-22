@@ -78,6 +78,8 @@ pub enum ProviderTypeModel {
     #[serde(rename = "local")]
     LocalMedia,
     Youtube,
+    #[serde(rename = "ytmusic")]
+    YouTubeMusic,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]

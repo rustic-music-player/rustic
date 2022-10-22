@@ -46,6 +46,13 @@ pub(crate) async fn setup_providers(
             providers.push(Box::new(youtube));
         }
     }
+    #[cfg(feature = "ytmusic-provider")]
+    {
+        if let Some(ytmusic) = config.provider.ytmusic.clone() {
+            info!("Loading YouTube Music Provider");
+            providers.push(Box::new(ytmusic));
+        }
+    }
     for provider in &mut providers {
         provider
             .setup(cred_store)

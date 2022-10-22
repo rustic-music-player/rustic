@@ -1,0 +1,21 @@
+[package]
+name = "rustic-ytmusic-provider"
+version = "0.1.0"
+edition = "2021"
+authors = ["Max Jöhnk <maxjoehnk@gmail.com>"]
+
+[dependencies]
+failure = "0.1"
+serde = { version = "1.0", features = ["derive"] }
+log = "0.4"
+maplit = "1"
+url = "2.2"
+async-trait = "0.1"
+futures = { version = "0.3", features = ["std", "async-await"], default-features = false }
+youtube-api = { git = "https://github.com/maxjoehnk/youtube-rs", rev = "805af0e" }
+
+[dependencies.rustic-core]
+path = "../../core"
+
+[dependencies.ytmusic]
+git = "https://github.com/maxjoehnk/ytmusic-rs"

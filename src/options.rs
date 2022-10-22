@@ -52,6 +52,8 @@ pub enum Module {
     LocalProvider,
     #[cfg(feature = "youtube-provider")]
     YoutubeProvider,
+    #[cfg(feature = "ytmusic-provider")]
+    YouTubeMusicProvider,
 }
 
 impl FromStr for Module {
@@ -79,6 +81,8 @@ impl FromStr for Module {
             "local" => Ok(LocalProvider),
             #[cfg(feature = "youtube-provider")]
             "youtube" => Ok(YoutubeProvider),
+            #[cfg(feature = "ytmusic-provider")]
+            "ytmusic" => Ok(YouTubeMusicProvider),
             _ => Err(format!("unknown module {}", s)),
         }
     }
@@ -107,6 +111,8 @@ impl Module {
             LocalProvider => config.provider.local = None,
             #[cfg(feature = "youtube-provider")]
             YoutubeProvider => config.provider.youtube = None,
+            #[cfg(feature = "ytmusic-provider")]
+            YouTubeMusicProvider => config.provider.ytmusic = None,
         }
     }
 }

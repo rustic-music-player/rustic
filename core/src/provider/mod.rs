@@ -92,6 +92,8 @@ pub enum ProviderType {
     #[serde(rename = "local")]
     LocalMedia,
     Youtube,
+    #[serde(rename = "ytmusic")]
+    YouTubeMusic,
 }
 
 #[async_trait]

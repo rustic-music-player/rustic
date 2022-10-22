@@ -276,6 +276,7 @@ impl From<ProviderType> for ProviderTypeModel {
             ProviderType::Soundcloud => ProviderTypeModel::Soundcloud,
             ProviderType::Spotify => ProviderTypeModel::Spotify,
             ProviderType::Youtube => ProviderTypeModel::Youtube,
+            ProviderType::YouTubeMusic => ProviderTypeModel::YouTubeMusic,
         }
     }
 }
@@ -290,6 +291,7 @@ impl From<ProviderTypeModel> for ProviderType {
             ProviderTypeModel::Soundcloud => ProviderType::Soundcloud,
             ProviderTypeModel::Spotify => ProviderType::Spotify,
             ProviderTypeModel::Youtube => ProviderType::Youtube,
+            ProviderTypeModel::YouTubeMusic => ProviderType::YouTubeMusic,
         }
     }
 }

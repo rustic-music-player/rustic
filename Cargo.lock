@@ -835,6 +835,12 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "a4521f3e3d031370679b3b140beb36dfe4801b09ac77e30c61941f97df3ef28b"
 
 [[package]]
+name = "base16ct"
+version = "0.1.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "349a06037c7bf932dd7e7d1f653678b2038b9ad46a74102f1fc7bd7872678cce"
+
+[[package]]
 name = "base64"
 version = "0.12.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -6690,6 +6696,7 @@ dependencies = [
  "rustic-sqlite-store",
  "rustic-systray-frontend",
  "rustic-youtube-provider",
+ "rustic-ytmusic-provider",
  "serde",
  "serde_json",
  "structopt",
@@ -7154,6 +7161,22 @@ dependencies = [
  "tokio",
  "url",
  "youtube-api",
+]
+
+[[package]]
+name = "rustic-ytmusic-provider"
+version = "0.1.0"
+dependencies = [
+ "async-trait",
+ "failure",
+ "futures 0.3.17",
+ "log",
+ "maplit",
+ "rustic-core",
+ "serde",
+ "url",
+ "youtube-api",
+ "ytmusic",
 ]
 
 [[package]]
@@ -9595,6 +9618,22 @@ dependencies = [
  "serde_json",
  "serde_urlencoded 0.6.1",
  "tokio",
+]
+
+[[package]]
+name = "ytmusic"
+version = "0.1.0"
+source = "git+https://github.com/maxjoehnk/ytmusic-rs#92b642f63e0359db6d761aceabcb4c34cf80d0cc"
+dependencies = [
+ "base16ct",
+ "headers",
+ "http",
+ "regex",
+ "serde",
+ "serde_json",
+ "sha1 0.10.0",
+ "surf",
+ "thiserror",
 ]
 
 [[package]]

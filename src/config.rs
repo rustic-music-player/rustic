@@ -122,6 +122,9 @@ pub struct ProviderConfig {
     #[cfg(feature = "youtube-provider")]
     #[serde(default = "rustic_youtube_provider::YoutubeProvider::new")]
     pub youtube: Option<rustic_youtube_provider::YoutubeProvider>,
+    #[cfg(feature = "ytmusic-provider")]
+    #[serde(default = "rustic_ytmusic_provider::YouTubeMusicProvider::new")]
+    pub ytmusic: Option<rustic_ytmusic_provider::YouTubeMusicProvider>,
 }
 
 impl Default for ProviderConfig {
@@ -137,6 +140,8 @@ impl Default for ProviderConfig {
             local: rustic_local_provider::LocalProvider::new(),
             #[cfg(feature = "youtube-provider")]
             youtube: rustic_youtube_provider::YoutubeProvider::new(),
+            #[cfg(feature = "ytmusic-provider")]
+            ytmusic: rustic_ytmusic_provider::YouTubeMusicProvider::new(),
         }
     }
 }

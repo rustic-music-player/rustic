@@ -23,6 +23,7 @@ members = [
     "provider/soundcloud",
     "provider/spotify",
     "provider/youtube",
+    "provider/ytmusic",
     "store/helpers",
     "store/memory",
     "store/sled",
@@ -58,6 +59,7 @@ default = [
 	"pocketcasts-provider",
 	"soundcloud-provider",
 	"youtube-provider",
+    "ytmusic-provider",
 	"druid-frontend",
 	"http-client"
 ]
@@ -76,12 +78,13 @@ rodio-backend = ["rustic-rodio-backend"]
 #Disabled until protobuf version missmatch between rust-cast and librespot is resolved
 #google-cast-backend = ["rustic-google-cast-backend"]
 snapcast-backend = ["rustic-snapcast-backend"]
-all-providers = ["local-files-provider", "pocketcasts-provider", "soundcloud-provider", "spotify-provider", "youtube-provider"]
+all-providers = ["local-files-provider", "pocketcasts-provider", "soundcloud-provider", "spotify-provider", "youtube-provider", "ytmusic-provider"]
 local-files-provider = ["rustic-local-provider"]
 pocketcasts-provider = ["rustic-pocketcasts-provider"]
 soundcloud-provider = ["rustic-soundcloud-provider"]
 spotify-provider = ["rustic-spotify-provider"]
 youtube-provider = ["rustic-youtube-provider"]
+ytmusic-provider = ["rustic-ytmusic-provider"]
 all-stores = ["sled-store", "sqlite-store"]
 sled-store = ["rustic-sled-store"]
 sqlite-store = ["rustic-sqlite-store"]
@@ -192,4 +195,8 @@ optional = true
 
 [dependencies.rustic-youtube-provider]
 path = "provider/youtube"
+optional = true
+
+[dependencies.rustic-ytmusic-provider]
+path = "provider/ytmusic"
 optional = true
